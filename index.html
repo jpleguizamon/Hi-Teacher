@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#07090E">
+<meta name="theme-color" content="#05060B">
 <meta name="color-scheme" content="dark">
 <title>Hi Teacher</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -19,7 +19,7 @@
    ===================================================================== */
 :root{
   /* Marca */
-  --bg:#07090E; --bg-deep:#040609;
+  --bg:#05060B; --bg-deep:#030408;
   --accent:#2FD3F2;            /* ciano elétrico: ação primária, ativo, foco */
   --accent-2:#1E88E5;          /* azul elétrico: luz ambiente, avatares, apoio */
   --accent-ink:#021219;        /* texto sobre o ciano */
@@ -28,16 +28,21 @@
   --accent-line:rgba(47,211,242,.45);
 
   /* Vidro */
-  --glass:rgba(15,20,32,.65);
-  --glass-strong:rgba(12,16,26,.84);
-  --glass-raised:rgba(20,28,44,.72);
+  --glass:rgba(14,20,34,.4);
+  --glass-strong:rgba(10,14,24,.62);
+  --glass-raised:rgba(24,36,60,.46);
   --glass-inset:rgba(255,255,255,.03);
-  --glass-field:rgba(4,7,12,.55);
+  --glass-field:rgba(3,6,12,.42);
   --glass-border:rgba(47,211,242,.18);
   --glass-border-soft:rgba(47,211,242,.1);
   --hairline:rgba(148,163,184,.12);
-  --blur:blur(1rem) saturate(140%);
-  --edge-light:inset 0 0.0625rem 0 rgba(255,255,255,.05);
+  --blur:blur(1rem) saturate(160%);
+  --edge-light:inset 0 0.0625rem 0 rgba(255,255,255,.08);
+  /* Reflexo diagonal do vidro + tinta: usar sempre como background dos painéis */
+  --sheen:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.015) 42%,rgba(255,255,255,0) 70%);
+  --glass-fill:var(--sheen),var(--glass);
+  --glass-fill-raised:var(--sheen),var(--glass-raised);
+  --glass-fill-strong:var(--sheen),var(--glass-strong);
 
   /* Aliases das superfícies antigas (ainda referenciados em alguns pontos) */
   --surface:var(--glass); --surface-2:rgba(9,13,21,.8); --surface-3:var(--glass-raised);
@@ -124,6 +129,9 @@ body::before{
     radial-gradient(22rem 18rem at 40% 55%, rgba(47,211,242,.05), transparent 70%),
     var(--bg);
 }
+/* Fundo animado (WebGL2) atrás de tudo. Se o WebGL falhar, o script esconde o canvas
+   e as luzes estáticas do body::before aparecem no lugar. */
+#ribbonGlowCanvas{position:fixed;inset:0;z-index:-1;pointer-events:none;width:100%;height:100%;display:block}
 button,input,select,textarea{font:inherit}
 button{cursor:pointer}
 input,textarea{caret-color:var(--accent)}
@@ -158,7 +166,7 @@ option{background-color:#0b0f18;color:#f8fafc}
 /* ===== Cabeçalho (vidro fixo no topo) ===== */
 header{
   padding:0.8125rem 1.25rem 0.9375rem;
-  background:rgba(7,10,17,.55);
+  background:rgba(6,9,16,.36);
   -webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
   border-bottom:0.0625rem solid var(--glass-border-soft);
   box-shadow:0 0.5rem 1.5rem rgba(0,0,0,.25);
@@ -191,21 +199,23 @@ header{
   position:absolute;left:1.25rem;top:0.8125rem;z-index:2;display:grid;place-items:center;
   width:2.625rem;height:2.625rem;padding:0;line-height:1;
   border:0.0625rem solid var(--glass-border);border-radius:var(--radius-sm);
-  background:rgba(15,20,32,.6);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
+  background:var(--glass-fill);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
   color:var(--text-2);box-shadow:var(--edge-light),var(--shadow-sm);
   transition:border-color .2s,color .2s,box-shadow .2s;
 }
 .menu-btn:hover{border-color:var(--accent-line);color:var(--accent);box-shadow:var(--edge-light),var(--glow-sm)}
 .settings-topbar{
   display:none;align-items:center;justify-content:center;position:sticky;top:0;z-index:10;padding:0.9375rem 1.25rem;
-  background:rgba(7,10,17,.55);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
+  background:rgba(6,9,16,.36);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
   border-bottom:0.0625rem solid var(--glass-border-soft);
 }
 .settings-topbar .settings-back-btn{position:absolute;left:0.9375rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-2);font-size:1.875rem;line-height:1;padding:0.25rem 0.625rem;cursor:pointer;border-radius:var(--radius-sm);transition:color .15s}
 .settings-topbar .settings-back-btn:hover{color:var(--accent)}
 .settings-topbar .settings-topbar-title{font-size:1.125rem;font-weight:750;color:var(--heading);letter-spacing:-0.01em}
 main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
-@keyframes pageIn{from{opacity:.35;transform:translateY(0.375rem)}to{opacity:1;transform:none}}
+/* Só transform: opacity < 1 no <main> viraria "backdrop root" e os cards de vidro
+   perderiam o desfoque do fundo durante a animação. */
+@keyframes pageIn{from{transform:translateY(0.5rem)}to{transform:none}}
 
 /* ===== Início: aulas dos próximos dias ===== */
 .day-section{margin-bottom:1.375rem;cursor:pointer;padding:0.5rem;border-radius:var(--radius-lg);transition:background .2s ease}
@@ -213,7 +223,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .card{
   display:flex;align-items:center;gap:0.8125rem;padding:0.875rem 0.8125rem;margin-bottom:0.6875rem;
   border:0.0625rem solid var(--glass-border-soft);border-radius:var(--radius-lg);
-  background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
+  background:var(--glass-fill);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
   box-shadow:var(--edge-light);
   transition:transform .35s var(--ease-out),opacity .35s var(--ease-out),border-color .35s,box-shadow .35s,padding .35s;
   transform:scale(.98);opacity:.8;--avatar-size:2.5rem;
@@ -232,7 +242,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .day-section.focused .card{
   padding:1.1875rem 1rem;
   border-color:var(--accent-line);
-  background:var(--glass-raised);
+  background:var(--glass-fill-raised);
   box-shadow:var(--edge-light),var(--glow-sm),var(--shadow-sm);
   transform:scale(1);
   opacity:1;
@@ -259,7 +269,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .overlay{position:fixed;inset:0;background:rgba(2,4,8,.55);-webkit-backdrop-filter:blur(0.25rem);backdrop-filter:blur(0.25rem);z-index:20;opacity:0;pointer-events:none;transition:opacity .22s}
 .sidebar{
   position:fixed;z-index:21;left:0;top:0;bottom:0;width:min(20rem,85vw);
-  background:var(--glass-strong);-webkit-backdrop-filter:blur(1.25rem) saturate(150%);backdrop-filter:blur(1.25rem) saturate(150%);
+  background:var(--glass-fill-strong);-webkit-backdrop-filter:blur(1.25rem) saturate(150%);backdrop-filter:blur(1.25rem) saturate(150%);
   border-right:0.0625rem solid var(--glass-border);
   transform:translateX(-105%);transition:transform .28s var(--ease-out);
   box-shadow:1.125rem 0 2.8125rem rgba(0,0,0,.5);
@@ -290,7 +300,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .goals-progress-summary{font-size:0.8125rem;color:var(--muted);font-weight:600;margin-bottom:0.875rem}
 .goal-row{
   display:flex;align-items:center;gap:0.75rem;
-  background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
+  background:var(--glass-fill);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
   border:0.0625rem solid var(--glass-border-soft);border-radius:var(--radius-lg);box-shadow:var(--edge-light);
   padding:0.875rem;margin-bottom:0.625rem;transition:opacity .2s,border-color .2s;
 }
@@ -333,8 +343,8 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .goal-title-btn{background:none;border:none;padding:0;text-align:left;font:inherit;color:inherit;cursor:pointer;display:block;width:100%}
 
 /* Cards estilo "crachá" (rodada 3), inspirados em crachá de identificação — só na página de Testes */
-.card-badge1,.card-badge2,.card-badge4{background:var(--glass);border:0.0625rem solid var(--glass-border-soft);border-radius:var(--radius-xl);overflow:hidden;box-shadow:var(--shadow-md)}
-.card-badge3,.card-badge5{background:var(--glass);border:0.0625rem solid var(--glass-border-soft);border-radius:var(--radius-lg);padding:0.875rem}
+.card-badge1,.card-badge2,.card-badge4{background:var(--glass-fill);border:0.0625rem solid var(--glass-border-soft);border-radius:var(--radius-xl);overflow:hidden;box-shadow:var(--shadow-md)}
+.card-badge3,.card-badge5{background:var(--glass-fill);border:0.0625rem solid var(--glass-border-soft);border-radius:var(--radius-lg);padding:0.875rem}
 .badge1-header{padding:0.75rem 1rem;font-weight:800;font-size:0.9375rem;color:#0a1420;letter-spacing:.03em;display:flex;align-items:center;gap:0.5rem}
 .badge1-header.tier-silver{background:linear-gradient(90deg,#e2e8f0,#94a3b8)}
 .badge1-plus{font-size:1.125rem}
@@ -413,13 +423,13 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .settings-row-title .help-icon{margin-left:0.3125rem}
 .help-bubble{
   position:fixed;z-index:300;width:15.625rem;max-width:calc(100vw - 1.5rem);
-  background:rgba(12,17,28,.95);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
+  background:rgba(10,14,24,.86);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
   border:0.0625rem solid var(--accent-line);border-radius:var(--radius-md);padding:0.75rem 0.875rem;
   font-size:0.75rem;line-height:1.5;color:var(--text-2);font-weight:500;
   box-shadow:var(--shadow-lg),var(--glow-sm);
 }
 .help-bubble::before{
-  content:"";position:absolute;width:0.625rem;height:0.625rem;background:rgba(12,17,28,.95);
+  content:"";position:absolute;width:0.625rem;height:0.625rem;background:rgba(10,14,24,.86);
   border-left:0.0625rem solid var(--accent-line);border-top:0.0625rem solid var(--accent-line);
   transform:rotate(45deg);top:-0.34375rem;left:var(--arrow-left,1rem);
 }
@@ -446,7 +456,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .settings-profile-card{
   display:flex;align-items:center;gap:0.875rem;padding:1rem 1.125rem;margin-bottom:1.75rem;
   border-radius:var(--radius-lg);border:0.0625rem solid var(--glass-border);cursor:pointer;
-  background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
+  background:var(--glass-fill);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
   box-shadow:var(--edge-light);transition:border-color .2s,box-shadow .2s;
 }
 .settings-profile-card:hover{border-color:var(--accent-line);box-shadow:var(--edge-light),var(--glow-sm)}
@@ -471,7 +481,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .profile-tier-line.tier-gold{color:#f3c04a}
 .settings-group-label{font-size:0.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0.375rem 0.5rem}
 .settings-card{
-  background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
+  background:var(--glass-fill);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
   border:0.0625rem solid var(--glass-border-soft);border-radius:var(--radius-lg);box-shadow:var(--edge-light);
   overflow:hidden;margin-bottom:1.75rem;
 }
@@ -541,7 +551,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .students-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));gap:0.75rem;margin-bottom:0.6875rem}
 .student-square{
   min-width:0;border-radius:var(--radius-lg);border:0.0625rem solid var(--glass-border-soft);
-  background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
+  background:var(--glass-fill);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
   cursor:pointer;position:relative;
   box-shadow:var(--edge-light);padding:0.875rem;
   transition:border-color .2s,box-shadow .2s,transform .2s var(--ease-out);
@@ -565,7 +575,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .icon-controls-group{display:flex;align-items:center;gap:0.375rem;position:relative}
 .icon-btn-ctrl{
   position:relative;width:2.25rem;height:2.25rem;border-radius:var(--radius-sm);
-  background:var(--glass);border:0.0625rem solid var(--glass-border);color:var(--accent);
+  background:var(--glass-fill);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:0.0625rem solid var(--glass-border);color:var(--accent);
   display:grid;place-items:center;font-size:0.875rem;box-shadow:var(--edge-light);
   transition:background .2s,border-color .2s,color .2s,box-shadow .2s;
 }
@@ -576,7 +586,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .filter-dot.active{display:block}
 .filter-drawer{
   display:none;position:absolute;right:0;top:2.75rem;z-index:50;width:15rem;
-  background:var(--glass-strong);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
+  background:var(--glass-fill-strong);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
   border:0.0625rem solid var(--glass-border);border-radius:var(--radius-md);padding:0.75rem;
   box-shadow:var(--shadow-lg);flex-direction:column;gap:0.625rem;
 }
@@ -627,18 +637,18 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 }
 .search-clear-btn:hover{background:rgba(248,113,113,.22);color:var(--danger)}
 
-.add{border:0.0625rem solid var(--glass-border);background:var(--glass);color:var(--text);border-radius:var(--radius-pill);padding:0.625rem 1rem;font-weight:700}
+.add{border:0.0625rem solid var(--glass-border);background:var(--glass-fill);color:var(--text);border-radius:var(--radius-pill);padding:0.625rem 1rem;font-weight:700}
 /* Linha de aluno (Avaliação / Desempenho) */
 .student-card{
   padding:1rem;border:0.0625rem solid var(--glass-border-soft);border-radius:var(--radius-lg);
-  background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:var(--edge-light);
+  background:var(--glass-fill);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:var(--edge-light);
   margin-bottom:0.6875rem;transition:border-color .2s,box-shadow .2s;
 }
 .student-card:hover{border-color:var(--glass-border)}
 .student-card.inactive{opacity:.55;filter:grayscale(.6);border-color:var(--hairline)}
 .student-top{display:flex;align-items:center;gap:0.75rem}
 .student-top .info{flex:1}
-.edit{border:0.0625rem solid var(--glass-border);background:var(--glass);color:var(--text-2);border-radius:var(--radius-pill);padding:0.375rem 0.75rem;font-size:0.75rem;font-weight:650;transition:border-color .15s,color .15s}
+.edit{border:0.0625rem solid var(--glass-border);background:var(--glass-fill);color:var(--text-2);border-radius:var(--radius-pill);padding:0.375rem 0.75rem;font-size:0.75rem;font-weight:650;transition:border-color .15s,color .15s}
 .edit:hover{border-color:var(--accent-line);color:var(--accent)}
 
 /* ===== Estrelas (dourado aceso) ===== */
@@ -736,7 +746,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .btn-set-month{padding:0.6875rem 1.125rem;border-radius:var(--radius-pill);font-weight:750;font-size:0.8125rem;white-space:nowrap}
 .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(11.25rem,1fr));gap:0.75rem;margin-bottom:1.25rem}
 .kpi-card{
-  background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
+  background:var(--glass-fill);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
   border:0.0625rem solid var(--glass-border-soft);border-radius:var(--radius-lg);box-shadow:var(--edge-light);
   padding:1rem 1.125rem;
 }
@@ -744,14 +754,14 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .kpi-value{font-size:1.5rem;font-weight:750;color:var(--text);margin-top:0.375rem;letter-spacing:-0.02em;font-variant-numeric:tabular-nums}
 .kpi-sub{font-size:0.75rem;color:var(--muted);margin-top:0.375rem;line-height:1.4;font-weight:500}
 .chart-card{
-  background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
+  background:var(--glass-fill);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
   border:0.0625rem solid var(--glass-border-soft);border-radius:var(--radius-xl);box-shadow:var(--edge-light),var(--shadow-md);
   padding:1.25rem 1rem;margin-bottom:1.75rem;
 }
 
 /* ===== Página "Desempenho": seletor de alunos deslizante + busca por lupa + gráfico de evolução ===== */
 .perf-selector-card{
-  background:var(--glass);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
+  background:var(--glass-fill);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
   border:0.0625rem solid var(--glass-border-soft);border-radius:var(--radius-xl);box-shadow:var(--edge-light);
   padding:0.875rem;margin-bottom:1.25rem;
 }
@@ -795,7 +805,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 /* ===== Organização de Aulas ===== */
 .lesson-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(11.25rem, 1fr)); gap: 1.125rem; }
 .lesson-card {
-  background: var(--glass); -webkit-backdrop-filter:var(--blur); backdrop-filter:var(--blur);
+  background: var(--glass-fill); -webkit-backdrop-filter:var(--blur); backdrop-filter:var(--blur);
   border: 0.0625rem solid var(--glass-border-soft); border-radius:var(--radius-lg); box-shadow: var(--edge-light);
   padding: 0.75rem 0.75rem 0.875rem;
   cursor: grab; transition: transform 0.2s var(--ease-out), opacity 0.2s, border-color 0.2s, box-shadow 0.2s;
@@ -842,7 +852,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 /* "Pequenos Temas" (sem anexo) — card bem menor, só com o texto do tema, sem espaço de imagem */
 .lesson-grid-mini { display: grid; grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr)); gap: 0.625rem; }
 .lesson-card-mini{
-  background: var(--glass); border: 0.0625rem solid var(--glass-border-soft); border-radius:var(--radius-md); box-shadow: var(--edge-light);
+  background: var(--glass-fill); -webkit-backdrop-filter:var(--blur); backdrop-filter:var(--blur); border: 0.0625rem solid var(--glass-border-soft); border-radius:var(--radius-md); box-shadow: var(--edge-light);
   padding: 0.75rem 0.625rem; min-height: 3.75rem;
   display: flex; align-items: center; justify-content: center; text-align: center;
   cursor: pointer; transition: transform 0.2s var(--ease-out), border-color 0.2s, box-shadow 0.2s;
@@ -850,15 +860,16 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .lesson-card-mini:hover{ transform: translateY(-0.1875rem); border-color: var(--accent-line); box-shadow: var(--edge-light), var(--glow-sm); }
 .lesson-card-mini .lesson-title-mini{ font-size: 0.8125rem; font-weight: 650; color: var(--text); line-height: 1.3; word-break: break-word; }
 
-/* ===== Modais (o fundo desfoca a página; o painel é vidro sobre ela) ===== */
-.modal-bg{position:fixed;inset:0;z-index:30;background:rgba(2,4,8,.6);display:none;align-items:center;justify-content:center;-webkit-backdrop-filter:blur(0.5rem) saturate(120%);backdrop-filter:blur(0.5rem) saturate(120%);padding:1.25rem}
-.modal-bg.show{display:flex;animation:fadeIn .2s var(--ease-out)}
+/* ===== Modais: o fundo só escurece e o próprio painel é o vidro fosco.
+   (Desfocar os dois não funciona: um backdrop-filter dentro de outro só enxerga o pai.) ===== */
+.modal-bg{position:fixed;inset:0;z-index:30;background:rgba(2,4,8,.5);display:none;align-items:center;justify-content:center;padding:1.25rem}
+.modal-bg.show{display:flex}
 .modal-bg.show .modal{animation:modalIn .26s var(--ease-out)}
-@keyframes fadeIn{from{opacity:.4}to{opacity:1}}
 @keyframes modalIn{from{opacity:.4;transform:translateY(0.625rem) scale(.985)}to{opacity:1;transform:none}}
 .modal{
   width:min(28rem,90vw);max-height:85vh;overflow:auto;
-  background:linear-gradient(180deg,rgba(18,25,40,.86),rgba(10,14,23,.9));
+  background:var(--sheen),rgba(12,18,30,.58);
+  -webkit-backdrop-filter:blur(1.5rem) saturate(160%);backdrop-filter:blur(1.5rem) saturate(160%);
   border:0.0625rem solid var(--glass-border);border-radius:var(--radius-xl);padding:1.5rem;
   box-shadow:var(--edge-light),var(--shadow-lg),0 0 3rem rgba(47,211,242,.06);
 }
@@ -893,23 +904,23 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .save:active,.btn-set-month:active{transform:scale(.98)}
 .save:disabled{opacity:.5;box-shadow:none;cursor:progress}
 
-/* ===== Login e onboarding: cartão de vidro flutuante sobre fundo desfocado ===== */
+/* ===== Login e onboarding: cartão de vidro flutuante direto sobre o fundo animado ===== */
 #authGate,#onboardingGate{
   position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:1.5rem;
-  background:
-    radial-gradient(30rem 24rem at 85% 8%, rgba(47,211,242,.16), transparent 62%),
-    radial-gradient(30rem 26rem at 8% 88%, rgba(30,136,229,.2), transparent 64%),
-    rgba(7,9,14,.88);
-  -webkit-backdrop-filter:blur(1.5rem);backdrop-filter:blur(1.5rem);
+  background:rgba(3,5,10,.18);
 }
+/* Com o login/onboarding aberto, o app por trás fica invisível: assim o portão pode ser
+   transparente sem mostrar a tela do app atrás do cartão. */
+#authGate:not(.hidden) ~ .app,#authGate:not(.hidden) ~ .sidebar,#authGate:not(.hidden) ~ .overlay,
+#onboardingGate:not(.hidden) ~ .app,#onboardingGate:not(.hidden) ~ .sidebar,#onboardingGate:not(.hidden) ~ .overlay{visibility:hidden}
 #authGate{z-index:100}
 #authGate.hidden{display:none}
 #onboardingGate{z-index:99}
 #onboardingGate.hidden{display:none}
 .auth-card{
   width:min(24rem,100%);text-align:center;
-  background:linear-gradient(180deg,rgba(18,25,40,.72),rgba(10,14,23,.78));
-  -webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
+  background:var(--sheen),rgba(12,18,30,.5);
+  -webkit-backdrop-filter:blur(1.5rem) saturate(160%);backdrop-filter:blur(1.5rem) saturate(160%);
   border:0.0625rem solid var(--glass-border);border-radius:var(--radius-xl);
   padding:2rem 1.5rem 1.5rem;
   box-shadow:var(--edge-light),var(--shadow-lg),0 0 3.5rem rgba(47,211,242,.1);
@@ -939,7 +950,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .agenda-toolbar{display:flex;align-items:center;gap:0.625rem;margin-bottom:0.875rem}
 .agenda-nav-btn{
   width:2.375rem;height:2.375rem;border-radius:50%;flex:none;
-  background:var(--glass);border:0.0625rem solid var(--glass-border);color:var(--text-2);font-size:1.125rem;font-weight:700;
+  background:var(--glass-fill);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:0.0625rem solid var(--glass-border);color:var(--text-2);font-size:1.125rem;font-weight:700;
   display:grid;place-items:center;cursor:pointer;box-shadow:var(--edge-light);
   transition:background .2s,border-color .2s,color .2s,box-shadow .2s;
 }
@@ -947,12 +958,13 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .agenda-month-label{flex:1;text-align:center;font-size:1.0625rem;font-weight:750;color:var(--heading);text-transform:capitalize;letter-spacing:-0.01em}
 .agenda-weekdays{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:0.375rem;margin-bottom:0.375rem}
 .agenda-weekday{text-align:center;font-size:0.6875rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding-bottom:0.25rem}
-.agenda-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:0.375rem;margin-bottom:6rem}
-/* Células sem backdrop-filter de propósito: são 42 por mês e o fundo atrás delas é liso,
-   então o desfoque não aparece — só pesaria a rolagem no celular. */
+.agenda-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:0.375rem;margin-bottom:6rem;border-radius:var(--radius-sm);-webkit-backdrop-filter:blur(1rem);backdrop-filter:blur(1rem)}
+/* O desfoque fica na grade inteira (um só backdrop-filter) e as 42 células são vidro
+   translúcido por cima dela: mesmo visual fosco, sem refazer 42 desfoques a cada quadro
+   do fundo animado. */
 .agenda-day{
   aspect-ratio:0.8;min-width:0;border-radius:var(--radius-sm);border:0.0625rem solid var(--glass-border-soft);
-  background:rgba(15,20,32,.55);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+  background:var(--sheen),rgba(14,20,34,.3);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
   gap:0.125rem;position:relative;padding:0.3125rem 0.125rem;cursor:pointer;overflow:hidden;
   transition:border-color .2s,background .2s,box-shadow .2s;
 }
@@ -1000,7 +1012,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 /* Aviso flutuante (lembrete) */
 .reminder-toast{
   position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);z-index:60;
-  background:var(--glass-strong);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
+  background:var(--glass-fill-strong);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
   border:0.0625rem solid var(--accent-line);color:var(--text);padding:0.75rem 1.125rem;border-radius:var(--radius-md);
   font-size:0.8125rem;font-weight:700;box-shadow:var(--shadow-lg),var(--glow);max-width:min(24rem,88vw);animation:toastIn .25s var(--ease-out);
 }
@@ -1025,6 +1037,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .modal-fullscreen {
   width: 100%; height: 100%; max-height: 100%; border-radius: 0; background: rgba(4,6,10,.96); padding: 0;
   display: flex; flex-direction: column; position: relative; border: none; box-shadow: none;
+  -webkit-backdrop-filter: none; backdrop-filter: none;
 }
 .fullscreen-header-bar {
   padding: 1rem 1.25rem; border-bottom: 0.0625rem solid var(--glass-border-soft); background: rgba(12,16,26,.8);
@@ -1055,7 +1068,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
   .sidebar{
     position:sticky; align-self:flex-start; top:0; left:auto; bottom:auto;
     width:16.5rem; height:100vh; flex:none; transform:none; transition:none; order:-1;
-    background:rgba(9,12,20,.55);
+    background:var(--sheen),rgba(8,12,22,.34);
     box-shadow:none; border-right:0.0625rem solid var(--glass-border-soft);
   }
   .top{padding-left:1.25rem}
@@ -1066,6 +1079,8 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 @media (prefers-reduced-transparency: reduce) {
   :root{--glass:rgba(15,20,32,.96);--glass-strong:rgba(12,16,26,.98);--glass-raised:rgba(20,28,44,.97)}
   header,.settings-topbar{background:rgba(7,10,17,.97)}
+  .modal,.auth-card,.sidebar{background:rgba(12,18,30,.97)}
+  .agenda-day{background:rgba(15,20,32,.96)}
 }
 @media (prefers-reduced-motion: reduce) {
   *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
@@ -1073,6 +1088,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 </style>
 </head>
 <body>
+<canvas id="ribbonGlowCanvas" aria-hidden="true"></canvas>
 <svg style="display:none" aria-hidden="true">
 <defs>
 <g id="icon-home"><path d="M3 11.5L12 4l9 7.5"/><path d="M5.5 10v9.5a1 1 0 0 0 1 1H10v-6h4v6h3.5a1 1 0 0 0 1-1V10"/></g>
@@ -6037,6 +6053,139 @@ closeHelpBubble();
 });
 document.addEventListener("scroll", closeHelpBubble, true);
 window.addEventListener("resize", closeHelpBubble);
+</script>
+<script>
+/* Fundo animado do app (WebGL2). Desenha em meia resolução e a ~30 fps: a imagem é só
+   gradiente suave (não perde nitidez) e cada quadro obriga todos os painéis de vidro a
+   refazer o desfoque — menos quadros deixa a rolagem leve no celular.
+   Cores no fragmentSrc (RGB de 0 a 1): bgColor = fundo, accent = azul, accent2 = ciano. */
+(function(){
+  var canvas = document.getElementById('ribbonGlowCanvas');
+  if(!canvas) return;
+  var reduceMotion = false;
+  try{ reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches; }catch(e){}
+  var fallback = function(){ canvas.style.display = 'none'; };
+
+  try{
+    var gl = canvas.getContext('webgl2', {alpha:false, antialias:false, depth:false, stencil:false, powerPreference:'low-power'});
+    if(!gl) throw new Error('WebGL2 indisponível');
+
+    var vertexSrc = [
+      '#version 300 es',
+      'const vec2 pos[3] = vec2[3](vec2(-1.0,-1.0), vec2(3.0,-1.0), vec2(-1.0,3.0));',
+      'void main(){ gl_Position = vec4(pos[gl_VertexID], 0.0, 1.0); }'
+    ].join('\n');
+
+    var fragmentSrc = [
+      '#version 300 es',
+      'precision highp float;',
+      'uniform vec2 uResolution;',
+      'uniform float uTime;',
+      'uniform vec2 uMouse;',
+      'out vec4 fragColor;',
+      'const vec3 bgColor = vec3(0.0196, 0.0235, 0.0431);',
+      'const vec3 accent = vec3(0.3098, 0.549, 1.0);',
+      'const vec3 accent2 = vec3(0.1843, 0.8275, 0.949);',
+      'float flow(vec2 uv, float t){',
+      '  float n = sin(uv.x * 3.0 + t * 0.6) * 0.5;',
+      '  n += sin(uv.y * 2.2 - t * 0.4 + n) * 0.5;',
+      '  n += sin((uv.x + uv.y) * 1.6 + t * 0.25) * 0.3;',
+      '  return n;',
+      '}',
+      'void main(){',
+      '  vec2 aspect = vec2(uResolution.x / uResolution.y, 1.0);',
+      '  vec2 uv = gl_FragCoord.xy / uResolution.xy;',
+      '  vec2 p = (uv * 2.0 - 1.0) * aspect;',
+      '  float t = uTime;',
+      '  vec2 warp = vec2(flow(p * 1.3, t), flow(p * 1.3 + 5.0, t * 1.1));',
+      '  float d = length(p * 0.6 + warp * 0.35);',
+      '  vec2 toMouse = p - (uMouse * 2.0 - 1.0) * aspect;',
+      '  float mouseGlow = smoothstep(0.9, 0.0, length(toMouse));',
+      '  float band = flow(p * 0.8 + warp, t * 0.7);',
+      '  float glow = smoothstep(1.1, -0.3, d) * 0.32;',
+      '  glow += band * 0.06;',
+      '  glow += mouseGlow * 0.18;',
+      '  glow = clamp(glow, 0.0, 1.0);',
+      '  vec3 col = mix(bgColor, accent, glow * 0.4);',
+      '  col = mix(col, accent2, smoothstep(0.3, 1.0, band) * 0.18 * glow);',
+      '  fragColor = vec4(col, 1.0);',
+      '}'
+    ].join('\n');
+
+    var compileShader = function(type, src){
+      var shader = gl.createShader(type);
+      gl.shaderSource(shader, src);
+      gl.compileShader(shader);
+      if(!gl.getShaderParameter(shader, gl.COMPILE_STATUS)){
+        var info = gl.getShaderInfoLog(shader);
+        gl.deleteShader(shader);
+        throw new Error('Shader compile error: ' + info);
+      }
+      return shader;
+    };
+
+    var program = gl.createProgram();
+    gl.attachShader(program, compileShader(gl.VERTEX_SHADER, vertexSrc));
+    gl.attachShader(program, compileShader(gl.FRAGMENT_SHADER, fragmentSrc));
+    gl.linkProgram(program);
+    if(!gl.getProgramParameter(program, gl.LINK_STATUS)){
+      throw new Error('Program link error: ' + gl.getProgramInfoLog(program));
+    }
+    gl.useProgram(program);
+    // WebGL2 exige um VAO ligado no drawArrays mesmo sem atributos (o triângulo vem do gl_VertexID).
+    gl.bindVertexArray(gl.createVertexArray());
+
+    var uResolution = gl.getUniformLocation(program, 'uResolution');
+    var uTime = gl.getUniformLocation(program, 'uTime');
+    var uMouse = gl.getUniformLocation(program, 'uMouse');
+
+    var RENDER_SCALE = 0.5;
+    var FRAME_MS = 1000 / 30 - 1;
+    var mouse = [0.5, 0.5];
+    var targetMouse = [0.5, 0.5];
+    // pointer* cobre mouse e toque: no celular o brilho vai até onde o dedo encosta.
+    var onPointer = function(e){
+      targetMouse[0] = e.clientX / window.innerWidth;
+      targetMouse[1] = 1 - e.clientY / window.innerHeight;
+    };
+    window.addEventListener('pointermove', onPointer, {passive:true});
+    window.addEventListener('pointerdown', onPointer, {passive:true});
+
+    var start = performance.now();
+    var draw = function(now){
+      gl.uniform2f(uResolution, canvas.width, canvas.height);
+      gl.uniform1f(uTime, (now - start) * 0.001);
+      gl.uniform2f(uMouse, mouse[0], mouse[1]);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    };
+
+    var resize = function(){
+      canvas.width = Math.max(1, Math.floor(window.innerWidth * RENDER_SCALE));
+      canvas.height = Math.max(1, Math.floor(window.innerHeight * RENDER_SCALE));
+      gl.viewport(0, 0, canvas.width, canvas.height);
+      // Mudar o tamanho apaga o canvas; sem animação, redesenha na hora.
+      if(reduceMotion) draw(start);
+    };
+    resize();
+    window.addEventListener('resize', resize);
+    canvas.addEventListener('webglcontextlost', fallback);
+
+    var lastFrame = 0;
+    var loop = function(now){
+      requestAnimationFrame(loop);
+      if(now - lastFrame < FRAME_MS) return;
+      var dt = Math.min(now - (lastFrame || now), 100);
+      lastFrame = now;
+      var ease = 1 - Math.pow(0.95, dt / 16.667);
+      mouse[0] += (targetMouse[0] - mouse[0]) * ease;
+      mouse[1] += (targetMouse[1] - mouse[1]) * ease;
+      draw(now);
+    };
+    if(reduceMotion) draw(start); else requestAnimationFrame(loop);
+  }catch(e){
+    fallback();
+  }
+})();
 </script>
 </body>
 </html>
