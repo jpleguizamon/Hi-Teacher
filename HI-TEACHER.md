@@ -71,6 +71,9 @@ Outras telas importantes fora do menu principal: `#authGate` (login/cadastro via
 
 - Um único arquivo HTML, sem framework, sem build.
 - **Supabase** (`@supabase/supabase-js` via CDN) para autenticação e persistência dos dados do usuário (a chave anônima no arquivo é pública por design do Supabase — a segurança real vem das regras de RLS no banco, não do sigilo da chave).
+  - O login precisa da biblioteca do CDN. Se ela não carregar (sem internet, ou o `index.html` aberto dentro de outro app — visualizador de e-mail, WhatsApp, Drive, Claude — que bloqueia scripts externos), o login mostra "Não foi possível conectar ao login" com um botão "Tentar de novo". Antes desse ajuste (set/2026) o app caía calado no modo "só local" e abria o onboarding sem pedir login, parecendo que o login tinha sumido. O modo "só local" continua existindo, mas só quando `SUPABASE_URL` está vazio.
+  - Mensagens de erro do Supabase são traduzidas por `authErrorMessage()` (credenciais inválidas, email não confirmado, conta já existente, sem conexão).
+  - Testado em set/2026: o Supabase aceita login tanto de página hospedada quanto do arquivo aberto localmente (origem `null`). Para uso no celular, o caminho confiável é abrir por uma URL no navegador (ex.: GitHub Pages do repositório). Os links de confirmação de conta e de "esqueci minha senha" voltam para a URL de onde o app foi aberto, então essa URL precisa estar em Authentication → URL Configuration no painel do Supabase.
 - `localStorage` como cache local dos dados (alunos, aulas, metas, configurações), sincronizado com o Supabase.
 - SheetJS (xlsx), JSZip e Tesseract.js via CDN, usados na importação de planilhas de alunos (inclusive com OCR de imagem).
 - Ícones em sprite SVG inline (`<defs>` no topo do `<body>`), sem biblioteca de ícones externa.

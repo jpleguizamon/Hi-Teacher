@@ -2140,7 +2140,8 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 // Preencha com os dados do seu projeto Supabase (Painel do projeto > Project Settings > API).
 const SUPABASE_URL = "https://kzybvylrxrmtottjuqey.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6eWJ2eWxyeHJtdG90dGp1cWV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5Njc3NTYsImV4cCI6MjEwNDU0Mzc1Nn0.skoe-VIlS7s5eaElffB7JYkf-V-jNZG48tnKLrSo9XA";
-const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_URL.indexOf("http") === 0)
+const SUPABASE_CONFIGURED = SUPABASE_URL.indexOf("http") === 0;
+const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 ? supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 : null;
 
@@ -2273,7 +2274,26 @@ navBtn.style.display = shouldShow ? "" : "none";
 if (!shouldShow && currentPage === "tests") openPage("home");
 }
 
-if (!supabaseClient) {
+// Erros do Supabase vêm em inglês e técnicos ("Failed to fetch"); traduz os mais comuns.
+function authErrorMessage(error){
+const msg = (error && error.message) || "";
+if (/invalid login credentials/i.test(msg)) return "Email ou senha incorretos.";
+if (/email not confirmed/i.test(msg)) return "Seu email ainda não foi confirmado. Abra o link que te mandamos por email e tente de novo.";
+if (/user already registered/i.test(msg)) return "Já existe uma conta com esse email. Toque em \"Já tenho conta — entrar\".";
+if (/failed to fetch|load failed|network/i.test(msg)) return "Sem conexão com o servidor de login. Verifique a internet e tente de novo.";
+return msg || "Não foi possível entrar. Tente de novo.";
+}
+
+if (!supabaseClient && SUPABASE_CONFIGURED) {
+// A nuvem está configurada, mas a biblioteca de login não carregou (sem internet, ou o
+// arquivo foi aberto num visualizador que bloqueia scripts externos). Antes o app caía no
+// modo "só local" e abria o onboarding sem pedir login — parecia que o login tinha sumido.
+showAuthGate("Não foi possível conectar ao login.");
+["authFieldEmail","authFieldPassword","authToggleBtn","authForgotBtn"].forEach(id => { document.getElementById(id).style.display = "none"; });
+document.getElementById("authError").textContent = "Verifique a internet. Se você abriu o arquivo por outro app (e-mail, WhatsApp, Drive, Claude...), abra o Hi Teacher direto no Chrome ou no Safari.";
+document.getElementById("authSubmitBtn").textContent = "Tentar de novo";
+document.getElementById("authSubmitBtn").onclick = () => location.reload();
+} else if (!supabaseClient) {
 // Supabase ainda não configurado (SUPABASE_URL/ANON_KEY vazios) — o app segue funcionando
 // só localmente, como antes, sem pedir login.
 hideAuthGate();
@@ -2306,7 +2326,7 @@ if (authMode === "reset") {
 const email = document.getElementById("authEmail").value.trim();
 if (!email) { errEl.textContent = "Informe seu email."; return; }
 const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
-if (error) { errEl.textContent = error.message; return; }
+if (error) { errEl.textContent = authErrorMessage(error); return; }
 errEl.style.color = "#4ade80";
 errEl.textContent = "Te mandamos um link por email pra redefinir a senha.";
 return;
@@ -2315,7 +2335,7 @@ if (authMode === "recovery") {
 const newPassword = document.getElementById("authNewPassword").value;
 if (!newPassword || newPassword.length < 6) { errEl.textContent = "A senha precisa ter pelo menos 6 caracteres."; return; }
 const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
-if (error) { errEl.textContent = error.message; return; }
+if (error) { errEl.textContent = authErrorMessage(error); return; }
 errEl.style.color = "#4ade80";
 errEl.textContent = "Senha atualizada! Entrando…";
 setTimeout(() => location.reload(), 1200);
@@ -2332,8 +2352,10 @@ if (password !== confirmPassword) { errEl.textContent = "As senhas não são igu
 const { data, error } = authMode === "login"
 ? await supabaseClient.auth.signInWithPassword({ email, password })
 : await supabaseClient.auth.signUp({ email, password });
-if (error) { errEl.textContent = error.message; return; }
+if (error) { errEl.textContent = authErrorMessage(error); return; }
 if (authMode === "signup" && !data.session) { errEl.textContent = "Conta criada! Confirme seu email antes de entrar."; return; }
+} catch (e) {
+errEl.textContent = authErrorMessage(e);
 } finally {
 document.getElementById("authSubmitBtn").disabled = false;
 }
