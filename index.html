@@ -866,6 +866,17 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .input-with-action{display:flex;gap:0.5rem;align-items:center}
 .input-with-action input{flex:1;min-width:0}
 .wa-btn{flex:none;display:inline-flex;align-items:center;padding:0.5625rem 0.875rem;border-radius:var(--radius-pill);font-size:0.75rem;font-weight:700;color:#86efac;background:rgba(74,222,128,.1);border:0.0625rem solid rgba(74,222,128,.35);text-decoration:none;white-space:nowrap}
+.wa-btn-muted{color:var(--text-2);background:var(--glass-inset);border-color:rgba(148,163,184,.3)}
+.wa-mini{padding:0.375rem 0.75rem;align-self:center}
+.action-toast{position:fixed;left:50%;bottom:1.25rem;transform:translateX(-50%);z-index:70;width:min(92vw,26rem);display:flex;align-items:center;gap:0.625rem;
+  padding:0.75rem 0.875rem;border-radius:var(--radius-md);border:0.0625rem solid var(--accent-line);background:var(--glass-fill-strong);
+  -webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:var(--shadow-sm),var(--glow-sm);animation:toastIn .25s var(--ease-out)}
+@keyframes toastIn{from{transform:translate(-50%,0.75rem)}to{transform:translate(-50%,0)}}
+.action-toast-msg{flex:1;min-width:0;font-size:0.8125rem;font-weight:600;color:var(--text);line-height:1.35}
+.action-toast-close{flex:none;width:1.75rem;height:1.75rem;border-radius:50%;border:none;background:transparent;color:var(--muted);cursor:pointer}
+.msg-field-foot{display:flex;justify-content:space-between;align-items:center;gap:0.5rem;margin-top:0.375rem}
+.msg-vars{font-size:0.6875rem;color:var(--muted);font-weight:600}
+.btn-link-inline{background:none;border:none;padding:0;color:var(--accent);font-size:0.75rem;font-weight:700;cursor:pointer}
 .stu-link{color:#86efac!important;text-decoration:none;font-weight:700}
 .times-by-day{display:grid;gap:0.4375rem;margin:-0.25rem 0 0.875rem}
 .time-by-day-row{display:flex;align-items:center;gap:0.75rem}
@@ -1744,6 +1755,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 <div class="settings-row" id="rowCriterios"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-clipboard"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Critérios de avaliação<button type="button" class="help-icon" data-help="O que você avalia em cada aula, de 0 a 5 estrelas. Renomear mantém as avaliações antigas; tirar um critério não apaga as notas que ele já tinha.">!</button></div></div><span class="settings-row-value" id="valCriterios"></span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowEvalFreq"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-star"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Frequência da avaliação<button type="button" class="help-icon" data-help="De quanto em quanto tempo o app pede pra avaliar cada aluno. Fora do dia de avaliação a aula fica só como 'Aula dada', sem pop-up nem 'Aguardando avaliação'. Dá pra mudar por aluno no cadastro dele.">!</button></div></div><span class="settings-row-value" id="valEvalFreq">Toda aula</span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowFerias"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-sun"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Férias e recesso<button type="button" class="help-icon" data-help="Períodos sem aula, pra todos os alunos ou só pra um. As aulas nesses dias (e nos feriados da Agenda) ficam automaticamente como 'Não houve aula', sem avaliação.">!</button></div><div class="settings-row-sub">Períodos sem aula, gerais ou por aluno</div></div><span class="settings-row-value" id="valFerias">Nenhum</span><span class="settings-row-chevron">›</span></div>
+<div class="settings-row" id="rowMensagens"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-message"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Mensagens prontas<button type="button" class="help-icon" data-help="Textos que o app já deixa escritos pra mandar no WhatsApp: cobrar mensalidade, avisar aula marcada ou cancelada e parabenizar no aniversário. As palavras entre colchetes são trocadas pelos dados do aluno.">!</button></div><div class="settings-row-sub">Cobrança, aula remarcada, cancelamento, aniversário</div></div><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowIdioma"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-globe"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Idioma</div></div><span class="settings-row-value">Português</span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowChartsStart"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-trending-up"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Início dos gráficos<button type="button" class="help-icon" data-help="Meses antes dessa data aparecem apagados nos gráficos, em vez de parecerem um resultado zero.">!</button></div><div class="settings-row-sub">A partir de quando os gráficos começam a contar</div></div><span class="settings-row-value" id="valChartsStart">Desde o início</span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowGrowthGoal"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-target"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Meta de crescimento mensal<button type="button" class="help-icon" data-help="Defina quanto espera crescer por mês. Sem meta definida, o app calcula uma média automática com base no seu histórico, descartando meses fora do padrão (como um mês de matrículas em massa ou de saída de vários alunos).">!</button></div><div class="settings-row-sub">Usada para marcar em verde/vermelho se o mês bateu a meta</div></div><span class="settings-row-value" id="valGrowthGoal">Sem meta</span><span class="settings-row-chevron">›</span></div>
@@ -2223,6 +2235,16 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 <div class="field"><label>Para quem</label><select id="breakStudentSelect"></select></div>
 <button type="button" class="btn-historico" id="breakAddBtn" style="width:100%">Adicionar período</button>
 <div class="actions"><button class="save" id="breaksDoneBtn" style="width:100%">Concluído</button></div>
+</div>
+</div>
+
+<!-- Modal: Mensagens prontas -->
+<div class="modal-bg" id="mensagensModal">
+<div class="modal">
+<h2>Mensagens prontas</h2>
+<div class="field-hint">As palavras entre colchetes viram os dados de verdade: [nome] é quem recebe (o responsável, se o aluno for menor de idade e tiver responsável cadastrado), [aluno] é o primeiro nome do aluno.</div>
+<div id="mensagensFields"></div>
+<div class="actions"><button class="cancel" id="mensagensCancelBtn">Cancelar</button><button class="save" id="mensagensSaveBtn">Salvar</button></div>
 </div>
 </div>
 
@@ -2939,6 +2961,7 @@ let appSettings = Object.assign({
   breaks:[],
   levels:null,
   useLevels:true,
+  messages:{},
   criteria:null
 }, JSON.parse(localStorage.getItem("jp_settings_v1")||"null")||{});
 saveAppSettingsMerge();
@@ -2951,6 +2974,7 @@ appSettings.location = Object.assign({ state:null, city:"" }, appSettings.locati
 if (appSettings.growthGoalPercent === undefined) appSettings.growthGoalPercent = null;
 if (!["every","biweekly","monthly","bimonthly"].includes(appSettings.evalFrequency)) appSettings.evalFrequency = "every";
 if (!Array.isArray(appSettings.breaks)) appSettings.breaks = [];
+if (!appSettings.messages || typeof appSettings.messages !== "object") appSettings.messages = {};
 if (!appSettings.paymentsSince) appSettings.paymentsSince = `${new Date().getFullYear()}-${pad2(new Date().getMonth()+1)}`;
 if (!Array.isArray(appSettings.levels) || appSettings.levels.length === 0) appSettings.levels = [...DEFAULT_LEVELS];
 if (appSettings.useLevels === undefined) appSettings.useLevels = true;
@@ -3947,9 +3971,100 @@ const extra = n - 3;
 return `<div class="avatar-cluster">${btn(g[0])}${btn(g[1])}${btn(g[2])}<div class="avatar-small">+${extra}</div></div>`;
 }
 
-// Avisos no WhatsApp depois de marcar/remarcar/cancelar (mensagens prontas: ver abaixo).
-function offerLessonMessage(s, m){}
-function offerCancelMessage(s, time){}
+// ===== Mensagens prontas no WhatsApp =====
+// Textos editáveis em Configurações → "Mensagens prontas" (appSettings.messages guarda só o
+// que o professor mudou). Variáveis entre colchetes: [nome] = quem recebe (o responsável,
+// se o aluno for menor de idade e tiver responsável), [aluno], [mês], [valor], [dia],
+// [data], [hora], [referência].
+const DEFAULT_MESSAGES = {
+charge: "Oi, [nome]! Passando pra lembrar da mensalidade de [mês] (R$ [valor]). Obrigado!",
+lessonMoved: "Sua aula ficou para [dia], [data], às [hora].",
+cancel: "Oi, [nome]! Hoje não vou conseguir dar a aula das [hora]. Vamos marcar uma reposição?",
+birthday: "Feliz aniversário, [aluno]! 🎉"
+};
+const MESSAGE_LABELS = {
+charge: { title:"Cobrar mensalidade", vars:"[nome] [aluno] [mês] [valor]" },
+lessonMoved: { title:"Aula marcada ou remarcada", vars:"[nome] [aluno] [dia] [data] [hora]" },
+cancel: { title:"Aula cancelada", vars:"[nome] [aluno] [hora] [data]" },
+birthday: { title:"Aniversário", vars:"[nome] [aluno]" }
+};
+const WEEKDAY_FULL = ["domingo","segunda-feira","terça-feira","quarta-feira","quinta-feira","sexta-feira","sábado"];
+const MONTH_FULL = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+function getMessageTemplate(key){ return (appSettings.messages && appSettings.messages[key]) || DEFAULT_MESSAGES[key] || ""; }
+function firstName(n){ return String(n || "").trim().split(/\s+/)[0] || ""; }
+function ageYears(birthIso){
+if (!birthIso) return null;
+const b = dateFromIso(birthIso), now = new Date();
+if (isNaN(b.getTime())) return null;
+let y = now.getFullYear() - b.getFullYear();
+if (now.getMonth() < b.getMonth() || (now.getMonth() === b.getMonth() && now.getDate() < b.getDate())) y--;
+return y;
+}
+function isMinor(s){ const a = ageYears(s.birthDate); return a !== null && a < 18; }
+// Pra quem vai a mensagem: responsável (menor de idade com responsável), senão o aluno.
+function messageRecipient(s){
+const hasGuardian = !!(s.guardianName || s.guardianPhone);
+if (hasGuardian && isMinor(s) && whatsappLink(s.guardianPhone)) return { phone: s.guardianPhone, name: firstName(s.guardianName) || firstName(s.name) };
+if (whatsappLink(s.phone)) return { phone: s.phone, name: firstName(s.name) };
+if (whatsappLink(s.guardianPhone)) return { phone: s.guardianPhone, name: firstName(s.guardianName) || firstName(s.name) };
+return null;
+}
+function fillMessage(tpl, vars){
+return tpl.replace(/\[([^\]]+)\]/g, (all, k) => {
+const key = stripAccents(k).toLowerCase().trim();
+return vars[key] !== undefined && vars[key] !== null ? String(vars[key]) : all;
+});
+}
+// Link wa.me já com o texto; null se o aluno não tem telefone.
+function waMessageLink(s, key, vars = {}){
+const r = messageRecipient(s);
+if (!r) return null;
+const text = fillMessage(getMessageTemplate(key), { nome: r.name, aluno: firstName(s.name), ...vars });
+return `${whatsappLink(r.phone)}?text=${encodeURIComponent(text)}`;
+}
+function moneyText(v){ return Number(v || 0).toLocaleString("pt-BR", { minimumFractionDigits: Number.isInteger(Number(v)) ? 0 : 2, maximumFractionDigits: 2 }); }
+function monthLongLabel(key){
+const [y, m] = key.split("-").map(Number);
+return MONTH_FULL[m-1] + (y !== new Date().getFullYear() ? `/${y}` : "");
+}
+// Aviso no rodapé com um botão (abrir o WhatsApp ou cadastrar o telefone).
+function showActionToast(msg, actionLabel, href, onAction){
+document.querySelectorAll(".action-toast").forEach(t => t.remove());
+const t = document.createElement("div");
+t.className = "action-toast";
+t.innerHTML = `<span class="action-toast-msg">${escapeHtml(msg)}</span>${href
+? `<a class="wa-btn" href="${href}" target="_blank" rel="noopener">${escapeHtml(actionLabel)}</a>`
+: `<button type="button" class="wa-btn wa-btn-muted">${escapeHtml(actionLabel)}</button>`}<button type="button" class="action-toast-close" aria-label="Fechar">✕</button>`;
+document.body.appendChild(t);
+const close = () => t.remove();
+t.querySelector(".action-toast-close").onclick = close;
+const act = t.querySelector(".wa-btn");
+act.addEventListener("click", () => { if (onAction) onAction(); setTimeout(close, 300); });
+setTimeout(close, 12000);
+}
+// Sem telefone: abre o cadastro do aluno já no campo de telefone.
+function openContactField(s){
+openPage("students");
+openEdit(s.id);
+const sec = document.getElementById("fContactSection");
+sec.open = true;
+setTimeout(() => { sec.scrollIntoView({ block: "center" }); document.getElementById("fPhone").focus(); }, 60);
+}
+function offerMessage(s, key, vars, doneText){
+const href = waMessageLink(s, key, vars);
+if (href) showActionToast(doneText, "Avisar no WhatsApp", href);
+else showActionToast(`${doneText} Sem telefone pra avisar.`, "Cadastrar telefone", null, () => openContactField(s));
+}
+// Depois de marcar/remarcar uma aula extra ou reposição.
+function offerLessonMessage(s, m){
+if (!m || m.status !== "scheduled" || !m.date) return;
+const d = dateFromIso(m.date);
+offerMessage(s, "lessonMoved", { dia: WEEKDAY_FULL[d.getDay()], data: formatDateShort(m.date).slice(0,5), hora: m.time || getStudentTimeFor(s, d.getDay()) }, `Aula de ${firstName(s.name)} marcada pra ${formatDateShort(m.date).slice(0,5)}.`);
+}
+// Depois de cancelar uma aula.
+function offerCancelMessage(s, time, dateBr){
+offerMessage(s, "cancel", { hora: time, data: (dateBr || "").slice(0,5) }, `Aula de ${firstName(s.name)} cancelada.`);
+}
 
 // ===== Ações rápidas nas aulas do Início =====
 // Antes da aula começar: Remarcar / Cancelar aula. Depois que começa: Dada / Faltou / Remarcar.
@@ -3974,7 +4089,7 @@ if (action === "cancel") {
 if (!confirm(`Cancelar a aula de ${s.name} das ${time}? Ela fica como "Professor cancelou" e entra nas reposições pendentes.`)) return;
 recordNoClass(s, entry, "teacher_cancel", true);
 refreshAfterLessonChange(s);
-offerCancelMessage(s, time);
+offerCancelMessage(s, time, entry.date);
 return;
 }
 if (action === "absent") return openQuickAbsence(s, entry, time);
@@ -4238,6 +4353,11 @@ return key === cur && Number(s.dueDay) > 0 && new Date().getDate() > Number(s.du
 }
 function studentMonthlyValue(s){ return s.value !== undefined ? s.value : getDefaultValueFor(s); }
 
+// Botão "Cobrar" (mensagem pronta no WhatsApp); some se o aluno não tem telefone.
+function chargeLink(s, key){
+const href = waMessageLink(s, "charge", { mes: monthLongLabel(key), valor: moneyText(studentMonthlyValue(s)) });
+return href ? `<a class="wa-btn wa-mini" href="${href}" target="_blank" rel="noopener" aria-label="Cobrar ${escapeHtml(s.name)} no WhatsApp">Cobrar</a>` : "";
+}
 function renderPendingPayments(){
 const box = document.getElementById("pendingPaymentsBox");
 if (!box) return;
@@ -4262,6 +4382,7 @@ return `
 <div class="goal-title">${escapeHtml(r.s.name)}</div>
 <div class="pay-meta"><span class="goal-period-badge">R$ ${studentMonthlyValue(r.s)}</span>${status}</div>
 </div>
+${chargeLink(r.s, r.key)}
 </div>`;
 };
 box.innerHTML =
@@ -7560,6 +7681,37 @@ document.getElementById("breakLabelInput").value = "";
 document.getElementById("breakStartInput").value = "";
 document.getElementById("breakEndInput").value = "";
 renderBreaksList();
+};
+
+// --- Mensagens prontas ---
+function renderMessagesFields(values){
+document.getElementById("mensagensFields").innerHTML = Object.keys(DEFAULT_MESSAGES).map(k => `
+<div class="field">
+<label>${MESSAGE_LABELS[k].title}</label>
+<textarea rows="3" data-msg-key="${k}">${escapeHtml(values[k])}</textarea>
+<div class="msg-field-foot"><span class="msg-vars">${MESSAGE_LABELS[k].vars}</span><button type="button" class="btn-link-inline" data-msg-reset="${k}">Voltar ao padrão</button></div>
+</div>`).join("");
+document.querySelectorAll("[data-msg-reset]").forEach(b => b.onclick = () => {
+document.querySelector(`[data-msg-key="${b.dataset.msgReset}"]`).value = DEFAULT_MESSAGES[b.dataset.msgReset];
+});
+}
+document.getElementById("rowMensagens").onclick = () => {
+const values = {};
+Object.keys(DEFAULT_MESSAGES).forEach(k => values[k] = getMessageTemplate(k));
+renderMessagesFields(values);
+document.getElementById("mensagensModal").classList.add("show");
+};
+document.getElementById("mensagensCancelBtn").onclick = () => document.getElementById("mensagensModal").classList.remove("show");
+document.getElementById("mensagensSaveBtn").onclick = () => {
+const next = {};
+document.querySelectorAll("[data-msg-key]").forEach(t => {
+const k = t.dataset.msgKey, v = t.value.trim();
+if (v && v !== DEFAULT_MESSAGES[k]) next[k] = v; // guarda só o que mudou
+});
+appSettings.messages = next;
+saveAppSettings();
+document.getElementById("mensagensModal").classList.remove("show");
+if (currentPage === "home") renderHome();
 };
 
 // --- Idioma ---
