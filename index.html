@@ -887,7 +887,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .form-section-summary:empty{display:none}
 .form-section[open] .form-section-summary{display:none}
 .field.field-error > label{color:var(--danger)}
-.field.field-error input,.field.field-error select{border-color:var(--danger-border)!important}
+.field.field-error input,.field.field-error select,.field.field-error .day:not(.selected){border-color:var(--danger-border)!important}
 .form-section[open] summary::after{content:"−"}
 .form-section[open]{padding-bottom:0.125rem}
 .input-with-action{display:flex;gap:0.5rem;align-items:center}
@@ -1784,7 +1784,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 <div class="settings-card">
 <div class="settings-row" id="rowInstrumentos"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-music"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Instrumentos que leciona<button type="button" class="help-icon" data-help="A lista de opções que aparece ao cadastrar um aluno. Adicione quantos instrumentos precisar — não tem limite.">!</button></div></div><span class="settings-row-value" id="valInstrumentos"></span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowValoresPadrao"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-dollar"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Valores padrões<button type="button" class="help-icon" data-help="Valores sugeridos automaticamente ao cadastrar um novo aluno, de acordo com o formato da aula (individual ou grupo).">!</button></div></div><span class="settings-row-value" id="valValoresPadrao">R$ 140</span><span class="settings-row-chevron">›</span></div>
-<div class="settings-row" id="rowDiasUteis"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-calendar"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Dias úteis<button type="button" class="help-icon" data-help="Usado para pré-selecionar os dias da semana ao cadastrar um novo aluno.">!</button></div></div><span class="settings-row-value" id="valDiasUteis">Seg-Sex</span><span class="settings-row-chevron">›</span></div>
+<div class="settings-row" id="rowDiasUteis"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-calendar"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Dias úteis<button type="button" class="help-icon" data-help="Os dias da semana em que você costuma dar aula. O cadastro de aluno novo começa sem nenhum dia marcado: os dias de cada aluno são escolhidos no cadastro dele.">!</button></div></div><span class="settings-row-value" id="valDiasUteis">Seg-Sex</span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowDuracao"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-clock"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Duração padrão da aula</div></div><span class="settings-row-value" id="valDuracao">60 min</span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowNiveis"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-trending-up"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Níveis dos alunos<button type="button" class="help-icon" data-help="A lista de níveis que aparece no cadastro do aluno, na ordem do menor pro maior. Dá pra renomear, reordenar, adicionar, tirar ou não usar nível nenhum.">!</button></div></div><span class="settings-row-value" id="valNiveis"></span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowCriterios"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-clipboard"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Critérios de avaliação<button type="button" class="help-icon" data-help="O que você avalia em cada aula, de 0 a 5 estrelas. Renomear mantém as avaliações antigas; tirar um critério não apaga as notas que ele já tinha.">!</button></div></div><span class="settings-row-value" id="valCriterios"></span><span class="settings-row-chevron">›</span></div>
@@ -2201,7 +2201,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 <option value="0">Domingo</option><option value="1">Segunda</option><option value="2">Terça</option><option value="3">Quarta</option><option value="4">Quinta</option><option value="5">Sexta</option><option value="6">Sábado</option>
 </select>
 </div>
-<div class="field-hint">Os dias marcados aqui já vêm pré-selecionados ao cadastrar um novo aluno.</div>
+<div class="field-hint">Os dias da semana em que você costuma dar aula. O cadastro de aluno novo começa sem nenhum dia marcado: você escolhe os dias de cada aluno no cadastro dele.</div>
 <div class="actions"><button class="cancel" id="diasUteisCancelBtn">Cancelar</button><button class="save" id="diasUteisSaveBtn">Salvar</button></div>
 </div>
 </div>
@@ -7053,7 +7053,7 @@ document.getElementById("fFormatSuggested").textContent = `Valor sugerido: R$ ${
 document.getElementById("fTime").onchange = updateModalFormatPreview;
 document.getElementById("fInstrument").onchange = updateModalFormatPreview;
 document.querySelectorAll(".day").forEach(b => {
-b.onclick = () => { b.classList.toggle("selected"); renderTimesByDay(); updateModalFormatPreview(); };
+b.onclick = () => { b.classList.toggle("selected"); b.closest(".field")?.classList.remove("field-error"); renderTimesByDay(); updateModalFormatPreview(); };
 });
 
 // Valores do formulário do aluno, pelos mesmos rótulos das pendências. Comparar com a foto
@@ -7471,7 +7471,9 @@ valSelect.value = "auto";
 customValWrapper.style.display = "none";
 }
 
-document.querySelectorAll(".day").forEach(b=>b.classList.toggle("selected", s ? studentDays(s).includes(Number(b.dataset.day)) : appSettings.workDays.includes(Number(b.dataset.day))));
+// Aluno novo começa sem nenhum dia marcado (antes vinham os dias úteis e era fácil salvar
+// sem perceber um aluno com aula de segunda a sexta).
+document.querySelectorAll(".day").forEach(b=>b.classList.toggle("selected", s ? studentDays(s).includes(Number(b.dataset.day)) : false));
 document.getElementById("fLessonFreq").value = s?.lessonFrequency || "weekly";
 document.getElementById("fBiweeklyStart").value = s?.biweeklyStart || "";
 timesByDayDraft = { ...(s?.timesByDay || {}) };
@@ -7556,6 +7558,14 @@ document.getElementById("cancelBtn").onclick=()=>document.getElementById("modalB
 document.getElementById("saveBtn").onclick=()=>{
 const name=document.getElementById("fName").value.trim();
 if(!name){alert("Digite o nome.");return;}
+// Toda semana / quinzenal precisa de pelo menos um dia de aula.
+if (document.getElementById("fLessonFreq").value !== "single" && selectedModalDays().length === 0) {
+const daysField = document.getElementById("days").closest(".field");
+daysField.classList.add("field-error");
+daysField.scrollIntoView({ block: "center", behavior: "smooth" });
+alert("Marque pelo menos um dia da aula (ou escolha \"Avulsa\" em Frequência da aula).");
+return;
+}
 const advErr = validateAdvancedFields();
 if (advErr) {
 const [fieldId, msg] = advErr;
