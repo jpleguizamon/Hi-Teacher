@@ -1940,12 +1940,13 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 <div id="fFormat" class="locked-input">Individual</div>
 <div class="field-hint" id="fFormatSuggested" style="margin-top:0.375rem">Valor sugerido: R$ 140</div>
 </div>
-<div class="field"><label id="fValueLabel">Valor da mensalidade</label>
+<div class="field" id="fValueField"><label id="fValueLabel">Valor da mensalidade</label>
 <select id="fValueSelect">
 <option value="auto">Automático (valores padrões)</option>
 <option value="outro">Outro valor...</option>
 </select>
 </div>
+<div class="field" id="fPriceField" style="display:none"><label id="fPriceLabel">Valor por aula (R$)</label><input id="fPrice" type="number" min="0" inputmode="decimal" placeholder="Ex.: 80"></div>
 <div class="field" id="customValWrapper" style="display:none">
 <label>Valor personalizado (R$)</label>
 <input id="fCustomValue" type="number" min="0" inputmode="decimal" placeholder="Ex: 100">
@@ -1975,7 +1976,8 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 <input id="fPackageSize" type="number" min="1" inputmode="numeric" placeholder="Nº de aulas" style="flex:1;min-width:0">
 <input id="fPackageStart" type="date" aria-label="Início do pacote" style="flex:1.4;min-width:0">
 </div>
-<div class="field-hint" style="margin-top:0.375rem">Conta as aulas dadas a partir da data (falta sem avisar também conta). O card mostra quantas já foram.</div>
+<div class="field-hint" style="margin-top:0.375rem">Conta as aulas dadas a partir da data (falta sem avisar também conta). O card mostra quantas já foram. Com pacote, a cobrança é pelo valor do pacote, não por mensalidade.</div>
+<button type="button" class="btn-link-inline" id="fRenewPackageBtn" style="display:none;margin-top:0.5rem">Renovar pacote (começa hoje)</button>
 </div>
 <div class="field" id="fTrackingField"><label>Começar histórico em</label><input id="fTrackingSince" type="date">
 <div class="field-hint" style="margin:0.375rem 0 0">As aulas previstas (pendências, faltas, pacote) contam a partir desta data. Pra registrar aulas passadas, coloque uma data anterior; vazio = desde a data de entrada. A data de entrada vale só pro tempo de casa.</div>
@@ -3975,18 +3977,20 @@ return `<div class="avatar-cluster">${btn(g[0])}${btn(g[1])}${btn(g[2])}<div cla
 // Textos editáveis em Configurações → "Mensagens prontas" (appSettings.messages guarda só o
 // que o professor mudou). Variáveis entre colchetes: [nome] = quem recebe (o responsável,
 // se o aluno for menor de idade e tiver responsável), [aluno], [mês], [valor], [dia],
-// [data], [hora], [referência].
+// [data], [hora], [referência] ("da aula de 10/09" / "do pacote de 10 aulas").
 const DEFAULT_MESSAGES = {
 charge: "Oi, [nome]! Passando pra lembrar da mensalidade de [mês] (R$ [valor]). Obrigado!",
 lessonMoved: "Sua aula ficou para [dia], [data], às [hora].",
 cancel: "Oi, [nome]! Hoje não vou conseguir dar a aula das [hora]. Vamos marcar uma reposição?",
-birthday: "Feliz aniversário, [aluno]! 🎉"
+birthday: "Feliz aniversário, [aluno]! 🎉",
+chargeItem: "Oi, [nome]! Passando pra lembrar do pagamento [referência] (R$ [valor]). Obrigado!"
 };
 const MESSAGE_LABELS = {
 charge: { title:"Cobrar mensalidade", vars:"[nome] [aluno] [mês] [valor]" },
 lessonMoved: { title:"Aula marcada ou remarcada", vars:"[nome] [aluno] [dia] [data] [hora]" },
 cancel: { title:"Aula cancelada", vars:"[nome] [aluno] [hora] [data]" },
-birthday: { title:"Aniversário", vars:"[nome] [aluno]" }
+birthday: { title:"Aniversário", vars:"[nome] [aluno]" },
+chargeItem: { title:"Cobrar aula avulsa ou pacote", vars:"[nome] [aluno] [referência] [valor]" }
 };
 const WEEKDAY_FULL = ["domingo","segunda-feira","terça-feira","quarta-feira","quinta-feira","sexta-feira","sábado"];
 const MONTH_FULL = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
@@ -4333,6 +4337,9 @@ const set = getPaidMonths(s);
 if (paid) set.add(key); else set.delete(key);
 s.paidMonths = [...set].sort();
 s.paidMonth = s.paidMonths.length ? s.paidMonths[s.paidMonths.length - 1] : null;
+// Data em que foi marcado como pago (usada no recibo).
+if (paid) (s.paidDates ??= {})[key] = isoOf(new Date());
+else if (s.paidDates) delete s.paidDates[key];
 }
 function isPaidThisMonth(s){ return getPaidMonths(s).has(currentMonthKey()); }
 // Meses que o aluno deve (do início da cobrança até o mês atual, ou até a saída).
@@ -4345,7 +4352,11 @@ const out = [];
 for (let k = from, guard = 0; k <= to && guard < 240; k = addMonths(k, 1), guard++) out.push(k);
 return out;
 }
-function unpaidMonths(s){ const paid = getPaidMonths(s); return billingMonths(s).filter(k => !paid.has(k)); }
+function unpaidMonths(s){
+if (billingMode(s) !== "monthly") return []; // aula avulsa e pacote não têm mensalidade
+const paid = getPaidMonths(s);
+return billingMonths(s).filter(k => !paid.has(k));
+}
 function isPastDue(s, key){
 const cur = currentMonthKey();
 if (key < cur) return true;
@@ -4353,6 +4364,96 @@ return key === cur && Number(s.dueDay) > 0 && new Date().getDate() > Number(s.du
 }
 function studentMonthlyValue(s){ return s.value !== undefined ? s.value : getDefaultValueFor(s); }
 
+// ===== Cobrança por tipo de aula =====
+// monthly = mensalidade (toda semana / quinzenal, como sempre foi); lesson = aula avulsa,
+// cobra cada aula dada (lessonPrice); package = pacote de aulas, cobra um valor por pacote
+// (packagePrice). Pagamentos de aula/pacote ficam em student.charges:
+//   { id, kind:"lesson"|"package", ref, value, paid, paidDate, size? }
+// ref da aula = "dd/mm/aaaa" (+ "|makeupId"); ref do pacote = data de início dele.
+function billingMode(s){ return Number(s.packageSize) > 0 ? "package" : s.lessonFrequency === "single" ? "lesson" : "monthly"; }
+function lessonChargeRef(l){ return l.date + (l.makeupId ? "|" + l.makeupId : ""); }
+function billingStartIso(){ return (appSettings.paymentsSince || currentMonthKey()) + "-01"; }
+// Aulas dadas do aluno avulso, pagas ou não (as pagas guardam o valor da época).
+function lessonCharges(s){
+if (billingMode(s) !== "lesson") return [];
+const saved = new Map((s.charges || []).filter(c => c.kind === "lesson").map(c => [c.ref, c]));
+const start = billingStartIso();
+return getStudentTimeline(s)
+.filter(l => (isEvaluated(l) || l.status === "given" || l.status === "pending") && isoFromBr(l.date) >= start)
+.map(l => {
+const ref = lessonChargeRef(l), c = saved.get(ref);
+return { kind:"lesson", ref, date: l.date, value: c ? c.value : (Number(s.lessonPrice) || 0), paid: !!(c && c.paid), paidDate: c && c.paidDate };
+});
+}
+function packageCharges(s){ return (s.charges || []).filter(c => c.kind === "package"); }
+function chargeLabel(c){
+if (c.kind === "lesson") return `Aula de ${c.date.slice(0,5)}`;
+return `Pacote${c.size ? ` de ${c.size} aulas` : ""} (desde ${formatDateShort(c.ref).slice(0,5)})`;
+}
+// O que falta receber de aula/pacote (só de quem paga pra mim).
+function receivables(s){
+if (s.active === false || !paysMe(s)) return [];
+const mode = billingMode(s);
+if (mode === "lesson") return Number(s.lessonPrice) > 0 ? lessonCharges(s).filter(c => !c.paid) : [];
+if (mode === "package") return packageCharges(s).filter(c => !c.paid);
+return [];
+}
+function markChargePaid(s, c, paid){
+s.charges ??= [];
+let rec = s.charges.find(x => x.kind === c.kind && x.ref === c.ref);
+if (c.kind === "lesson" && !paid) { s.charges = s.charges.filter(x => x !== rec); return; }
+if (!rec) { rec = { id: "ch" + Date.now().toString(36) + Math.random().toString(36).slice(2,5), kind: c.kind, ref: c.ref, value: c.value }; if (c.date) rec.date = c.date; s.charges.push(rec); }
+rec.paid = !!paid;
+if (paid) rec.paidDate = isoOf(new Date()); else delete rec.paidDate;
+}
+// Pacote novo (ou renovado): nasce uma cobrança pra data de início dele.
+function ensurePackageCharge(s){
+if (billingMode(s) !== "package" || !s.packageStart) return;
+s.charges ??= [];
+const c = s.charges.find(x => x.kind === "package" && x.ref === s.packageStart);
+const price = Number(s.packagePrice) || 0;
+if (!c) s.charges.push({ id: "ch" + Date.now().toString(36) + Math.random().toString(36).slice(2,5), kind:"package", ref: s.packageStart, size: Number(s.packageSize), value: price, paid:false });
+else if (!c.paid) { c.value = price; c.size = Number(s.packageSize); }
+}
+function priceText(s){
+const mode = billingMode(s);
+if (mode === "lesson") return Number(s.lessonPrice) > 0 ? `R$ ${moneyText(s.lessonPrice)} por aula` : "valor por aula não definido";
+if (mode === "package") return Number(s.packagePrice) > 0 ? `R$ ${moneyText(s.packagePrice)} o pacote` : "valor do pacote não definido";
+return `R$ ${studentMonthlyValue(s)}`;
+}
+
+// "A receber": aulas avulsas dadas e pacotes ainda não pagos.
+let receivableTargets = [];
+function allReceivables(){
+const out = [];
+students.filter(s => s.active !== false && paysMe(s)).forEach(s => receivables(s).forEach(c => out.push({ s, c })));
+return out.sort((a,b) => a.s.name.localeCompare(b.s.name) || String(a.c.date ? isoFromBr(a.c.date) : a.c.ref).localeCompare(String(b.c.date ? isoFromBr(b.c.date) : b.c.ref)));
+}
+function receivablesHTML(){
+receivableTargets = allReceivables();
+if (!receivableTargets.length) return "";
+return `<div class="settings-group-label" style="margin-top:1.5rem">A receber</div>` + receivableTargets.map(({ s, c }, i) => {
+// [referência] já vem com o artigo: "da aula de 10/09", "do pacote de 10 aulas (desde 01/09)".
+const href = waMessageLink(s, "chargeItem", { referencia: (c.kind === "lesson" ? "da " : "do ") + chargeLabel(c).toLowerCase(), valor: moneyText(c.value) });
+return `<div class="goal-row">
+<button type="button" class="goal-check" data-rcv="${i}" aria-label="Marcar ${escapeHtml(chargeLabel(c))} de ${escapeHtml(s.name)} como pago"></button>
+<div class="goal-info">
+<div class="goal-title">${escapeHtml(s.name)}</div>
+<div class="pay-meta"><span class="goal-period-badge">R$ ${moneyText(c.value)}</span><span class="pay-due">${escapeHtml(chargeLabel(c))}</span></div>
+</div>
+${href ? `<a class="wa-btn wa-mini" href="${href}" target="_blank" rel="noopener">Cobrar</a>` : ""}
+</div>`;
+}).join("");
+}
+function bindReceivables(box){
+box.querySelectorAll("[data-rcv]").forEach(btn => btn.onclick = () => {
+const t = receivableTargets[Number(btn.dataset.rcv)];
+if (!t) return;
+markChargePaid(t.s, t.c, true);
+saveStudents();
+renderPendingPayments();
+});
+}
 // Botão "Cobrar" (mensagem pronta no WhatsApp); some se o aluno não tem telefone.
 function chargeLink(s, key){
 const href = waMessageLink(s, "charge", { mes: monthLongLabel(key), valor: moneyText(studentMonthlyValue(s)) });
@@ -4366,7 +4467,7 @@ const rows = [];
 students.filter(s => s.active !== false && paysMe(s)).forEach(s => {
 unpaidMonths(s).forEach(key => rows.push({ s, key, late: isPastDue(s, key) }));
 });
-if (rows.length === 0) { box.innerHTML = ""; return; }
+if (rows.length === 0 && !allReceivables().length) { box.innerHTML = ""; bindReceivables(box); return; }
 rows.sort((a,b) => a.s.name.localeCompare(b.s.name) || a.key.localeCompare(b.key));
 const late = rows.filter(r => r.key < cur);
 const now = rows.filter(r => r.key === cur);
@@ -4387,7 +4488,9 @@ ${chargeLink(r.s, r.key)}
 };
 box.innerHTML =
 (late.length ? `<div class="settings-group-label" style="margin-top:1.5rem">Mensalidades atrasadas</div>${late.map(row).join("")}` : "") +
-(now.length ? `<div class="settings-group-label" style="margin-top:1.5rem">Mensalidades deste mês</div>${now.map(row).join("")}` : "");
+(now.length ? `<div class="settings-group-label" style="margin-top:1.5rem">Mensalidades deste mês</div>${now.map(row).join("")}` : "") +
+receivablesHTML();
+bindReceivables(box);
 box.querySelectorAll("[data-mark-paid]").forEach(btn => {
 btn.onclick = () => {
 const [sid, key] = btn.dataset.markPaid.split("|");
@@ -5289,9 +5392,14 @@ const refDate = isInactive ? (s.exit || new Date().toISOString().slice(0,10)) : 
 const monthlyValue = s.value !== undefined ? s.value : getDefaultValueFor(s);
 const lateMonths = (!isInactive && paysMe(s)) ? unpaidMonths(s).filter(k => isPastDue(s, k)).length : 0;
 const payLate = lateMonths > 0;
-const payText = s.payTo === "school" ? `R$ ${monthlyValue} · paga à escola`
+const mode = billingMode(s);
+const openCharges = isInactive ? 0 : receivables(s).length;
+const payLabel = mode === "lesson" ? "Valor por aula" : mode === "package" ? "Valor do pacote" : "Mensalidade";
+const basePrice = mode === "monthly" ? `R$ ${monthlyValue}` : priceText(s).replace(/ (por aula|o pacote)$/, "");
+const payText = s.payTo === "school" ? `${basePrice} · paga à escola`
 : s.payTo === "none" ? "Bolsa"
-: `R$ ${monthlyValue}${payLate ? ` · ${lateMonths} atrasada${lateMonths > 1 ? "s" : ""}` : ""}`;
+: mode === "monthly" ? `R$ ${monthlyValue}${payLate ? ` · ${lateMonths} atrasada${lateMonths > 1 ? "s" : ""}` : ""}`
+: `${basePrice}${openCharges ? ` · ${openCharges} a receber` : ""}`;
 const absences = isInactive ? 0 : countMonthAbsences(s);
 const pkg = isInactive ? null : packageUsage(s);
 const packageRow = pkg ? `<div class="stu-row"><span class="stu-label">Pacote</span><span class="stu-value${pkg.used >= pkg.size ? " stu-value-warn" : ""}">${pkg.used >= pkg.size ? `Terminou (${pkg.used} de ${pkg.size})` : `${pkg.used} de ${pkg.size} aulas`}</span></div>` : "";
@@ -5316,7 +5424,7 @@ ${s.instrument ? `<div class="stu-row"><span class="stu-label">Instrumento</span
 ${scheduleRows}
 ${format === "Grupo" && !isInactive ? `<div class="stu-row"><span class="stu-label">Modalidade</span><span class="stu-value">Grupo</span></div>` : ""}
 <div class="stu-row"><span class="stu-label">Permanência</span><span class="stu-value">${formatEntryDuration(s.entry, refDate)}</span></div>
-<div class="stu-row"><span class="stu-label">Mensalidade</span><span class="stu-value${payLate ? " stu-value-warn" : ""}">${payText}</span></div>
+<div class="stu-row"><span class="stu-label">${payLabel}</span><span class="stu-value${payLate || openCharges ? " stu-value-warn" : ""}">${payText}</span></div>
 ${absencesRow}
 ${packageRow}
 ${ageRow}
@@ -5745,8 +5853,14 @@ renderPlanner();
 openPlanViewer(editingPlanId);
 };
 
+// Faturamento estimado do mês: mensalidade de quem paga por mês, as aulas avulsas dadas
+// no mês e os pacotes que começaram no mês. Bolsa não entra.
 function calculateCurrentMonthlyRevenue(){
+const monthKey = currentMonthKey();
 return students.filter(s=>s.active!==false && s.payTo !== "none").reduce((acc, s)=>{
+const mode = billingMode(s);
+if (mode === "lesson") return acc + lessonCharges(s).filter(c => isoFromBr(c.date).startsWith(monthKey)).reduce((a, c) => a + Number(c.value || 0), 0);
+if (mode === "package") return acc + packageCharges(s).filter(c => String(c.ref).startsWith(monthKey)).reduce((a, c) => a + Number(c.value || 0), 0);
 return acc + (s.value !== undefined ? s.value : getDefaultValueFor(s));
 }, 0);
 }
@@ -6615,7 +6729,7 @@ document.getElementById("testsBackBtn").onclick = () => openPage("home");
 const valSelect = document.getElementById("fValueSelect");
 const customValWrapper = document.getElementById("customValWrapper");
 valSelect.onchange = () => {
-customValWrapper.style.display = valSelect.value === "outro" ? "block" : "none";
+customValWrapper.style.display = valSelect.value === "outro" && formBillingMode() === "monthly" ? "block" : "none";
 };
 
 // ---- Horário do aluno no formulário: frequência, dias, horário geral ou um por dia.
@@ -6751,8 +6865,11 @@ const custom = document.getElementById("fCustomValue").value;
 const value = document.getElementById("fValueSelect").value === "outro" && custom !== "" ? Number(custom) : getDefaultValueFor(preview);
 const payTo = document.getElementById("fPayTo").value;
 const parts = [];
+const mode = formBillingMode();
+const price = Number(document.getElementById("fPrice").value);
+const valueText = mode === "monthly" ? `R$ ${value}` : price > 0 ? `R$ ${moneyText(price)} ${mode === "package" ? "o pacote" : "por aula"}` : `valor ${mode === "package" ? "do pacote" : "por aula"} a definir`;
 if (payTo === "none") parts.push("bolsa");
-else parts.push(`R$ ${value}`, payTo === "school" ? "paga à escola" : "paga para mim");
+else parts.push(valueText, payTo === "school" ? "paga à escola" : "paga para mim");
 const due = Number(document.getElementById("fDueDay").value);
 if (payTo === "me" && due) parts.push(`vence dia ${due}`);
 const dur = Number(document.getElementById("fDuration").value);
@@ -6773,7 +6890,8 @@ e.target.closest?.(".field")?.classList.remove("field-error");
 // Erros de preenchimento dos campos avançados: [campo, mensagem] ou null.
 function validateAdvancedFields(){
 const num = id => document.getElementById(id).value.trim();
-if (document.getElementById("fValueSelect").value === "outro" && (num("fCustomValue") === "" || Number(num("fCustomValue")) < 0)) return ["fCustomValue", "Digite o valor personalizado (ou volte pra \"Automático\")."];
+if (formBillingMode() === "monthly" && document.getElementById("fValueSelect").value === "outro" && (num("fCustomValue") === "" || Number(num("fCustomValue")) < 0)) return ["fCustomValue", "Digite o valor personalizado (ou volte pra \"Automático\")."];
+if (formBillingMode() !== "monthly" && num("fPrice") !== "" && Number(num("fPrice")) < 0) return ["fPrice", "O valor não pode ser negativo."];
 if (num("fDueDay") !== "" && !(Number.isInteger(Number(num("fDueDay"))) && Number(num("fDueDay")) >= 1 && Number(num("fDueDay")) <= 31)) return ["fDueDay", "O vencimento precisa ser um dia de 1 a 31."];
 if (num("fDuration") !== "" && !(Number(num("fDuration")) >= 5 && Number(num("fDuration")) <= 240)) return ["fDuration", "A duração da aula precisa ficar entre 5 e 240 minutos."];
 if (num("fPackageSize") !== "" && !(Number(num("fPackageSize")) >= 1)) return ["fPackageSize", "O pacote precisa ter pelo menos 1 aula."];
@@ -6828,11 +6946,30 @@ if (det) { document.getElementById("fLocationDetailLabel").textContent = det.lab
 let paidDraft = new Set();
 let trackingAuto = false;
 document.getElementById("fTrackingSince").addEventListener("input", () => { trackingAuto = false; });
+// Modo de cobrança que o formulário está mostrando (muda com a frequência e o pacote).
+function formBillingMode(){
+if (Number(document.getElementById("fPackageSize").value) > 0) return "package";
+return document.getElementById("fLessonFreq").value === "single" ? "lesson" : "monthly";
+}
+function updatePriceFields(){
+const mode = formBillingMode();
+document.getElementById("fValueField").style.display = mode === "monthly" ? "" : "none";
+document.getElementById("customValWrapper").style.display = mode === "monthly" && valSelect.value === "outro" ? "block" : "none";
+document.getElementById("fPriceField").style.display = mode === "monthly" ? "none" : "";
+document.getElementById("fPriceLabel").textContent = mode === "package" ? "Valor do pacote (R$)" : "Valor por aula (R$)";
+document.getElementById("fDueDayField").style.display = mode === "monthly" ? "" : "none";
+}
+let chargeDraft = new Map(); // ref -> pago? (aulas e pacotes)
 function renderPayMonthsField(s){
 const field = document.getElementById("fPaymentsField");
 const payTo = document.getElementById("fPayTo").value;
+updatePriceFields();
 document.getElementById("fDueDayField").style.visibility = payTo === "me" ? "" : "hidden";
 if (!s || payTo !== "me") { field.style.display = "none"; return; }
+const mode = formBillingMode();
+if (mode !== "monthly") return renderChargesField(s, mode);
+document.getElementById("fPaymentsLabel").textContent = "Mensalidades pagas";
+document.getElementById("fPaymentsHint").textContent = "Toque no mês pra marcar como pago ou não pago.";
 const months = billingMonths(s).slice(-12).reverse();
 if (!months.length) { field.style.display = "none"; return; }
 field.style.display = "";
@@ -6848,6 +6985,34 @@ if (paidDraft.has(k)) paidDraft.delete(k); else paidDraft.add(k);
 renderPayMonthsField(s);
 });
 }
+// Aulas avulsas dadas / pacotes do aluno, com o pago marcado no rascunho.
+function renderChargesField(s, mode){
+const field = document.getElementById("fPaymentsField");
+const list = (mode === "lesson" ? lessonCharges({ ...s, lessonFrequency: "single", packageSize: undefined }) : packageCharges(s)).slice(-12).reverse();
+document.getElementById("fPaymentsLabel").textContent = mode === "lesson" ? "Aulas pagas" : "Pacotes pagos";
+document.getElementById("fPaymentsHint").textContent = mode === "lesson" ? "Cada aula dada vira um valor a receber. Toque pra marcar como pago ou não pago." : "Cada pacote (ou renovação) vira um valor a receber. Toque pra marcar como pago.";
+if (!list.length) { field.style.display = "none"; return; }
+field.style.display = "";
+const wrap = document.getElementById("fPayMonths");
+wrap.innerHTML = list.map(c => {
+const paid = chargeDraft.has(c.ref) ? chargeDraft.get(c.ref) : c.paid;
+const label = c.kind === "lesson" ? c.date.slice(0,5) : `Pacote ${formatDateShort(c.ref).slice(0,5)}`;
+return `<button type="button" class="pay-month ${paid ? "paid" : ""}" data-charge-ref="${escapeHtml(c.ref)}">${label}<span>${paid ? "✓ pago" : "a receber"}</span></button>`;
+}).join("");
+wrap.querySelectorAll("[data-charge-ref]").forEach(b => b.onclick = () => {
+const ref = b.dataset.chargeRef;
+const c = list.find(x => x.ref === ref);
+const cur = chargeDraft.has(ref) ? chargeDraft.get(ref) : c.paid;
+chargeDraft.set(ref, !cur);
+renderChargesField(s, mode);
+});
+}
+["fLessonFreq","fPackageSize"].forEach(id => document.getElementById(id).addEventListener("change", () => renderPayMonthsField(editingId ? students.find(x => x.id === editingId) : null)));
+document.getElementById("fPackageSize").addEventListener("input", updatePriceFields);
+document.getElementById("fRenewPackageBtn").onclick = () => {
+document.getElementById("fPackageStart").value = isoOf(new Date());
+updateAdvSummary();
+};
 document.getElementById("fPayTo").onchange = () => renderPayMonthsField(editingId ? students.find(x => x.id === editingId) : null);
 document.getElementById("fDueDay").oninput = () => renderPayMonthsField(editingId ? students.find(x => x.id === editingId) : null);
 function openEdit(id=null){
@@ -6898,6 +7063,10 @@ document.getElementById("fContactSection").open = !!(s && (s.phone || s.birthDat
 refreshContactHints();
 document.getElementById("fDueDay").value = s?.dueDay || "";
 paidDraft = s ? getPaidMonths(s) : new Set();
+chargeDraft = new Map();
+const mode0 = s ? billingMode(s) : "monthly";
+document.getElementById("fPrice").value = s ? (mode0 === "package" ? (s.packagePrice ?? "") : (s.lessonPrice ?? "")) : "";
+document.getElementById("fRenewPackageBtn").style.display = s && Number(s.packageSize) > 0 ? "" : "none";
 renderPayMonthsField(s);
 document.getElementById("fPackageStart").value = s?.packageStart || "";
 const extraBtn = document.getElementById("btnScheduleExtra");
@@ -7030,8 +7199,23 @@ const changed = before.size !== paidDraft.size || [...paidDraft].some(k => !befo
 if (changed) {
 obj.paidMonths = [...paidDraft].sort();
 obj.paidMonth = obj.paidMonths.length ? obj.paidMonths[obj.paidMonths.length - 1] : null;
+obj.paidDates = { ...(currentObj.paidDates || {}) };
+obj.paidMonths.forEach(k => { if (!before.has(k)) obj.paidDates[k] = isoOf(new Date()); });
+Object.keys(obj.paidDates).forEach(k => { if (!paidDraft.has(k)) delete obj.paidDates[k]; });
 }
 }
+// Valor por aula / do pacote (a mensalidade continua em "value").
+const price = document.getElementById("fPrice").value;
+const mode = billingMode(obj);
+if (mode === "lesson") { if (price !== "") obj.lessonPrice = Number(price); else delete obj.lessonPrice; }
+if (mode === "package") { if (price !== "") obj.packagePrice = Number(price); else delete obj.packagePrice; }
+obj.charges = (currentObj?.charges || []).map(c => ({ ...c }));
+if (payTo === "me") ensurePackageCharge(obj);
+if (currentObj && chargeDraft.size) {
+const all = mode === "lesson" ? lessonCharges(obj) : packageCharges(obj);
+chargeDraft.forEach((paid, ref) => { const c = all.find(x => x.ref === ref); if (c) markChargePaid(obj, c, paid); });
+}
+if (!obj.charges.length) delete obj.charges;
 
 const evalFreq = document.getElementById("fEvalFreq").value;
 if (evalFreq) obj.evalFrequency = evalFreq; else delete obj.evalFrequency;
