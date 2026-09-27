@@ -813,6 +813,13 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .reason-picker-label{font-size:0.6875rem;font-weight:700;color:var(--text-2);margin-bottom:0.4375rem}
 .reason-chips{display:flex;flex-wrap:wrap;gap:0.375rem}
 .reason-makeup{margin-top:0.625rem}
+.makeup-when{margin-top:0.625rem}
+.makeup-when-fields{display:flex;gap:0.5rem}
+.makeup-when-fields .field{flex:1;min-width:0;margin-bottom:0.5rem}
+.makeup-when-fields .field:first-child{flex:1.15}
+.makeup-when-actions{display:flex;justify-content:flex-end;align-items:center;gap:0.5rem}
+.makeup-when-actions .save{padding:0.5625rem 1.125rem;font-size:0.8125rem}
+.reason-done{margin-top:0.5rem;font-size:0.75rem;font-weight:700;color:var(--green)}
 .reason-picker .filter-chip{font-size:0.75rem;padding:0.4375rem 0.75rem}
 
 /* Início: lição de casa, dia sem aula e reposições */
@@ -3300,11 +3307,33 @@ const m = { id: "mk" + Date.now().toString(36) + Math.random().toString(36).slic
 (student.makeups ??= []).push(m);
 return m;
 }
+// withMakeup: false (não repõe) | true (repõe, data depois) | { date, time } (já marcada).
+// Devolve a reposição criada, se houver.
 function recordNoClass(student, entry, reason, withMakeup){
 const fields = { status:"noclass", reason };
-if (withMakeup) fields.makeupCreated = createMakeup(student, entry.date, reason).id;
+let m = null;
+if (withMakeup) {
+m = createMakeup(student, entry.date, reason);
+if (typeof withMakeup === "object" && withMakeup.date) {
+m.status = "scheduled";
+m.date = withMakeup.date;
+if (withMakeup.time) m.time = withMakeup.time;
+}
+fields.makeupCreated = m.id;
+}
 upsertLessonRecord(student, entry, fields);
 saveStudents();
+return m;
+}
+// Horário de uma aula da linha do tempo (o da reposição/aula extra, ou o do dia da semana).
+function lessonTimeOf(student, entry){
+const mk = entry.makeupId ? (student.makeups || []).find(m => m.id === entry.makeupId) : null;
+return (mk && mk.time) || getStudentTimeFor(student, dateFromIso(isoFromBr(entry.date)).getDay());
+}
+// Depois de registrar "não houve aula": aviso com a mensagem certa no WhatsApp.
+function offerAfterNoClass(student, reason, m, time, dateBr){
+if (m && m.status === "scheduled") return offerLessonMessage(student, m);
+if (reason === "teacher_cancel") offerCancelMessage(student, time, dateBr);
 }
 // Remarcar em um passo: a aula original vira "não houve aula · Remarcada" e nasce a aula
 // extra já marcada. Remarcar uma aula extra que ainda não aconteceu só muda a data dela.
@@ -3448,30 +3477,67 @@ document.getElementById('historyModal').style.display = 'none';
 
 // Seletor de motivo de "Não houve aula". Em "aluno faltou e avisou" pergunta se vai repor;
 // "professor cancelou" sempre gera reposição. onPick(reason, withMakeup).
-function buildReasonPicker(onPick){
+// Seletor de "Não houve aula". Depois do motivo pergunta se vai repor (menos feriado/férias);
+// "Sim, repor" abre data e horário na hora. onPick(reason, makeup):
+//   makeup = false (não repõe) | true (repor, marcar depois) | { date, time } (já marcada).
+// opts.time = horário sugerido; opts.fixedReason pula a escolha do motivo (ex.: cancelar aula);
+// opts.commitLabel troca o texto do botão de salvar a data.
+function buildReasonPicker(onPick, opts = {}){
 const wrap = document.createElement("div");
 wrap.className = "reason-picker";
+const fixed = opts.fixedReason;
 wrap.innerHTML = `
-<div class="reason-picker-label">Por que não houve aula?</div>
-<div class="reason-chips">${Object.entries(ABSENCE_REASONS).filter(([k,r]) => r.pick !== false).map(([k,r]) => `<button type="button" class="filter-chip reason-chip" data-reason="${k}">${r.label}</button>`).join("")}</div>
+${fixed ? "" : `<div class="reason-picker-label">Por que não houve aula?</div>
+<div class="reason-chips">${Object.entries(ABSENCE_REASONS).filter(([k,r]) => r.pick !== false).map(([k,r]) => `<button type="button" class="filter-chip reason-chip" data-reason="${k}">${r.label}</button>`).join("")}</div>`}
 <div class="reason-makeup" style="display:none">
 <div class="reason-picker-label">Vai repor essa aula?</div>
 <div class="reason-chips">
-<button type="button" class="filter-chip" data-makeup="yes">Sim, vai ter reposição</button>
+<button type="button" class="filter-chip" data-makeup="yes">Sim, repor</button>
 <button type="button" class="filter-chip" data-makeup="no">Não vai repor</button>
 </div>
-</div>`;
-wrap.querySelectorAll("[data-reason]").forEach(btn => {
-btn.onclick = () => {
-const reason = btn.dataset.reason;
-wrap.querySelectorAll("[data-reason]").forEach(b => b.classList.toggle("selected", b === btn));
-if (reason === "absent_notice") { wrap.querySelector(".reason-makeup").style.display = "block"; return; }
-onPick(reason, reason === "teacher_cancel");
+<div class="makeup-when" style="display:none">
+<div class="makeup-when-fields">
+<div class="field"><label>Data da reposição</label><input type="date" class="mk-date"></div>
+<div class="field"><label>Horário</label><input type="time" class="mk-time" value="${opts.time || ""}"></div>
+</div>
+<div class="makeup-when-actions">
+<button type="button" class="btn-edit-toggle mk-later">Marcar depois</button>
+<button type="button" class="save mk-save">${opts.commitLabel || "Salvar"}</button>
+</div>
+</div>
+</div>
+<div class="reason-done" style="display:none"></div>`;
+let reason = fixed || null;
+const mkBox = wrap.querySelector(".reason-makeup"), when = wrap.querySelector(".makeup-when"), done = wrap.querySelector(".reason-done");
+const pick = (r, mk) => {
+done.style.display = "";
+done.textContent = mk && typeof mk === "object" ? `✓ Reposição marcada pra ${formatDateShort(mk.date).slice(0,5)}${mk.time ? " às " + mk.time : ""}` : mk ? "✓ Reposição fica pendente (marcar depois)" : r === "holiday" ? "✓ Feriado/férias, sem reposição" : "✓ Sem reposição";
+onPick(r, mk);
 };
-});
-wrap.querySelectorAll("[data-makeup]").forEach(btn => {
-btn.onclick = () => onPick("absent_notice", btn.dataset.makeup === "yes");
-});
+const setRepor = (yes) => {
+wrap.querySelectorAll("[data-makeup]").forEach(b => b.classList.toggle("selected", (b.dataset.makeup === "yes") === yes));
+when.style.display = yes ? "" : "none";
+};
+const chooseReason = (r) => {
+reason = r;
+done.style.display = "none";
+wrap.querySelectorAll("[data-reason]").forEach(b => b.classList.toggle("selected", b.dataset.reason === r));
+if (r === "holiday") { mkBox.style.display = "none"; return pick(r, false); }
+mkBox.style.display = "block";
+wrap.querySelectorAll("[data-makeup]").forEach(b => b.classList.remove("selected"));
+when.style.display = "none";
+if (r === "teacher_cancel") setRepor(true); // professor cancelou: "Sim, repor" já vem marcado
+};
+wrap.querySelectorAll("[data-reason]").forEach(b => b.onclick = () => chooseReason(b.dataset.reason));
+wrap.querySelector('[data-makeup="yes"]').onclick = () => { done.style.display = "none"; setRepor(true); };
+wrap.querySelector('[data-makeup="no"]').onclick = () => { setRepor(false); pick(reason, false); };
+wrap.querySelector(".mk-later").onclick = () => pick(reason, true);
+wrap.querySelector(".mk-save").onclick = () => {
+const date = wrap.querySelector(".mk-date").value, time = wrap.querySelector(".mk-time").value;
+if (!date) { alert('Escolha a data da reposição ou toque em "Marcar depois".'); return; }
+pick(reason, { date, time });
+};
+if (fixed) chooseReason(fixed);
 return wrap;
 }
 
@@ -3582,7 +3648,12 @@ openRescheduleModal(student, lesson, (mk && mk.time) || getStudentTimeFor(studen
 div.querySelector('.btn-noclass').onclick = () => {
 const slot = div.querySelector('.reason-slot');
 if (slot.firstChild) { slot.innerHTML = ""; return; }
-slot.appendChild(buildReasonPicker((reason, withMakeup) => { recordNoClass(student, lesson, reason, withMakeup); rerender(); }));
+const time = lessonTimeOf(student, lesson);
+slot.appendChild(buildReasonPicker((reason, withMakeup) => {
+const m = recordNoClass(student, lesson, reason, withMakeup);
+rerender();
+offerAfterNoClass(student, reason, m, time, lesson.date);
+}, { time }));
 };
 
 if (!isPending) { attachNotesToggle(div, student, lesson, rerender); return div; }
@@ -4118,13 +4189,7 @@ runQuickAction(b.dataset.qa, t);
 function runQuickAction(action, t){
 const { student: s, entry, time } = t;
 if (action === "reschedule") return openRescheduleModal(s, entry, time);
-if (action === "cancel") {
-if (!confirm(`Cancelar a aula de ${s.name} das ${time}? Ela fica como "Professor cancelou" e entra nas reposições pendentes.`)) return;
-recordNoClass(s, entry, "teacher_cancel", true);
-refreshAfterLessonChange(s);
-offerCancelMessage(s, time, entry.date);
-return;
-}
+if (action === "cancel") return openCancelLesson([t]);
 if (action === "absent") return openQuickAbsence(s, entry, time);
 if (action === "given") {
 // Dia de avaliar: abre a avaliação; senão, só as anotações (opcionais).
@@ -4136,7 +4201,8 @@ return openEvalPopup();
 return openQuickNotes(s, entry, time);
 }
 }
-function openQuickModal(title, info, bodyEl, onSave){
+function openQuickModal(title, info, bodyEl, onSave, closeLabel){
+document.getElementById("quickLessonCancel").textContent = closeLabel || "Cancelar";
 document.getElementById("quickLessonTitle").textContent = title;
 document.getElementById("quickLessonInfo").textContent = info;
 const body = document.getElementById("quickLessonBody");
@@ -4166,10 +4232,23 @@ refreshAfterLessonChange(s);
 }
 function openQuickAbsence(s, entry, time){
 openQuickModal(`Faltou · ${s.name}`, `${entry.date}${time ? " às " + time : ""}.`, buildReasonPicker((reason, withMakeup) => {
-recordNoClass(s, entry, reason, withMakeup);
+const m = recordNoClass(s, entry, reason, withMakeup);
 closeQuickModal();
 refreshAfterLessonChange(s);
-}), null);
+offerAfterNoClass(s, reason, m, time, entry.date);
+}, { time }), null);
+}
+// Cancelar aula (professor cancelou): pergunta se vai repor e já deixa escolher a data.
+// targets = [{ student, entry, time }] (um aluno, ou a turma toda).
+function openCancelLesson(targets, title){
+const t0 = targets[0];
+const names = targets.map(t => firstName(t.student.name)).join(", ");
+openQuickModal(title || `Cancelar aula · ${t0.student.name}`, `${t0.entry.date}${t0.time ? " às " + t0.time : ""}${targets.length > 1 ? ` · ${names}` : ""}. Fica como "Professor cancelou".`, buildReasonPicker((reason, withMakeup) => {
+const made = targets.map(t => ({ t, m: recordNoClass(t.student, t.entry, reason, withMakeup) }));
+closeQuickModal();
+refreshAfterLessonChange(t0.student);
+made.forEach(({ t, m }, i) => setTimeout(() => offerAfterNoClass(t.student, reason, m, t.time, t.entry.date), i * 150));
+}, { time: t0.time, fixedReason: "teacher_cancel" }), null, "Voltar");
 }
 // Aulas passadas recentes (7 dias) que ficaram sem registro: a última de cada aluno.
 function recentUnrecordedLessons(days = 7){
@@ -7593,8 +7672,7 @@ reasonSlot.innerHTML = "";
 st.reason = null; st.withMakeup = false;
 if (on) reasonSlot.appendChild(buildReasonPicker((reason, withMakeup) => {
 st.reason = reason; st.withMakeup = withMakeup;
-reasonSlot.querySelectorAll("[data-makeup]").forEach(b => b.classList.toggle("selected", (b.dataset.makeup === "yes") === withMakeup && reason === "absent_notice"));
-}));
+}, { time: group.time, commitLabel: "Confirmar data" }));
 };
 noClassBtn.onclick = () => setNoClass(!st.noClass);
 notesToggle.onclick = () => {
@@ -7618,12 +7696,12 @@ openEvalPopup();
 function saveEvalPopup(group, states){
 for (let i = 0; i < group.items.length; i++) {
 const s = group.items[i].student, st = states[i];
-if (st.noClass && !st.reason) { alert(`Escolha o motivo de não ter havido aula com ${s.name}.`); return; }
+if (st.noClass && !st.reason) { alert(`Escolha o motivo de não ter havido aula com ${s.name} (e se vai repor).`); return; }
 if (!st.noClass && !activeCriteria().every(c => st.values[c.key] > 0)) { alert(`Avalie todos os critérios de ${s.name} ou marque "Não houve aula".`); return; }
 }
 group.items.forEach(({ student, entry }, i) => {
 const st = states[i];
-if (st.noClass) { recordNoClass(student, entry, st.reason, st.withMakeup); return; }
+if (st.noClass) { const m = recordNoClass(student, entry, st.reason, st.withMakeup); setTimeout(() => offerAfterNoClass(student, st.reason, m, group.time, entry.date), 100); return; }
 const notes = readNotes(st.el);
 const fields = { status:"evaluated", ...st.values };
 if (notes.taught) fields.taught = notes.taught;
