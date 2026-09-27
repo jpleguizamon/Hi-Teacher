@@ -582,6 +582,10 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 }
 .nav button.nav-item.active .nav-icon { color: var(--accent); filter: drop-shadow(0 0 0.25rem rgba(47,211,242,.7)); }
 .nav button.nav-item:disabled { opacity: 0.45; cursor: not-allowed; }
+.choice-chips{display:flex;flex-wrap:wrap;gap:0.4375rem}
+.choice-chips .filter-chip{font-size:0.8125rem;padding:0.5rem 0.875rem;display:inline-flex;align-items:center;gap:0.375rem}
+.filter-chip:disabled{opacity:.6;cursor:not-allowed}
+.filter-chip .badge-soon{font-size:0.5625rem;padding:0.0625rem 0.375rem}
 .badge-soon {
   font-size: 0.6875rem; font-weight: 700; background: var(--glass-inset); border: 0.0625rem solid var(--hairline); padding: 0.125rem 0.4375rem;
   border-radius:var(--radius-pill); color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;
@@ -1305,7 +1309,14 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 </select>
 </div>
 <div class="field"><label>Cidade</label><input type="text" id="onbCity" placeholder="Ex.: Rio de Janeiro"></div>
-<div class="field"><label>O que você ensina?</label><input type="text" id="onbSubject" placeholder="Ex.: Música, Inglês, Reforço escolar..."></div>
+<div class="field"><label>O que você ensina?</label>
+<div class="choice-chips" id="onbSubjectOptions">
+<button type="button" class="filter-chip selected" data-subject="Música" aria-pressed="true">Música</button>
+<button type="button" class="filter-chip" disabled>Idiomas <span class="badge-soon">Em breve</span></button>
+<button type="button" class="filter-chip" disabled>Reforço escolar <span class="badge-soon">Em breve</span></button>
+<button type="button" class="filter-chip" disabled>Outros <span class="badge-soon">Em breve</span></button>
+</div>
+</div>
 <div class="field">
 <label>Instrumentos que leciona</label>
 <div class="field-hint" style="margin-top:0">Já deixamos os mais comuns marcados. Adicione outros (ex.: Bateria) ou remova o que não usa.</div>
@@ -1743,7 +1754,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 <div class="settings-card">
 <div class="settings-row" id="rowFeedback"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-message"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Enviar feedback</div></div><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowTermos"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-file-text"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Termos e privacidade</div></div><span class="settings-row-chevron">›</span></div>
-<div class="settings-row"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-info"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Versão do app</div></div><span class="settings-row-value">6.9</span></div>
+<div class="settings-row"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-info"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Versão do app</div></div><span class="settings-row-value" id="valVersao"></span></div>
 </div>
 
 <div class="settings-group-label">Conta</div>
@@ -2206,14 +2217,14 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 <div class="modal">
 <h2>Idioma</h2>
 <div class="field"><label>Idioma do app</label>
-<select id="idiomaSelect">
-<option value="pt-BR">Português (Brasil)</option>
-<option value="en" disabled>English (em breve)</option>
-<option value="es" disabled>Español (em breve)</option>
-</select>
+<div class="choice-chips">
+<button type="button" class="filter-chip selected" aria-pressed="true">Português (Brasil)</button>
+<button type="button" class="filter-chip" disabled>English <span class="badge-soon">Em breve</span></button>
+<button type="button" class="filter-chip" disabled>Español <span class="badge-soon">Em breve</span></button>
 </div>
-<div class="field-hint">Por enquanto o Hi Teacher está disponível só em Português. Outros idiomas chegam em breve.</div>
-<div class="actions"><button class="cancel" id="idiomaCancelBtn">Cancelar</button><button class="save" id="idiomaSaveBtn">Salvar</button></div>
+</div>
+<div class="field-hint">Por enquanto o Hi Teacher está disponível só em Português.</div>
+<div class="actions"><button class="save" id="idiomaSaveBtn" style="width:100%">Fechar</button></div>
 </div>
 </div>
 
@@ -2541,7 +2552,6 @@ document.getElementById("onbFullName").value = appSettings.profile.fullName || "
 document.getElementById("onbDisplayName").value = (appSettings.profile.name && appSettings.profile.name !== "Professor JP") ? appSettings.profile.name : "";
 document.getElementById("onbState").value = appSettings.location.state || "";
 document.getElementById("onbCity").value = appSettings.location.city || "";
-document.getElementById("onbSubject").value = appSettings.profile.subject || "";
 instrumentsDraft = appSettings.instruments && appSettings.instruments.length ? [...appSettings.instruments] : [...DEFAULT_INSTRUMENTS];
 renderInstrumentTagsList("onbInstrumentTags");
 document.getElementById("onbNewInstrumentInput").value = "";
@@ -2569,7 +2579,8 @@ const teachesGroup = document.getElementById("onbTeachesGroup").checked;
 appSettings.instruments = instrumentsDraft;
 appSettings.profile.fullName = fullName;
 appSettings.profile.name = displayName;
-appSettings.profile.subject = document.getElementById("onbSubject").value.trim();
+// Por enquanto só Música está liberado; as outras opções aparecem com "Em breve".
+appSettings.profile.subject = document.querySelector("#onbSubjectOptions .filter-chip.selected")?.dataset.subject || "Música";
 appSettings.profile.teachesGroup = teachesGroup;
 appSettings.location.state = document.getElementById("onbState").value || null;
 appSettings.location.city = document.getElementById("onbCity").value.trim();
@@ -6861,7 +6872,10 @@ const parts = appSettings.notifications.reminders
 return parts.join(" · ");
 }
 
+// Versão mostrada em Configurações. Sobe a cada rodada de mudanças publicada.
+const APP_VERSION = "7.1";
 function renderSettingsSummary(){
+document.getElementById("valVersao").textContent = APP_VERSION;
 document.getElementById("settingsProfileName").textContent = appSettings.profile.name;
 renderProfessorTier();
 renderProfileAvatarInto(document.getElementById("settingsProfileAvatar"));
@@ -7283,12 +7297,10 @@ renderBreaksList();
 
 // --- Idioma ---
 document.getElementById("rowIdioma").onclick = () => {
-document.getElementById("idiomaSelect").value = appSettings.language;
 document.getElementById("idiomaModal").classList.add("show");
 };
-document.getElementById("idiomaCancelBtn").onclick = () => document.getElementById("idiomaModal").classList.remove("show");
 document.getElementById("idiomaSaveBtn").onclick = () => {
-appSettings.language = document.getElementById("idiomaSelect").value;
+appSettings.language = "pt-BR";
 saveAppSettings();
 document.getElementById("idiomaModal").classList.remove("show");
 };
