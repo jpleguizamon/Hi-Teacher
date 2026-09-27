@@ -836,9 +836,15 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .pay-month.late{border-color:var(--danger-border);background:rgba(248,113,113,.07)}
 .pay-month.late span{color:var(--danger)}
 .form-section{border:0.0625rem solid var(--glass-border-soft);border-radius:var(--radius-md);background:var(--glass-inset);padding:0 0.875rem;margin-bottom:0.875rem}
-.form-section summary{cursor:pointer;list-style:none;padding:0.8125rem 0;font-size:0.8125rem;font-weight:700;color:var(--text-2);display:flex;align-items:center;justify-content:space-between;gap:0.5rem}
+.form-section summary{cursor:pointer;list-style:none;padding:0.8125rem 0;display:grid;grid-template-columns:1fr auto;align-items:center;column-gap:0.5rem}
 .form-section summary::-webkit-details-marker{display:none}
-.form-section summary::after{content:"+";font-size:1.125rem;color:var(--accent);font-weight:600}
+.form-section summary::after{content:"+";grid-column:2;grid-row:1 / span 2;font-size:1.125rem;color:var(--accent);font-weight:600}
+.form-section-title{grid-column:1;font-size:0.8125rem;font-weight:700;color:var(--text-2)}
+.form-section-summary{grid-column:1;font-size:0.75rem;font-weight:600;color:var(--muted);margin-top:0.25rem;line-height:1.4}
+.form-section-summary:empty{display:none}
+.form-section[open] .form-section-summary{display:none}
+.field.field-error > label{color:var(--danger)}
+.field.field-error input,.field.field-error select{border-color:var(--danger-border)!important}
 .form-section[open] summary::after{content:"−"}
 .form-section[open]{padding-bottom:0.125rem}
 .input-with-action{display:flex;gap:0.5rem;align-items:center}
@@ -1866,7 +1872,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 </select>
 </div>
 <div class="field" id="fBiweeklyField" style="display:none"><label>Uma data de aula (pra saber a semana certa)</label><input id="fBiweeklyStart" type="date"></div>
-<div class="field-hint" id="fSingleHint" style="display:none">Aula avulsa não tem dia fixo: cada aula é marcada no botão "Marcar aula extra" (aparece aqui depois de salvar o aluno) e entra no Início e na Agenda.</div>
+<div class="field-hint" id="fSingleHint" style="display:none">Aula avulsa não tem dia fixo: cada aula é marcada no botão "Marcar aula" (aparece aqui depois de salvar o aluno) e entra no Início e na Agenda.</div>
 <div id="fRegularFields">
 <div class="field"><label>Dias da aula</label>
 <div class="days" id="days">
@@ -1878,24 +1884,37 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 <div class="toggle-field" id="fPerDayWrap" style="display:none"><label>Horário diferente em cada dia</label><label class="switch"><input type="checkbox" id="fPerDayToggle"><span class="switch-slider"></span></label></div>
 <div class="times-by-day" id="fTimesByDay" style="display:none"></div>
 </div>
-<div class="field"><label>Duração da aula (minutos)</label><input id="fDuration" type="number" min="5" max="240" inputmode="numeric" placeholder="Padrão das Configurações"></div>
+<button type="button" class="btn-historico" id="btnScheduleExtra" style="width:100%;margin-bottom:0.875rem;display:none">+ Marcar aula extra</button>
+<div class="field" id="fLevelField"><label>Nível</label>
+<select id="fLevel"></select>
+</div>
+<div style="display:flex;gap:10px">
+<div class="field" style="flex:1"><label>Data de entrada</label><input id="fEntry" type="date"></div>
+<div class="field" id="exitDateFieldWrapper" style="flex:1;display:none"><label>Data de saída</label><input id="fExit" type="date"></div>
+</div>
+<div class="field" id="fPaymentsField" style="display:none"><label id="fPaymentsLabel">Mensalidades pagas</label>
+<div class="pay-months" id="fPayMonths"></div>
+<div class="field-hint" id="fPaymentsHint" style="margin-top:0.375rem">Toque no mês pra marcar como pago ou não pago.</div>
+</div>
+<details class="form-section" id="fAdvSection">
+<summary><span class="form-section-title">Configurações avançadas</span><span class="form-section-summary" id="fAdvSummary"></span></summary>
 <div class="field">
 <label>Formato da aula (Calculado automaticamente)</label>
 <div id="fFormat" class="locked-input">Individual</div>
 <div class="field-hint" id="fFormatSuggested" style="margin-top:0.375rem">Valor sugerido: R$ 140</div>
 </div>
-<div class="field"><label>Valor da mensalidade</label>
+<div class="field"><label id="fValueLabel">Valor da mensalidade</label>
 <select id="fValueSelect">
-<option value="auto">Automático (usa os valores padrões)</option>
+<option value="auto">Automático (valores padrões)</option>
 <option value="outro">Outro valor...</option>
 </select>
 </div>
 <div class="field" id="customValWrapper" style="display:none">
 <label>Valor personalizado (R$)</label>
-<input id="fCustomValue" type="number" placeholder="Ex: 100">
+<input id="fCustomValue" type="number" min="0" inputmode="decimal" placeholder="Ex: 100">
 </div>
 <div style="display:flex;gap:0.625rem">
-<div class="field" style="flex:1.3"><label>Mensalidade paga para</label>
+<div class="field" style="flex:1.3"><label>Paga para</label>
 <select id="fPayTo">
 <option value="me">Mim</option>
 <option value="school">Escola</option>
@@ -1904,13 +1923,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 </div>
 <div class="field" id="fDueDayField" style="flex:1"><label>Vencimento (dia)</label><input id="fDueDay" type="number" min="1" max="31" inputmode="numeric" placeholder="Opcional"></div>
 </div>
-<div class="field" id="fPaymentsField" style="display:none"><label>Mensalidades pagas</label>
-<div class="pay-months" id="fPayMonths"></div>
-<div class="field-hint" style="margin-top:0.375rem">Toque no mês pra marcar como pago ou não pago.</div>
-</div>
-<div class="field" id="fLevelField"><label>Nível</label>
-<select id="fLevel"></select>
-</div>
+<div class="field"><label>Duração da aula (minutos)</label><input id="fDuration" type="number" min="5" max="240" inputmode="numeric" placeholder="Padrão das Configurações"></div>
 <div class="field"><label>Avaliar este aluno</label>
 <select id="fEvalFreq">
 <option value="">Padrão das Configurações</option>
@@ -1920,16 +1933,19 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 <option value="bimonthly">Bimestral</option>
 </select>
 </div>
-<div class="field"><label>Pacote de aulas (opcional)</label>
+<div class="field" id="fPackageField"><label>Pacote de aulas (opcional)</label>
 <div style="display:flex;gap:0.625rem">
 <input id="fPackageSize" type="number" min="1" inputmode="numeric" placeholder="Nº de aulas" style="flex:1;min-width:0">
 <input id="fPackageStart" type="date" aria-label="Início do pacote" style="flex:1.4;min-width:0">
 </div>
 <div class="field-hint" style="margin-top:0.375rem">Conta as aulas dadas a partir da data (falta sem avisar também conta). O card mostra quantas já foram.</div>
 </div>
-<button type="button" class="btn-historico" id="btnScheduleExtra" style="width:100%;margin-bottom:0.875rem;display:none">+ Marcar aula extra</button>
+<div class="field" id="fTrackingField"><label>Começar histórico em</label><input id="fTrackingSince" type="date">
+<div class="field-hint" style="margin:0.375rem 0 0">As aulas previstas (pendências, faltas, pacote) contam a partir desta data. Pra registrar aulas passadas, coloque uma data anterior; vazio = desde a data de entrada. A data de entrada vale só pro tempo de casa.</div>
+</div>
+</details>
 <details class="form-section" id="fContactSection">
-<summary>Contato, responsável e local da aula</summary>
+<summary><span class="form-section-title">Contato, responsável e local da aula</span></summary>
 <div class="field"><label>Telefone / WhatsApp</label>
 <div class="input-with-action"><input id="fPhone" type="tel" inputmode="tel" placeholder="Ex.: (31) 99999-9999"><a class="wa-btn" id="fPhoneWa" target="_blank" rel="noopener" style="display:none">WhatsApp</a></div>
 </div>
@@ -1949,10 +1965,6 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 </div>
 <div class="field" id="fLocationDetailField" style="display:none"><label id="fLocationDetailLabel">Endereço</label><input id="fLocationDetail"></div>
 </details>
-<div style="display:flex;gap:10px">
-<div class="field" style="flex:1"><label>Data de entrada</label><input id="fEntry" type="date"></div>
-<div class="field" id="exitDateFieldWrapper" style="flex:1;display:none"><label>Data de saída</label><input id="fExit" type="date"></div>
-</div>
 <div id="statusToggleWrapper" style="display:none">
 <button class="btn-toggle-status" id="btnToggleStatus">Registrar Saída do Aluno (Inativar)</button>
 <button class="btn-delete" id="btnDeleteStudent" style="display:none">Excluir Aluno Permanentemente</button>
@@ -3087,10 +3099,13 @@ return null;
 
 // Aulas que o aluno já deveria ter tido até agora (regulares + reposições marcadas),
 // contando a de hoje só depois que ela termina.
+// Início das aulas previstas: trackingSince (aluno cadastrado depois desse recurso) ou,
+// pra quem já existia, a data de entrada, como sempre foi.
+function trackingStart(s){ return s.trackingSince || s.entry || ""; }
 function getStudentOccurrences(s, now = new Date()){
 const out = [];
-if (!s.entry) return out;
-const cur = dateFromIso(s.entry);
+if (!trackingStart(s)) return out;
+const cur = dateFromIso(trackingStart(s));
 if (isNaN(cur.getTime())) return out;
 const today = new Date(now); today.setHours(0,0,0,0);
 let last = today;
@@ -4568,6 +4583,7 @@ format: "Individual",
 value: value !== null ? value : appSettings.defaultValues.individual,
 level: level || (appSettings.useLevels ? appSettings.levels[0] : ""),
 entry: entry || new Date().toISOString().slice(0,10),
+trackingSince: [isoOf(new Date()), entry || ""].sort().pop(),
 active: true,
 lessons: [],
 needsReview: needsReview.length ? needsReview : undefined,
@@ -4866,7 +4882,7 @@ scheduleRows = `<div class="stu-row"><span class="stu-label">Aulas</span><span c
 } else {
 const timeText = s.timesByDay ? orderedDays(studentDays(s)).map(d => `${WEEKDAY_SHORT[d]} ${getStudentTimeFor(s, d)}`).join(" · ") : (s.time || "—");
 scheduleRows = `<div class="stu-row"><span class="stu-label">${dayCount > 1 ? "Dias da semana" : "Dia da semana"}</span><span class="stu-value stu-value-wrap">${fullDaysText(s.days)}${s.lessonFrequency === "biweekly" ? " (quinzenal)" : ""}</span></div>
-<div class="stu-row"><span class="stu-label">Horário</span><span class="stu-value stu-value-wrap">${timeText}${durText}</span></div>`;
+${timeText !== "—" ? `<div class="stu-row"><span class="stu-label">Horário</span><span class="stu-value stu-value-wrap">${timeText}${durText}</span></div>` : ""}`;
 }
 
 const tier = getLevelTier(s.level);
@@ -4884,7 +4900,8 @@ const ageRow = s.birthDate && ageText(s.birthDate) ? `<div class="stu-row"><span
 const locRow = locationText(s) ? `<div class="stu-row"><span class="stu-label">Local</span><span class="stu-value">${escapeHtml(locationText(s))}</span></div>` : "";
 const waLink = whatsappLink(s.phone) || whatsappLink(s.guardianPhone);
 const waRow = (!isInactive && waLink) ? `<div class="stu-row"><span class="stu-label">Contato</span><a class="stu-value stu-link" href="${waLink}" target="_blank" rel="noopener" data-stop>WhatsApp${!whatsappLink(s.phone) ? " (resp.)" : ""} ↗</a></div>` : "";
-const absencesRow = isInactive ? "" : `<div class="stu-row"><span class="stu-label">Faltas no mês</span><span class="stu-value${absences >= 2 ? " stu-value-warn" : ""}">${absences === 0 ? "Nenhuma" : absences}</span></div>`;
+// Card enxuto: linha vazia ou no padrão não aparece (sem falta, individual, sem instrumento...).
+const absencesRow = (isInactive || absences === 0) ? "" : `<div class="stu-row"><span class="stu-label">Faltas no mês</span><span class="stu-value${absences >= 2 ? " stu-value-warn" : ""}">${absences}</span></div>`;
 
 el.innerHTML=`
 ${s.needsReview && s.needsReview.length ? `<span class="sq-review-badge" title="Importado com campos provisórios: ${s.needsReview.join(', ')}">⚠ Revisar</span>` : ''}
@@ -4892,13 +4909,13 @@ ${s.needsReview && s.needsReview.length ? `<span class="sq-review-badge" title="
 <div class="stu-photo-wrap tier-${tier}"><div class="stu-photo">${initials(s.name)}</div></div>
 <div class="stu-name-block">
 <div class="stu-name">${s.name}</div>
-${appSettings.useLevels ? `<div class="stu-sub">${escapeHtml(s.level || "Sem nível")}</div>` : ""}
+${appSettings.useLevels && s.level ? `<div class="stu-sub">${escapeHtml(s.level)}</div>` : ""}
 </div>
 </div>
 <div class="stu-fields">
-<div class="stu-row"><span class="stu-label">Instrumento</span><span class="stu-value">${s.instrument || "—"}</span></div>
+${s.instrument ? `<div class="stu-row"><span class="stu-label">Instrumento</span><span class="stu-value">${escapeHtml(s.instrument)}</span></div>` : ""}
 ${scheduleRows}
-<div class="stu-row"><span class="stu-label">Modalidade</span><span class="stu-value">${format}</span></div>
+${format === "Grupo" && !isInactive ? `<div class="stu-row"><span class="stu-label">Modalidade</span><span class="stu-value">Grupo</span></div>` : ""}
 <div class="stu-row"><span class="stu-label">Permanência</span><span class="stu-value">${formatEntryDuration(s.entry, refDate)}</span></div>
 <div class="stu-row"><span class="stu-label">Mensalidade</span><span class="stu-value${payLate ? " stu-value-warn" : ""}">${payText}</span></div>
 ${absencesRow}
@@ -6326,6 +6343,44 @@ sel.innerHTML = opts.map(l => `<option value="${escapeHtml(l)}">${escapeHtml(l)}
 sel.value = s ? (s.level || "") : appSettings.levels[0];
 document.getElementById("fLevelField").style.display = appSettings.useLevels ? "" : "none";
 }
+// ---- Configurações avançadas: o que quase nunca muda fica recolhido, com um resumo dos
+// valores atuais embaixo do título. Abre sozinha se tiver pendência da importação ou erro.
+function advSummaryText(){
+const sch = readModalSchedule();
+const preview = { id: editingId || -1, ...sch, instrument: document.getElementById("fInstrument").value };
+const custom = document.getElementById("fCustomValue").value;
+const value = document.getElementById("fValueSelect").value === "outro" && custom !== "" ? Number(custom) : getDefaultValueFor(preview);
+const payTo = document.getElementById("fPayTo").value;
+const parts = [];
+if (payTo === "none") parts.push("bolsa");
+else parts.push(`R$ ${value}`, payTo === "school" ? "paga à escola" : "paga para mim");
+const due = Number(document.getElementById("fDueDay").value);
+if (payTo === "me" && due) parts.push(`vence dia ${due}`);
+const dur = Number(document.getElementById("fDuration").value);
+parts.push(`${dur > 0 ? dur : appSettings.lessonDuration} min`);
+const ef = document.getElementById("fEvalFreq").value || appSettings.evalFrequency || "every";
+parts.push(`avaliação ${(EVAL_FREQUENCIES[ef] || "Toda aula").toLowerCase()}`);
+const pk = Number(document.getElementById("fPackageSize").value);
+if (pk > 0) parts.push(`pacote de ${pk} aulas`);
+const ts = document.getElementById("fTrackingSince").value;
+if (ts) parts.push(`histórico desde ${formatDateShort(ts)}`);
+return parts.join(" · ");
+}
+function updateAdvSummary(){ document.getElementById("fAdvSummary").textContent = advSummaryText(); }
+["input","change"].forEach(ev => document.querySelector("#modalBg .modal").addEventListener(ev, (e) => {
+updateAdvSummary();
+e.target.closest?.(".field")?.classList.remove("field-error");
+}));
+// Erros de preenchimento dos campos avançados: [campo, mensagem] ou null.
+function validateAdvancedFields(){
+const num = id => document.getElementById(id).value.trim();
+if (document.getElementById("fValueSelect").value === "outro" && (num("fCustomValue") === "" || Number(num("fCustomValue")) < 0)) return ["fCustomValue", "Digite o valor personalizado (ou volte pra \"Automático\")."];
+if (num("fDueDay") !== "" && !(Number.isInteger(Number(num("fDueDay"))) && Number(num("fDueDay")) >= 1 && Number(num("fDueDay")) <= 31)) return ["fDueDay", "O vencimento precisa ser um dia de 1 a 31."];
+if (num("fDuration") !== "" && !(Number(num("fDuration")) >= 5 && Number(num("fDuration")) <= 240)) return ["fDuration", "A duração da aula precisa ficar entre 5 e 240 minutos."];
+if (num("fPackageSize") !== "" && !(Number(num("fPackageSize")) >= 1)) return ["fPackageSize", "O pacote precisa ter pelo menos 1 aula."];
+return null;
+}
+
 // ---- Contato e local da aula
 const LOCATION_TYPES = { studio:"Estúdio", home:"Casa do aluno", online:"Online", school:"Escola" };
 const LOCATION_DETAIL = { home:{ label:"Endereço", ph:"Rua, número, bairro" }, online:{ label:"Link da aula", ph:"https://meet.google.com/..." }, school:{ label:"Nome da escola", ph:"Ex.: Escola Música Viva" } };
@@ -6372,6 +6427,8 @@ if (det) { document.getElementById("fLocationDetailLabel").textContent = det.lab
 
 // Histórico de mensalidades no cadastro: rascunho dos meses pagos, gravado ao salvar.
 let paidDraft = new Set();
+let trackingAuto = false;
+document.getElementById("fTrackingSince").addEventListener("input", () => { trackingAuto = false; });
 function renderPayMonthsField(s){
 const field = document.getElementById("fPaymentsField");
 const payTo = document.getElementById("fPayTo").value;
@@ -6427,6 +6484,10 @@ const durInput = document.getElementById("fDuration");
 durInput.value = s?.duration || "";
 durInput.placeholder = `Padrão: ${appSettings.lessonDuration} min`;
 document.getElementById("fPackageSize").value = s?.packageSize || "";
+// Aluno novo começa o histórico hoje; aluno antigo sem o campo segue a data de entrada.
+trackingAuto = !s;
+document.getElementById("fTrackingSince").value = s ? (s.trackingSince || "") : isoOf(new Date());
+document.querySelectorAll("#modalBg .field-error").forEach(f => f.classList.remove("field-error"));
 document.getElementById("fPayTo").value = s?.payTo || "me";
 document.getElementById("fPhone").value = s?.phone || "";
 document.getElementById("fBirth").value = s?.birthDate || "";
@@ -6446,7 +6507,10 @@ extraBtn.textContent = s?.lessonFrequency === "single" ? "+ Marcar aula" : "+ Ma
 updateFreqFields();
 renderTimesByDay();
 updateModalFormatPreview();
+updateAdvSummary();
 setupPendingNote(s);
+const adv = document.getElementById("fAdvSection");
+adv.open = hasPending(s) && s.needsReview.some(label => adv.contains(document.getElementById(PENDING_FIELDS[label] || "")));
 
 const statusWrap = document.getElementById("statusToggleWrapper");
 const btnToggle = document.getElementById("btnToggleStatus");
@@ -6492,6 +6556,16 @@ document.getElementById("cancelBtn").onclick=()=>document.getElementById("modalB
 document.getElementById("saveBtn").onclick=()=>{
 const name=document.getElementById("fName").value.trim();
 if(!name){alert("Digite o nome.");return;}
+const advErr = validateAdvancedFields();
+if (advErr) {
+const [fieldId, msg] = advErr;
+document.getElementById("fAdvSection").open = true;
+const input = document.getElementById(fieldId);
+input.closest(".field")?.classList.add("field-error");
+input.focus();
+alert(msg);
+return;
+}
 const days=[...document.querySelectorAll(".day.selected")].map(b=>Number(b.dataset.day));
 const currentObj = editingId ? students.find(x=>x.id===editingId) : null;
 const isActive = currentObj ? currentObj.active !== false : true;
@@ -6518,6 +6592,12 @@ obj.exit = document.getElementById("fExit").value || currentObj?.exit || new Dat
 } else {
 delete obj.exit;
 }
+
+// Começar histórico em: aluno novo que não mexeu no campo começa hoje (ou na entrada, se
+// ela for depois de hoje); vazio = desde a data de entrada.
+let tracking = document.getElementById("fTrackingSince").value;
+if (!currentObj && trackingAuto) tracking = [isoOf(new Date()), obj.entry || ""].sort().pop();
+if (tracking) obj.trackingSince = tracking; else delete obj.trackingSince;
 
 const sch = readModalSchedule();
 obj.days = sch.days;
