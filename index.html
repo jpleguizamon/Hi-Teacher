@@ -831,6 +831,19 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .bday-sub{font-weight:600;color:var(--muted)}
 .bday-week{font-size:0.75rem;color:var(--muted);font-weight:600;margin:0 0.375rem 0.5rem;line-height:1.45}
 .card.has-qa{flex-wrap:wrap}
+.card-tappable{cursor:pointer}
+.lp-head{display:flex;justify-content:space-between;align-items:flex-start;gap:0.75rem;margin-bottom:1rem}
+.lp-sub{font-size:0.8125rem;color:var(--muted);font-weight:600;margin-top:0.3125rem;font-variant-numeric:tabular-nums}
+.lp-student{background:var(--glass-inset);border:0.0625rem solid var(--glass-border-soft);border-radius:var(--radius-md);padding:0.875rem;margin-bottom:0.75rem}
+.lp-student-head{display:flex;align-items:center;gap:0.625rem;margin-bottom:0.625rem}
+.lp-student-name{font-size:0.9375rem;font-weight:750;color:var(--text);min-width:0;overflow-wrap:break-word}
+.lp-last{border-left:0.1875rem solid var(--accent-line);padding:0.125rem 0 0.125rem 0.625rem}
+.lp-last-title{font-size:0.625rem;font-weight:750;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);margin-bottom:0.25rem}
+.lp-last-empty{font-size:0.8125rem;color:var(--muted)}
+.lp-last-miss{font-size:0.8125rem;font-weight:650;color:var(--orange);margin-bottom:0.25rem}
+.lp-last .lesson-notes{margin-top:0.25rem}
+.lp-actions{display:flex;justify-content:flex-end;margin-top:0.75rem}
+.lp-cancel{margin-top:0.25rem}
 .qa-rows{flex-basis:100%;display:grid;gap:0.4375rem;padding-top:0.625rem;margin-top:0.125rem;border-top:0.0625rem solid var(--hairline)}
 .qa-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:0.375rem 0.5rem}
 .qa-name{margin-right:auto;font-size:0.75rem;font-weight:700;color:var(--text-2)}
@@ -1035,7 +1048,8 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 
 /* ===== Modais: o fundo só escurece e o próprio painel é o vidro fosco.
    (Desfocar os dois não funciona: um backdrop-filter dentro de outro só enxerga o pai.) ===== */
-#makeupModal,#quickLessonModal{z-index:32}
+#lessonPanelModal{z-index:31}
+#makeupModal,#quickLessonModal,#evalPopupModal{z-index:32}
 #receiptModal{z-index:33}
 .receipt-preview{display:block;width:100%;border-radius:var(--radius-sm);background:#fff;box-shadow:var(--shadow-sm)}
 .pay-item{display:flex;flex-direction:column;align-items:stretch;gap:0.25rem}
@@ -2372,6 +2386,18 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 <div class="field-hint" id="quickLessonInfo" style="margin-bottom:0.75rem"></div>
 <div id="quickLessonBody"></div>
 <div class="actions"><button class="cancel" id="quickLessonCancel">Cancelar</button><button class="save" id="quickLessonSave">Salvar</button></div>
+</div>
+</div>
+
+<!-- Painel da aula (toque no card de aula do Início) -->
+<div class="modal-bg" id="lessonPanelModal">
+<div class="modal">
+<div class="lp-head">
+<div style="min-width:0"><h2 id="lpTitle" style="margin:0">Aula de hoje</h2><div class="lp-sub" id="lpSub"></div></div>
+<button class="close-btn-inline" id="lpClose" aria-label="Fechar">✕</button>
+</div>
+<div id="lpBody"></div>
+<div id="lpFooter"></div>
 </div>
 </div>
 
@@ -4178,6 +4204,96 @@ return phase === "before"
 ? `<button type="button" class="qa-btn" data-qa="reschedule" data-qk="${key}">Remarcar</button><button type="button" class="qa-btn muted" data-qa="cancel" data-qk="${key}">Cancelar aula</button>`
 : `<button type="button" class="qa-btn primary" data-qa="given" data-qk="${key}">Dada</button><button type="button" class="qa-btn" data-qa="absent" data-qk="${key}">Faltou</button><button type="button" class="qa-btn" data-qa="reschedule" data-qk="${key}">Remarcar</button>`;
 }
+// Botões de ação a partir de uma lista (given | absent | reschedule | cancel).
+function quickButtonsHTML(key, actions){
+const def = { given:["Dada","primary"], absent:["Faltou",""], reschedule:["Remarcar",""], cancel:["Cancelar aula","muted"] };
+return actions.map(a => `<button type="button" class="qa-btn ${def[a][1]}" data-qa="${a}" data-qk="${key}">${def[a][0]}</button>`).join("");
+}
+
+// ===== Painel da aula (toque no card do Início) =====
+// Mostra a turma inteira daquele dia e horário (quem tem aula no mesmo dia e horário), com a
+// última aula registrada de cada aluno e os botões de cada um.
+let lessonPanel = null; // { iso, time }
+// Último registro do aluno antes de uma data (aaaa-mm-dd), incluindo reposição/aula extra.
+function lastLessonRecordBefore(s, beforeIso){
+let best = null;
+(s.lessons || []).forEach(l => {
+const iso = isoFromBr(l.date);
+if (iso >= beforeIso) return;
+if (!best || iso > isoFromBr(best.date)) best = l;
+});
+return best;
+}
+function lastLessonHTML(s, beforeIso){
+const last = lastLessonRecordBefore(s, beforeIso);
+if (!last) return `<div class="lp-last"><div class="lp-last-title">Última aula</div><div class="lp-last-empty">Nenhuma aula registrada antes desta.</div></div>`;
+const notes = lessonNotesHTML(last);
+const miss = isNoClass(last) ? `<div class="lp-last-miss">${escapeHtml(noClassNote(s, last))}</div>` : "";
+return `<div class="lp-last"><div class="lp-last-title">Última aula (${last.date.slice(0,5)})</div>${miss}${notes || `<div class="lp-last-empty">Sem anotações na última aula</div>`}</div>`;
+}
+function openLessonPanel(dateObj, time){
+lessonPanel = { iso: isoOf(dateObj), time };
+renderLessonPanel();
+if (lessonPanel) document.getElementById("lessonPanelModal").classList.add("show");
+}
+function closeLessonPanel(){
+document.getElementById("lessonPanelModal").classList.remove("show");
+lessonPanel = null;
+}
+document.getElementById("lpClose").onclick = closeLessonPanel;
+function refreshLessonPanel(){
+if (lessonPanel && document.getElementById("lessonPanelModal").classList.contains("show")) renderLessonPanel();
+}
+function renderLessonPanel(){
+const { iso, time } = lessonPanel;
+const date = dateFromIso(iso);
+const group = getLessonsOnDate(date).filter(x => x.time === time);
+if (!group.length) { closeLessonPanel(); return; }
+const now = new Date();
+const todayIso = isoOf(now);
+const tomorrow = new Date(now); tomorrow.setDate(tomorrow.getDate() + 1);
+const isToday = iso === todayIso;
+const start = lessonStart(date, time);
+const end = new Date(Math.max(...group.map(x => lessonEnd(date, time, x.student).getTime())));
+document.getElementById("lpTitle").textContent = isToday ? "Aula de hoje" : iso === isoOf(tomorrow) ? "Aula de amanhã" : `Aula de ${WEEKDAY_FULL[date.getDay()]}, ${iso.slice(8,10)}/${iso.slice(5,7)}`;
+const instruments = [...new Set(group.map(x => x.student.instrument).filter(Boolean))].join(", ");
+const durs = [...new Set(group.map(x => getStudentDuration(x.student)))].sort((a,b) => a - b);
+document.getElementById("lpSub").textContent = [time, instruments, durs.join(" e ") + " min", group.length > 1 ? `turma de ${group.length}` : ""].filter(Boolean).join(" · ");
+const body = document.getElementById("lpBody");
+body.innerHTML = group.map((x, i) => {
+const s = x.student;
+const key = `p${iso}-${time}-${i}`;
+let actionsHtml;
+if (x.off) actionsHtml = `<span class="qa-note">${escapeHtml(x.off.label)}</span>`;
+else if (x.record) actionsHtml = `<span class="qa-note">${recordStatusText(x.record, s)}</span>`;
+else {
+quickTargets[key] = { student: s, entry: entryForLesson(x, date), time };
+const acts = !isToday ? ["reschedule"] : now >= start ? ["given","absent","reschedule"] : ["absent","reschedule"];
+actionsHtml = `<div class="qa-btns">${quickButtonsHTML(key, acts)}</div>`;
+}
+return `<div class="lp-student">
+<div class="lp-student-head">
+<div class="avatar-small">${initials(s.name)}</div>
+<div class="lp-student-name">${escapeHtml(s.name)}${x.kind === "extra" ? ` <span class="badge-makeup">${extraLabel(s, x.makeupId)}</span>` : ""}</div>
+</div>
+${lastLessonHTML(s, iso)}
+<div class="lp-actions">${actionsHtml}</div>
+</div>`;
+}).join("");
+bindQuickActions(body);
+// Cancelar: aula que ainda vai acontecer ou está acontecendo (hoje antes do fim, ou outro dia).
+const cancellable = group.filter(x => !x.off && !x.record);
+const footer = document.getElementById("lpFooter");
+footer.innerHTML = cancellable.length && (!isToday || now < end)
+? `<button type="button" class="btn-delete lp-cancel">${cancellable.length > 1 ? "Cancelar aula da turma" : "Cancelar aula"}</button>`
+: "";
+const cbtn = footer.querySelector(".lp-cancel");
+if (cbtn) cbtn.onclick = () => openCancelLesson(
+cancellable.map(x => ({ student: x.student, entry: entryForLesson(x, date), time })),
+cancellable.length > 1 ? `Cancelar aula da turma · ${time}` : null
+);
+}
+
 function bindQuickActions(root){
 root.querySelectorAll("[data-qa]").forEach(b => b.onclick = (e) => {
 e.stopPropagation();
@@ -4324,7 +4440,6 @@ ${href ? `<a class="wa-btn wa-mini" href="${href}" target="_blank" rel="noopener
 }
 
 function renderHome(){
-quickTargets = {};
 renderBirthdays();
 const now=new Date();
 document.getElementById("homeGreetingText").textContent = `Olá, ${appSettings.profile.name}`;
@@ -4434,6 +4549,8 @@ return `<div class="qa-row">${label}<div class="qa-btns">${quickActionsHTML(key,
 if (rows.length) { qaHtml = `<div class="qa-rows">${rows.join("")}</div>`; card.classList.add("has-qa"); }
 }
 
+card.classList.add("card-tappable");
+card.onclick = () => openLessonPanel(date, time);
 card.innerHTML=`<div class="time">${time}</div>${avatarsHtml}<div class="info"><div class="name">${names}</div><div class="instrument">${escapeHtml(instruments)}${g.length>1?" · grupo":" · ind."}${extraKinds.map(k => " · " + k).join("")}${offNote ? " · " + escapeHtml(offNote) : ""}</div>${hwHtml}</div><div class="status ${statusClass}">${statusText}</div>${qaHtml}`;
 bindQuickActions(card);
 card.querySelectorAll("[data-home-student]").forEach(b=>{
@@ -4737,6 +4854,7 @@ if (currentPage === "students") renderStudents();
 if (currentPage === "evaluation") renderEvaluation();
 if (s && document.getElementById("historyModal").classList.contains("show") && document.getElementById("modalStudentName").textContent === s.name) renderHistoryContent(s);
 if (agendaModalDate && document.getElementById("holidayInfoModal").classList.contains("show")) openAgendaDayModal(agendaModalDate);
+refreshLessonPanel();
 }
 function afterMakeupChange(){
 const s = editingMakeup && editingMakeup.s;
@@ -7711,6 +7829,7 @@ upsertLessonRecord(student, entry, fields);
 saveStudents();
 evalQueueIndex++;
 openEvalPopup();
+refreshLessonPanel();
 if (currentPage === "evaluation") renderEvaluation();
 if (currentPage === "home") renderHome();
 if (currentPage === "students") renderStudents();
