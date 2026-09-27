@@ -835,6 +835,16 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .pay-month.paid span{color:var(--green)}
 .pay-month.late{border-color:var(--danger-border);background:rgba(248,113,113,.07)}
 .pay-month.late span{color:var(--danger)}
+.form-section{border:0.0625rem solid var(--glass-border-soft);border-radius:var(--radius-md);background:var(--glass-inset);padding:0 0.875rem;margin-bottom:0.875rem}
+.form-section summary{cursor:pointer;list-style:none;padding:0.8125rem 0;font-size:0.8125rem;font-weight:700;color:var(--text-2);display:flex;align-items:center;justify-content:space-between;gap:0.5rem}
+.form-section summary::-webkit-details-marker{display:none}
+.form-section summary::after{content:"+";font-size:1.125rem;color:var(--accent);font-weight:600}
+.form-section[open] summary::after{content:"−"}
+.form-section[open]{padding-bottom:0.125rem}
+.input-with-action{display:flex;gap:0.5rem;align-items:center}
+.input-with-action input{flex:1;min-width:0}
+.wa-btn{flex:none;display:inline-flex;align-items:center;padding:0.5625rem 0.875rem;border-radius:var(--radius-pill);font-size:0.75rem;font-weight:700;color:#86efac;background:rgba(74,222,128,.1);border:0.0625rem solid rgba(74,222,128,.35);text-decoration:none;white-space:nowrap}
+.stu-link{color:#86efac!important;text-decoration:none;font-weight:700}
 .times-by-day{display:grid;gap:0.4375rem;margin:-0.25rem 0 0.875rem}
 .time-by-day-row{display:flex;align-items:center;gap:0.75rem}
 .time-by-day-row span{flex:1;font-size:0.8125rem;font-weight:650;color:var(--text-2)}
@@ -1918,6 +1928,27 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 <div class="field-hint" style="margin-top:0.375rem">Conta as aulas dadas a partir da data (falta sem avisar também conta). O card mostra quantas já foram.</div>
 </div>
 <button type="button" class="btn-historico" id="btnScheduleExtra" style="width:100%;margin-bottom:0.875rem;display:none">+ Marcar aula extra</button>
+<details class="form-section" id="fContactSection">
+<summary>Contato, responsável e local da aula</summary>
+<div class="field"><label>Telefone / WhatsApp</label>
+<div class="input-with-action"><input id="fPhone" type="tel" inputmode="tel" placeholder="Ex.: (31) 99999-9999"><a class="wa-btn" id="fPhoneWa" target="_blank" rel="noopener" style="display:none">WhatsApp</a></div>
+</div>
+<div class="field"><label>Data de nascimento</label><input id="fBirth" type="date"><div class="field-hint" id="fAgeHint" style="margin:0.375rem 0 0"></div></div>
+<div class="field"><label>Responsável (nome)</label><input id="fGuardianName" placeholder="Pra aluno menor de idade"></div>
+<div class="field"><label>Telefone do responsável</label>
+<div class="input-with-action"><input id="fGuardianPhone" type="tel" inputmode="tel" placeholder="Ex.: (31) 98888-8888"><a class="wa-btn" id="fGuardianWa" target="_blank" rel="noopener" style="display:none">WhatsApp</a></div>
+</div>
+<div class="field"><label>Local da aula</label>
+<select id="fLocationType">
+<option value="">Não informar</option>
+<option value="studio">Estúdio / minha sala</option>
+<option value="home">Casa do aluno</option>
+<option value="online">Online</option>
+<option value="school">Escola</option>
+</select>
+</div>
+<div class="field" id="fLocationDetailField" style="display:none"><label id="fLocationDetailLabel">Endereço</label><input id="fLocationDetail"></div>
+</details>
 <div style="display:flex;gap:10px">
 <div class="field" style="flex:1"><label>Data de entrada</label><input id="fEntry" type="date"></div>
 <div class="field" id="exitDateFieldWrapper" style="flex:1;display:none"><label>Data de saída</label><input id="fExit" type="date"></div>
@@ -4124,13 +4155,18 @@ document.getElementById("addStudentBtn").onclick = () => openEdit();
 
 // ===== Importar planilha de alunos (.csv, .xlsx, .xls) =====
 const IMPORT_TARGET_FIELDS = [
-{ key:"name", label:"Nome do aluno", required:true, guesses:["nome completo","nome do aluno","aluno","nome","name","student"] },
+{ key:"name", label:"Nome do aluno", required:true, guesses:["nome completo","nome do aluno","aluno","nome","name","student"], avoid:["respons"] },
 { key:"instrument", label:"Instrumento", guesses:["instrumento","instrument","curso"] },
 { key:"days", label:"Dia(s) da semana", guesses:["dia da semana","dias da semana","dias","dia"] },
 { key:"time", label:"Horário", guesses:["horário","horario","hora"] },
 { key:"value", label:"Valor mensal (R$)", guesses:["valor mensal","mensalidade","valor","preço","preco"] },
 { key:"level", label:"Nível", guesses:["nível","nivel","level"] },
-{ key:"entry", label:"Data de entrada", guesses:["data de entrada","data de início","data de matrícula","entrada","matrícula"] }
+{ key:"entry", label:"Data de entrada", guesses:["data de entrada","data de início","data de matrícula","entrada","matrícula"] },
+{ key:"phone", label:"Telefone / WhatsApp", guesses:["whatsapp","celular","telefone","fone","tel","contato"], avoid:["respons","pai","mae"] },
+{ key:"birth", label:"Data de nascimento", guesses:["data de nascimento","nascimento","aniversario","nasc"] },
+{ key:"guardian", label:"Responsável", guesses:["responsavel","nome do responsavel","mae","pai"], avoid:["tel","cel","whats","fone","contato"] },
+{ key:"guardianPhone", label:"Telefone do responsável", guesses:[], match: h => h.includes("respons") && /tel|cel|whats|fone|contato/.test(h) },
+{ key:"location", label:"Local da aula", guesses:["local da aula","local","endereco","link"] }
 ];
 
 const DAY_NAME_MAP = { domingo:0, dom:0, segunda:1, seg:1, "2a":1, terca:2, ter:2, "3a":2, quarta:3, qua:3, "4a":3, quinta:4, qui:4, "5a":4, sexta:5, sex:5, "6a":5, sabado:6, sab:6 };
@@ -4199,17 +4235,45 @@ return `${year}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
 }
 return null;
 }
-function guessColumnFor(field, headers){
+// used: colunas já escolhidas pra outro campo (não sugere a mesma coluna duas vezes).
+function guessColumnFor(field, headers, used = new Set()){
 const normHeaders = headers.map(h => stripAccents(h||"").toLowerCase().trim());
+const ok = (h, i) => !used.has(i) && !(field.avoid || []).some(a => h.includes(a));
+if (field.match) return normHeaders.findIndex((h, i) => ok(h, i) && field.match(h));
 for (const guess of field.guesses) {
-const idx = normHeaders.findIndex(h => h === guess);
+const g = stripAccents(guess);
+const idx = normHeaders.findIndex((h, i) => ok(h, i) && (h === guess || h === g));
 if (idx > -1) return idx;
 }
 for (const guess of field.guesses) {
-const idx = normHeaders.findIndex(h => h.includes(guess));
+const g = stripAccents(guess);
+const idx = normHeaders.findIndex((h, i) => ok(h, i) && (h.includes(guess) || h.includes(g)));
 if (idx > -1) return idx;
 }
 return -1;
+}
+// Local da aula escrito na planilha: link/online, estúdio, escola, casa; outro texto vira endereço.
+function parseLocationText(text){
+const raw = String(text || "").trim();
+if (!raw) return null;
+const norm = stripAccents(raw).toLowerCase();
+const url = raw.match(/https?:\/\/\S+/);
+if (url || /online|zoom|meet|skype|remot/.test(norm)) return { type:"online", detail: url ? url[0] : "" };
+if (/estudio|studio|minha sala|sala do professor/.test(norm)) return { type:"studio", detail:"" };
+if (/escola|colegio|conservatorio|instituto/.test(norm)) return { type:"school", detail: raw };
+const home = raw.replace(/^(na\s+)?casa( do aluno)?\s*[:\-–]?\s*/i, "").trim();
+return { type:"home", detail: home };
+}
+// Horário com dia junto ("Seg 19h, Qui 15h"): devolve { days, timesByDay } ou null.
+function parseDayTimePairs(text){
+if (!text) return null;
+const norm = stripAccents(String(text)).toLowerCase();
+const re = /(domingo|dom|segunda|seg|terca|ter|quarta|qua|quinta|qui|sexta|sex|sabado|sab)(?:-feira)?\.?\s*(?:as|a partir das)?\s*(\d{1,2}\s*[h:.]?\s*\d{0,2}\s*h?)/g;
+const tbd = {};
+let m;
+while ((m = re.exec(norm))) { const t = parseTimeText(m[2].trim()); if (t) tbd[DAY_NAME_MAP[m[1]]] = t; }
+const days = Object.keys(tbd).map(Number);
+return days.length ? { days: days.sort((a,b)=>a-b), timesByDay: tbd } : null;
 }
 // Parser simples de CSV com suporte a campos entre aspas (contendo vírgulas/quebras de linha).
 function parseCSV(text){
@@ -4434,8 +4498,10 @@ showImportStep2();
 
 function showImportStep2(){
 const mapEl = document.getElementById("importMappingFields");
+const usedCols = new Set();
 mapEl.innerHTML = IMPORT_TARGET_FIELDS.map(field => {
-const guessIdx = guessColumnFor(field, importHeaders);
+const guessIdx = guessColumnFor(field, importHeaders, usedCols);
+if (guessIdx > -1) usedCols.add(guessIdx);
 const options = [`<option value="-1">${field.required ? "— selecione a coluna —" : "— não importar / usar padrão —"}</option>`]
 .concat(importHeaders.map((h,i) => `<option value="${i}" ${i===guessIdx?"selected":""}>${h || `Coluna ${i+1}`}</option>`));
 return `<div class="field"><label>${field.label}${field.required?" *":""}</label><select id="importMap_${field.key}">${options.join("")}</select></div>`;
@@ -4460,8 +4526,21 @@ const imported = [];
 importRows.forEach(row => {
 const name = mapping.name > -1 ? String(row[mapping.name]||"").trim() : "";
 if (!name) return; // pula linhas sem nome
-const days = mapping.days > -1 ? parseDaysText(row[mapping.days]) : null;
-const time = mapping.time > -1 ? parseTimeText(row[mapping.time]) : null;
+let days = mapping.days > -1 ? parseDaysText(row[mapping.days]) : null;
+let time = mapping.time > -1 ? parseTimeText(row[mapping.time]) : null;
+// "Seg 19h, Qui 15h" na coluna de horário (ou de dia): um horário por dia.
+let timesByDay = null;
+if (!time) {
+const pairs = parseDayTimePairs(mapping.time > -1 ? row[mapping.time] : "") || parseDayTimePairs(mapping.days > -1 ? row[mapping.days] : "");
+if (pairs) {
+days = days || pairs.days;
+time = pairs.timesByDay[orderedDays(pairs.days)[0]];
+if (new Set(Object.values(pairs.timesByDay)).size > 1) timesByDay = pairs.timesByDay;
+}
+}
+const cell = (key) => mapping[key] > -1 ? String(row[mapping[key]] ?? "").trim() : "";
+const location = parseLocationText(cell("location"));
+const birth = mapping.birth > -1 ? parseEntryDateText(row[mapping.birth]) : null;
 const level = mapping.level > -1 ? parseLevelText(row[mapping.level]) : null;
 const value = mapping.value > -1 ? parseValueText(row[mapping.value]) : null;
 const entry = mapping.entry > -1 ? parseEntryDateText(row[mapping.entry]) : null;
@@ -4491,7 +4570,13 @@ level: level || (appSettings.useLevels ? appSettings.levels[0] : ""),
 entry: entry || new Date().toISOString().slice(0,10),
 active: true,
 lessons: [],
-needsReview: needsReview.length ? needsReview : undefined
+needsReview: needsReview.length ? needsReview : undefined,
+...(timesByDay ? { timesByDay } : {}),
+...(cell("phone") ? { phone: cell("phone") } : {}),
+...(birth ? { birthDate: birth } : {}),
+...(cell("guardian") ? { guardianName: cell("guardian") } : {}),
+...(cell("guardianPhone") ? { guardianPhone: cell("guardianPhone") } : {}),
+...(location ? { locationType: location.type, ...(location.detail ? { locationDetail: location.detail } : {}) } : {})
 });
 });
 if (imported.length === 0) { errEl.textContent = "Nenhuma linha com nome válido encontrada."; return; }
@@ -4795,6 +4880,10 @@ const payText = s.payTo === "school" ? `R$ ${monthlyValue} · paga à escola`
 const absences = isInactive ? 0 : countMonthAbsences(s);
 const pkg = isInactive ? null : packageUsage(s);
 const packageRow = pkg ? `<div class="stu-row"><span class="stu-label">Pacote</span><span class="stu-value${pkg.used >= pkg.size ? " stu-value-warn" : ""}">${pkg.used >= pkg.size ? `Terminou (${pkg.used} de ${pkg.size})` : `${pkg.used} de ${pkg.size} aulas`}</span></div>` : "";
+const ageRow = s.birthDate && ageText(s.birthDate) ? `<div class="stu-row"><span class="stu-label">Idade</span><span class="stu-value">${ageText(s.birthDate)}</span></div>` : "";
+const locRow = locationText(s) ? `<div class="stu-row"><span class="stu-label">Local</span><span class="stu-value">${escapeHtml(locationText(s))}</span></div>` : "";
+const waLink = whatsappLink(s.phone) || whatsappLink(s.guardianPhone);
+const waRow = (!isInactive && waLink) ? `<div class="stu-row"><span class="stu-label">Contato</span><a class="stu-value stu-link" href="${waLink}" target="_blank" rel="noopener" data-stop>WhatsApp${!whatsappLink(s.phone) ? " (resp.)" : ""} ↗</a></div>` : "";
 const absencesRow = isInactive ? "" : `<div class="stu-row"><span class="stu-label">Faltas no mês</span><span class="stu-value${absences >= 2 ? " stu-value-warn" : ""}">${absences === 0 ? "Nenhuma" : absences}</span></div>`;
 
 el.innerHTML=`
@@ -4814,9 +4903,13 @@ ${scheduleRows}
 <div class="stu-row"><span class="stu-label">Mensalidade</span><span class="stu-value${payLate ? " stu-value-warn" : ""}">${payText}</span></div>
 ${absencesRow}
 ${packageRow}
+${ageRow}
+${locRow}
+${waRow}
 </div>
 `;
 el.onclick = () => openEdit(s.id);
+el.querySelectorAll("[data-stop]").forEach(a => a.onclick = (e) => e.stopPropagation());
 return el;
 };
 
@@ -6233,6 +6326,50 @@ sel.innerHTML = opts.map(l => `<option value="${escapeHtml(l)}">${escapeHtml(l)}
 sel.value = s ? (s.level || "") : appSettings.levels[0];
 document.getElementById("fLevelField").style.display = appSettings.useLevels ? "" : "none";
 }
+// ---- Contato e local da aula
+const LOCATION_TYPES = { studio:"Estúdio", home:"Casa do aluno", online:"Online", school:"Escola" };
+const LOCATION_DETAIL = { home:{ label:"Endereço", ph:"Rua, número, bairro" }, online:{ label:"Link da aula", ph:"https://meet.google.com/..." }, school:{ label:"Nome da escola", ph:"Ex.: Escola Música Viva" } };
+// Link do WhatsApp: só dígitos; número brasileiro sem DDI (10–11 dígitos) ganha o 55.
+function whatsappLink(phone){
+let d = String(phone || "").replace(/\D/g, "");
+if (!d) return null;
+d = d.replace(/^0+/, "");
+if (d.length === 10 || d.length === 11) d = "55" + d;
+return d.length >= 10 ? `https://wa.me/${d}` : null;
+}
+function ageText(birthIso){
+if (!birthIso) return "";
+const b = dateFromIso(birthIso), now = new Date();
+if (isNaN(b.getTime()) || b > now) return "";
+let months = (now.getFullYear() - b.getFullYear()) * 12 + (now.getMonth() - b.getMonth());
+if (now.getDate() < b.getDate()) months--;
+if (months < 12) return `${months} ${months === 1 ? "mês" : "meses"}`;
+const y = Math.floor(months / 12);
+return `${y} ano${y === 1 ? "" : "s"}`;
+}
+function locationText(s){
+if (!s.locationType) return "";
+if (s.locationType === "school" && s.locationDetail) return s.locationDetail;
+return LOCATION_TYPES[s.locationType] || "";
+}
+function refreshContactHints(){
+const set = (inputId, btnId) => {
+const link = whatsappLink(document.getElementById(inputId).value);
+const btn = document.getElementById(btnId);
+btn.style.display = link ? "" : "none";
+if (link) btn.href = link;
+};
+set("fPhone", "fPhoneWa");
+set("fGuardianPhone", "fGuardianWa");
+const age = ageText(document.getElementById("fBirth").value);
+document.getElementById("fAgeHint").textContent = age ? `Idade: ${age}` : "";
+const type = document.getElementById("fLocationType").value;
+const det = LOCATION_DETAIL[type];
+document.getElementById("fLocationDetailField").style.display = det ? "" : "none";
+if (det) { document.getElementById("fLocationDetailLabel").textContent = det.label; document.getElementById("fLocationDetail").placeholder = det.ph; }
+}
+["fPhone","fGuardianPhone","fBirth","fLocationType"].forEach(id => document.getElementById(id).addEventListener(id === "fLocationType" ? "change" : "input", refreshContactHints));
+
 // Histórico de mensalidades no cadastro: rascunho dos meses pagos, gravado ao salvar.
 let paidDraft = new Set();
 function renderPayMonthsField(s){
@@ -6291,6 +6428,14 @@ durInput.value = s?.duration || "";
 durInput.placeholder = `Padrão: ${appSettings.lessonDuration} min`;
 document.getElementById("fPackageSize").value = s?.packageSize || "";
 document.getElementById("fPayTo").value = s?.payTo || "me";
+document.getElementById("fPhone").value = s?.phone || "";
+document.getElementById("fBirth").value = s?.birthDate || "";
+document.getElementById("fGuardianName").value = s?.guardianName || "";
+document.getElementById("fGuardianPhone").value = s?.guardianPhone || "";
+document.getElementById("fLocationType").value = s?.locationType || "";
+document.getElementById("fLocationDetail").value = s?.locationDetail || "";
+document.getElementById("fContactSection").open = !!(s && (s.phone || s.birthDate || s.guardianName || s.guardianPhone || s.locationType));
+refreshContactHints();
 document.getElementById("fDueDay").value = s?.dueDay || "";
 paidDraft = s ? getPaidMonths(s) : new Set();
 renderPayMonthsField(s);
@@ -6385,6 +6530,16 @@ if (dur > 0) obj.duration = Math.max(5, Math.min(240, Math.round(dur))); else de
 const pkg = Number(document.getElementById("fPackageSize").value);
 if (pkg > 0) { obj.packageSize = Math.round(pkg); obj.packageStart = document.getElementById("fPackageStart").value || isoOf(new Date()); }
 else { delete obj.packageSize; delete obj.packageStart; }
+
+// Contato e local: campo vazio sai do aluno (não guarda string vazia).
+const setOpt = (key, val) => { if (val) obj[key] = val; else delete obj[key]; };
+setOpt("phone", document.getElementById("fPhone").value.trim());
+setOpt("birthDate", document.getElementById("fBirth").value);
+setOpt("guardianName", document.getElementById("fGuardianName").value.trim());
+setOpt("guardianPhone", document.getElementById("fGuardianPhone").value.trim());
+const locType = document.getElementById("fLocationType").value;
+setOpt("locationType", locType);
+setOpt("locationDetail", LOCATION_DETAIL[locType] ? document.getElementById("fLocationDetail").value.trim() : "");
 
 const payTo = document.getElementById("fPayTo").value;
 if (payTo === "me") delete obj.payTo; else obj.payTo = payTo;
