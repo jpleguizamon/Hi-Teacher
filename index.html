@@ -606,6 +606,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .stu-photo-wrap.tier-bronze{background:linear-gradient(135deg,#e3a469,#8a4d24)}
 .stu-photo-wrap.tier-silver{background:linear-gradient(135deg,#f1f5f9,#94a3b8)}
 .stu-photo-wrap.tier-gold{background:linear-gradient(135deg,#f3c04a,#96690f);box-shadow:0 0 0.625rem rgba(243,192,74,.3)}
+.stu-photo-wrap.tier-none{background:linear-gradient(135deg,var(--accent),var(--accent-2))}
 .stu-photo{width:100%;height:100%;border-radius:50%;background:var(--bg);color:var(--text);display:grid;place-items:center;font-weight:800;font-size:0.8125rem}
 .stu-name-block{min-width:0;flex:1}
 .stu-name{font-size:0.875rem;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -823,6 +824,13 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .makeup-dismiss:hover{color:var(--text);border-color:var(--glass-border)}
 .btn-link-muted{display:block;width:100%;text-align:center;font-size:0.75rem;color:var(--muted);margin-top:0.5rem;text-decoration:underline;text-underline-offset:0.2em;cursor:pointer;background:none;border:none;padding:0.5rem}
 .btn-link-muted:hover{color:var(--text)}
+.list-edit-rows{display:grid;gap:0.4375rem}
+.list-edit-row{display:flex;align-items:center;gap:0.375rem}
+.list-edit-row .inline-input{flex:1;min-width:0;padding:0.5625rem 0.75rem;font-size:0.875rem}
+.list-edit-btn{flex:none;width:2rem;height:2rem;border-radius:50%;display:grid;place-items:center;border:0.0625rem solid var(--hairline);background:var(--glass-inset);color:var(--text-2);font-size:0.8125rem;cursor:pointer;padding:0}
+.list-edit-btn:disabled{opacity:.3;cursor:default}
+.list-edit-btn.danger{color:var(--danger);background:rgba(248,113,113,.08)}
+.list-edit-archived{display:flex;align-items:center;justify-content:space-between;gap:0.5rem;font-size:0.8125rem;color:var(--muted);padding:0.375rem 0}
 .theme-card-actions{display:flex;align-items:center;gap:0.5rem;flex:none}
 .theme-remove-btn{display:grid;place-items:center;padding:0}
 .criterion-stars { color: var(--star); font-size: 0.9rem; letter-spacing: 0.0625rem; text-shadow: 0 0 0.375rem rgba(251,191,36,.4); }
@@ -1392,7 +1400,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 </main>
 
 <main id="evaluationPage" style="display:none">
-<div class="page-title-bar" style="margin-top:0"><h2 class="page-title-text">Gráfico das 4 competências<button type="button" class="help-icon" data-help="Cada aula pode ser avaliada em 4 critérios: pontualidade, prática, comprometimento e desenvolvimento. Aqui você acompanha a média mensal de cada aluno ou geral.">!</button></h2></div>
+<div class="page-title-bar" style="margin-top:0"><h2 class="page-title-text">Gráfico das competências<button type="button" class="help-icon" data-help="Cada aula é avaliada pelos critérios definidos em Configurações (de início: pontualidade, prática, comprometimento e desenvolvimento). Aqui você acompanha a média mensal de cada aluno ou geral.">!</button></h2></div>
 
 <div class="perf-selector-card">
 <div class="perf-slider-row">
@@ -1676,6 +1684,8 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 <div class="settings-row" id="rowValoresPadrao"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-dollar"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Valores padrões<button type="button" class="help-icon" data-help="Valores sugeridos automaticamente ao cadastrar um novo aluno, de acordo com o formato da aula (individual ou grupo).">!</button></div></div><span class="settings-row-value" id="valValoresPadrao">R$ 140</span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowDiasUteis"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-calendar"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Dias úteis<button type="button" class="help-icon" data-help="Usado para pré-selecionar os dias da semana ao cadastrar um novo aluno.">!</button></div></div><span class="settings-row-value" id="valDiasUteis">Seg-Sex</span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowDuracao"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-clock"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Duração padrão da aula</div></div><span class="settings-row-value" id="valDuracao">60 min</span><span class="settings-row-chevron">›</span></div>
+<div class="settings-row" id="rowNiveis"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-trending-up"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Níveis dos alunos<button type="button" class="help-icon" data-help="A lista de níveis que aparece no cadastro do aluno, na ordem do menor pro maior. Dá pra renomear, reordenar, adicionar, tirar ou não usar nível nenhum.">!</button></div></div><span class="settings-row-value" id="valNiveis"></span><span class="settings-row-chevron">›</span></div>
+<div class="settings-row" id="rowCriterios"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-clipboard"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Critérios de avaliação<button type="button" class="help-icon" data-help="O que você avalia em cada aula, de 0 a 5 estrelas. Renomear mantém as avaliações antigas; tirar um critério não apaga as notas que ele já tinha.">!</button></div></div><span class="settings-row-value" id="valCriterios"></span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowEvalFreq"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-star"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Frequência da avaliação<button type="button" class="help-icon" data-help="De quanto em quanto tempo o app pede pra avaliar cada aluno. Fora do dia de avaliação a aula fica só como 'Aula dada', sem pop-up nem 'Aguardando avaliação'. Dá pra mudar por aluno no cadastro dele.">!</button></div></div><span class="settings-row-value" id="valEvalFreq">Toda aula</span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowFerias"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-sun"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Férias e recesso<button type="button" class="help-icon" data-help="Períodos sem aula, pra todos os alunos ou só pra um. As aulas nesses dias (e nos feriados da Agenda) ficam automaticamente como 'Não houve aula', sem avaliação.">!</button></div><div class="settings-row-sub">Períodos sem aula, gerais ou por aluno</div></div><span class="settings-row-value" id="valFerias">Nenhum</span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowIdioma"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-globe"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Idioma</div></div><span class="settings-row-value">Português</span><span class="settings-row-chevron">›</span></div>
@@ -1845,8 +1855,8 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 <label>Valor personalizado (R$)</label>
 <input id="fCustomValue" type="number" placeholder="Ex: 100">
 </div>
-<div class="field"><label>Nível</label>
-<select id="fLevel"><option>Iniciante 1</option><option>Iniciante 2</option><option>Intermediário 1</option><option>Intermediário 2</option><option>Intermediário 3</option><option>Avançado</option></select>
+<div class="field" id="fLevelField"><label>Nível</label>
+<select id="fLevel"></select>
 </div>
 <div class="field"><label>Avaliar este aluno</label>
 <select id="fEvalFreq">
@@ -2035,6 +2045,27 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 </div>
 <div class="field-hint">Usada para calcular quando uma aula termina e disparar a avaliação pós-aula.</div>
 <div class="actions"><button class="cancel" id="duracaoCancelBtn">Cancelar</button><button class="save" id="duracaoSaveBtn">Salvar</button></div>
+</div>
+</div>
+
+<!-- Modal: editor de lista (níveis / critérios de avaliação) -->
+<div class="modal-bg" id="listEditModal">
+<div class="modal">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+<h2 style="margin:0" id="listEditTitle">Lista</h2>
+<button class="close-btn-inline" id="listEditCloseX" aria-label="Fechar">✕</button>
+</div>
+<div class="field-hint" id="listEditHint" style="margin-top:-0.25rem"></div>
+<div id="listEditTop"></div>
+<div id="listEditBody">
+<div class="list-edit-rows" id="listEditRows"></div>
+<div style="display:flex;gap:0.5rem;margin-top:0.625rem">
+<input type="text" id="listEditNewInput" class="inline-input" style="flex:1;min-width:0">
+<button type="button" class="btn-historico" id="listEditAddBtn">Adicionar</button>
+</div>
+<div id="listEditBottom"></div>
+</div>
+<div class="actions"><button class="cancel" id="listEditCancelBtn">Cancelar</button><button class="save" id="listEditSaveBtn">Salvar</button></div>
 </div>
 </div>
 
@@ -2615,7 +2646,6 @@ updateTestsVisibility();
 }
 
 const monthNamesShort=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
-const levelOrder={"Iniciante 1":1, "Iniciante 2":2, "Intermediário 1":3, "Intermediário 2":4, "Intermediário 3":5, "Avançado":6};
 const today=new Date();
 const todayKey=today.getDay();
 
@@ -2752,6 +2782,16 @@ el.className = `profile-tier-line tier-${tier}`;
 // Lista padrão de instrumentos, usada só como semente pra quem está começando do zero
 // (onboarding) ou pra contas antigas que nunca tiveram esse campo (migração abaixo).
 const DEFAULT_INSTRUMENTS = ["Violão","Teclado","Musicalização","Ukulele","Saxofone"];
+// Níveis e critérios de avaliação padrão (os de sempre). Cada professor pode editar em
+// Configurações; a chave (key) de um critério nunca muda, só o nome, pra avaliações antigas
+// continuarem ligadas a ele.
+const DEFAULT_LEVELS = ["Iniciante 1","Iniciante 2","Intermediário 1","Intermediário 2","Intermediário 3","Avançado"];
+const DEFAULT_CRITERIA = [
+{key:"pontualidade", label:"Pontualidade"},
+{key:"pratica", label:"Prática"},
+{key:"comprometimento", label:"Comprometimento"},
+{key:"desenvolvimento", label:"Desenvolvimento"}
+];
 
 let appSettings = Object.assign({
   onboarded:false,
@@ -2767,7 +2807,10 @@ let appSettings = Object.assign({
   location:{ state:null, city:"" },
   instruments:null,
   evalFrequency:"every",
-  breaks:[]
+  breaks:[],
+  levels:null,
+  useLevels:true,
+  criteria:null
 }, JSON.parse(localStorage.getItem("jp_settings_v1")||"null")||{});
 saveAppSettingsMerge();
 function saveAppSettingsMerge(){
@@ -2779,6 +2822,9 @@ appSettings.location = Object.assign({ state:null, city:"" }, appSettings.locati
 if (appSettings.growthGoalPercent === undefined) appSettings.growthGoalPercent = null;
 if (!["every","biweekly","monthly","bimonthly"].includes(appSettings.evalFrequency)) appSettings.evalFrequency = "every";
 if (!Array.isArray(appSettings.breaks)) appSettings.breaks = [];
+if (!Array.isArray(appSettings.levels) || appSettings.levels.length === 0) appSettings.levels = [...DEFAULT_LEVELS];
+if (appSettings.useLevels === undefined) appSettings.useLevels = true;
+if (!Array.isArray(appSettings.criteria) || !appSettings.criteria.some(c => c && c.key && !c.removed)) appSettings.criteria = DEFAULT_CRITERIA.map(c => ({ ...c }));
 // Migração: contas de antes desse recurso existir ganham a lista fixa antiga como ponto
 // de partida (mantém o comportamento que já tinham), em vez de começar vazias.
 if (!Array.isArray(appSettings.instruments) || appSettings.instruments.length === 0) {
@@ -2822,12 +2868,11 @@ let touchDropPosition = "left";
 let editingPlanId = null;
 let currentEditImages = [];
 
-const CRITERIA = [
-{key:"pontualidade", label:"Pontualidade"},
-{key:"pratica", label:"Prática"},
-{key:"comprometimento", label:"Comprometimento"},
-{key:"desenvolvimento", label:"Desenvolvimento"}
-];
+// Critérios em uso (formulários de avaliação) e todos os que já existiram (exibir e somar
+// avaliações antigas, mesmo de um critério que o professor tirou da lista).
+function activeCriteria(){ return appSettings.criteria.filter(c => !c.removed); }
+function allCriteria(){ return appSettings.criteria; }
+function lessonCriteria(lesson){ return allCriteria().filter(c => lesson[c.key] !== undefined && lesson[c.key] !== null && !isNaN(Number(lesson[c.key]))); }
 
 let pendingEvalQueue = [];
 let evalQueueIndex = 0;
@@ -3120,9 +3165,9 @@ if (evaluatedLessons.length === 0) return null;
 let sum = 0;
 let count = 0;
 evaluatedLessons.forEach(lesson => {
-sum += (lesson.pontualidade ?? 0) + (lesson.pratica ?? 0) + (lesson.comprometimento ?? 0) + (lesson.desenvolvimento ?? 0);
-count += 4;
+lessonCriteria(lesson).forEach(c => { sum += Number(lesson[c.key]); count++; });
 });
+if (count === 0) return null;
 return (sum / count).toFixed(1);
 }
 
@@ -3231,7 +3276,7 @@ ${badge}
 if (isEvaluated(lesson)) {
 div.innerHTML = header(`<span class="badge-evaluated">Avaliada</span>`) + `
 <div class="lesson-criteria-grid">
-${CRITERIA.map(c=>`<div class="criterion-row"><span>${c.label}</span><div class="criterion-stars">${starsDisplayHTML(lesson[c.key] ?? 0)}</div></div>`).join('')}
+${lessonCriteria(lesson).map(c=>`<div class="criterion-row"><span>${escapeHtml(c.label)}</span><div class="criterion-stars">${starsDisplayHTML(Number(lesson[c.key]))}</div></div>`).join('')}
 </div>
 ${lessonNotesHTML(lesson)}
 <div class="history-actions"><button type="button" class="btn-edit-toggle btn-notes">${lesson.taught || lesson.homework ? "Editar anotações" : "Anotar a aula"}</button></div>`;
@@ -3276,16 +3321,16 @@ if (!isPending) { attachNotesToggle(div, student, lesson, rerender); return div;
 
 const values = {};
 const wrap = div.querySelector('.eval-criteria-wrap');
-CRITERIA.forEach(c => {
+activeCriteria().forEach(c => {
 values[c.key] = 0;
 const row = document.createElement('div');
 row.className = 'star-input-row';
-row.innerHTML = `<span class="criterion-label">${c.label}</span>${buildStarInputHTML(0)}`;
+row.innerHTML = `<span class="criterion-label">${escapeHtml(c.label)}</span>${buildStarInputHTML(0)}`;
 wrap.appendChild(row);
 attachStarInputHandlers(row.querySelector('.star-input'), { set:(v)=>{ values[c.key]=v; } });
 });
 div.querySelector('.btn-save-eval').onclick = () => {
-if (!CRITERIA.every(c => values[c.key] > 0)) { alert('Avalie todos os critérios ou marque "Não houve aula".'); return; }
+if (!activeCriteria().every(c => values[c.key] > 0)) { alert('Avalie todos os critérios ou marque "Não houve aula".'); return; }
 const notes = readNotes(div);
 const fields = { status:"evaluated", ...values };
 if (notes.taught) fields.taught = notes.taught;
@@ -3996,6 +4041,9 @@ return `${String(hour).padStart(2,"0")}:${String(min).padStart(2,"0")}`;
 function parseLevelText(text){
 if(!text) return null;
 const norm = stripAccents(String(text)).toLowerCase();
+// Primeiro, um nível da lista do professor com o mesmo nome (sem ligar pra acento/maiúscula).
+const own = appSettings.levels.find(l => stripAccents(l).toLowerCase() === norm.trim());
+if (own) return own;
 const numMatch = norm.match(/(\d+)/);
 const num = numMatch ? numMatch[1] : "1";
 if (norm.startsWith("inic")) return `Iniciante ${["1","2"].includes(num)?num:"1"}`;
@@ -4304,7 +4352,7 @@ const needsReview = [];
 if (!instrumentText) needsReview.push("instrumento");
 if (!days) needsReview.push("dia da semana");
 if (!time) needsReview.push("horário");
-if (!level) needsReview.push("nível");
+if (!level && appSettings.useLevels) needsReview.push("nível");
 if (value === null) needsReview.push("valor mensal");
 if (!entry) needsReview.push("data de entrada");
 
@@ -4316,7 +4364,7 @@ time: time || "08:00",
 days: days || [],
 format: "Individual",
 value: value !== null ? value : appSettings.defaultValues.individual,
-level: level || "Iniciante 1",
+level: level || (appSettings.useLevels ? appSettings.levels[0] : ""),
 entry: entry || new Date().toISOString().slice(0,10),
 active: true,
 lessons: [],
@@ -4369,7 +4417,8 @@ let currentSort = "name_asc";
 
 function renderSortOptionList(){
 const list = document.getElementById("sortOptionList");
-list.innerHTML = SORT_OPTIONS.map(opt => `
+if (!appSettings.useLevels && currentSort.startsWith("level")) currentSort = "name_asc";
+list.innerHTML = SORT_OPTIONS.filter(opt => appSettings.useLevels || !opt.value.startsWith("level")).map(opt => `
 <div class="sort-option-row ${opt.value===currentSort?'selected':''}" data-sort="${opt.value}">
 <span>${opt.label}</span><span class="check">✓</span>
 </div>
@@ -4542,8 +4591,8 @@ if (sortVal === "name_asc") return a.name.localeCompare(b.name);
 if (sortVal === "name_desc") return b.name.localeCompare(a.name);
 if (sortVal === "entry_desc") return (b.entry || "").localeCompare(a.entry || "");
 if (sortVal === "entry_asc") return (a.entry || "").localeCompare(b.entry || "");
-if (sortVal === "level_asc") return (levelOrder[a.level] || 0) - (levelOrder[b.level] || 0);
-if (sortVal === "level_desc") return (levelOrder[b.level] || 0) - (levelOrder[a.level] || 0);
+if (sortVal === "level_asc") return levelRank(a.level) - levelRank(b.level);
+if (sortVal === "level_desc") return levelRank(b.level) - levelRank(a.level);
 return a.name.localeCompare(b.name);
 };
 
@@ -4564,12 +4613,20 @@ return `${names.slice(0,-1).join(", ")} e ${names[names.length-1]}`;
 // semana · horário · modalidade (Individual/Grupo); depois a linha tracejada; e embaixo
 // dela, centralizado, o nível do aluno. Para inativos, a linha de baixo vira a data de saída.
 // Define a "faixa" de cor do nível: Iniciante -> bronze, Intermediário -> prata, Avançado -> ouro
+// Níveis com outros nomes: a cor sai da posição na lista (primeiro terço bronze, depois
+// prata, último terço ouro). Sem níveis em uso, o anel fica na cor do app.
 function getLevelTier(level){
+if(!appSettings.useLevels) return "none";
 if(!level) return "bronze";
 if(level.startsWith("Avançado")) return "gold";
 if(level.startsWith("Intermediário")) return "silver";
-return "bronze";
+if(level.startsWith("Iniciante")) return "bronze";
+const list = appSettings.levels, idx = list.indexOf(level);
+if (idx < 0 || list.length < 2) return "bronze";
+const r = idx / (list.length - 1);
+return r < 1/3 ? "bronze" : r < 2/3 ? "silver" : "gold";
 }
+function levelRank(level){ return appSettings.levels.indexOf(level) + 1; }
 
 // Formata o tempo desde a entrada do aluno em anos/meses (ex.: "1 ano e 3 meses", "8 meses").
 function formatEntryDuration(entryStr, refStr){
@@ -4605,7 +4662,7 @@ ${s.needsReview && s.needsReview.length ? `<span class="sq-review-badge" title="
 <div class="stu-photo-wrap tier-${tier}"><div class="stu-photo">${initials(s.name)}</div></div>
 <div class="stu-name-block">
 <div class="stu-name">${s.name}</div>
-<div class="stu-sub">${s.level || "—"}</div>
+${appSettings.useLevels ? `<div class="stu-sub">${escapeHtml(s.level || "Sem nível")}</div>` : ""}
 </div>
 </div>
 <div class="stu-fields">
@@ -5404,7 +5461,7 @@ setupSwipe("chartPerfWrapper", "lineChartPerfSvg", renderPerformance);
 const PERF_ALL_ID = "__all__";
 let selectedPerfStudentId = null;
 
-// Média das notas (0 a 5 estrelas) das 4 avaliações oficiais de cada aula, por mês, no ano informado.
+// Média das notas (0 a 5 estrelas) dos critérios avaliados em cada aula, por mês, no ano informado.
 function computeStudentStarSeries(student, year){
 const series = monthNamesShort.map(m => ({ month: m, value: 0 }));
 const sums = new Array(12).fill(0);
@@ -5417,7 +5474,7 @@ if(!ts) return;
 const d = new Date(ts);
 if(d.getFullYear() !== year) return;
 
-const notas = CRITERIA.map(c => lesson[c.key]).filter(v => v !== undefined && v !== null);
+const notas = lessonCriteria(lesson).map(c => lesson[c.key]);
 if(notas.length===0) return;
 const media = notas.reduce((a,b)=>a+Number(b),0) / notas.length;
 
@@ -5444,7 +5501,7 @@ if(!ts) return;
 const d = new Date(ts);
 if(d.getFullYear() !== year) return;
 
-const notas = CRITERIA.map(c => lesson[c.key]).filter(v => v !== undefined && v !== null);
+const notas = lessonCriteria(lesson).map(c => lesson[c.key]);
 if(notas.length===0) return;
 const media = notas.reduce((a,b)=>a+Number(b),0) / notas.length;
 
@@ -5978,6 +6035,16 @@ refreshPendingNote();
 }
 ["input","change","click"].forEach(ev => document.querySelector("#modalBg .modal").addEventListener(ev, () => { if (pendingSnapshot) refreshPendingNote(); }));
 
+// Opções de nível: a lista das Configurações, "Sem nível" e, se o aluno tiver um nível que
+// saiu da lista, esse nível também (pra não trocar sem querer ao salvar).
+function renderLevelSelectOptions(s){
+const sel = document.getElementById("fLevel");
+const opts = [...appSettings.levels];
+if (s && s.level && !opts.includes(s.level)) opts.push(s.level);
+sel.innerHTML = opts.map(l => `<option value="${escapeHtml(l)}">${escapeHtml(l)}</option>`).join("") + `<option value="">Sem nível</option>`;
+sel.value = s ? (s.level || "") : appSettings.levels[0];
+document.getElementById("fLevelField").style.display = appSettings.useLevels ? "" : "none";
+}
 function openEdit(id=null){
 editingId=id;
 const s=id?students.find(x=>x.id===id):null;
@@ -5986,7 +6053,7 @@ document.getElementById("fName").value=s?.name||"";
 renderInstrumentSelectOptions();
 document.getElementById("fInstrument").value=s?.instrument||appSettings.instruments[0];
 document.getElementById("fTime").value=s?.time||"19:00";
-document.getElementById("fLevel").value=s?.level||"Iniciante 1";
+renderLevelSelectOptions(s);
 document.getElementById("fEntry").value=s?.entry||new Date().toISOString().slice(0,10);
 document.getElementById("fExit").value=s?.exit||"";
 document.getElementById("fEvalFreq").options[0].textContent = `Padrão das Configurações (${(EVAL_FREQUENCIES[appSettings.evalFrequency] || "Toda aula").toLowerCase()})`;
@@ -6063,7 +6130,7 @@ name,
 instrument:document.getElementById("fInstrument").value,
 time:document.getElementById("fTime").value,
 days,
-level:document.getElementById("fLevel").value,
+level: appSettings.useLevels ? document.getElementById("fLevel").value : (currentObj?.level || ""),
 entry:document.getElementById("fEntry").value,
 active: isActive,
 lessons: currentObj?.lessons || [],
@@ -6176,7 +6243,7 @@ const states = [];
 
 group.items.forEach(({ student: s, entry }) => {
 const st = { noClass:false, reason:null, withMakeup:false, values:{} };
-CRITERIA.forEach(c => { st.values[c.key] = 0; });
+activeCriteria().forEach(c => { st.values[c.key] = 0; });
 states.push(st);
 const prevHw = getLastHomework(s, isoFromBr(group.date));
 
@@ -6197,10 +6264,10 @@ ${prevHw ? `<div class="prev-homework"><span class="lesson-note-label">Para casa
 container.appendChild(div);
 
 const critWrap = div.querySelector(".eval-criteria-wrap");
-CRITERIA.forEach(c => {
+activeCriteria().forEach(c => {
 const row = document.createElement("div");
 row.className = "star-input-row";
-row.innerHTML = `<span class="criterion-label">${c.label}</span>${buildStarInputHTML(0)}`;
+row.innerHTML = `<span class="criterion-label">${escapeHtml(c.label)}</span>${buildStarInputHTML(0)}`;
 critWrap.appendChild(row);
 attachStarInputHandlers(row.querySelector(".star-input"), { set:(v)=>{ st.values[c.key]=v; } });
 });
@@ -6244,7 +6311,7 @@ function saveEvalPopup(group, states){
 for (let i = 0; i < group.items.length; i++) {
 const s = group.items[i].student, st = states[i];
 if (st.noClass && !st.reason) { alert(`Escolha o motivo de não ter havido aula com ${s.name}.`); return; }
-if (!st.noClass && !CRITERIA.every(c => st.values[c.key] > 0)) { alert(`Avalie todos os critérios de ${s.name} ou marque "Não houve aula".`); return; }
+if (!st.noClass && !activeCriteria().every(c => st.values[c.key] > 0)) { alert(`Avalie todos os critérios de ${s.name} ou marque "Não houve aula".`); return; }
 }
 group.items.forEach(({ student, entry }, i) => {
 const st = states[i];
@@ -6313,6 +6380,8 @@ document.getElementById("valInstrumentos").textContent = `${appSettings.instrume
 document.getElementById("valValoresPadrao").textContent = `R$ ${appSettings.defaultValues.individual}`;
 document.getElementById("valDiasUteis").textContent = formatWorkDaysLabel();
 document.getElementById("valDuracao").textContent = `${appSettings.lessonDuration} min`;
+document.getElementById("valNiveis").textContent = appSettings.useLevels ? `${appSettings.levels.length} níve${appSettings.levels.length === 1 ? "l" : "is"}` : "Sem nível";
+document.getElementById("valCriterios").textContent = `${activeCriteria().length} critério${activeCriteria().length === 1 ? "" : "s"}`;
 document.getElementById("valEvalFreq").textContent = EVAL_FREQUENCIES[appSettings.evalFrequency] || "Toda aula";
 const upcomingBreaks = (appSettings.breaks || []).filter(b => b.end >= isoOf(new Date())).length;
 document.getElementById("valFerias").textContent = upcomingBreaks ? `${upcomingBreaks} período${upcomingBreaks > 1 ? "s" : ""}` : "Nenhum";
@@ -6538,6 +6607,124 @@ appSettings.lessonDuration = val;
 saveAppSettings();
 renderSettingsSummary();
 document.getElementById("duracaoModal").classList.remove("show");
+};
+
+// --- Editor de lista (níveis e critérios): rascunho que só vai pra appSettings ao salvar.
+// Cada item guarda de onde veio (orig) pra saber o que foi renomeado.
+let listEdit = null;
+function openListEditor(cfg){
+listEdit = { ...cfg, items: cfg.items.map(it => ({ ...it })) };
+document.getElementById("listEditTitle").textContent = cfg.title;
+document.getElementById("listEditHint").textContent = cfg.hint;
+document.getElementById("listEditNewInput").placeholder = cfg.placeholder;
+document.getElementById("listEditNewInput").value = "";
+document.getElementById("listEditTop").innerHTML = "";
+document.getElementById("listEditBottom").innerHTML = "";
+if (cfg.renderTop) cfg.renderTop(document.getElementById("listEditTop"));
+renderListEditRows();
+document.getElementById("listEditModal").classList.add("show");
+}
+function renderListEditRows(){
+const wrap = document.getElementById("listEditRows");
+const items = listEdit.items;
+wrap.innerHTML = items.map((it, i) => `
+<div class="list-edit-row">
+<input type="text" class="inline-input" data-list-label="${i}" value="${escapeHtml(it.label)}" aria-label="Nome">
+<button type="button" class="list-edit-btn" data-list-up="${i}" ${i === 0 ? "disabled" : ""} aria-label="Subir">↑</button>
+<button type="button" class="list-edit-btn" data-list-down="${i}" ${i === items.length - 1 ? "disabled" : ""} aria-label="Descer">↓</button>
+<button type="button" class="list-edit-btn danger" data-list-del="${i}" aria-label="Tirar da lista">✕</button>
+</div>`).join("") || `<div class="field-hint" style="margin:0">Lista vazia.</div>`;
+wrap.querySelectorAll("[data-list-label]").forEach(inp => inp.oninput = () => { items[Number(inp.dataset.listLabel)].label = inp.value; });
+const move = (i, d) => { const [x] = items.splice(i, 1); items.splice(i + d, 0, x); renderListEditRows(); };
+wrap.querySelectorAll("[data-list-up]").forEach(b => b.onclick = () => move(Number(b.dataset.listUp), -1));
+wrap.querySelectorAll("[data-list-down]").forEach(b => b.onclick = () => move(Number(b.dataset.listDown), 1));
+wrap.querySelectorAll("[data-list-del]").forEach(b => b.onclick = () => {
+const [x] = items.splice(Number(b.dataset.listDel), 1);
+if (listEdit.onRemove) listEdit.onRemove(x);
+renderListEditRows();
+});
+if (listEdit.renderBottom) listEdit.renderBottom(document.getElementById("listEditBottom"));
+}
+function closeListEditor(){ document.getElementById("listEditModal").classList.remove("show"); listEdit = null; }
+document.getElementById("listEditCloseX").onclick = closeListEditor;
+document.getElementById("listEditCancelBtn").onclick = closeListEditor;
+function addListEditItem(){
+const input = document.getElementById("listEditNewInput");
+const label = input.value.trim();
+if (!label) return;
+if (listEdit.items.some(it => it.label.trim().toLowerCase() === label.toLowerCase())) { input.value = ""; return; }
+listEdit.items.push({ label });
+input.value = "";
+renderListEditRows();
+input.focus();
+}
+document.getElementById("listEditAddBtn").onclick = addListEditItem;
+document.getElementById("listEditNewInput").onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); addListEditItem(); } };
+document.getElementById("listEditSaveBtn").onclick = () => {
+const items = listEdit.items.map(it => ({ ...it, label: it.label.trim() })).filter(it => it.label);
+const names = items.map(it => it.label.toLowerCase());
+if (names.some((n, i) => names.indexOf(n) !== i)) { alert("Tem dois itens com o mesmo nome."); return; }
+if (listEdit.onSave(items) === false) return;
+saveAppSettings();
+renderSettingsSummary();
+closeListEditor();
+};
+
+// Níveis: renomear aqui renomeia nos alunos; tirar da lista não mexe em quem já tem o nível.
+document.getElementById("rowNiveis").onclick = () => openListEditor({
+title: "Níveis dos alunos",
+hint: "Do menor pro maior (a ordem vale pra ordenar os alunos e pra cor do anel). Renomear aqui também renomeia nos alunos; tirar da lista não apaga o nível de quem já tem.",
+placeholder: "Ex.: Básico",
+items: appSettings.levels.map(l => ({ orig: l, label: l })),
+renderTop(el){
+el.innerHTML = `<div class="toggle-field" style="margin-bottom:0.75rem"><label>Usar nível nos alunos</label><label class="switch"><input type="checkbox" id="useLevelsToggle" ${appSettings.useLevels ? "checked" : ""}><span class="switch-slider"></span></label></div>`;
+const t = el.querySelector("#useLevelsToggle");
+const sync = () => { document.getElementById("listEditBody").style.display = t.checked ? "" : "none"; };
+t.onchange = sync; sync();
+},
+onSave(items){
+const use = document.getElementById("useLevelsToggle").checked;
+if (use && items.length === 0) { alert("Adicione ao menos um nível, ou desligue \"Usar nível nos alunos\"."); return false; }
+if (use) {
+items.forEach(it => { if (it.orig && it.orig !== it.label) students.forEach(st => { if (st.level === it.orig) st.level = it.label; }); });
+saveStudents();
+appSettings.levels = items.map(it => it.label);
+}
+appSettings.useLevels = use;
+renderSortOptionList();
+renderStudents();
+}
+});
+
+// Critérios: a chave fica, o nome muda. Tirado da lista, o critério fica guardado como
+// "removed" pra avaliações antigas continuarem aparecendo; dá pra restaurar.
+document.getElementById("rowCriterios").onclick = () => {
+const removedNow = [];
+openListEditor({
+title: "Critérios de avaliação",
+hint: "Avaliados de 0 a 5 estrelas em cada aula. Renomear mantém as notas antigas; tirar da lista não apaga as notas que o critério já tem.",
+placeholder: "Ex.: Leitura de partitura",
+items: activeCriteria().map(c => ({ key: c.key, label: c.label })),
+onRemove(it){ if (it.key) removedNow.push(it); },
+renderBottom(el){
+const archived = [...appSettings.criteria.filter(c => c.removed && !listEdit.items.some(it => it.key === c.key) && !removedNow.some(r => r.key === c.key)), ...removedNow];
+el.innerHTML = archived.length ? `<div class="agenda-day-modal-section-title" style="margin-top:1rem">Tirados da lista</div>` + archived.map(c => `<div class="list-edit-archived"><span>${escapeHtml(c.label)}</span><button type="button" class="btn-edit-toggle" data-restore="${c.key}">Voltar pra lista</button></div>`).join("") : "";
+el.querySelectorAll("[data-restore]").forEach(b => b.onclick = () => {
+const key = b.dataset.restore;
+const idx = removedNow.findIndex(r => r.key === key);
+if (idx > -1) removedNow.splice(idx, 1);
+const c = appSettings.criteria.find(x => x.key === key) || {};
+listEdit.items.push({ key, label: c.label || b.previousElementSibling.textContent });
+renderListEditRows();
+});
+},
+onSave(items){
+if (items.length === 0) { alert("Deixe ao menos um critério de avaliação."); return false; }
+const next = items.map(it => ({ key: it.key || ("c_" + Date.now().toString(36) + Math.random().toString(36).slice(2,5)), label: it.label }));
+appSettings.criteria.forEach(c => { if (!next.some(n => n.key === c.key)) next.push({ ...c, removed: true }); });
+appSettings.criteria = next;
+}
+});
 };
 
 // --- Frequência da avaliação ---
