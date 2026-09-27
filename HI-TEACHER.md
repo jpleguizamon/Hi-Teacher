@@ -55,7 +55,7 @@ Tudo vive num único `index.html` (~6.000 linhas): HTML + `<style>` + `<script>`
 | Página (`data-page`) | O que tem |
 |---|---|
 | `home` | Saudação do dia, lista de aulas dos próximos dias (cards com horário, aluno, instrumento, status), lista de mensalidades do mês. |
-| `students` | Grade de cards dos alunos ativos (instrumento, horário, modalidade, permanência, mensalidade) e lista de inativos/saídas; busca, ordenação e filtros (formato, instrumento, dia). |
+| `students` | Grade de cards dos alunos ativos (instrumento, horário, modalidade, permanência, mensalidade) e lista de inativos/saídas; busca, ordenação (inclui "Por dia da semana", que agrupa os cards em seções por dia na ordem do "Início da semana", por horário; quem tem aula em vários dias aparece em cada um) e filtros (pendências, formato, instrumento, dia — o de dia aceita vários ao mesmo tempo). **Pendências**: a importação de planilha marca em `needsReview` os dados que preencheu provisoriamente (instrumento, dia, horário, nível, valor, data de entrada); o card mostra "⚠ Revisar", a página mostra um botão "N alunos com informações pendentes" que lista o que falta, e o modal do aluno avisa o que falta e destaca os campos. Uma pendência só sai quando o campo é alterado ou quando o professor toca pra confirmar que o valor provisório está certo — salvar sem mexer mantém o aviso. |
 | `evaluation` | Gráfico das 4 competências (pontualidade, prática, comprometimento, desenvolvimento) por aluno ou média geral, com histórico de avaliações por aula. |
 | `studentsPerformance` | Desempenho dos alunos por tema/assunto musical vinculado. |
 | `planner` | Organizador de aulas/materiais por tema, com upload de imagem/mapa mental. |

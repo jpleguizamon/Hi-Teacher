@@ -265,6 +265,49 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
   font-size:0.5625rem;font-weight:800;padding:0.15625rem 0.4375rem;border-radius:var(--radius-pill);letter-spacing:.02em;
 }
 
+/* ===== Pendências de alunos importados (dados provisórios) ===== */
+.pending-banner{
+  display:flex;align-items:center;justify-content:space-between;gap:0.75rem;width:100%;margin:0 0 0.875rem;
+  padding:0.75rem 1rem;border-radius:var(--radius-lg);text-align:left;cursor:pointer;
+  background:var(--sheen),rgba(251,191,36,.08);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);
+  border:0.0625rem solid rgba(251,191,36,.35);color:var(--star);font-size:0.8125rem;font-weight:700;
+  transition:border-color .2s,box-shadow .2s;
+}
+.pending-banner:hover{border-color:rgba(251,191,36,.6);box-shadow:0 0 0.75rem rgba(251,191,36,.18)}
+.pending-banner .pending-banner-cta{flex:none;font-size:0.75rem;color:var(--text);background:rgba(251,191,36,.16);border-radius:var(--radius-pill);padding:0.25rem 0.625rem}
+.pending-note{
+  margin:-0.375rem 0 1rem;padding:0.75rem 0.875rem;border-radius:var(--radius-md);
+  background:rgba(251,191,36,.08);border:0.0625rem solid rgba(251,191,36,.3);
+}
+.pending-note-title{font-size:0.8125rem;font-weight:800;color:var(--star);margin-bottom:0.25rem}
+.pending-note-text{font-size:0.75rem;color:var(--text-2);line-height:1.45;margin-bottom:0.625rem}
+.pending-chips{display:flex;flex-wrap:wrap;gap:0.375rem}
+.pending-chip{
+  display:inline-flex;align-items:center;gap:0.375rem;border-radius:var(--radius-pill);padding:0.375rem 0.625rem;
+  font-size:0.6875rem;font-weight:700;cursor:pointer;
+  background:rgba(251,191,36,.12);color:var(--star);border:0.0625rem solid rgba(251,191,36,.4);
+  transition:background .15s,color .15s,border-color .15s;
+}
+.pending-chip .pending-chip-action{font-weight:600;color:var(--text-2);opacity:.85}
+.pending-chip.resolved{background:rgba(74,222,128,.12);color:var(--green);border-color:rgba(74,222,128,.4)}
+.pending-chip.resolved .pending-chip-action{color:var(--green)}
+.field.field-pending > label{color:var(--star)}
+.field.field-pending > label::after{content:" · provisório";font-weight:600;opacity:.8}
+.field.field-pending input,.field.field-pending select,.field.field-pending .days .day:not(.selected){border-color:rgba(251,191,36,.45)}
+.pending-row{display:block;width:100%;text-align:left;cursor:pointer;font:inherit;color:inherit;transition:border-color .15s,background .15s}
+.pending-row:hover{border-color:var(--accent-line);background:rgba(47,211,242,.05)}
+.pending-row .fields{color:var(--star)}
+.filter-label-hint{font-weight:500;color:var(--faint)}
+
+/* Alunos agrupados por dia da semana (ordenação "Por dia da semana") */
+.day-group-head{
+  grid-column:1 / -1;display:flex;align-items:baseline;justify-content:space-between;gap:0.5rem;
+  margin:0.75rem 0.125rem 0;padding-bottom:0.375rem;border-bottom:0.0625rem solid var(--hairline);
+}
+.day-group-head:first-child{margin-top:0}
+.day-group-title{font-size:0.9375rem;font-weight:750;color:var(--heading);letter-spacing:-0.01em}
+.day-group-count{font-size:0.75rem;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
+
 /* ===== Barra lateral (gaveta no celular, coluna fixa no desktop) ===== */
 .overlay{position:fixed;inset:0;background:rgba(2,4,8,.55);-webkit-backdrop-filter:blur(0.25rem);backdrop-filter:blur(0.25rem);z-index:20;opacity:0;pointer-events:none;transition:opacity .22s}
 .sidebar{
@@ -1221,6 +1264,13 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 </button>
 <div class="filter-drawer" id="filterDrawer">
 <div class="filter-field">
+<label>Pendências</label>
+<div class="filter-chip-row" data-filter-group="pending">
+<button type="button" class="filter-chip selected" data-value="all">Todos</button>
+<button type="button" class="filter-chip" data-value="pending">⚠ Com pendências</button>
+</div>
+</div>
+<div class="filter-field">
 <label>Formato</label>
 <div class="filter-chip-row" data-filter-group="format">
 <button type="button" class="filter-chip selected" data-value="all">Todos</button>
@@ -1233,7 +1283,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 <div class="filter-chip-row" data-filter-group="instrument"></div>
 </div>
 <div class="filter-field">
-<label>Dia da Semana</label>
+<label>Dia da Semana <span class="filter-label-hint">· pode marcar vários</span></label>
 <div class="filter-chip-row" data-filter-group="day">
 <button type="button" class="filter-chip selected" data-value="all">Todos</button>
 <button type="button" class="filter-chip" data-value="1">Seg</button>
@@ -1255,6 +1305,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 <button class="icon-btn-ctrl" id="addStudentBtn" title="Adicionar aluno">+</button>
 </div>
 </div>
+<button type="button" class="pending-banner" id="pendingBanner" style="display:none"></button>
 <div class="perf-search-panel" id="studentSearchPanel" style="display:none;margin-top:0;padding-top:0;border-top:none">
 <div class="search-input-wrap">
 <input type="text" id="studentSearchInput" class="student-picker-search" placeholder="Buscar aluno por nome..." autocomplete="off">
@@ -1692,6 +1743,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 <div class="modal-bg" id="modalBg">
 <div class="modal">
 <h2 id="modalTitle">Novo aluno</h2>
+<div class="pending-note" id="pendingNote" style="display:none"></div>
 <div class="field"><label>Nome do aluno</label><input id="fName" placeholder="Ex.: João Silva"></div>
 <div class="field"><label>Instrumento</label>
 <select id="fInstrument"></select>
@@ -3396,7 +3448,8 @@ document.getElementById("filterClearBtn").onclick = (e) => {
 e.stopPropagation();
 currentFilters.format = "all";
 currentFilters.instrument = "all";
-currentFilters.day = "all";
+currentFilters.day = [];
+currentFilters.pending = "all";
 document.querySelectorAll(".filter-chip-row .filter-chip").forEach(c => c.classList.toggle("selected", c.dataset.value === "all"));
 renderStudents();
 closeAllStudentToolbarPanels();
@@ -3744,12 +3797,14 @@ const time = mapping.time > -1 ? parseTimeText(row[mapping.time]) : null;
 const level = mapping.level > -1 ? parseLevelText(row[mapping.level]) : null;
 const value = mapping.value > -1 ? parseValueText(row[mapping.value]) : null;
 const entry = mapping.entry > -1 ? parseEntryDateText(row[mapping.entry]) : null;
+const instrumentText = mapping.instrument > -1 ? String(row[mapping.instrument]||"").trim() : "";
 
 // A planilha do professor pode não ter todas as informações (ex.: sem a data de
 // entrada ou o dia da semana de um aluno específico). Nesses casos preenchemos um
 // valor provisório pra não travar a importação, mas marcamos o quê foi "chutado"
 // pra avisar e pedir pra revisar depois.
 const needsReview = [];
+if (!instrumentText) needsReview.push("instrumento");
 if (!days) needsReview.push("dia da semana");
 if (!time) needsReview.push("horário");
 if (!level) needsReview.push("nível");
@@ -3759,7 +3814,7 @@ if (!entry) needsReview.push("data de entrada");
 imported.push({
 id: nextId++,
 name,
-instrument: mapping.instrument > -1 ? String(row[mapping.instrument]||"").trim() : "",
+instrument: instrumentText,
 time: time || "08:00",
 days: days || [],
 format: "Individual",
@@ -3791,7 +3846,7 @@ summaryEl.textContent = `${imported.length} aluno(s) importado(s) com todas as i
 listEl.innerHTML = "";
 } else {
 titleEl.textContent = "Importação concluída — dá uma conferida";
-summaryEl.textContent = `${imported.length} aluno(s) importado(s). Para ${needReview.length} deles, algumas informações não estavam na planilha, então usei um valor provisório — dá uma olhada e ajusta quando puder (o aviso "⚠ Revisar" some do card assim que você editar e salvar o aluno). Formato ficou como "Individual" pra todos.`;
+summaryEl.textContent = `${imported.length} aluno(s) importado(s). Para ${needReview.length} deles, algumas informações não estavam na planilha, então usei um valor provisório. O aviso "⚠ Revisar" fica no card até você corrigir ou confirmar cada dado — toque no aluno pra ver o que falta, ou use o botão de pendências na página Alunos. Formato ficou como "Individual" pra todos.`;
 listEl.innerHTML = needReview.map(s => `
 <div class="import-review-row">
 <div class="name">${s.name}</div>
@@ -3810,7 +3865,8 @@ const SORT_OPTIONS = [
 { value: "entry_desc", label: "Data (Recentes)" },
 { value: "entry_asc", label: "Data (Antigos)" },
 { value: "level_asc", label: "Nível (Menor p/ Maior)" },
-{ value: "level_desc", label: "Nível (Maior p/ Menor)" }
+{ value: "level_desc", label: "Nível (Maior p/ Menor)" },
+{ value: "weekday", label: "Por dia da semana" }
 ];
 let currentSort = "name_asc";
 
@@ -3845,7 +3901,8 @@ sortDrawer.classList.remove("open");
 btnToggleSort.classList.remove("active");
 }});
 
-let currentFilters = { format: "all", instrument: "all", day: "all" };
+// day é uma lista (vazia = todos os dias): o filtro de dia aceita vários dias ao mesmo tempo.
+let currentFilters = { format: "all", instrument: "all", day: [], pending: "all" };
 
 function bindFilterChipGroup(groupName, key){
 document.querySelectorAll(`.filter-chip-row[data-filter-group="${groupName}"] .filter-chip`).forEach(chip => {
@@ -3857,9 +3914,29 @@ renderStudents();
 };
 });
 }
+function syncDayFilterChips(){
+document.querySelectorAll('.filter-chip-row[data-filter-group="day"] .filter-chip').forEach(c => {
+c.classList.toggle("selected", c.dataset.value === "all" ? currentFilters.day.length === 0 : currentFilters.day.includes(Number(c.dataset.value)));
+});
+}
+function bindDayFilterChips(){
+document.querySelectorAll('.filter-chip-row[data-filter-group="day"] .filter-chip').forEach(chip => {
+chip.onclick = (e) => {
+e.stopPropagation();
+if (chip.dataset.value === "all") currentFilters.day = [];
+else {
+const d = Number(chip.dataset.value);
+currentFilters.day = currentFilters.day.includes(d) ? currentFilters.day.filter(x => x !== d) : [...currentFilters.day, d];
+}
+syncDayFilterChips();
+renderStudents();
+};
+});
+}
+bindFilterChipGroup("pending", "pending");
 bindFilterChipGroup("format", "format");
 renderInstrumentFilterChips();
-bindFilterChipGroup("day", "day");
+bindDayFilterChips();
 renderInstrumentSelectOptions();
 
 const studentSearchPanel = document.getElementById("studentSearchPanel");
@@ -3892,8 +3969,52 @@ renderStudents();
 };
 
 function updateFilterDot() {
-filterDot.classList.toggle("active", currentFilters.format !== "all" || currentFilters.instrument !== "all" || currentFilters.day !== "all");
+filterDot.classList.toggle("active", currentFilters.format !== "all" || currentFilters.instrument !== "all" || currentFilters.day.length > 0 || currentFilters.pending !== "all");
 }
+
+// ===== Pendências: dados provisórios que a importação de planilha preencheu sozinha =====
+const WEEKDAY_NAMES = ["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"];
+// Rótulo guardado em student.needsReview -> id do campo no formulário do aluno.
+const PENDING_FIELDS = {
+"instrumento": "fInstrument",
+"dia da semana": "days",
+"horário": "fTime",
+"nível": "fLevel",
+"valor mensal": "fValueSelect",
+"data de entrada": "fEntry"
+};
+function hasPending(s){ return !!(s && s.needsReview && s.needsReview.length); }
+function capitalizeFirst(t){ return t.charAt(0).toUpperCase() + t.slice(1); }
+
+function updatePendingBanner(){
+const banner = document.getElementById("pendingBanner");
+const count = students.filter(hasPending).length;
+if (!count) { banner.style.display = "none"; return; }
+banner.style.display = "flex";
+banner.innerHTML = `<span>⚠ ${count} ${count === 1 ? "aluno com informações pendentes" : "alunos com informações pendentes"}</span><span class="pending-banner-cta">Ver o que falta</span>`;
+}
+
+function showPendingList(){
+const list = students.filter(hasPending).sort((a,b) => a.name.localeCompare(b.name));
+document.getElementById("importReviewTitle").textContent = "Informações pendentes";
+document.getElementById("importReviewSummaryText").textContent = list.length
+? "Estes dados vieram provisórios da importação. Toque no aluno pra corrigir ou confirmar: o aviso só sai quando cada dado for alterado ou confirmado."
+: "Nenhuma pendência: está tudo revisado.";
+const listEl = document.getElementById("importReviewList");
+listEl.innerHTML = list.map(s => `
+<button type="button" class="import-review-row pending-row" data-open-student="${s.id}">
+<div class="name">${s.name}${s.active === false ? " (inativo)" : ""}</div>
+<div class="fields">⚠ Falta: ${s.needsReview.join(", ")}</div>
+</button>`).join("");
+listEl.querySelectorAll("[data-open-student]").forEach(btn => {
+btn.onclick = () => {
+document.getElementById("importReviewModal").classList.remove("show");
+openEdit(Number(btn.dataset.openStudent));
+};
+});
+document.getElementById("importReviewModal").classList.add("show");
+}
+document.getElementById("pendingBanner").onclick = () => showPendingList();
 
 function renderStudents(){
 const boxActive=document.getElementById("studentsActive");
@@ -3905,13 +4026,16 @@ const sortVal = currentSort;
 const fmtVal = currentFilters.format;
 const instVal = currentFilters.instrument;
 const dayVal = currentFilters.day;
+const pendVal = currentFilters.pending;
 const searchVal = (document.getElementById("studentSearchInput")?.value || "").trim().toLowerCase();
 updateFilterDot();
+updatePendingBanner();
 
 const filterFn = (s) => {
+if (pendVal === "pending" && !hasPending(s)) return false;
 if (fmtVal !== "all" && getFormat(s) !== fmtVal) return false;
 if (instVal !== "all" && s.instrument !== instVal) return false;
-if (dayVal !== "all" && !s.days.includes(Number(dayVal))) return false;
+if (dayVal.length && !(s.days || []).some(d => dayVal.includes(d))) return false;
 if (searchVal && !s.name.toLowerCase().includes(searchVal)) return false;
 return true;
 };
@@ -3923,7 +4047,7 @@ if (sortVal === "entry_desc") return (b.entry || "").localeCompare(a.entry || ""
 if (sortVal === "entry_asc") return (a.entry || "").localeCompare(b.entry || "");
 if (sortVal === "level_asc") return (levelOrder[a.level] || 0) - (levelOrder[b.level] || 0);
 if (sortVal === "level_desc") return (levelOrder[b.level] || 0) - (levelOrder[a.level] || 0);
-return 0;
+return a.name.localeCompare(b.name);
 };
 
 const activeList = students.filter(s=>s.active!==false && filterFn(s)).sort(sortFn);
@@ -3982,7 +4106,7 @@ ${s.needsReview && s.needsReview.length ? `<span class="sq-review-badge" title="
 </div>
 </div>
 <div class="stu-fields">
-<div class="stu-row"><span class="stu-label">Instrumento</span><span class="stu-value">${s.instrument}</span></div>
+<div class="stu-row"><span class="stu-label">Instrumento</span><span class="stu-value">${s.instrument || "—"}</span></div>
 <div class="stu-row"><span class="stu-label">${isInactive?'Saída':'Horário'}</span><span class="stu-value ${isInactive?'schedule-inactive':''}">${scheduleValue}</span></div>
 <div class="stu-row"><span class="stu-label">Modalidade</span><span class="stu-value">${format}</span></div>
 <div class="stu-row"><span class="stu-label">Permanência</span><span class="stu-value">${formatEntryDuration(s.entry, refDate)}</span></div>
@@ -3993,7 +4117,27 @@ el.onclick = () => openEdit(s.id);
 return el;
 };
 
+if (sortVal === "weekday") {
+// Uma seção por dia, na ordem da semana configurada (Início da semana), com os alunos
+// em ordem de horário. Quem tem aula em mais de um dia aparece em cada um deles; com
+// filtro de dia ligado, só os dias filtrados viram seção.
+const ws = appSettings.weekStart ?? 1;
+const dayOrder = [0,1,2,3,4,5,6].map(i => (ws + i) % 7).filter(d => !dayVal.length || dayVal.includes(d));
+const byTime = (a, b) => (a.time || "").localeCompare(b.time || "") || a.name.localeCompare(b.name);
+const appendGroup = (title, list) => {
+if (!list.length) return;
+const head = document.createElement("div");
+head.className = "day-group-head";
+head.innerHTML = `<span class="day-group-title">${title}</span><span class="day-group-count">${list.length} ${list.length === 1 ? "aluno" : "alunos"}</span>`;
+boxActive.appendChild(head);
+list.forEach(s => boxActive.appendChild(createSquare(s, false)));
+};
+dayOrder.forEach(d => appendGroup(WEEKDAY_NAMES[d], activeList.filter(s => (s.days || []).includes(d)).sort(byTime)));
+if (!dayVal.length) appendGroup("Sem dia definido", activeList.filter(s => !(s.days || []).length).sort(byTime));
+} else {
 activeList.forEach(s=>boxActive.appendChild(createSquare(s,false)));
+}
+if (activeList.length === 0) boxActive.innerHTML = `<div class="empty" style="grid-column:1/-1">${students.some(s => s.active !== false) ? "Nenhum aluno com esses filtros." : "Nenhum aluno ativo ainda. Toque no + pra cadastrar."}</div>`;
 
 if(inactiveList.length===0) boxInactive.innerHTML="<div style='color:#94a3b8;font-size:13px;padding:10px 0'>Nenhum inativo.</div>";
 else inactiveList.forEach(s=>boxInactive.appendChild(createSquare(s,true)));
@@ -5266,6 +5410,58 @@ document.querySelectorAll(".day").forEach(b => {
 b.onclick = () => { b.classList.toggle("selected"); updateModalFormatPreview(); };
 });
 
+// Valores do formulário do aluno, pelos mesmos rótulos das pendências. Comparar com a foto
+// tirada ao abrir diz se a pessoa realmente mexeu naquele campo.
+let pendingSnapshot = null;
+let pendingConfirmed = new Set();
+function readStudentFormValues(){
+return {
+"instrumento": document.getElementById("fInstrument").value,
+"dia da semana": [...document.querySelectorAll(".day.selected")].map(b => b.dataset.day).sort().join(","),
+"horário": document.getElementById("fTime").value,
+"nível": document.getElementById("fLevel").value,
+"valor mensal": valSelect.value === "outro" ? "outro:" + document.getElementById("fCustomValue").value : "auto",
+"data de entrada": document.getElementById("fEntry").value
+};
+}
+function isPendingResolved(label, now){
+return pendingConfirmed.has(label) || (!!pendingSnapshot && now[label] !== pendingSnapshot[label]);
+}
+function refreshPendingNote(){
+if (!pendingSnapshot) return;
+const now = readStudentFormValues();
+document.querySelectorAll("#pendingNote .pending-chip").forEach(chip => {
+const label = chip.dataset.pending;
+const changed = now[label] !== pendingSnapshot[label];
+const resolved = isPendingResolved(label, now);
+chip.classList.toggle("resolved", resolved);
+chip.querySelector(".pending-chip-action").textContent = changed ? "✓ alterado" : (pendingConfirmed.has(label) ? "✓ confirmado" : "· está certo? toque");
+const fieldEl = document.getElementById(PENDING_FIELDS[label] || "")?.closest(".field");
+if (fieldEl) fieldEl.classList.toggle("field-pending", !resolved);
+});
+}
+function setupPendingNote(s){
+const note = document.getElementById("pendingNote");
+document.querySelectorAll("#modalBg .field-pending").forEach(f => f.classList.remove("field-pending"));
+pendingConfirmed = new Set();
+if (!hasPending(s)) { note.style.display = "none"; note.innerHTML = ""; pendingSnapshot = null; return; }
+pendingSnapshot = readStudentFormValues();
+note.innerHTML = `
+<div class="pending-note-title">⚠ Falta revisar</div>
+<div class="pending-note-text">Estes dados vieram provisórios da importação. O aviso sai quando você alterar o campo. Se o valor já estiver certo, toque nele pra confirmar.</div>
+<div class="pending-chips">${s.needsReview.map(label => `<button type="button" class="pending-chip" data-pending="${label}">${capitalizeFirst(label)} <span class="pending-chip-action"></span></button>`).join("")}</div>`;
+note.style.display = "block";
+note.querySelectorAll(".pending-chip").forEach(chip => {
+chip.onclick = () => {
+const label = chip.dataset.pending;
+if (pendingConfirmed.has(label)) pendingConfirmed.delete(label); else pendingConfirmed.add(label);
+refreshPendingNote();
+};
+});
+refreshPendingNote();
+}
+["input","change","click"].forEach(ev => document.querySelector("#modalBg .modal").addEventListener(ev, () => { if (pendingSnapshot) refreshPendingNote(); }));
+
 function openEdit(id=null){
 editingId=id;
 const s=id?students.find(x=>x.id===id):null;
@@ -5290,6 +5486,7 @@ customValWrapper.style.display = "none";
 
 document.querySelectorAll(".day").forEach(b=>b.classList.toggle("selected", s ? (s.days||[]).includes(Number(b.dataset.day)) : appSettings.workDays.includes(Number(b.dataset.day))));
 updateModalFormatPreview();
+setupPendingNote(s);
 
 const statusWrap = document.getElementById("statusToggleWrapper");
 const btnToggle = document.getElementById("btnToggleStatus");
@@ -5360,6 +5557,14 @@ const selVal = valSelect.value;
 const objForDefault = {...obj, id: editingId || -1};
 if (selVal === "outro") obj.value = Number(document.getElementById("fCustomValue").value) || getDefaultValueFor(objForDefault);
 else obj.value = getDefaultValueFor(objForDefault);
+
+// O aviso de pendência só sai dos campos que foram alterados ou confirmados; salvar
+// sem mexer num dado provisório mantém o "⚠ Revisar" no card.
+if (currentObj && hasPending(currentObj)) {
+const now = readStudentFormValues();
+const remaining = currentObj.needsReview.filter(label => !isPendingResolved(label, now));
+if (remaining.length) obj.needsReview = remaining;
+}
 
 if(editingId) students=students.map(s=>s.id===editingId?obj:s);
 else students.push(obj);
@@ -5645,7 +5850,7 @@ document.getElementById("profileModal").classList.remove("show");
 function getKnownInstruments(){
 const fromStudents = students.map(s=>s.instrument);
 const fromOverrides = Object.keys(appSettings.defaultValues.byInstrument);
-return [...new Set([...appSettings.instruments, ...fromStudents, ...fromOverrides])];
+return [...new Set([...appSettings.instruments, ...fromStudents, ...fromOverrides])].filter(Boolean);
 }
 // Popula o <select> de instrumento do modal de aluno com os instrumentos configurados
 // (mais qualquer um só usado por um aluno importado), preservando a seleção atual.
