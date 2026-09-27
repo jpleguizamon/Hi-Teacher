@@ -54,18 +54,32 @@ Tudo vive num único `index.html` (~6.000 linhas): HTML + `<style>` + `<script>`
 
 | Página (`data-page`) | O que tem |
 |---|---|
-| `home` | Saudação do dia, lista de aulas dos próximos dias (cards com horário, aluno, instrumento, status), lista de mensalidades do mês. |
+| `home` | Saudação do dia, lista de aulas dos próximos dias (cards com horário, aluno, instrumento, status e o "Para casa" da última aula anotada do aluno), reposições pendentes/marcadas e lista de mensalidades do mês. Dia de feriado ou férias aparece com o status "Feriado"/"Férias" em vez de "Em breve"; reposição marcada aparece como aula extra ("· reposição"). |
 | `students` | Grade de cards dos alunos ativos (instrumento, dia(s) da semana por extenso — "Segunda e Sexta" —, horário em linha própria, modalidade, permanência, mensalidade) e lista de inativos/saídas; busca, ordenação (inclui "Por dia da semana", que agrupa os cards em seções por dia na ordem do "Início da semana", por horário; quem tem aula em vários dias aparece em cada um) e filtros (pendências, formato, instrumento, dia — o de dia aceita vários ao mesmo tempo). **Pendências**: a importação de planilha marca em `needsReview` os dados que preencheu provisoriamente (instrumento, dia, horário, nível, valor, data de entrada); o card mostra "⚠ Revisar", a página mostra um botão "N alunos com informações pendentes" que lista o que falta, e o modal do aluno avisa o que falta e destaca os campos. Uma pendência só sai quando o campo é alterado ou quando o professor toca pra confirmar que o valor provisório está certo — salvar sem mexer mantém o aviso. |
-| `evaluation` | Gráfico das 4 competências (pontualidade, prática, comprometimento, desenvolvimento) por aluno ou média geral, com histórico de avaliações por aula. |
+| `evaluation` | Gráfico das 4 competências (pontualidade, prática, comprometimento, desenvolvimento) por aluno ou média geral, com histórico por aula. Cada aula do histórico fica como Avaliada, Aguardando avaliação, Aula dada (fora do dia de avaliação), Não houve aula (com motivo) ou Sem aula (feriado/férias, automático, com botão "Teve aula mesmo assim"). Toda aula aceita anotações "O que foi dado" e "Para estudar em casa"; na aula seguinte o app mostra o "Para casa da aula anterior". |
 | `studentsPerformance` | Desempenho dos alunos por tema/assunto musical vinculado. No modal do aluno dá pra vincular, criar e tirar um tema (lixeira em cada tema: remove só o vínculo e a nota daquele aluno; o tema continua no Organizador de Aulas). |
 | `planner` | Organizador de aulas/materiais por tema, com upload de imagem/mapa mental. |
-| `agenda` | Calendário mensal com dias de aula, feriados nacionais e da cidade configurada. |
+| `agenda` | Calendário mensal com dias de aula (asterisco só onde vai ter aula de fato: some em feriado e férias), feriados nacionais e do estado configurado, férias/recesso gerais (etiqueta verde-água com a primeira palavra do nome) e reposições marcadas (etiqueta lilás "Aula extra"). Tocar no dia lista as aulas previstas com horário, riscando as que não vão acontecer e dizendo o motivo. |
 | `goals` | Metas pessoais/profissionais organizadas por período (dia/semana/mês/ano), inspirado no padrão de apps de tarefas (seções fixas, progresso por seção, concluídas colapsadas). |
 | `evolutionFinancial` | Gráfico de faturamento mês a mês, KPIs (maior ganho, média mensal), edição de valor por mês. |
 | `evolutionQuantitative` | Gráfico de nº de alunos ativos por mês. |
 | `tests` | Página interna de testes/mockups de componentes (não é uma feature do produto final). |
 
-Outras telas importantes fora do menu principal: `#authGate` (login/cadastro via Supabase), `#onboardingGate` (configuração inicial: nome, cidade/estado, instrumentos lecionados, mensalidade padrão), Configurações (lista de instrumentos customizável, valores padrão, dias úteis, duração de aula, lembretes, localização).
+Outras telas importantes fora do menu principal: `#authGate` (login/cadastro via Supabase), `#onboardingGate` (configuração inicial: nome, cidade/estado, instrumentos lecionados, mensalidade padrão), Configurações (lista de instrumentos customizável, valores padrão, dias úteis, duração de aula, frequência da avaliação, férias e recesso, lembretes, localização).
+
+## Regras das aulas (set/2026)
+
+Decididas para o app servir a qualquer professor de música. Regra geral: **dado antigo continua funcionando igual e o que é novo começa vazio ou com o comportamento de antes.**
+
+- **Motor de aulas** (`getStudentOccurrences` / `getStudentTimeline` / `getLessonsOnDate`): tudo que precisa saber "quando esse aluno tem aula" passa por ele — histórico, pop-up pós-aula, Início, Agenda e lembretes. A aula de hoje só conta depois de terminar, usando a duração do aluno ou a padrão das Configurações (antes era 1 hora fixa).
+- **Frequência da avaliação**: Configurações → "Avaliar: toda aula / quinzenal / mensal / bimestral" (padrão: toda aula, igual a antes), com exceção por aluno no cadastro ("Avaliar este aluno"). Só a primeira aula dada de cada período pede avaliação; as outras ficam como "Aula dada", sem pop-up nem "Aguardando avaliação". Quinzenal = janelas fixas de 14 dias começando numa segunda.
+- **Motivo da falta**: "Não houve aula" pede o motivo — Aluno faltou e avisou / Aluno faltou sem avisar / Professor cancelou / Feriado-férias. Registros antigos de "Não houve aula" ficam sem motivo. O card do aluno mostra "Faltas no mês" (só as duas faltas do aluno; cancelamento e feriado não contam; laranja a partir de 2).
+- **Reposições**: "Professor cancelou" sempre gera reposição; "Aluno faltou e avisou" pergunta se vai repor. A reposição fica em "Reposições pendentes" no Início até ganhar data e horário ("Marcar"); marcada, vira aula extra no Início e na Agenda e é avaliada como qualquer aula. Dá pra dispensar (✕) ou desmarcar. Ficam em `student.makeups` (`{id, originDate, reason, status: pending|scheduled|dismissed, date, time}`) e o registro da aula extra leva `makeupId`.
+- **Férias e recesso**: Configurações → "Férias e recesso", períodos para todos os alunos ou só um (`appSettings.breaks`). Aulas nesses períodos e nos feriados nacionais/estaduais da Agenda viram "Não houve aula (feriado/férias)" automaticamente, sem avaliação e sem pendência. Ponto facultativo (Carnaval, Corpus Christi) **não** cancela aula.
+- **Anotações da aula**: `taught` ("O que foi dado") e `homework` ("Para estudar em casa") no próprio registro da aula. Pensado para o futuro app do aluno mostrar a lição de casa.
+- **Onde fica cada dado novo** (tudo dentro das chaves que já sincronizam): configurações gerais em `jp_settings_v1` (`evalFrequency`, `breaks`); por aluno em `jp_students_v5` (`evalFrequency`, `makeups`, e nos registros de `lessons`: `status` "evaluated" | "noclass" | "given", `reason`, `makeupId`, `makeupCreated`, `taught`, `homework`).
+- **Salvar o aluno preserva tudo**: o formulário parte do aluno salvo e troca só os campos dele (antes, editar um aluno apagava temas e qualquer dado fora do formulário).
+- A versão antiga no Netlify não conhece os registros novos (ex.: "Aula dada", reposição) — mais um motivo para usar só a versão do GitHub Pages.
 
 ## Stack técnica
 
