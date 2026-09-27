@@ -2150,6 +2150,10 @@ const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_
 
 let authCurrentUser = null;
 let cloudSyncTimer = null;
+// Só envia pra nuvem depois que a cópia da nuvem foi lida com sucesso nesta sessão.
+// Sem isso, uma leitura que falhasse (ou demorasse) fazia o app enviar os dados deste
+// aparelho — vazios num celular novo — por cima dos dados da nuvem, apagando tudo.
+let cloudPullOk = false;
 
 // Intercepta toda escrita no localStorage: se for uma chave do app e o usuário estiver
 // logado, agenda um envio pra nuvem alguns segundos depois (evita mandar uma requisição
@@ -2157,7 +2161,7 @@ let cloudSyncTimer = null;
 const _nativeSetItem = Storage.prototype.setItem;
 Storage.prototype.setItem = function(key, value){
 _nativeSetItem.call(this, key, value);
-if (this === localStorage && authCurrentUser && CLOUD_SYNC_KEYS.includes(key)) {
+if (this === localStorage && authCurrentUser && cloudPullOk && CLOUD_SYNC_KEYS.includes(key)) {
 clearTimeout(cloudSyncTimer);
 cloudSyncTimer = setTimeout(pushCloudData, 1500);
 }
@@ -2171,17 +2175,30 @@ try { await supabaseClient.from("user_data").upsert({ user_id: authCurrentUser.i
 catch(e) { console.error("Falha ao sincronizar com a nuvem:", e); }
 }
 
+function showCloudWarning(msg){
+const toast = document.createElement("div");
+toast.className = "reminder-toast";
+toast.textContent = msg;
+document.body.appendChild(toast);
+setTimeout(() => toast.remove(), 9000);
+}
+
 async function pullCloudData(){
 if (!supabaseClient) return;
 try {
-const { data: row } = await supabaseClient.from("user_data").select("data").eq("user_id", authCurrentUser.id).maybeSingle();
+const { data: row, error } = await supabaseClient.from("user_data").select("data").eq("user_id", authCurrentUser.id).maybeSingle();
+if (error) throw error;
+cloudPullOk = true;
 if (!row || !row.data) { await pushCloudData(); return; }
 let changed = false;
 Object.entries(row.data).forEach(([k, v]) => {
 if (CLOUD_SYNC_KEYS.includes(k) && localStorage.getItem(k) !== v) { _nativeSetItem.call(localStorage, k, v); changed = true; }
 });
 if (changed) location.reload();
-} catch(e) { console.error("Falha ao carregar dados da nuvem:", e); }
+} catch(e) {
+console.error("Falha ao carregar dados da nuvem:", e);
+showCloudWarning("Não foi possível carregar seus dados da nuvem. Nada foi apagado — feche e abra o app de novo com internet antes de cadastrar ou editar algo.");
+}
 }
 
 function showAuthGate(subtitle){
