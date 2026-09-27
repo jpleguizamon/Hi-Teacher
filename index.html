@@ -1030,6 +1030,10 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 /* ===== Modais: o fundo só escurece e o próprio painel é o vidro fosco.
    (Desfocar os dois não funciona: um backdrop-filter dentro de outro só enxerga o pai.) ===== */
 #makeupModal,#quickLessonModal{z-index:32}
+#receiptModal{z-index:33}
+.receipt-preview{display:block;width:100%;border-radius:var(--radius-sm);background:#fff;box-shadow:var(--shadow-sm)}
+.pay-item{display:flex;flex-direction:column;align-items:stretch;gap:0.25rem}
+.pay-receipt{border:none;background:none;padding:0.125rem 0;color:var(--accent);font-size:0.6875rem;font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:0.15em}
 .modal-bg{position:fixed;inset:0;z-index:30;background:rgba(2,4,8,.5);display:none;align-items:center;justify-content:center;padding:1.25rem}
 .modal-bg.show{display:flex}
 .modal-bg.show .modal{animation:modalIn .26s var(--ease-out)}
@@ -2098,6 +2102,8 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 </div>
 </div>
 <div class="field"><label>Nome</label><input id="profName" placeholder="Ex.: Professor JP"></div>
+<div class="field"><label>Nome completo (aparece no recibo)</label><input id="profFullName" placeholder="Ex.: João Pedro Leguizamon"></div>
+<div class="field"><label>CPF ou CNPJ (opcional, aparece no recibo)</label><input id="profDocument" inputmode="numeric" placeholder="Ex.: 123.456.789-00"></div>
 <div class="actions"><button class="cancel" id="profCancelBtn">Cancelar</button><button class="save" id="profSaveBtn">Salvar</button></div>
 </div>
 </div>
@@ -2358,6 +2364,19 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 <div class="field-hint" id="quickLessonInfo" style="margin-bottom:0.75rem"></div>
 <div id="quickLessonBody"></div>
 <div class="actions"><button class="cancel" id="quickLessonCancel">Cancelar</button><button class="save" id="quickLessonSave">Salvar</button></div>
+</div>
+</div>
+
+<!-- Modal: Recibo de pagamento -->
+<div class="modal-bg" id="receiptModal">
+<div class="modal">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+<h2 style="margin:0">Recibo</h2>
+<button class="close-btn-inline" id="receiptCloseX" aria-label="Fechar">✕</button>
+</div>
+<img id="receiptPreview" class="receipt-preview" alt="Prévia do recibo">
+<div class="field-hint" id="receiptHint" style="margin-top:0.75rem"></div>
+<div class="actions"><button class="cancel" id="receiptDownloadBtn">Baixar</button><button class="save" id="receiptShareBtn">Compartilhar</button></div>
 </div>
 </div>
 
@@ -6990,6 +7009,166 @@ if (det) { document.getElementById("fLocationDetailLabel").textContent = det.lab
 let paidDraft = new Set();
 let trackingAuto = false;
 document.getElementById("fTrackingSince").addEventListener("input", () => { trackingAuto = false; });
+// ===== Recibo de pagamento (PNG) =====
+// Valor por extenso em reais, até milhões ("cento e cinquenta reais e cinquenta centavos").
+function valorPorExtenso(n){
+const U = ["zero","um","dois","três","quatro","cinco","seis","sete","oito","nove","dez","onze","doze","treze","catorze","quinze","dezesseis","dezessete","dezoito","dezenove"];
+const D = ["","","vinte","trinta","quarenta","cinquenta","sessenta","setenta","oitenta","noventa"];
+const C = ["","cento","duzentos","trezentos","quatrocentos","quinhentos","seiscentos","setecentos","oitocentos","novecentos"];
+const ate999 = x => {
+if (x === 100) return "cem";
+const parts = [], h = Math.floor(x / 100), r = x % 100;
+if (h) parts.push(C[h]);
+if (r) parts.push(r < 20 ? U[r] : D[Math.floor(r / 10)] + (r % 10 ? " e " + U[r % 10] : ""));
+return parts.join(" e ");
+};
+const inteiro = x => {
+if (x === 0) return "zero";
+const mi = Math.floor(x / 1e6), mil = Math.floor((x % 1e6) / 1000), r = x % 1000;
+const groups = [];
+if (mi) groups.push(mi === 1 ? "um milhão" : ate999(mi) + " milhões");
+if (mil) groups.push(mil === 1 ? "mil" : ate999(mil) + " mil");
+if (r) groups.push(ate999(r));
+if (groups.length > 1 && r && (r < 100 || r % 100 === 0)) { const last = groups.pop(); return groups.join(" ") + " e " + last; }
+return groups.join(" ");
+};
+const total = Math.round(Number(n || 0) * 100);
+const reais = Math.floor(total / 100), cent = total % 100;
+const parts = [];
+if (reais) parts.push(inteiro(reais) + (reais === 1 ? " real" : (reais % 1e6 === 0 ? " de reais" : " reais")));
+if (cent) parts.push(inteiro(cent) + (cent === 1 ? " centavo" : " centavos"));
+return parts.length ? parts.join(" e ") : "zero reais";
+}
+function moneyFull(v){ return Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }); }
+function longDate(iso){ const d = dateFromIso(iso); return `${d.getDate()} de ${MONTH_FULL[d.getMonth()]} de ${d.getFullYear()}`; }
+// Referência do recibo; com o instrumento no texto corrido ("mensalidade de setembro/2026
+// das aulas de bateria", "aula de piano do dia 10/09/2026", "pacote de 10 aulas de canto…").
+function receiptReference(s, item, withInstrument){
+const inst = withInstrument && s.instrument ? s.instrument.toLowerCase() : "";
+if (item.kind === "month") { const [y, m] = item.key.split("-").map(Number); return `mensalidade de ${MONTH_FULL[m-1]}/${y}${inst ? ` das aulas de ${inst}` : ""}`; }
+if (item.kind === "lesson") return `aula${inst ? ` de ${inst}` : ""} do dia ${item.date}`;
+const size = item.size || s.packageSize;
+return `pacote${size ? ` de ${size}` : " de"} aulas${inst ? ` de ${inst}` : ""} iniciado em ${formatDateShort(item.ref)}`;
+}
+// Quebra o texto em linhas que cabem na largura.
+function wrapCanvasText(ctx, text, maxWidth){
+const words = text.split(/\s+/), lines = [];
+let line = "";
+words.forEach(w => {
+const test = line ? line + " " + w : w;
+if (ctx.measureText(test).width > maxWidth && line) { lines.push(line); line = w; } else line = test;
+});
+if (line) lines.push(line);
+return lines;
+}
+// Logo do app recolorida pra aparecer discreta no fundo branco.
+function tintedLogo(color){
+return new Promise(resolve => {
+const src = document.querySelector(".side-logo-img, .header-app-title")?.src;
+if (!src) return resolve(null);
+const img = new Image();
+img.onload = () => {
+const c = document.createElement("canvas");
+c.width = img.naturalWidth; c.height = img.naturalHeight;
+const x = c.getContext("2d");
+x.drawImage(img, 0, 0);
+x.globalCompositeOperation = "source-in";
+x.fillStyle = color;
+x.fillRect(0, 0, c.width, c.height);
+resolve(c);
+};
+img.onerror = () => resolve(null);
+img.src = src;
+});
+}
+async function drawReceipt(s, item){
+const W = 1240, H = 1000, M = 90;
+const canvas = document.createElement("canvas");
+canvas.width = W; canvas.height = H;
+const ctx = canvas.getContext("2d");
+const font = (w, size) => `${w} ${size}px Inter, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif`;
+const ink = "#0f172a", soft = "#475569", faint = "#94a3b8", accent = "#1E88E5";
+ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, W, H);
+ctx.fillStyle = accent; ctx.fillRect(0, 0, W, 10);
+const logo = await tintedLogo("rgba(15,23,42,0.55)");
+if (logo) { const lh = 54, lw = logo.width * (lh / logo.height); ctx.drawImage(logo, M, 62, lw, lh); }
+ctx.textBaseline = "alphabetic";
+ctx.fillStyle = ink; ctx.font = font(800, 54); ctx.textAlign = "right";
+ctx.fillText("RECIBO", W - M, 110);
+ctx.font = font(800, 40); ctx.fillStyle = accent;
+ctx.fillText(moneyFull(item.value), W - M, 170);
+ctx.textAlign = "left";
+ctx.strokeStyle = "#e2e8f0"; ctx.lineWidth = 2;
+ctx.beginPath(); ctx.moveTo(M, 205); ctx.lineTo(W - M, 205); ctx.stroke();
+
+const teacher = appSettings.profile.fullName || appSettings.profile.name || "";
+const payer = s.guardianName && isMinor(s) ? `${s.guardianName}, responsável por ${s.name},` : s.name;
+const ref = receiptReference(s, item, false);
+const body = `Recebi de ${payer} a importância de ${moneyFull(item.value)} (${valorPorExtenso(item.value)}), referente ${item.kind === "package" ? "ao" : "à"} ${receiptReference(s, item, true)}.`;
+ctx.fillStyle = ink; ctx.font = font(500, 32);
+let y = 280;
+wrapCanvasText(ctx, body, W - 2 * M).forEach(l => { ctx.fillText(l, M, y); y += 48; });
+
+y += 22;
+ctx.font = font(600, 24);
+const details = [
+["Aluno", s.name],
+...(s.guardianName ? [["Responsável", s.guardianName]] : []),
+["Referência", ref.charAt(0).toUpperCase() + ref.slice(1)],
+["Valor", `${moneyFull(item.value)} (${valorPorExtenso(item.value)})`],
+...(item.paidDate ? [["Data do pagamento", formatDateShort(item.paidDate)]] : [])
+];
+details.forEach(([k, v]) => {
+ctx.fillStyle = faint; ctx.font = font(700, 20); ctx.fillText(k.toUpperCase(), M, y);
+ctx.fillStyle = soft; ctx.font = font(600, 26);
+const lines = wrapCanvasText(ctx, v, W - 2 * M - 300);
+lines.forEach((l, i) => ctx.fillText(l, M + 300, y + i * 34));
+y += Math.max(1, lines.length) * 34 + 14;
+});
+
+const loc = appSettings.location || {};
+const place = [loc.city, loc.state].filter(Boolean).join(" – ");
+ctx.fillStyle = ink; ctx.font = font(500, 26);
+ctx.fillText(`${place ? place + ", " : ""}${longDate(isoOf(new Date()))}.`, M, H - 250);
+
+const sigY = H - 140;
+ctx.strokeStyle = "#94a3b8"; ctx.lineWidth = 2;
+ctx.beginPath(); ctx.moveTo(W / 2 - 260, sigY); ctx.lineTo(W / 2 + 260, sigY); ctx.stroke();
+ctx.textAlign = "center";
+ctx.fillStyle = ink; ctx.font = font(700, 26); ctx.fillText(teacher, W / 2, sigY + 38);
+if (appSettings.profile.document) { ctx.fillStyle = soft; ctx.font = font(500, 22); ctx.fillText(`CPF/CNPJ: ${appSettings.profile.document}`, W / 2, sigY + 70); }
+ctx.fillStyle = faint; ctx.font = font(500, 18); ctx.fillText("Recibo gerado pelo Hi Teacher", W / 2, H - 22);
+ctx.textAlign = "left";
+return canvas;
+}
+let currentReceipt = null;
+async function openReceipt(s, item){
+if (!appSettings.profile.fullName) { if (!confirm("Seu nome completo ainda não está no perfil (Configurações → Editar perfil). O recibo vai sair com o nome curto. Gerar assim mesmo?")) return; }
+const canvas = await drawReceipt(s, item);
+const blob = await new Promise(r => canvas.toBlob(r, "image/png"));
+const slug = stripAccents(`${s.name}-${item.kind === "month" ? item.key : (item.date || item.ref)}`).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+const file = new File([blob], `recibo-${slug}.png`, { type: "image/png" });
+if (currentReceipt?.url) URL.revokeObjectURL(currentReceipt.url);
+currentReceipt = { file, url: URL.createObjectURL(blob), s };
+document.getElementById("receiptPreview").src = currentReceipt.url;
+const canShare = !!(navigator.canShare && navigator.canShare({ files: [file] }));
+document.getElementById("receiptShareBtn").style.display = canShare ? "" : "none";
+document.getElementById("receiptHint").textContent = canShare ? "Compartilhe direto (WhatsApp, e-mail…) ou baixe a imagem." : "Baixe a imagem pra mandar ou imprimir.";
+document.getElementById("receiptModal").classList.add("show");
+}
+document.getElementById("receiptCloseX").onclick = () => document.getElementById("receiptModal").classList.remove("show");
+document.getElementById("receiptDownloadBtn").onclick = () => {
+if (!currentReceipt) return;
+const a = document.createElement("a");
+a.href = currentReceipt.url; a.download = currentReceipt.file.name;
+document.body.appendChild(a); a.click(); a.remove();
+};
+document.getElementById("receiptShareBtn").onclick = async () => {
+if (!currentReceipt) return;
+try { await navigator.share({ files: [currentReceipt.file], title: "Recibo", text: `Recibo de pagamento – ${currentReceipt.s.name}` }); }
+catch (e) { if (e && e.name !== "AbortError") document.getElementById("receiptDownloadBtn").click(); }
+};
+
 // Modo de cobrança que o formulário está mostrando (muda com a frequência e o pacote).
 function formBillingMode(){
 if (Number(document.getElementById("fPackageSize").value) > 0) return "package";
@@ -7021,8 +7200,13 @@ const wrap = document.getElementById("fPayMonths");
 wrap.innerHTML = months.map(k => {
 const paid = paidDraft.has(k);
 const late = !paid && isPastDue({ ...s, dueDay: document.getElementById("fDueDay").value }, k);
-return `<button type="button" class="pay-month ${paid ? "paid" : late ? "late" : ""}" data-pay-month="${k}">${monthLabel(k)}<span>${paid ? "✓ pago" : late ? "atrasado" : "a pagar"}</span></button>`;
+const chip = `<button type="button" class="pay-month ${paid ? "paid" : late ? "late" : ""}" data-pay-month="${k}">${monthLabel(k)}<span>${paid ? "✓ pago" : late ? "atrasado" : "a pagar"}</span></button>`;
+return paid ? `<div class="pay-item">${chip}<button type="button" class="pay-receipt" data-receipt-month="${k}">Recibo</button></div>` : chip;
 }).join("");
+wrap.querySelectorAll("[data-receipt-month]").forEach(b => b.onclick = () => {
+const k = b.dataset.receiptMonth;
+openReceipt(s, { kind: "month", key: k, value: studentMonthlyValue(s), paidDate: (s.paidDates || {})[k] || (getPaidMonths(s).has(k) ? null : isoOf(new Date())) });
+});
 wrap.querySelectorAll("[data-pay-month]").forEach(b => b.onclick = () => {
 const k = b.dataset.payMonth;
 if (paidDraft.has(k)) paidDraft.delete(k); else paidDraft.add(k);
@@ -7041,8 +7225,13 @@ const wrap = document.getElementById("fPayMonths");
 wrap.innerHTML = list.map(c => {
 const paid = chargeDraft.has(c.ref) ? chargeDraft.get(c.ref) : c.paid;
 const label = c.kind === "lesson" ? c.date.slice(0,5) : `Pacote ${formatDateShort(c.ref).slice(0,5)}`;
-return `<button type="button" class="pay-month ${paid ? "paid" : ""}" data-charge-ref="${escapeHtml(c.ref)}">${label}<span>${paid ? "✓ pago" : "a receber"}</span></button>`;
+const chip = `<button type="button" class="pay-month ${paid ? "paid" : ""}" data-charge-ref="${escapeHtml(c.ref)}">${label}<span>${paid ? "✓ pago" : "a receber"}</span></button>`;
+return paid ? `<div class="pay-item">${chip}<button type="button" class="pay-receipt" data-receipt-charge="${escapeHtml(c.ref)}">Recibo</button></div>` : chip;
 }).join("");
+wrap.querySelectorAll("[data-receipt-charge]").forEach(b => b.onclick = () => {
+const c = list.find(x => x.ref === b.dataset.receiptCharge);
+if (c) openReceipt(s, { ...c, paidDate: c.paid ? c.paidDate : isoOf(new Date()) });
+});
 wrap.querySelectorAll("[data-charge-ref]").forEach(b => b.onclick = () => {
 const ref = b.dataset.chargeRef;
 const c = list.find(x => x.ref === ref);
@@ -7522,6 +7711,8 @@ renderSettingsSummary();
 let profPhotoWorking = null; // null = sem alteração; "" = remover; dataURL = nova foto
 document.getElementById("settingsProfileCard").onclick = () => {
 document.getElementById("profName").value = appSettings.profile.name;
+document.getElementById("profFullName").value = appSettings.profile.fullName || "";
+document.getElementById("profDocument").value = appSettings.profile.document || "";
 profPhotoWorking = null;
 renderProfileAvatarInto(document.getElementById("profPhotoPreview"));
 document.getElementById("profileModal").classList.add("show");
@@ -7561,6 +7752,9 @@ document.getElementById("profSaveBtn").onclick = () => {
 const name = document.getElementById("profName").value.trim();
 if(!name){ alert("Digite um nome."); return; }
 appSettings.profile.name = name;
+appSettings.profile.fullName = document.getElementById("profFullName").value.trim();
+const doc = document.getElementById("profDocument").value.trim();
+if (doc) appSettings.profile.document = doc; else delete appSettings.profile.document;
 if (profPhotoWorking !== null) appSettings.profile.photo = profPhotoWorking || undefined;
 saveAppSettings();
 renderSettingsSummary();
