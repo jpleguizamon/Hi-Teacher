@@ -2167,12 +2167,25 @@ cloudSyncTimer = setTimeout(pushCloudData, 1500);
 }
 };
 
+// O supabase-js não lança erro: devolve { error }. Antes esse erro era ignorado, então um
+// envio que falhava nunca aparecia e os dados ficavam só no aparelho sem ninguém saber.
+let cloudPushWarned = false;
 async function pushCloudData(){
-if (!supabaseClient || !authCurrentUser) return;
+if (!supabaseClient || !authCurrentUser) return false;
 const data = {};
 CLOUD_SYNC_KEYS.forEach(k => { const v = localStorage.getItem(k); if (v !== null) data[k] = v; });
-try { await supabaseClient.from("user_data").upsert({ user_id: authCurrentUser.id, data, updated_at: new Date().toISOString() }); }
-catch(e) { console.error("Falha ao sincronizar com a nuvem:", e); }
+try {
+const { error } = await supabaseClient.from("user_data").upsert({ user_id: authCurrentUser.id, data, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
+if (error) throw error;
+return true;
+} catch(e) {
+console.error("Falha ao sincronizar com a nuvem:", e);
+if (!cloudPushWarned) {
+cloudPushWarned = true;
+showCloudWarning("Não consegui salvar na nuvem. Suas mudanças estão guardadas só neste aparelho por enquanto.");
+}
+return false;
+}
 }
 
 function showCloudWarning(msg){
@@ -6013,14 +6026,23 @@ document.getElementById("importFileInput").onchange = (e) => {
 const file = e.target.files[0];
 if (!file) return;
 const reader = new FileReader();
-reader.onload = (ev) => {
+reader.onload = async (ev) => {
 try {
 const data = JSON.parse(ev.target.result);
 const keysFound = Object.keys(data).filter(k => CLOUD_SYNC_KEYS.includes(k));
 if (keysFound.length === 0) { alert("Esse arquivo não parece ser um backup válido do Hi Teacher."); return; }
 if (!confirm(`Importar este backup vai substituir os dados atuais (alunos, aulas, configurações etc.). Deseja continuar?`)) return;
 keysFound.forEach(k => localStorage.setItem(k, data[k]));
-alert("Dados importados! O app vai recarregar agora.");
+let doneMsg = "Dados importados! O app vai recarregar agora.";
+if (supabaseClient && authCurrentUser) {
+// Envia já, antes de recarregar: o recarregamento cancelava o envio agendado e, ao
+// abrir de novo, o app puxava da nuvem a versão antiga por cima do backup.
+clearTimeout(cloudSyncTimer);
+doneMsg = (await pushCloudData())
+? "Dados importados e salvos na nuvem! O app vai recarregar agora."
+: "Os dados foram importados só neste aparelho: não consegui salvar na nuvem. Tente importar de novo daqui a pouco.";
+}
+alert(doneMsg);
 location.reload();
 } catch(err) {
 alert("Não consegui ler esse arquivo. Verifique se é um backup exportado pelo próprio Hi Teacher.");
