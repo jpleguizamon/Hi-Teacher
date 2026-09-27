@@ -615,6 +615,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .stu-label{color:var(--muted);font-weight:600;flex:none}
 .stu-value{color:var(--text-2);font-weight:650;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;font-variant-numeric:tabular-nums}
 .stu-value.schedule-inactive{color:var(--danger)}
+.stu-value.stu-value-wrap{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.35}
 .icon-controls-group{display:flex;align-items:center;gap:0.375rem;position:relative}
 .icon-btn-ctrl{
   position:relative;width:2.25rem;height:2.25rem;border-radius:var(--radius-sm);
@@ -775,6 +776,8 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
   padding: 0.375rem 0.625rem; border-radius:var(--radius-sm); border: 0.0625rem solid var(--hairline);
 }
 .criterion-row span { font-weight: 600; color: var(--text-2); }
+.theme-card-actions{display:flex;align-items:center;gap:0.5rem;flex:none}
+.theme-remove-btn{display:grid;place-items:center;padding:0}
 .criterion-stars { color: var(--star); font-size: 0.9rem; letter-spacing: 0.0625rem; text-shadow: 0 0 0.375rem rgba(251,191,36,.4); }
 
 /* ===== Evolução (dashboard) ===== */
@@ -935,6 +938,8 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .day.selected,.wd-day.selected{background:var(--accent-soft-2);color:var(--accent);border-color:var(--accent-line);box-shadow:var(--glow-sm)}
 .actions{display:flex;gap:0.5625rem;margin-top:1.375rem}
 .actions button{flex:1;padding:0.8125rem;border-radius:var(--radius-pill);font-weight:700}
+/* Todo botão principal/secundário é pílula, mesmo fora da barra de ações de um modal. */
+.save,.cancel{border-radius:var(--radius-pill);font-weight:700}
 .cancel{background:var(--glass-inset);color:var(--text-2);border:0.0625rem solid rgba(148,163,184,.22);transition:background .15s,border-color .15s,color .15s}
 .cancel:hover{background:rgba(255,255,255,.06);border-color:rgba(148,163,184,.4);color:var(--text)}
 /* Ação primária: preenchimento azul elétrico + brilho */
@@ -1019,11 +1024,19 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .agenda-day.other-month .agenda-day-num{color:#3f4a5c}
 .agenda-lesson-mark{position:absolute;top:0.25rem;right:0.375rem;font-size:0.75rem;font-weight:800;color:var(--accent);line-height:1;text-shadow:0 0 0.375rem rgba(47,211,242,.7)}
 .agenda-day-tags{display:flex;flex-direction:column;gap:0.09375rem;margin-top:0.125rem;width:100%}
+/* Marcações do dia (feriados e eventos): vidro tingido da cor do tipo, no mesmo idioma
+   das pílulas de status — em vez de faixa de cor chapada com texto escuro. */
 .agenda-tag{
-  font-size:0.4375rem;font-weight:800;letter-spacing:.01em;text-align:center;
-  padding:0.0625rem 0.125rem;border-radius:var(--radius-xs);line-height:1.15;color:var(--accent-ink);width:100%;
+  font-size:0.5rem;font-weight:700;letter-spacing:.01em;text-align:center;
+  padding:0.125rem 0.1875rem;border-radius:0.375rem;line-height:1.2;width:100%;
+  border:0.0625rem solid var(--tag-line);background:var(--tag-fill);color:var(--tag-ink);
   overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
 }
+.agenda-tag--holiday{--tag-fill:rgba(251,113,133,.14);--tag-line:rgba(251,113,133,.38);--tag-ink:#fda4af}
+.agenda-tag--state{--tag-fill:rgba(251,191,36,.12);--tag-line:rgba(251,191,36,.36);--tag-ink:#fcd34d}
+.agenda-tag--facultativo{--tag-fill:rgba(148,163,184,.12);--tag-line:rgba(148,163,184,.32);--tag-ink:#cbd5e1}
+.agenda-tag--event{--tag-fill:rgba(47,211,242,.12);--tag-line:rgba(47,211,242,.4);--tag-ink:#8eeafb}
+.agenda-dot{display:inline-block;width:0.5rem;height:0.5rem;border-radius:50%;margin-right:0.375rem;vertical-align:0.0625rem;background:var(--tag-ink);box-shadow:0 0 0.375rem var(--tag-line)}
 .agenda-today-fab{
   position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);z-index:25;
   padding:0.75rem 1.5rem;border-radius:var(--radius-pill);
@@ -2901,7 +2914,7 @@ lessonDiv.innerHTML = `
 <div class="eval-criteria-wrap"></div>
 <div style="display:flex;gap:8px;margin-top:12px;">
 <button type="button" class="btn-edit-toggle btn-noclass">Não houve aula</button>
-<button type="button" class="save btn-save-eval" style="flex:1;padding:8px;font-size:12px;">Salvar avaliação</button>
+<button type="button" class="save btn-save-eval" style="flex:1;padding:0.5625rem 1rem;font-size:0.8125rem;">Salvar avaliação</button>
 </div>
 `;
 contentContainer.appendChild(lessonDiv);
@@ -3067,11 +3080,12 @@ let agendaViewMonth = new Date().getMonth();
 let agendaModalDate = null;
 const agendaMonthNamesFull = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 const agendaWeekdayNamesFull = ["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"];
+// As cores de cada tipo ficam no CSS (.agenda-tag--holiday etc.).
 const agendaTagInfo = {
-holiday: { color:"#f87171", label:"Feriado nacional" },
-facultativo: { color:"#94a3b8", label:"Ponto facultativo" },
-state: { color:"#fbbf24", label:"Feriado estadual" },
-event: { color:"#2FD3F2", label:"Evento" }
+holiday: { label:"Feriado nacional" },
+facultativo: { label:"Ponto facultativo" },
+state: { label:"Feriado estadual" },
+event: { label:"Evento" }
 };
 const agendaTagText = { holiday:"Feriado Nac.", facultativo:"Ponto Fac.", state:"Feriado Est." };
 
@@ -3116,7 +3130,7 @@ const isToday = dateStr === todayStr;
 const cell = document.createElement("div");
 cell.className = `agenda-day ${isOtherMonth?'other-month':''} ${isToday?'is-today':''}`;
 const tagsHtml = dayTags.length
-? `<div class="agenda-day-tags">${dayTags.map(t=>`<span class="agenda-tag" style="background:${agendaTagInfo[t.type].color}">${t.type==='event' ? t.title : agendaTagText[t.type]}</span>`).join('')}</div>`
+? `<div class="agenda-day-tags">${dayTags.map(t=>`<span class="agenda-tag agenda-tag--${t.type}">${t.type==='event' ? t.title : agendaTagText[t.type]}</span>`).join('')}</div>`
 : '';
 const markHtml = isLessonDay ? `<span class="agenda-lesson-mark">*</span>` : '';
 cell.innerHTML = `<div class="agenda-day-num">${cellDate.getDate()}</div>${markHtml}${tagsHtml}`;
@@ -3144,7 +3158,7 @@ document.getElementById("agendaLessonsLine").innerHTML = lessonStudents.length
 const dayList = [...getNationalHolidaysForYear(y).filter(h => h.date === dateStr), ...getAgendaEventsForDate(dateStr)];
 document.getElementById("holidayInfoList").innerHTML = dayList.length ? dayList.map(item => `
 <div class="holiday-info-item">
-<div><div class="holiday-info-name">${item.type==='event' ? item.title : item.name}</div><div class="holiday-info-type">${agendaTagInfo[item.type].label}</div></div>
+<div><div class="holiday-info-name">${item.type==='event' ? item.title : item.name}</div><div class="holiday-info-type"><span class="agenda-dot agenda-tag--${item.type}"></span>${agendaTagInfo[item.type].label}</div></div>
 ${item.type==='event' ? `<button type="button" class="btn-delete" style="margin:0;width:auto;padding:0.375rem 0.75rem;font-size:0.75rem" data-del-id="${item.id}">Remover</button>` : ''}
 </div>`).join('') : `<div class="field-hint" style="margin:0 0 0.875rem">Nada marcado neste dia ainda.</div>`;
 
@@ -4053,12 +4067,14 @@ return a.name.localeCompare(b.name);
 const activeList = students.filter(s=>s.active!==false && filterFn(s)).sort(sortFn);
 const inactiveList = students.filter(s=>s.active===false && filterFn(s)).sort(sortFn);
 
-// Abrevia os dias da semana para caber no chip do card (ex.: "Seg" ou "Seg +2")
-function shortDaysTag(days){
-const labels = (days||[]).map(d=>["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"][d]);
-if(labels.length===0) return "Sem dia";
-if(labels.length<=1) return labels[0];
-return `${labels[0]} +${labels.length-1}`;
+// Dias por extenso, na ordem da semana configurada: "Segunda", "Segunda e Sexta",
+// "Segunda, Quarta e Sexta".
+function fullDaysText(days){
+const ws = appSettings.weekStart ?? 1;
+const names = [...(days||[])].sort((a,b) => ((a - ws + 7) % 7) - ((b - ws + 7) % 7)).map(d => WEEKDAY_NAMES[d]);
+if(names.length===0) return "Sem dia definido";
+if(names.length===1) return names[0];
+return `${names.slice(0,-1).join(", ")} e ${names[names.length-1]}`;
 }
 
 // Card: ícone+nome/instrumento no topo; logo abaixo, já ocupando a largura toda, dia da
@@ -4088,9 +4104,11 @@ const el=document.createElement("div");
 el.className=`student-square ${isInactive?'inactive':''}`;
 const format = getFormat(s);
 
-const scheduleValue = isInactive
-? (s.exit ? formatDateShort(s.exit) : "—")
-: `${shortDaysTag(s.days)} · ${s.time}`;
+const dayCount = (s.days || []).length;
+const scheduleRows = isInactive
+? `<div class="stu-row"><span class="stu-label">Saída</span><span class="stu-value schedule-inactive">${s.exit ? formatDateShort(s.exit) : "—"}</span></div>`
+: `<div class="stu-row"><span class="stu-label">${dayCount > 1 ? "Dias da semana" : "Dia da semana"}</span><span class="stu-value stu-value-wrap">${fullDaysText(s.days)}</span></div>
+<div class="stu-row"><span class="stu-label">Horário</span><span class="stu-value">${s.time || "—"}</span></div>`;
 
 const tier = getLevelTier(s.level);
 const refDate = isInactive ? (s.exit || new Date().toISOString().slice(0,10)) : new Date().toISOString().slice(0,10);
@@ -4107,7 +4125,7 @@ ${s.needsReview && s.needsReview.length ? `<span class="sq-review-badge" title="
 </div>
 <div class="stu-fields">
 <div class="stu-row"><span class="stu-label">Instrumento</span><span class="stu-value">${s.instrument || "—"}</span></div>
-<div class="stu-row"><span class="stu-label">${isInactive?'Saída':'Horário'}</span><span class="stu-value ${isInactive?'schedule-inactive':''}">${scheduleValue}</span></div>
+${scheduleRows}
 <div class="stu-row"><span class="stu-label">Modalidade</span><span class="stu-value">${format}</span></div>
 <div class="stu-row"><span class="stu-label">Permanência</span><span class="stu-value">${formatEntryDuration(s.entry, refDate)}</span></div>
 <div class="stu-row"><span class="stu-label">Mensalidade</span><span class="stu-value">R$ ${monthlyValue}</span></div>
@@ -5185,13 +5203,25 @@ itemDiv.className = 'lesson-card-item';
 itemDiv.innerHTML = `
 <div class="lesson-card-header">
 <span><svg class="inline-icon" viewBox="0 0 24 24"><use href="#icon-music"/></svg> ${topicName}</span>
+<span class="theme-card-actions">
 <span class="badge-evaluated">${assignment.date || ''}</span>
+<button type="button" class="goal-delete theme-remove-btn" aria-label="Tirar o tema ${topicName} de ${student.name}" title="Tirar este tema do aluno"><svg class="inline-icon" viewBox="0 0 24 24"><use href="#icon-trash"/></svg></button>
+</span>
 </div>
 <div class="star-input-row">
 <span class="criterion-label">Avaliação</span>
 ${buildStarInputHTML(assignment.rating || 0)}
 </div>
 `;
+// Tira só o vínculo deste tema com este aluno (e a nota dele); o tema continua existindo
+// no Organizador de Aulas e nos outros alunos.
+itemDiv.querySelector('.theme-remove-btn').onclick = () => {
+if (!confirm(`Tirar o tema "${topicName}" de ${student.name}? A avaliação desse tema para esse aluno também será apagada.`)) return;
+student.themes = (student.themes || []).filter(a => a !== assignment);
+localStorage.setItem("jp_students_v5", JSON.stringify(students));
+renderPerformanceModalContent(student);
+renderStudentsPerformance();
+};
 attachStarInputHandlers(itemDiv.querySelector('.star-input'), { set: (v) => {
 assignment.rating = v;
 localStorage.setItem("jp_students_v5", JSON.stringify(students));
