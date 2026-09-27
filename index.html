@@ -816,14 +816,13 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .reason-picker .filter-chip{font-size:0.75rem;padding:0.4375rem 0.75rem}
 
 /* Início: lição de casa, dia sem aula e reposições */
-.bday-card{display:flex;align-items:center;gap:0.75rem;padding:0.875rem 1rem;margin:0 0 0.625rem;border-radius:var(--radius-lg);
+.bday-card{display:flex;align-items:center;gap:0.625rem;padding:0.5625rem 0.75rem;margin:0 0 0.5rem;border-radius:var(--radius-lg);
   border:0.0625rem solid rgba(251,191,36,.35);background:linear-gradient(135deg,rgba(251,191,36,.1),rgba(47,211,242,.05)),var(--glass-fill);
   -webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:var(--edge-light)}
-.bday-emoji{font-size:1.5rem;flex:none}
-.bday-text{flex:1;min-width:0}
-.bday-title{font-size:0.875rem;font-weight:750;color:var(--text);overflow-wrap:break-word}
-.bday-sub{font-size:0.75rem;color:var(--muted);margin-top:0.125rem}
-.bday-week{font-size:0.75rem;color:var(--muted);font-weight:600;margin:0 0.375rem 0.875rem;line-height:1.45}
+.bday-emoji{font-size:1.125rem;flex:none}
+.bday-title{flex:1;min-width:0;font-size:0.8125rem;font-weight:700;color:var(--text);overflow-wrap:break-word}
+.bday-sub{font-weight:600;color:var(--muted)}
+.bday-week{font-size:0.75rem;color:var(--muted);font-weight:600;margin:0 0.375rem 0.5rem;line-height:1.45}
 .card.has-qa{flex-wrap:wrap}
 .qa-rows{flex-basis:100%;display:grid;gap:0.4375rem;padding-top:0.625rem;margin-top:0.125rem;border-top:0.0625rem solid var(--hairline)}
 .qa-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:0.375rem 0.5rem}
@@ -1399,10 +1398,12 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 <div class="home-message-status" id="homeMessageStatus"></div>
 <div class="home-message-phrase" id="homeMessagePhrase"></div>
 </div>
-<div id="birthdaysBox"></div>
-<div id="unrecordedBox"></div>
+<!-- Ordem do Início: aulas primeiro; depois o que precisa de registro, reposições,
+     aniversários e, por último, cobranças. -->
 <div id="nextDays"></div>
+<div id="unrecordedBox"></div>
 <div id="makeupsBox"></div>
+<div id="birthdaysBox"></div>
 <div id="pendingPaymentsBox"></div>
 </main>
 
@@ -4192,7 +4193,7 @@ const box = document.getElementById("unrecordedBox");
 if (!box) return;
 const list = recentUnrecordedLessons();
 if (!list.length) { box.innerHTML = ""; return; }
-box.innerHTML = `<div class="settings-group-label" style="margin-top:0.5rem">Aulas sem registro</div>` + list.map((t, i) => {
+box.innerHTML = `<div class="settings-group-label" style="margin-top:1.5rem">Aulas sem registro</div>` + list.map((t, i) => {
 const key = "u" + i;
 quickTargets[key] = t;
 const d = dateFromIso(isoFromBr(t.entry.date));
@@ -4232,14 +4233,15 @@ if (!box) return;
 const list = upcomingBirthdays();
 const today = list.filter(x => x.inDays === 0);
 const week = list.filter(x => x.inDays > 0);
-box.innerHTML = today.map(x => {
+if (!list.length) { box.innerHTML = ""; return; }
+box.innerHTML = `<div class="settings-group-label" style="margin-top:1.5rem">Aniversários</div>` + today.map(x => {
 const href = waMessageLink(x.s, "birthday");
 return `<div class="bday-card">
 <span class="bday-emoji" aria-hidden="true">🎂</span>
-<div class="bday-text"><div class="bday-title">Aniversário hoje: ${escapeHtml(x.s.name)}</div>${x.age > 0 && x.age < 120 ? `<div class="bday-sub">${x.age} anos</div>` : ""}</div>
-${href ? `<a class="wa-btn" href="${href}" target="_blank" rel="noopener">Parabenizar</a>` : ""}
+<div class="bday-title">Hoje: ${escapeHtml(x.s.name)}${x.age > 0 && x.age < 120 ? ` <span class="bday-sub">· ${x.age} anos</span>` : ""}</div>
+${href ? `<a class="wa-btn wa-mini" href="${href}" target="_blank" rel="noopener">Parabenizar</a>` : ""}
 </div>`;
-}).join("") + (week.length ? `<div class="bday-week">🎂 Esta semana: ${week.map(x => `${escapeHtml(firstName(x.s.name))} (${WEEKDAY_SHORT[x.date.getDay()].toLowerCase()}, ${pad2(x.date.getDate())}/${pad2(x.date.getMonth()+1)})`).join(" · ")}</div>` : "");
+}).join("") + (week.length ? `<div class="bday-week">Esta semana: ${week.map(x => `${escapeHtml(firstName(x.s.name))} (${WEEKDAY_SHORT[x.date.getDay()].toLowerCase()}, ${pad2(x.date.getDate())}/${pad2(x.date.getMonth()+1)})`).join(" · ")}</div>` : "");
 }
 
 function renderHome(){
