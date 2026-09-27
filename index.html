@@ -824,6 +824,17 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .makeup-dismiss:hover{color:var(--text);border-color:var(--glass-border)}
 .btn-link-muted{display:block;width:100%;text-align:center;font-size:0.75rem;color:var(--muted);margin-top:0.5rem;text-decoration:underline;text-underline-offset:0.2em;cursor:pointer;background:none;border:none;padding:0.5rem}
 .btn-link-muted:hover{color:var(--text)}
+.pay-meta{display:flex;flex-wrap:wrap;align-items:center;gap:0.375rem 0.5rem;margin-top:0.3125rem}
+.pay-meta .goal-period-badge{margin-top:0}
+.pay-late{font-size:0.6875rem;font-weight:700;color:var(--danger)}
+.pay-due{font-size:0.6875rem;font-weight:650;color:var(--muted)}
+.pay-months{display:flex;flex-wrap:wrap;gap:0.375rem}
+.pay-month{display:flex;flex-direction:column;align-items:center;gap:0.0625rem;min-width:4.25rem;padding:0.375rem 0.625rem;border-radius:var(--radius-md);border:0.0625rem solid var(--hairline);background:var(--glass-inset);color:var(--text-2);font-size:0.75rem;font-weight:700;cursor:pointer}
+.pay-month span{font-size:0.5625rem;font-weight:650;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.pay-month.paid{border-color:rgba(74,222,128,.35);background:rgba(74,222,128,.08);color:var(--green-light)}
+.pay-month.paid span{color:var(--green)}
+.pay-month.late{border-color:var(--danger-border);background:rgba(248,113,113,.07)}
+.pay-month.late span{color:var(--danger)}
 .times-by-day{display:grid;gap:0.4375rem;margin:-0.25rem 0 0.875rem}
 .time-by-day-row{display:flex;align-items:center;gap:0.75rem}
 .time-by-day-row span{flex:1;font-size:0.8125rem;font-weight:650;color:var(--text-2)}
@@ -1873,6 +1884,20 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 <label>Valor personalizado (R$)</label>
 <input id="fCustomValue" type="number" placeholder="Ex: 100">
 </div>
+<div style="display:flex;gap:0.625rem">
+<div class="field" style="flex:1.3"><label>Mensalidade paga para</label>
+<select id="fPayTo">
+<option value="me">Mim</option>
+<option value="school">Escola</option>
+<option value="none">Ninguém (bolsa)</option>
+</select>
+</div>
+<div class="field" id="fDueDayField" style="flex:1"><label>Vencimento (dia)</label><input id="fDueDay" type="number" min="1" max="31" inputmode="numeric" placeholder="Opcional"></div>
+</div>
+<div class="field" id="fPaymentsField" style="display:none"><label>Mensalidades pagas</label>
+<div class="pay-months" id="fPayMonths"></div>
+<div class="field-hint" style="margin-top:0.375rem">Toque no mês pra marcar como pago ou não pago.</div>
+</div>
 <div class="field" id="fLevelField"><label>Nível</label>
 <select id="fLevel"></select>
 </div>
@@ -2848,6 +2873,7 @@ appSettings.location = Object.assign({ state:null, city:"" }, appSettings.locati
 if (appSettings.growthGoalPercent === undefined) appSettings.growthGoalPercent = null;
 if (!["every","biweekly","monthly","bimonthly"].includes(appSettings.evalFrequency)) appSettings.evalFrequency = "every";
 if (!Array.isArray(appSettings.breaks)) appSettings.breaks = [];
+if (!appSettings.paymentsSince) appSettings.paymentsSince = `${new Date().getFullYear()}-${pad2(new Date().getMonth()+1)}`;
 if (!Array.isArray(appSettings.levels) || appSettings.levels.length === 0) appSettings.levels = [...DEFAULT_LEVELS];
 if (appSettings.useLevels === undefined) appSettings.useLevels = true;
 if (!Array.isArray(appSettings.criteria) || !appSettings.criteria.some(c => c && c.key && !c.removed)) appSettings.criteria = DEFAULT_CRITERIA.map(c => ({ ...c }));
@@ -3878,43 +3904,92 @@ renderMakeups();
 renderPendingPayments();
 }
 
-// Mensalidades pendentes: reaproveita o valor mensal já cadastrado por aluno (mesmo campo
-// usado no gráfico de Evolução Financeira) e o visual de checklist da página de Metas.
-// "Pago" reseta sozinho todo mês, comparando com a chave AAAA-MM do mês corrente.
+// Mensalidades: cada aluno guarda os meses pagos (paidMonths, "AAAA-MM"); paidMonth continua
+// sendo o último mês pago, pra compatibilidade. Só entra na cobrança quem paga pra mim
+// (payTo vazio ou "me"); "school" = paga à escola, "none" = bolsa. Atraso só conta a partir
+// de appSettings.paymentsSince (mês em que esse recurso chegou na conta), pra meses antigos
+// que ninguém marcava não virarem "atrasados" de uma vez.
+const MONTH_ABBR = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
 function currentMonthKey(){
 const d = new Date();
 return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
 }
-function isPaidThisMonth(s){
-return s.paidMonth === currentMonthKey();
+function addMonths(key, n){
+let [y, m] = key.split("-").map(Number);
+m += n;
+y += Math.floor((m - 1) / 12);
+m = ((m - 1) % 12 + 12) % 12 + 1;
+return `${y}-${pad2(m)}`;
 }
+function monthLabel(key){ const [y, m] = key.split("-"); return `${MONTH_ABBR[Number(m)-1]}/${y}`; }
+function paysMe(s){ return !s.payTo || s.payTo === "me"; }
+function getPaidMonths(s){
+const set = new Set(Array.isArray(s.paidMonths) ? s.paidMonths : []);
+if (s.paidMonth) set.add(s.paidMonth);
+return set;
+}
+function setMonthPaid(s, key, paid){
+const set = getPaidMonths(s);
+if (paid) set.add(key); else set.delete(key);
+s.paidMonths = [...set].sort();
+s.paidMonth = s.paidMonths.length ? s.paidMonths[s.paidMonths.length - 1] : null;
+}
+function isPaidThisMonth(s){ return getPaidMonths(s).has(currentMonthKey()); }
+// Meses que o aluno deve (do início da cobrança até o mês atual, ou até a saída).
+function billingMonths(s){
+const cur = currentMonthKey();
+let from = [appSettings.paymentsSince || cur, (s.entry || "").slice(0,7)].filter(Boolean).sort().pop();
+let to = cur;
+if (s.active === false && s.exit && s.exit.slice(0,7) < to) to = s.exit.slice(0,7);
+const out = [];
+for (let k = from, guard = 0; k <= to && guard < 240; k = addMonths(k, 1), guard++) out.push(k);
+return out;
+}
+function unpaidMonths(s){ const paid = getPaidMonths(s); return billingMonths(s).filter(k => !paid.has(k)); }
+function isPastDue(s, key){
+const cur = currentMonthKey();
+if (key < cur) return true;
+return key === cur && Number(s.dueDay) > 0 && new Date().getDate() > Number(s.dueDay);
+}
+function studentMonthlyValue(s){ return s.value !== undefined ? s.value : getDefaultValueFor(s); }
+
 function renderPendingPayments(){
 const box = document.getElementById("pendingPaymentsBox");
 if (!box) return;
-const activeStudents = students.filter(s=>s.active!==false);
-const pending = activeStudents.filter(s=>!isPaidThisMonth(s));
-if (activeStudents.length === 0 || pending.length === 0) { box.innerHTML = ""; return; }
-const monthKey = currentMonthKey();
-box.innerHTML = `
-<div class="settings-group-label" style="margin-top:1.5rem">Mensalidades deste mês</div>
-${pending.map(s => `
+const cur = currentMonthKey();
+const rows = [];
+students.filter(s => s.active !== false && paysMe(s)).forEach(s => {
+unpaidMonths(s).forEach(key => rows.push({ s, key, late: isPastDue(s, key) }));
+});
+if (rows.length === 0) { box.innerHTML = ""; return; }
+rows.sort((a,b) => a.s.name.localeCompare(b.s.name) || a.key.localeCompare(b.key));
+const late = rows.filter(r => r.key < cur);
+const now = rows.filter(r => r.key === cur);
+const row = r => {
+const due = Number(r.s.dueDay) > 0 ? r.s.dueDay : null;
+const status = r.key < cur ? `<span class="pay-late">Atrasada · ${monthLabel(r.key)}</span>`
+: r.late ? `<span class="pay-late">Venceu dia ${due}</span>`
+: due ? `<span class="pay-due">Vence dia ${due}</span>` : "";
+return `
 <div class="goal-row">
-<button type="button" class="goal-check" data-mark-paid="${s.id}" aria-label="Marcar mensalidade de ${s.name} como paga"></button>
+<button type="button" class="goal-check" data-mark-paid="${r.s.id}|${r.key}" aria-label="Marcar mensalidade de ${escapeHtml(r.s.name)} (${monthLabel(r.key)}) como paga"></button>
 <div class="goal-info">
-<div class="goal-title">${s.name}</div>
-<div class="goal-period-badge">R$ ${s.value !== undefined ? s.value : getDefaultValueFor(s)}</div>
+<div class="goal-title">${escapeHtml(r.s.name)}</div>
+<div class="pay-meta"><span class="goal-period-badge">R$ ${studentMonthlyValue(r.s)}</span>${status}</div>
 </div>
-</div>
-`).join("")}
-`;
+</div>`;
+};
+box.innerHTML =
+(late.length ? `<div class="settings-group-label" style="margin-top:1.5rem">Mensalidades atrasadas</div>${late.map(row).join("")}` : "") +
+(now.length ? `<div class="settings-group-label" style="margin-top:1.5rem">Mensalidades deste mês</div>${now.map(row).join("")}` : "");
 box.querySelectorAll("[data-mark-paid]").forEach(btn => {
 btn.onclick = () => {
-const s = students.find(x => x.id === Number(btn.dataset.markPaid));
-if (s) {
-s.paidMonth = monthKey;
-localStorage.setItem("jp_students_v5", JSON.stringify(students));
+const [sid, key] = btn.dataset.markPaid.split("|");
+const s = students.find(x => String(x.id) === sid);
+if (!s) return;
+setMonthPaid(s, key, true);
+saveStudents();
 renderPendingPayments();
-}
 };
 });
 }
@@ -4712,6 +4787,11 @@ scheduleRows = `<div class="stu-row"><span class="stu-label">${dayCount > 1 ? "D
 const tier = getLevelTier(s.level);
 const refDate = isInactive ? (s.exit || new Date().toISOString().slice(0,10)) : new Date().toISOString().slice(0,10);
 const monthlyValue = s.value !== undefined ? s.value : getDefaultValueFor(s);
+const lateMonths = (!isInactive && paysMe(s)) ? unpaidMonths(s).filter(k => isPastDue(s, k)).length : 0;
+const payLate = lateMonths > 0;
+const payText = s.payTo === "school" ? `R$ ${monthlyValue} · paga à escola`
+: s.payTo === "none" ? "Bolsa"
+: `R$ ${monthlyValue}${payLate ? ` · ${lateMonths} atrasada${lateMonths > 1 ? "s" : ""}` : ""}`;
 const absences = isInactive ? 0 : countMonthAbsences(s);
 const pkg = isInactive ? null : packageUsage(s);
 const packageRow = pkg ? `<div class="stu-row"><span class="stu-label">Pacote</span><span class="stu-value${pkg.used >= pkg.size ? " stu-value-warn" : ""}">${pkg.used >= pkg.size ? `Terminou (${pkg.used} de ${pkg.size})` : `${pkg.used} de ${pkg.size} aulas`}</span></div>` : "";
@@ -4731,7 +4811,7 @@ ${appSettings.useLevels ? `<div class="stu-sub">${escapeHtml(s.level || "Sem ní
 ${scheduleRows}
 <div class="stu-row"><span class="stu-label">Modalidade</span><span class="stu-value">${format}</span></div>
 <div class="stu-row"><span class="stu-label">Permanência</span><span class="stu-value">${formatEntryDuration(s.entry, refDate)}</span></div>
-<div class="stu-row"><span class="stu-label">Mensalidade</span><span class="stu-value">R$ ${monthlyValue}</span></div>
+<div class="stu-row"><span class="stu-label">Mensalidade</span><span class="stu-value${payLate ? " stu-value-warn" : ""}">${payText}</span></div>
 ${absencesRow}
 ${packageRow}
 </div>
@@ -5157,7 +5237,7 @@ openPlanViewer(editingPlanId);
 };
 
 function calculateCurrentMonthlyRevenue(){
-return students.filter(s=>s.active!==false).reduce((acc, s)=>{
+return students.filter(s=>s.active!==false && s.payTo !== "none").reduce((acc, s)=>{
 return acc + (s.value !== undefined ? s.value : getDefaultValueFor(s));
 }, 0);
 }
@@ -6153,6 +6233,30 @@ sel.innerHTML = opts.map(l => `<option value="${escapeHtml(l)}">${escapeHtml(l)}
 sel.value = s ? (s.level || "") : appSettings.levels[0];
 document.getElementById("fLevelField").style.display = appSettings.useLevels ? "" : "none";
 }
+// Histórico de mensalidades no cadastro: rascunho dos meses pagos, gravado ao salvar.
+let paidDraft = new Set();
+function renderPayMonthsField(s){
+const field = document.getElementById("fPaymentsField");
+const payTo = document.getElementById("fPayTo").value;
+document.getElementById("fDueDayField").style.visibility = payTo === "me" ? "" : "hidden";
+if (!s || payTo !== "me") { field.style.display = "none"; return; }
+const months = billingMonths(s).slice(-12).reverse();
+if (!months.length) { field.style.display = "none"; return; }
+field.style.display = "";
+const wrap = document.getElementById("fPayMonths");
+wrap.innerHTML = months.map(k => {
+const paid = paidDraft.has(k);
+const late = !paid && isPastDue({ ...s, dueDay: document.getElementById("fDueDay").value }, k);
+return `<button type="button" class="pay-month ${paid ? "paid" : late ? "late" : ""}" data-pay-month="${k}">${monthLabel(k)}<span>${paid ? "✓ pago" : late ? "atrasado" : "a pagar"}</span></button>`;
+}).join("");
+wrap.querySelectorAll("[data-pay-month]").forEach(b => b.onclick = () => {
+const k = b.dataset.payMonth;
+if (paidDraft.has(k)) paidDraft.delete(k); else paidDraft.add(k);
+renderPayMonthsField(s);
+});
+}
+document.getElementById("fPayTo").onchange = () => renderPayMonthsField(editingId ? students.find(x => x.id === editingId) : null);
+document.getElementById("fDueDay").oninput = () => renderPayMonthsField(editingId ? students.find(x => x.id === editingId) : null);
 function openEdit(id=null){
 editingId=id;
 const s=id?students.find(x=>x.id===id):null;
@@ -6186,6 +6290,10 @@ const durInput = document.getElementById("fDuration");
 durInput.value = s?.duration || "";
 durInput.placeholder = `Padrão: ${appSettings.lessonDuration} min`;
 document.getElementById("fPackageSize").value = s?.packageSize || "";
+document.getElementById("fPayTo").value = s?.payTo || "me";
+document.getElementById("fDueDay").value = s?.dueDay || "";
+paidDraft = s ? getPaidMonths(s) : new Set();
+renderPayMonthsField(s);
 document.getElementById("fPackageStart").value = s?.packageStart || "";
 const extraBtn = document.getElementById("btnScheduleExtra");
 extraBtn.style.display = s ? "" : "none";
@@ -6277,6 +6385,19 @@ if (dur > 0) obj.duration = Math.max(5, Math.min(240, Math.round(dur))); else de
 const pkg = Number(document.getElementById("fPackageSize").value);
 if (pkg > 0) { obj.packageSize = Math.round(pkg); obj.packageStart = document.getElementById("fPackageStart").value || isoOf(new Date()); }
 else { delete obj.packageSize; delete obj.packageStart; }
+
+const payTo = document.getElementById("fPayTo").value;
+if (payTo === "me") delete obj.payTo; else obj.payTo = payTo;
+const dueDay = Number(document.getElementById("fDueDay").value);
+if (payTo === "me" && dueDay >= 1 && dueDay <= 31) obj.dueDay = Math.round(dueDay); else delete obj.dueDay;
+if (currentObj) {
+const before = getPaidMonths(currentObj);
+const changed = before.size !== paidDraft.size || [...paidDraft].some(k => !before.has(k));
+if (changed) {
+obj.paidMonths = [...paidDraft].sort();
+obj.paidMonth = obj.paidMonths.length ? obj.paidMonths[obj.paidMonths.length - 1] : null;
+}
+}
 
 const evalFreq = document.getElementById("fEvalFreq").value;
 if (evalFreq) obj.evalFrequency = evalFreq; else delete obj.evalFrequency;
