@@ -816,6 +816,18 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .reason-picker .filter-chip{font-size:0.75rem;padding:0.4375rem 0.75rem}
 
 /* Início: lição de casa, dia sem aula e reposições */
+.card.has-qa{flex-wrap:wrap}
+.qa-rows{flex-basis:100%;display:grid;gap:0.4375rem;padding-top:0.625rem;margin-top:0.125rem;border-top:0.0625rem solid var(--hairline)}
+.qa-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:0.375rem 0.5rem}
+.qa-name{margin-right:auto;font-size:0.75rem;font-weight:700;color:var(--text-2)}
+.qa-note{font-size:0.75rem;font-weight:650;color:var(--muted)}
+.qa-btns{display:flex;flex-wrap:wrap;gap:0.375rem;justify-content:flex-end}
+.qa-past .qa-btns{justify-content:flex-start;margin-top:0.5rem}
+.qa-past{align-items:flex-start}
+.qa-btn{border:0.0625rem solid var(--accent-line);background:var(--accent-soft);color:var(--accent);border-radius:var(--radius-pill);padding:0.375rem 0.75rem;font-size:0.75rem;font-weight:700;white-space:nowrap;cursor:pointer}
+.qa-btn.primary{background:var(--accent);color:var(--accent-ink);box-shadow:var(--glow-sm)}
+.qa-btn.muted{border-color:rgba(148,163,184,.25);background:var(--glass-inset);color:var(--text-2)}
+.agenda-lesson-acts{flex-basis:100%;display:flex;gap:0.375rem;justify-content:flex-end}
 .hw-line{font-size:0.75rem;color:var(--text-2);margin-top:0.375rem;line-height:1.4;overflow-wrap:break-word;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .hw-label{color:var(--accent);font-weight:700}
 .status.off{background:rgba(148,163,184,.1);color:var(--muted);border-color:rgba(148,163,184,.3)}
@@ -998,6 +1010,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 
 /* ===== Modais: o fundo só escurece e o próprio painel é o vidro fosco.
    (Desfocar os dois não funciona: um backdrop-filter dentro de outro só enxerga o pai.) ===== */
+#makeupModal,#quickLessonModal{z-index:32}
 .modal-bg{position:fixed;inset:0;z-index:30;background:rgba(2,4,8,.5);display:none;align-items:center;justify-content:center;padding:1.25rem}
 .modal-bg.show{display:flex}
 .modal-bg.show .modal{animation:modalIn .26s var(--ease-out)}
@@ -1363,6 +1376,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 <div class="home-message-status" id="homeMessageStatus"></div>
 <div class="home-message-phrase" id="homeMessagePhrase"></div>
 </div>
+<div id="unrecordedBox"></div>
 <div id="nextDays"></div>
 <div id="makeupsBox"></div>
 <div id="pendingPaymentsBox"></div>
@@ -2304,6 +2318,16 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 </div>
 </div>
 
+<!-- Modal: ação rápida numa aula (anotações da aula dada / motivo da falta) -->
+<div class="modal-bg" id="quickLessonModal">
+<div class="modal">
+<h2 id="quickLessonTitle">Aula</h2>
+<div class="field-hint" id="quickLessonInfo" style="margin-bottom:0.75rem"></div>
+<div id="quickLessonBody"></div>
+<div class="actions"><button class="cancel" id="quickLessonCancel">Cancelar</button><button class="save" id="quickLessonSave">Salvar</button></div>
+</div>
+</div>
+
 <!-- Modal: Detalhe de um dia da Agenda -->
 <div class="modal-bg" id="holidayInfoModal">
 <div class="modal">
@@ -3203,7 +3227,9 @@ const ABSENCE_REASONS = {
 absent_notice:    { label:"Aluno faltou e avisou",   short:"Faltou e avisou" },
 absent_no_notice: { label:"Aluno faltou sem avisar", short:"Faltou sem avisar" },
 teacher_cancel:   { label:"Professor cancelou",      short:"Professor cancelou" },
-holiday:          { label:"Feriado/férias",          short:"Feriado/férias" }
+holiday:          { label:"Feriado/férias",          short:"Feriado/férias" },
+// Remarcada: a aula mudou de dia pelo "Remarcar" (não é falta; não aparece no seletor de motivo).
+rescheduled:      { label:"Remarcada",               short:"Remarcada", pick:false }
 };
 function saveStudents(){ localStorage.setItem("jp_students_v5", JSON.stringify(students)); }
 // Grava (ou atualiza) o registro de uma aula da linha do tempo, seja ela virtual ou já salva.
@@ -3225,6 +3251,59 @@ if (withMakeup) fields.makeupCreated = createMakeup(student, entry.date, reason)
 upsertLessonRecord(student, entry, fields);
 saveStudents();
 }
+// Remarcar em um passo: a aula original vira "não houve aula · Remarcada" e nasce a aula
+// extra já marcada. Remarcar uma aula extra que ainda não aconteceu só muda a data dela.
+function rescheduleLesson(student, entry, date, time){
+if (entry.makeupId && entry.virtual) {
+const m = (student.makeups || []).find(x => x.id === entry.makeupId);
+if (m) { m.date = date; if (time) m.time = time; else delete m.time; saveStudents(); return m; }
+}
+const m = { id: "mk" + Date.now().toString(36) + Math.random().toString(36).slice(2,6), originDate: entry.date, reason:"rescheduled", status:"scheduled", date };
+if (time) m.time = time;
+(student.makeups ??= []).push(m);
+upsertLessonRecord(student, entry, { status:"noclass", reason:"rescheduled", makeupCreated: m.id });
+saveStudents();
+return m;
+}
+// Desfaz uma remarcação: tira a aula nova e devolve a original (sem registro).
+function undoReschedule(student, m){
+student.makeups = (student.makeups || []).filter(x => x !== m);
+student.lessons = (student.lessons || []).filter(l => !(l.makeupCreated === m.id && l.reason === "rescheduled" && !l.taught && !l.homework));
+saveStudents();
+}
+// A aula de uma data pede avaliação? (mesma regra da linha do tempo, pra aula que ainda
+// não entrou nela, como a de hoje antes de terminar)
+function isEvalDue(s, iso){
+const freq = getEvalFrequency(s);
+if (freq === "every") return true;
+const pk = evalPeriodKey(iso, freq);
+if ((s.lessons || []).some(l => isEvaluated(l) && evalPeriodKey(isoFromBr(l.date), freq) === pk)) return false;
+return !getStudentTimeline(s).some(l => l.virtual && l.status === "pending" && isoFromBr(l.date) < iso && evalPeriodKey(isoFromBr(l.date), freq) === pk);
+}
+// Entrada da linha do tempo pra uma aula de getLessonsOnDate (o registro, a entrada virtual
+// dela ou, se ainda não entrou na linha do tempo, uma entrada virtual nova).
+function entryForLesson(x, date){
+if (x.record) return x.record;
+const br = brOf(date);
+const tl = getStudentTimeline(x.student).find(l => l.virtual && l.date === br && (x.makeupId ? l.makeupId === x.makeupId : !l.makeupId));
+if (tl) return tl;
+const e = { date: br, virtual: true, status: isEvalDue(x.student, isoOf(date)) ? "pending" : "given" };
+if (x.makeupId) e.makeupId = x.makeupId;
+return e;
+}
+// Texto curto de uma aula que não aconteceu (motivo, ou pra quando foi remarcada).
+function noClassNote(student, rec){
+if (rec.reason === "rescheduled") {
+const m = (student.makeups || []).find(x => x.id === rec.makeupCreated);
+return m && m.date ? `Remarcada p/ ${formatDateShort(m.date).slice(0,5)}${m.time ? " às " + m.time : ""}` : "Remarcada";
+}
+return ABSENCE_REASONS[rec.reason]?.short || "Não houve aula";
+}
+function recordStatusText(rec, student){
+if (isNoClass(rec)) { const t = noClassNote(student, rec); return t.charAt(0).toLowerCase() + t.slice(1); }
+return isEvaluated(rec) ? "✓ avaliada" : "✓ aula dada";
+}
+
 // Faltas do aluno no mês (só as faltas dele; cancelamento e feriado não contam).
 function countMonthAbsences(s, date = new Date()){
 const suffix = `/${pad2(date.getMonth()+1)}/${date.getFullYear()}`;
@@ -3248,7 +3327,12 @@ function lessonSlots(s){ return s.lessonFrequency === "single" ? [] : studentDay
 function sharesSlot(a, b){ const sb = lessonSlots(b); return lessonSlots(a).some(x => sb.includes(x)); }
 // Reposição x aula extra (avulsa ou fora do horário fixo), pelo tipo do agendamento.
 function isSingleLesson(s, makeupId){ const m = (s.makeups || []).find(x => x.id === makeupId); return !!(m && m.kind === "single"); }
-function extraLabel(s, makeupId){ return isSingleLesson(s, makeupId) ? "Aula extra" : "Reposição"; }
+function extraLabel(s, makeupId){
+const m = (s.makeups || []).find(x => x.id === makeupId);
+if (m && m.kind === "single") return "Aula extra";
+if (m && m.reason === "rescheduled") return "Remarcada";
+return "Reposição";
+}
 // Pacote de aulas: aulas dadas (e faltas sem aviso) desde o início do pacote.
 function packageUsage(s){
 if (!(Number(s.packageSize) > 0)) return null;
@@ -3314,7 +3398,7 @@ const wrap = document.createElement("div");
 wrap.className = "reason-picker";
 wrap.innerHTML = `
 <div class="reason-picker-label">Por que não houve aula?</div>
-<div class="reason-chips">${Object.entries(ABSENCE_REASONS).map(([k,r]) => `<button type="button" class="filter-chip reason-chip" data-reason="${k}">${r.label}</button>`).join("")}</div>
+<div class="reason-chips">${Object.entries(ABSENCE_REASONS).filter(([k,r]) => r.pick !== false).map(([k,r]) => `<button type="button" class="filter-chip reason-chip" data-reason="${k}">${r.label}</button>`).join("")}</div>
 <div class="reason-makeup" style="display:none">
 <div class="reason-picker-label">Vai repor essa aula?</div>
 <div class="reason-chips">
@@ -3358,7 +3442,7 @@ function makeupStatusText(student, lesson){
 if (!lesson.makeupCreated) return "";
 const m = (student.makeups||[]).find(x => x.id === lesson.makeupCreated);
 if (!m) return "";
-if (m.status === "scheduled") return `Reposição marcada para ${formatDateShort(m.date)}${m.time ? " às " + m.time : ""}`;
+if (m.status === "scheduled") return `${m.reason === "rescheduled" ? "Remarcada" : "Reposição marcada"} para ${formatDateShort(m.date)}${m.time ? " às " + m.time : ""}`;
 if (m.status === "dismissed") return "Reposição dispensada";
 return "Reposição pendente: marque a data no Início";
 }
@@ -3429,12 +3513,17 @@ div.innerHTML = header(isPending ? `<span class="badge-not-evaluated">Aguardando
 (isPending ? `<div class="eval-criteria-wrap"></div>${notesEditorHTML(lesson)}` : lessonNotesHTML(lesson)) +
 `<div class="reason-slot"></div>
 <div class="history-actions">
+<button type="button" class="btn-edit-toggle btn-reschedule">Remarcar</button>
 <button type="button" class="btn-edit-toggle btn-noclass">Não houve aula</button>
 ${isPending
 ? `<button type="button" class="save btn-save-eval">Salvar avaliação</button>`
 : `<button type="button" class="btn-edit-toggle btn-notes">${lesson.taught || lesson.homework ? "Editar anotações" : "Anotar a aula"}</button>`}
 </div>`;
 
+div.querySelector('.btn-reschedule').onclick = () => {
+const mk = lesson.makeupId ? (student.makeups || []).find(m => m.id === lesson.makeupId) : null;
+openRescheduleModal(student, lesson, (mk && mk.time) || getStudentTimeFor(student, dateFromIso(isoFromBr(lesson.date)).getDay()));
+};
 div.querySelector('.btn-noclass').onclick = () => {
 const slot = div.querySelector('.reason-slot');
 if (slot.firstChild) { slot.innerHTML = ""; return; }
@@ -3706,12 +3795,20 @@ document.getElementById("holidayInfoDate").textContent = `${String(d).padStart(2
 const dayLessons = getLessonsOnDate(cellDate);
 document.getElementById("agendaLessonsLine").innerHTML = dayLessons.length
 ? `<div class="agenda-lessons-line"><svg class="inline-icon" viewBox="0 0 24 24"><use href="#icon-music"/></svg> Aulas previstas</div>
-<div class="agenda-lessons-list">${dayLessons.map(x => {
+<div class="agenda-lessons-list">${dayLessons.map((x, idx) => {
 const cancelled = x.off || (x.record && isNoClass(x.record));
-const note = x.off ? x.off.label : (x.record && isNoClass(x.record)) ? (ABSENCE_REASONS[x.record.reason]?.short || "Não houve aula") : "";
-return `<div class="agenda-lesson-item${cancelled ? " is-off" : ""}"><span class="agenda-lesson-time">${x.time}</span><span class="agenda-lesson-name">${escapeHtml(x.student.name)}${x.kind === "extra" ? ` <span class="badge-makeup">${extraLabel(x.student, x.makeupId)}</span>` : ""}</span>${note ? `<span class="agenda-lesson-note">${escapeHtml(note)}</span>` : ""}</div>`;
+const note = x.off ? x.off.label : (x.record && isNoClass(x.record)) ? noClassNote(x.student, x.record) : "";
+// Aula que ainda vai acontecer (ou sem registro): Remarcar e, de hoje em diante, Cancelar.
+let acts = "";
+if (!cancelled && !x.record) {
+const key = `a${dateStr}-${idx}`;
+quickTargets[key] = { student: x.student, entry: entryForLesson(x, cellDate), time: x.time };
+acts = `<span class="agenda-lesson-acts"><button type="button" class="qa-btn" data-qa="reschedule" data-qk="${key}">Remarcar</button>${dateStr >= isoOf(new Date()) ? `<button type="button" class="qa-btn muted" data-qa="cancel" data-qk="${key}">Cancelar</button>` : ""}</span>`;
+}
+return `<div class="agenda-lesson-item${cancelled ? " is-off" : ""}"><span class="agenda-lesson-time">${x.time}</span><span class="agenda-lesson-name">${escapeHtml(x.student.name)}${x.kind === "extra" ? ` <span class="badge-makeup">${extraLabel(x.student, x.makeupId)}</span>` : ""}</span>${note ? `<span class="agenda-lesson-note">${escapeHtml(note)}</span>` : ""}${acts}</div>`;
 }).join("")}</div>`
 : '';
+bindQuickActions(document.getElementById("agendaLessonsLine"));
 
 const breakItems = (appSettings.breaks || []).filter(b => b.start <= dateStr && dateStr <= b.end).map(b => {
 const st = b.studentId ? students.find(x => x.id === b.studentId) : null;
@@ -3850,7 +3947,122 @@ const extra = n - 3;
 return `<div class="avatar-cluster">${btn(g[0])}${btn(g[1])}${btn(g[2])}<div class="avatar-small">+${extra}</div></div>`;
 }
 
+// Avisos no WhatsApp depois de marcar/remarcar/cancelar (mensagens prontas: ver abaixo).
+function offerLessonMessage(s, m){}
+function offerCancelMessage(s, time){}
+
+// ===== Ações rápidas nas aulas do Início =====
+// Antes da aula começar: Remarcar / Cancelar aula. Depois que começa: Dada / Faltou / Remarcar.
+let quickTargets = {};
+function quickActionsHTML(key, phase){
+return phase === "before"
+? `<button type="button" class="qa-btn" data-qa="reschedule" data-qk="${key}">Remarcar</button><button type="button" class="qa-btn muted" data-qa="cancel" data-qk="${key}">Cancelar aula</button>`
+: `<button type="button" class="qa-btn primary" data-qa="given" data-qk="${key}">Dada</button><button type="button" class="qa-btn" data-qa="absent" data-qk="${key}">Faltou</button><button type="button" class="qa-btn" data-qa="reschedule" data-qk="${key}">Remarcar</button>`;
+}
+function bindQuickActions(root){
+root.querySelectorAll("[data-qa]").forEach(b => b.onclick = (e) => {
+e.stopPropagation();
+const t = quickTargets[b.dataset.qk];
+if (!t) return;
+runQuickAction(b.dataset.qa, t);
+});
+}
+function runQuickAction(action, t){
+const { student: s, entry, time } = t;
+if (action === "reschedule") return openRescheduleModal(s, entry, time);
+if (action === "cancel") {
+if (!confirm(`Cancelar a aula de ${s.name} das ${time}? Ela fica como "Professor cancelou" e entra nas reposições pendentes.`)) return;
+recordNoClass(s, entry, "teacher_cancel", true);
+refreshAfterLessonChange(s);
+offerCancelMessage(s, time);
+return;
+}
+if (action === "absent") return openQuickAbsence(s, entry, time);
+if (action === "given") {
+// Dia de avaliar: abre a avaliação; senão, só as anotações (opcionais).
+if (entry.status === "pending") {
+pendingEvalQueue = [{ time, date: entry.date, items: [{ student: s, entry }] }];
+evalQueueIndex = 0;
+return openEvalPopup();
+}
+return openQuickNotes(s, entry, time);
+}
+}
+function openQuickModal(title, info, bodyEl, onSave){
+document.getElementById("quickLessonTitle").textContent = title;
+document.getElementById("quickLessonInfo").textContent = info;
+const body = document.getElementById("quickLessonBody");
+body.innerHTML = "";
+body.appendChild(bodyEl);
+const save = document.getElementById("quickLessonSave");
+save.style.display = onSave ? "" : "none";
+save.onclick = onSave;
+document.getElementById("quickLessonModal").classList.add("show");
+}
+function closeQuickModal(){ document.getElementById("quickLessonModal").classList.remove("show"); }
+document.getElementById("quickLessonCancel").onclick = closeQuickModal;
+function openQuickNotes(s, entry, time){
+const wrap = document.createElement("div");
+const prevHw = getLastHomework(s, isoFromBr(entry.date));
+wrap.innerHTML = (prevHw ? `<div class="prev-homework"><span class="lesson-note-label">Para casa da aula anterior (${prevHw.date})</span>${escapeHtml(prevHw.homework)}</div>` : "") + notesEditorHTML(entry);
+openQuickModal(`Aula dada · ${s.name}`, `${entry.date}${time ? " às " + time : ""}. As anotações são opcionais.`, wrap, () => {
+const notes = readNotes(wrap);
+const fields = { status: "given" };
+if (notes.taught) fields.taught = notes.taught;
+if (notes.homework) fields.homework = notes.homework;
+upsertLessonRecord(s, entry, fields);
+saveStudents();
+closeQuickModal();
+refreshAfterLessonChange(s);
+});
+}
+function openQuickAbsence(s, entry, time){
+openQuickModal(`Faltou · ${s.name}`, `${entry.date}${time ? " às " + time : ""}.`, buildReasonPicker((reason, withMakeup) => {
+recordNoClass(s, entry, reason, withMakeup);
+closeQuickModal();
+refreshAfterLessonChange(s);
+}), null);
+}
+// Aulas passadas recentes (7 dias) que ficaram sem registro: a última de cada aluno.
+function recentUnrecordedLessons(days = 7){
+const today = new Date(); today.setHours(0,0,0,0);
+const todayIso = isoOf(today);
+const minD = new Date(today); minD.setDate(minD.getDate() - days);
+const minIso = isoOf(minD);
+const out = [];
+students.filter(s => s.active !== false).forEach(s => {
+const last = getStudentTimeline(s).find(l => isoFromBr(l.date) < todayIso && !(l.auto && isNoClass(l)));
+if (!last || !last.virtual || !(last.status === "pending" || last.status === "given")) return;
+const iso = isoFromBr(last.date);
+if (iso < minIso) return;
+const mk = last.makeupId ? (s.makeups || []).find(m => m.id === last.makeupId) : null;
+out.push({ student: s, entry: last, time: (mk && mk.time) || getStudentTimeFor(s, dateFromIso(iso).getDay()) });
+});
+return out.sort((a,b) => isoFromBr(b.entry.date).localeCompare(isoFromBr(a.entry.date)) || a.time.localeCompare(b.time));
+}
+function renderUnrecordedLessons(){
+const box = document.getElementById("unrecordedBox");
+if (!box) return;
+const list = recentUnrecordedLessons();
+if (!list.length) { box.innerHTML = ""; return; }
+box.innerHTML = `<div class="settings-group-label" style="margin-top:0.5rem">Aulas sem registro</div>` + list.map((t, i) => {
+const key = "u" + i;
+quickTargets[key] = t;
+const d = dateFromIso(isoFromBr(t.entry.date));
+return `<div class="goal-row qa-past">
+<div class="avatar-small">${initials(t.student.name)}</div>
+<div class="goal-info">
+<div class="goal-title">${escapeHtml(t.student.name)}</div>
+<div class="makeup-sub">${WEEKDAY_SHORT[d.getDay()]}, ${t.entry.date.slice(0,5)} · ${t.time}${t.entry.status === "pending" ? " · dia de avaliar" : ""}</div>
+<div class="qa-btns">${quickActionsHTML(key, "after")}</div>
+</div>
+</div>`;
+}).join("");
+bindQuickActions(box);
+}
+
 function renderHome(){
+quickTargets = {};
 const now=new Date();
 document.getElementById("homeGreetingText").textContent = `Olá, ${appSettings.profile.name}`;
 const months=["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
@@ -3945,7 +4157,22 @@ const hw = live.map(x => ({ s:x.student, l:getLastHomework(x.student, iso) })).f
 const hwHtml = hw.map(x => `<div class="hw-line"><span class="hw-label">Para casa${g.length>1 ? " · " + escapeHtml(x.s.name.split(" ")[0]) : ""}:</span> ${escapeHtml(x.l.homework)}</div>`).join("");
 const offNote = live.length === 0 ? (g.find(x => x.off)?.off.label || "") : "";
 
-card.innerHTML=`<div class="time">${time}</div>${avatarsHtml}<div class="info"><div class="name">${names}</div><div class="instrument">${escapeHtml(instruments)}${g.length>1?" · grupo":" · ind."}${extraKinds.map(k => " · " + k).join("")}${offNote ? " · " + escapeHtml(offNote) : ""}</div>${hwHtml}</div><div class="status ${statusClass}">${statusText}</div>`;
+// Hoje: ações rápidas por aluno (ou o que já foi registrado).
+let qaHtml = "";
+if (offset === 0) {
+const phase = now < startTime ? "before" : "after";
+const rows = g.filter(x => !x.off).map((x, i) => {
+const label = g.length > 1 ? `<span class="qa-name">${escapeHtml(x.student.name.split(" ")[0])}</span>` : "";
+if (x.record) return `<div class="qa-row">${label}<span class="qa-note">${recordStatusText(x.record, x.student)}</span></div>`;
+const key = `t${time}-${i}`;
+quickTargets[key] = { student: x.student, entry: entryForLesson(x, date), time };
+return `<div class="qa-row">${label}<div class="qa-btns">${quickActionsHTML(key, phase)}</div></div>`;
+});
+if (rows.length) { qaHtml = `<div class="qa-rows">${rows.join("")}</div>`; card.classList.add("has-qa"); }
+}
+
+card.innerHTML=`<div class="time">${time}</div>${avatarsHtml}<div class="info"><div class="name">${names}</div><div class="instrument">${escapeHtml(instruments)}${g.length>1?" · grupo":" · ind."}${extraKinds.map(k => " · " + k).join("")}${offNote ? " · " + escapeHtml(offNote) : ""}</div>${hwHtml}</div><div class="status ${statusClass}">${statusText}</div>${qaHtml}`;
+bindQuickActions(card);
 card.querySelectorAll("[data-home-student]").forEach(b=>{
 b.onclick=(e)=>{ e.stopPropagation(); openStudentFromHome(Number(b.dataset.homeStudent)); }});
 section.appendChild(card);
@@ -3957,6 +4184,7 @@ offset++;
 }
 
 if(daysFound === 0) box.innerHTML="<div class='empty'>Nenhuma próxima aula agendada.</div>";
+renderUnrecordedLessons();
 renderMakeups();
 renderPendingPayments();
 }
@@ -4072,14 +4300,14 @@ const row = ({ s, m }, isPending) => `
 <div class="goal-title">${escapeHtml(s.name)}</div>
 <div class="makeup-sub">${isPending
 ? `Aula de ${m.originDate}${ABSENCE_REASONS[m.reason] ? " · " + ABSENCE_REASONS[m.reason].short : ""}`
-: `${formatDateShort(m.date)}${m.time ? " às " + m.time : ""} · ${m.kind === "single" ? "aula extra" : "repõe " + m.originDate}`}</div>
+: `${formatDateShort(m.date)}${m.time ? " às " + m.time : ""} · ${m.kind === "single" ? "aula extra" : m.reason === "rescheduled" ? "remarcada de " + m.originDate : "repõe " + m.originDate}`}</div>
 </div>
 <button type="button" class="btn-edit-toggle" data-makeup-edit="${s.id}|${m.id}">${isPending ? "Marcar" : "Alterar"}</button>
 ${isPending ? `<button type="button" class="makeup-dismiss" data-makeup-dismiss="${s.id}|${m.id}" aria-label="Dispensar reposição de ${escapeHtml(s.name)}">✕</button>` : ""}
 </div>`;
 box.innerHTML =
 (pending.length ? `<div class="settings-group-label" style="margin-top:1.5rem">Reposições pendentes</div>${pending.map(x => row(x, true)).join("")}` : "") +
-(scheduled.length ? `<div class="settings-group-label" style="margin-top:1.5rem">${scheduled.some(x => x.m.kind === "single") ? (scheduled.every(x => x.m.kind === "single") ? "Aulas extras marcadas" : "Reposições e aulas extras") : "Reposições marcadas"}</div>${scheduled.map(x => row(x, false)).join("")}` : "");
+(scheduled.length ? `<div class="settings-group-label" style="margin-top:1.5rem">${scheduledTitle(scheduled.map(x => x.m))}</div>${scheduled.map(x => row(x, false)).join("")}` : "");
 const find = (key) => { const [sid, mid] = key.split("|"); const s = students.find(x => String(x.id) === sid); return { s, m: s && (s.makeups || []).find(x => x.id === mid) }; };
 box.querySelectorAll("[data-makeup-edit]").forEach(b => b.onclick = () => { const { s, m } = find(b.dataset.makeupEdit); if (m) openMakeupModal(s, m); });
 box.querySelectorAll("[data-makeup-dismiss]").forEach(b => b.onclick = () => {
@@ -4091,20 +4319,27 @@ renderMakeups();
 });
 }
 
+function scheduledTitle(list){
+const kinds = new Set(list.map(m => m.kind === "single" ? "extra" : m.reason === "rescheduled" ? "moved" : "makeup"));
+if (kinds.size > 1) return "Aulas marcadas fora do horário";
+return kinds.has("extra") ? "Aulas extras marcadas" : kinds.has("moved") ? "Aulas remarcadas" : "Reposições marcadas";
+}
 let editingMakeup = null;
 // isNew: aula extra criada agora (só entra na lista do aluno se salvar).
 function openMakeupModal(s, m, isNew = false){
 editingMakeup = { s, m, isNew };
 const scheduled = m.status === "scheduled";
 const single = m.kind === "single";
-document.getElementById("makeupModalTitle").textContent = single ? (scheduled ? "Alterar aula extra" : "Marcar aula extra") : (scheduled ? "Alterar reposição" : "Marcar reposição");
+const moved = m.reason === "rescheduled";
+document.getElementById("makeupModalTitle").textContent = single ? (scheduled ? "Alterar aula extra" : "Marcar aula extra") : moved ? "Alterar aula remarcada" : (scheduled ? "Alterar reposição" : "Marcar reposição");
 document.getElementById("makeupModalInfo").textContent = single
 ? `${s.name} · aula fora do horário fixo (ou aula avulsa).`
+: moved ? `${s.name} · aula de ${m.originDate}, remarcada.`
 : `${s.name} · repõe a aula de ${m.originDate}${ABSENCE_REASONS[m.reason] ? " (" + ABSENCE_REASONS[m.reason].short.toLowerCase() + ")" : ""}.`;
 document.getElementById("makeupDateInput").value = m.date || "";
 document.getElementById("makeupTimeInput").value = m.time || s.time || "";
 const unBtn = document.getElementById("makeupUnscheduleBtn");
-unBtn.textContent = single ? "Cancelar esta aula" : "Desmarcar (volta para as pendentes)";
+unBtn.textContent = single ? "Cancelar esta aula" : moved ? "Desfazer remarcação (volta pro dia original)" : "Desmarcar (volta para as pendentes)";
 unBtn.style.display = scheduled ? "" : "none";
 document.getElementById("makeupModal").classList.add("show");
 }
@@ -4112,11 +4347,34 @@ function closeMakeupModal(){
 document.getElementById("makeupModal").classList.remove("show");
 editingMakeup = null;
 }
-function afterMakeupChange(){
-saveStudents();
-closeMakeupModal();
+// "Remarcar esta aula": mesmo modal de data/horário, gravando tudo de uma vez ao salvar.
+function openRescheduleModal(s, entry, time){
+if (entry.makeupId && entry.virtual) {
+const m = (s.makeups || []).find(x => x.id === entry.makeupId);
+if (m) { openMakeupModal(s, m); document.getElementById("makeupModalTitle").textContent = "Remarcar aula"; return; }
+}
+editingMakeup = { s, reschedule: { entry, time } };
+const d = dateFromIso(isoFromBr(entry.date));
+document.getElementById("makeupModalTitle").textContent = "Remarcar aula";
+document.getElementById("makeupModalInfo").textContent = `${s.name} · aula de ${WEEKDAY_SHORT[d.getDay()].toLowerCase()}, ${entry.date.slice(0,5)}${time ? " às " + time : ""}. Ela fica como "Remarcada" (não conta como falta) e a nova aparece no Início e na Agenda.`;
+document.getElementById("makeupDateInput").value = "";
+document.getElementById("makeupTimeInput").value = time || s.time || "";
+document.getElementById("makeupUnscheduleBtn").style.display = "none";
+document.getElementById("makeupModal").classList.add("show");
+}
+function refreshAfterLessonChange(s){
 if (currentPage === "home") renderHome();
 if (currentPage === "agenda") renderAgenda();
+if (currentPage === "students") renderStudents();
+if (currentPage === "evaluation") renderEvaluation();
+if (s && document.getElementById("historyModal").classList.contains("show") && document.getElementById("modalStudentName").textContent === s.name) renderHistoryContent(s);
+if (agendaModalDate && document.getElementById("holidayInfoModal").classList.contains("show")) openAgendaDayModal(agendaModalDate);
+}
+function afterMakeupChange(){
+const s = editingMakeup && editingMakeup.s;
+saveStudents();
+closeMakeupModal();
+refreshAfterLessonChange(s);
 }
 document.getElementById("makeupCancelBtn").onclick = closeMakeupModal;
 document.getElementById("makeupSaveBtn").onclick = () => {
@@ -4124,17 +4382,26 @@ if (!editingMakeup) return;
 const date = document.getElementById("makeupDateInput").value;
 const time = document.getElementById("makeupTimeInput").value;
 if (!date) { alert("Escolha a data da aula."); return; }
+if (editingMakeup.reschedule) {
+const { s, reschedule } = editingMakeup;
+const nm = rescheduleLesson(s, reschedule.entry, date, time);
+afterMakeupChange();
+offerLessonMessage(s, nm);
+return;
+}
 const { s, m, isNew } = editingMakeup;
 if (isNew) (s.makeups ??= []).push(m);
 m.status = "scheduled";
 m.date = date;
 if (time) m.time = time; else delete m.time;
 afterMakeupChange();
+offerLessonMessage(s, m);
 };
 document.getElementById("makeupUnscheduleBtn").onclick = () => {
 if (!editingMakeup) return;
 const { s, m } = editingMakeup;
 if (m.kind === "single") s.makeups = (s.makeups || []).filter(x => x !== m);
+else if (m.reason === "rescheduled") undoReschedule(s, m);
 else { m.status = "pending"; delete m.date; delete m.time; }
 afterMakeupChange();
 };
