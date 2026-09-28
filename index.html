@@ -1120,12 +1120,12 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .receipt-preview{display:block;width:100%;border-radius:var(--radius-sm);background:#fff;box-shadow:var(--shadow-sm)}
 .pay-item{display:flex;flex-direction:column;align-items:stretch;gap:0.25rem}
 .pay-receipt{border:none;background:none;padding:0.125rem 0;color:var(--accent);font-size:0.6875rem;font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:0.15em}
-.modal-bg{position:fixed;inset:0;z-index:30;background:rgba(2,4,8,.5);display:none;align-items:center;justify-content:center;padding:1.25rem}
+.modal-bg{position:fixed;inset:0;z-index:30;background:rgba(2,4,8,.5);display:none;align-items:center;justify-content:center;padding:1.25rem;padding-bottom:calc(1.25rem + var(--toast-h, 0px))}
 .modal-bg.show{display:flex}
 .modal-bg.show .modal{animation:modalIn .26s var(--ease-out)}
 @keyframes modalIn{from{opacity:.4;transform:translateY(0.625rem) scale(.985)}to{opacity:1;transform:none}}
 .modal{
-  width:min(28rem,90vw);max-height:85vh;overflow:auto;
+  width:min(28rem,90vw);max-height:calc(85vh - var(--toast-h, 0px));overflow:auto;
   background:var(--sheen),rgba(12,18,30,.58);
   -webkit-backdrop-filter:blur(1.5rem) saturate(160%);backdrop-filter:blur(1.5rem) saturate(160%);
   border:0.0625rem solid var(--glass-border);border-radius:var(--radius-xl);padding:1.5rem;
@@ -4664,7 +4664,14 @@ setTimeout(() => { sec.scrollIntoView({ block: "center" }); document.getElementB
 // juntam todos no mesmo painel, que fica aberto até o professor fechar.
 function getToastStack(){
 let st = document.getElementById("toastStack");
-if (!st) { st = document.createElement("div"); st.id = "toastStack"; document.body.appendChild(st); }
+if (!st) {
+st = document.createElement("div"); st.id = "toastStack"; document.body.appendChild(st);
+// Os modais encolhem pra cima do rodapé enquanto ele tiver avisos, pra nenhum botão
+// (ex.: "Salvar aluno") ficar escondido embaixo do painel "Avisar os alunos".
+const sync = () => document.documentElement.style.setProperty("--toast-h", st.offsetHeight ? `${st.offsetHeight + 12}px` : "0px");
+if (window.ResizeObserver) new ResizeObserver(sync).observe(st);
+else new MutationObserver(sync).observe(st, { childList: true, subtree: true });
+}
 return st;
 }
 let waPanel = null;
@@ -8543,7 +8550,7 @@ return parts.join(" · ");
 }
 
 // Versão mostrada em Configurações. Sobe a cada rodada de mudanças publicada.
-const APP_VERSION = "7.2.1";
+const APP_VERSION = "7.3";
 function renderSettingsSummary(){
 document.getElementById("valVersao").textContent = APP_VERSION;
 document.getElementById("settingsProfileName").textContent = appSettings.profile.name;
