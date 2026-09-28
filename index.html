@@ -1088,6 +1088,30 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .sheet-pair dd .wa-btn{display:flex;width:fit-content;padding:0.25rem 0.625rem;margin-top:0.3125rem;font-size:0.6875rem}
 .sheet-add{border:none;background:none;padding:0;color:var(--accent);font:inherit;font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:0.15em}
 .sheet-notes .lesson-notes{margin-top:0.375rem}
+.dots-row{display:flex;justify-content:space-between;gap:0.25rem;padding:0.25rem 0.125rem}
+.dot-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:0.3125rem;border:none;background:none;padding:0.25rem 0;cursor:pointer;color:var(--muted)}
+.dot{display:inline-block;width:0.875rem;height:0.875rem;border-radius:50%;flex:none}
+.dot-item .dot{width:1.125rem;height:1.125rem}
+.dot-date{font-size:0.6875rem;font-weight:650}
+.dot-given{background:var(--green);box-shadow:0 0 0.375rem rgba(74,222,128,.35)}
+.dot-evaluated{background:var(--accent);box-shadow:0 0 0.375rem rgba(47,211,242,.35)}
+.dot-notice{background:var(--orange)}
+.dot-nonotice{background:var(--danger)}
+.dot-cancel{background:#94a3b8}
+.dot-moved{background:var(--accent-2)}
+.dot-holiday{background:transparent;border:0.125rem solid #94a3b8}
+.dot-makeup{background:#a78bfa}
+.dots-legend{display:flex;flex-wrap:wrap;gap:0.25rem 0.75rem;margin:0.375rem 0 0.25rem;font-size:0.6875rem;color:var(--muted)}
+.dots-legend > span{display:inline-flex;align-items:center;gap:0.3125rem}
+.dots-legend .dot{width:0.625rem;height:0.625rem}
+.lesson-card-item.lesson-flash{border-color:var(--accent)!important;box-shadow:var(--glow)}
+.lp-about{font-size:0.75rem;font-weight:500;color:var(--muted);margin-top:0.1875rem;line-height:1.4;overflow-wrap:break-word}
+.lp-about-label{font-weight:700;color:var(--text-2)}
+.lp-notes{margin-top:0.75rem;padding-top:0.625rem;border-top:0.0625rem dashed var(--hairline)}
+.lp-notes .field{margin-bottom:0.5rem}
+.lp-notes textarea{min-height:2.75rem;resize:vertical}
+.lp-copy-row{display:flex;justify-content:flex-end;margin:-0.25rem 0 0.375rem}
+.lp-saved{min-height:1rem;font-size:0.6875rem;font-weight:700;color:var(--green);text-align:right}
 .sheet-actions{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-top:1rem}
 .sheet-actions > *{justify-content:center;text-align:center;padding:0.6875rem 0.75rem;font-size:0.8125rem}
 .sheet-actions .save{border:none}
@@ -2108,6 +2132,11 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 </select>
 </div>
 <div class="field" id="fLocationDetailField" style="display:none"><label id="fLocationDetailLabel">Endereço</label><input id="fLocationDetail"></div>
+</details>
+<details class="form-section" id="fAboutSection">
+<summary><span class="form-section-title">Objetivo e observações</span></summary>
+<div class="field"><label>Objetivo</label><textarea id="fObjective" rows="2" placeholder="Ex.: tocar na igreja, passar no vestibular de música"></textarea></div>
+<div class="field"><label>Observações</label><textarea id="fObservations" rows="2" placeholder="Ex.: canhoto, aprende melhor com vídeo"></textarea></div>
 </details>
 <div id="statusToggleWrapper" style="display:none">
 <button class="btn-toggle-status" id="btnToggleStatus">Registrar Saída do Aluno (Inativar)</button>
@@ -3469,7 +3498,7 @@ const used = new Set();
 const timeline = [];
 getStudentOccurrences(student).forEach(occ => {
 const rec = findLessonRecord(student, occ);
-if (rec) { used.add(rec); timeline.push(rec); return; }
+if (rec) { used.add(rec); if (rec.status === "pending") openPeriods.add(evalPeriodKey(occ.iso, freq)); timeline.push(rec); return; }
 const base = { date: occ.br, virtual:true };
 if (occ.makeupId) base.makeupId = occ.makeupId;
 const off = getOffReason(student, occ.iso);
@@ -3547,7 +3576,7 @@ return (mk && mk.time) || getStudentTimeFor(student, dateFromIso(isoFromBr(entry
 }
 // Depois de registrar "não houve aula": aviso com a mensagem certa no WhatsApp.
 function offerAfterNoClass(student, reason, m, time, dateBr){
-if (m && m.status === "scheduled") return offerLessonMessage(student, m);
+if (m && m.status === "scheduled") return reason === "teacher_cancel" ? offerCancelMakeupMessage(student, m, dateBr) : offerLessonMessage(student, m);
 if (reason === "teacher_cancel") return offerCancelMessage(student, time, dateBr);
 return null;
 }
@@ -3572,7 +3601,7 @@ const freq = getEvalFrequency(s);
 if (freq === "every") return true;
 const pk = evalPeriodKey(iso, freq);
 if ((s.lessons || []).some(l => isEvaluated(l) && evalPeriodKey(isoFromBr(l.date), freq) === pk)) return false;
-return !getStudentTimeline(s).some(l => l.virtual && l.status === "pending" && isoFromBr(l.date) < iso && evalPeriodKey(isoFromBr(l.date), freq) === pk);
+return !getStudentTimeline(s).some(l => l.status === "pending" && isoFromBr(l.date) < iso && evalPeriodKey(isoFromBr(l.date), freq) === pk);
 }
 // Entrada da linha do tempo pra uma aula de getLessonsOnDate (o registro, a entrada virtual
 // dela ou, se ainda não entrou na linha do tempo, uma entrada virtual nova).
@@ -3804,8 +3833,13 @@ sheetPair("Status", escapeHtml(lessonStateText(s, last))),
 (last.taught || last.homework) ? `<div class="sheet-pair wide sheet-notes">${lessonNotesHTML(last)}</div>` : ""
 ]) : "";
 
+const about = sheetSection("Objetivo e observações", [
+sheetPair("Objetivo", s.objective ? escapeHtml(s.objective) : "", true),
+sheetPair("Observações", s.observations ? escapeHtml(s.observations) : "", true)
+]);
 const body = document.getElementById("sheetBody");
-body.innerHTML = aulas + contato + financeiro + acomp + ultima;
+body.innerHTML = about + aulas + contato + financeiro + acomp + lastLessonsDotsHTML(s) + ultima;
+body.querySelectorAll("[data-dot]").forEach(b => b.onclick = () => openHistoryAt(s.id, b.dataset.dot));
 body.querySelectorAll("[data-sheet-add]").forEach(b => b.onclick = () => editFromSheet(s.id, b.dataset.sheetAdd));
 
 // Botões
@@ -3819,6 +3853,39 @@ acts.querySelector('[data-sheet-act="edit"]').onclick = () => editFromSheet(s.id
 acts.querySelector('[data-sheet-act="history"]').onclick = () => openHistoryModal(s.id);
 const ex = acts.querySelector('[data-sheet-act="extra"]');
 if (ex) ex.onclick = () => openMakeupModal(s, { id: "mk" + Date.now().toString(36) + Math.random().toString(36).slice(2,6), kind:"single", status:"pending" }, true);
+}
+// Últimas 5 aulas (da mais antiga pra mais recente) em bolinhas coloridas, com a data embaixo.
+function lessonDotKind(s, l){
+if (isNoClass(l)) {
+if (l.auto || l.reason === "holiday") return "holiday";
+if (l.reason === "absent_notice") return "notice";
+if (l.reason === "absent_no_notice") return "nonotice";
+if (l.reason === "rescheduled") return "moved";
+return "cancel";
+}
+const m = l.makeupId ? (s.makeups || []).find(x => x.id === l.makeupId) : null;
+if (m && m.kind !== "single" && m.reason !== "rescheduled") return "makeup";
+return isEvaluated(l) ? "evaluated" : "given";
+}
+const DOT_LABELS = { given:"Dada", evaluated:"Avaliada", notice:"Falta avisada", nonotice:"Falta sem aviso", cancel:"Cancelada", moved:"Remarcada", holiday:"Feriado/férias", makeup:"Reposição" };
+function lastLessonsDotsHTML(s){
+const todayIso = isoOf(new Date());
+const list = getStudentTimeline(s).filter(l => isoFromBr(l.date) <= todayIso).slice(0, 5).reverse();
+if (!list.length) return "";
+const kinds = list.map(l => lessonDotKind(s, l));
+return `<section class="sheet-sec"><div class="sheet-sec-title">Últimas aulas</div>
+<div class="dots-row">${list.map((l, i) => `<button type="button" class="dot-item" data-dot="${l.date}|${l.makeupId || ""}" aria-label="${l.date}: ${DOT_LABELS[kinds[i]]}" title="${DOT_LABELS[kinds[i]]}"><span class="dot dot-${kinds[i]}"></span><span class="dot-date">${l.date.slice(0,5)}</span></button>`).join("")}</div>
+<div class="dots-legend">${[...new Set(kinds)].map(k => `<span><span class="dot dot-${k}"></span>${DOT_LABELS[k]}</span>`).join("")}</div>
+</section>`;
+}
+// Abre o histórico já naquela aula (rola até ela e destaca).
+function openHistoryAt(id, key){
+openHistoryModal(id);
+const el = document.querySelector(`#modalHistoryContent [data-lesson-key="${key}"]`);
+if (!el) return;
+el.scrollIntoView({ block: "center" });
+el.classList.add("lesson-flash");
+setTimeout(() => el.classList.remove("lesson-flash"), 1800);
 }
 function openStudentSheet(id){
 sheetStudentId = id;
@@ -4026,6 +4093,7 @@ timeline.forEach(lesson => contentContainer.appendChild(buildHistoryItem(student
 function buildHistoryItem(student, lesson, rerender){
 const div = document.createElement('div');
 div.className = 'lesson-card-item';
+div.dataset.lessonKey = `${lesson.date}|${lesson.makeupId || ""}`;
 const makeupTag = lesson.makeupId ? `<span class="badge-makeup">${extraLabel(student, lesson.makeupId)}</span>` : "";
 const header = (badge) => `
 <div class="lesson-card-header">
@@ -4515,6 +4583,7 @@ const DEFAULT_MESSAGES = {
 charge: "Oi, [nome]! Passando pra lembrar da mensalidade de [mês] (R$ [valor]). Obrigado!",
 lessonMoved: "Sua aula ficou para [dia], [data], às [hora].",
 cancel: "Oi, [nome]! Hoje não vou conseguir dar a aula das [hora]. Vamos marcar uma reposição?",
+cancelMakeup: "Oi, [nome]! Não vou conseguir dar a aula de [data original]. A reposição ficou para [dia], [data], às [hora].",
 birthday: "Feliz aniversário, [aluno]! 🎉",
 lessonKept: "Oi, [nome]! A aula de [dia], [data], às [hora] está mantida. Até lá!",
 chargeItem: "Oi, [nome]! Passando pra lembrar do pagamento [referência] (R$ [valor]). Obrigado!"
@@ -4523,6 +4592,7 @@ const MESSAGE_LABELS = {
 charge: { title:"Cobrar mensalidade", vars:"[nome] [aluno] [mês] [valor]" },
 lessonMoved: { title:"Aula marcada ou remarcada", vars:"[nome] [aluno] [dia] [data] [hora]" },
 cancel: { title:"Aula cancelada", vars:"[nome] [aluno] [hora] [data]" },
+cancelMakeup: { title:"Aula cancelada com reposição marcada", vars:"[nome] [aluno] [data original] [dia] [data] [hora]" },
 birthday: { title:"Aniversário", vars:"[nome] [aluno]" },
 lessonKept: { title:"Aula mantida (depois de desfazer)", vars:"[nome] [aluno] [dia] [data] [hora]" },
 chargeItem: { title:"Cobrar aula avulsa ou pacote", vars:"[nome] [aluno] [referência] [valor]" }
@@ -4635,6 +4705,11 @@ if (!m || m.status !== "scheduled" || !m.date) return null;
 const d = dateFromIso(m.date);
 return offerMessage(s, "lessonMoved", { dia: WEEKDAY_FULL[d.getDay()], data: formatDateShort(m.date).slice(0,5), hora: m.time || getStudentTimeFor(s, d.getDay()) }, `Aula de ${firstName(s.name)} marcada pra ${formatDateShort(m.date).slice(0,5)}.`);
 }
+// Professor cancelou e já marcou a reposição: uma mensagem só, dizendo as duas coisas.
+function offerCancelMakeupMessage(s, m, dateBr){
+const d = dateFromIso(m.date), orig = (dateBr || "").slice(0,5), when = formatDateShort(m.date).slice(0,5);
+return offerMessage(s, "cancelMakeup", { "data original": orig, dia: WEEKDAY_FULL[d.getDay()], data: when, hora: m.time || getStudentTimeFor(s, d.getDay()) }, `Aula de ${firstName(s.name)} de ${orig} cancelada; reposição ${when}.`);
+}
 // Depois de cancelar uma aula.
 function offerCancelMessage(s, time, dateBr){
 return offerMessage(s, "cancel", { hora: time, data: (dateBr || "").slice(0,5) }, `Aula de ${firstName(s.name)} cancelada.`);
@@ -4660,21 +4735,16 @@ return { student: x.student, entry: entryForLesson(x, dateObj), time: x.time, ph
 // Mostra a turma inteira daquele dia e horário (quem tem aula no mesmo dia e horário), com a
 // última aula registrada de cada aluno e os botões de cada um.
 let lessonPanel = null; // { iso, time }
-// Último registro do aluno antes de uma data (aaaa-mm-dd), incluindo reposição/aula extra.
+// Última aula do aluno antes de uma data (aaaa-mm-dd), incluindo reposição/aula extra e as
+// aulas dadas automaticamente (sem registro).
 function lastLessonRecordBefore(s, beforeIso){
-let best = null;
-(s.lessons || []).forEach(l => {
-const iso = isoFromBr(l.date);
-if (iso >= beforeIso) return;
-if (!best || iso > isoFromBr(best.date)) best = l;
-});
-return best;
+return getStudentTimeline(s).find(l => isoFromBr(l.date) < beforeIso) || null;
 }
 function lastLessonHTML(s, beforeIso){
 const last = lastLessonRecordBefore(s, beforeIso);
-if (!last) return `<div class="lp-last"><div class="lp-last-title">Última aula</div><div class="lp-last-empty">Nenhuma aula registrada antes desta.</div></div>`;
+if (!last) return `<div class="lp-last"><div class="lp-last-title">Última aula</div><div class="lp-last-empty">Nenhuma aula antes desta.</div></div>`;
 const notes = lessonNotesHTML(last);
-const miss = isNoClass(last) ? `<div class="lp-last-miss">${escapeHtml(noClassNote(s, last))}</div>` : "";
+const miss = isNoClass(last) ? `<div class="lp-last-miss">${escapeHtml(last.auto ? (last.offLabel || "Feriado/férias") : noClassNote(s, last))}</div>` : "";
 return `<div class="lp-last"><div class="lp-last-title">Última aula (${last.date.slice(0,5)})</div>${miss}${notes || `<div class="lp-last-empty">Sem anotações na última aula</div>`}</div>`;
 }
 function openLessonPanel(dateObj, time){
@@ -4706,6 +4776,8 @@ const instruments = [...new Set(group.map(x => x.student.instrument).filter(Bool
 const durs = [...new Set(group.map(x => getStudentDuration(x.student)))].sort((a,b) => a - b);
 document.getElementById("lpSub").textContent = [time, instruments, durs.join(" e ") + " min", group.length > 1 ? `turma de ${group.length}` : ""].filter(Boolean).join(" · ");
 const body = document.getElementById("lpBody");
+// Hoje, depois que a aula terminou e foi dada: anotar ali mesmo (não aparece se não teve aula).
+const noteable = isToday ? group.filter(x => !x.off && !(x.record && isNoClass(x.record)) && now >= lessonEnd(date, time, x.student)) : [];
 body.innerHTML = group.map((x, i) => {
 const s = x.student;
 const key = `p${iso}-${time}-${i}`;
@@ -4719,13 +4791,15 @@ actionsHtml = `<div class="qa-btns">${whatButtonHTML(key, quickTargets[key].phas
 return `<div class="lp-student">
 <div class="lp-student-head">
 <div class="avatar-small">${initials(s.name)}</div>
-<div class="lp-student-name">${escapeHtml(s.name)}${x.kind === "extra" ? ` <span class="badge-makeup">${extraLabel(s, x.makeupId)}</span>` : ""}</div>
+<div class="lp-student-name">${escapeHtml(s.name)}${x.kind === "extra" ? ` <span class="badge-makeup">${extraLabel(s, x.makeupId)}</span>` : ""}${aboutLineHTML(s)}</div>
 </div>
 ${lastLessonHTML(s, iso)}
+${noteable.includes(x) ? todayNotesHTML(x, date, i, noteable.length > 1) : ""}
 <div class="lp-actions">${actionsHtml}</div>
 </div>`;
 }).join("");
 bindQuickActions(body);
+bindTodayNotes(body, noteable, date);
 // Turma: um botão que age em todos que ainda não têm registro (cada bloco tem o seu também).
 const open = group.filter(x => !x.off && !x.record);
 const footer = document.getElementById("lpFooter");
@@ -4740,6 +4814,63 @@ const ubtn = footer.querySelector(".lp-undo");
 if (ubtn) ubtn.onclick = () => undoRecords(undoable.map(x => ({ student: x.student, entry: x.record, time: x.time })));
 }
 
+function aboutLineHTML(s){
+const parts = [s.objective ? `<span class="lp-about-label">Objetivo:</span> ${escapeHtml(s.objective)}` : "", s.observations ? `<span class="lp-about-label">Obs.:</span> ${escapeHtml(s.observations)}` : ""].filter(Boolean);
+return parts.length ? `<div class="lp-about">${parts.join("<br>")}</div>` : "";
+}
+// Registro da aula de hoje (se já tiver) de um item de getLessonsOnDate.
+function todayRecordOf(x, date){
+const br = brOf(date);
+return (x.student.lessons || []).find(l => l.date === br && (x.makeupId ? l.makeupId === x.makeupId : !l.makeupId)) || null;
+}
+function todayNotesHTML(x, date, i, canCopy){
+const rec = todayRecordOf(x, date) || {};
+return `<div class="lp-notes" data-lp-notes="${i}">
+<div class="lp-last-title">Anotações de hoje</div>
+<div class="field"><label>O que foi dado</label><textarea rows="2" class="lp-taught" placeholder="Ex.: escala de Dó maior, música X">${escapeHtml(rec.taught || "")}</textarea></div>
+${canCopy ? `<div class="lp-copy-row"><button type="button" class="btn-link-inline lp-copy">Copiar para todos</button></div>` : ""}
+<div class="field"><label>Para estudar em casa</label><textarea rows="2" class="lp-homework" placeholder="Ex.: praticar a escala 10 min por dia">${escapeHtml(rec.homework || "")}</textarea></div>
+<div class="lp-saved" aria-live="polite"></div>
+</div>`;
+}
+// Salva as anotações da aula de hoje. Aula sem registro (dada automática) ganha um registro
+// com o mesmo estado dela: "given", ou "pending" se ainda vai ser avaliada.
+function saveTodayNotes(x, date, taught, homework){
+const s = x.student;
+let rec = todayRecordOf(x, date);
+if (!rec) {
+if (!taught && !homework) return false;
+const e = entryForLesson({ ...x, record: null }, date);
+rec = upsertLessonRecord(s, e, { status: e.status === "pending" ? "pending" : "given" });
+}
+if ((rec.taught || "") === taught && (rec.homework || "") === homework) return false;
+if (taught) rec.taught = taught; else delete rec.taught;
+if (homework) rec.homework = homework; else delete rec.homework;
+saveStudents();
+return true;
+}
+function bindTodayNotes(root, noteable, date){
+const boxes = [...root.querySelectorAll("[data-lp-notes]")]; // na mesma ordem de noteable
+const itemOf = (box) => noteable[boxes.indexOf(box)];
+const flash = (box, text) => { const el = box.querySelector(".lp-saved"); el.textContent = text; clearTimeout(el._t); el._t = setTimeout(() => el.textContent = "", 2500); };
+const save = (box) => {
+const x = itemOf(box);
+if (x && saveTodayNotes(x, date, box.querySelector(".lp-taught").value.trim(), box.querySelector(".lp-homework").value.trim())) { flash(box, "Salvo ✓"); refreshStudentSheet(); }
+};
+boxes.forEach(box => {
+box.querySelectorAll("textarea").forEach(t => t.addEventListener("change", () => save(box)));
+const copy = box.querySelector(".lp-copy");
+if (copy) copy.onclick = () => {
+const text = box.querySelector(".lp-taught").value.trim();
+const others = boxes.filter(b => b !== box);
+const clash = others.filter(b => { const v = b.querySelector(".lp-taught").value.trim(); return v && v !== text; });
+if (clash.length && !confirm(`Trocar o "O que foi dado" de ${clash.map(b => firstName(itemOf(b).student.name)).join(", ")} por este?`)) return;
+save(box);
+others.forEach(b => { b.querySelector(".lp-taught").value = text; save(b); });
+flash(box, "Copiado para todos ✓");
+};
+});
+}
 function bindQuickActions(root){
 root.querySelectorAll("[data-qa]").forEach(b => b.onclick = (e) => {
 e.stopPropagation();
@@ -5457,7 +5588,9 @@ const IMPORT_TARGET_FIELDS = [
 { key:"birth", label:"Data de nascimento", guesses:["data de nascimento","nascimento","aniversario","nasc"] },
 { key:"guardian", label:"Responsável", guesses:["responsavel","nome do responsavel","mae","pai"], avoid:["tel","cel","whats","fone","contato"] },
 { key:"guardianPhone", label:"Telefone do responsável", guesses:[], match: h => h.includes("respons") && /tel|cel|whats|fone|contato/.test(h) },
-{ key:"location", label:"Local da aula", guesses:["local da aula","local","endereco","link"] }
+{ key:"location", label:"Local da aula", guesses:["local da aula","local","endereco","link"] },
+{ key:"objective", label:"Objetivo", guesses:["objetivo","objetivos","meta","metas"] },
+{ key:"observations", label:"Observações", guesses:["observacoes","observacao","obs","anotacoes"] }
 ];
 
 const DAY_NAME_MAP = { domingo:0, dom:0, segunda:1, seg:1, "2a":1, terca:2, ter:2, "3a":2, quarta:3, qua:3, "4a":3, quinta:4, qui:4, "5a":4, sexta:5, sex:5, "6a":5, sabado:6, sab:6 };
@@ -5868,6 +6001,8 @@ needsReview: needsReview.length ? needsReview : undefined,
 ...(birth ? { birthDate: birth } : {}),
 ...(cell("guardian") ? { guardianName: cell("guardian") } : {}),
 ...(cell("guardianPhone") ? { guardianPhone: cell("guardianPhone") } : {}),
+...(cell("objective") ? { objective: cell("objective") } : {}),
+...(cell("observations") ? { observations: cell("observations") } : {}),
 ...(location ? { locationType: location.type, ...(location.detail ? { locationDetail: location.detail } : {}) } : {})
 });
 });
@@ -8007,6 +8142,9 @@ document.getElementById("fGuardianPhone").value = s?.guardianPhone || "";
 document.getElementById("fLocationType").value = s?.locationType || "";
 document.getElementById("fLocationDetail").value = s?.locationDetail || "";
 document.getElementById("fContactSection").open = !!(s && (s.phone || s.birthDate || s.guardianName || s.guardianPhone || s.locationType));
+document.getElementById("fObjective").value = s?.objective || "";
+document.getElementById("fObservations").value = s?.observations || "";
+document.getElementById("fAboutSection").open = !!(s && (s.objective || s.observations));
 refreshContactHints();
 document.getElementById("fDueDay").value = s?.dueDay || "";
 paidDraft = s ? getPaidMonths(s) : new Set();
@@ -8145,6 +8283,8 @@ setOpt("guardianPhone", document.getElementById("fGuardianPhone").value.trim());
 const locType = document.getElementById("fLocationType").value;
 setOpt("locationType", locType);
 setOpt("locationDetail", LOCATION_DETAIL[locType] ? document.getElementById("fLocationDetail").value.trim() : "");
+setOpt("objective", document.getElementById("fObjective").value.trim());
+setOpt("observations", document.getElementById("fObservations").value.trim());
 
 const payTo = document.getElementById("fPayTo").value;
 if (payTo === "me") delete obj.payTo; else obj.payTo = payTo;
