@@ -1067,6 +1067,30 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 /* ===== Modais: o fundo só escurece e o próprio painel é o vidro fosco.
    (Desfocar os dois não funciona: um backdrop-filter dentro de outro só enxerga o pai.) ===== */
 #lessonPanelModal{z-index:31}
+.sheet-modal{width:min(32rem,92vw)}
+.sheet-head{display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem}
+.sheet-photo{width:3.5rem;height:3.5rem}
+.sheet-photo .stu-photo{font-size:1rem}
+.sheet-title{flex:1;min-width:0}
+.sheet-title h2{margin:0;font-size:1.25rem;overflow-wrap:break-word}
+.sheet-sub{font-size:0.75rem;color:var(--muted);margin-top:0.1875rem}
+.sheet-sub .sheet-inactive{color:var(--orange);font-weight:700}
+.sheet-sec{border-top:0.0625rem solid var(--hairline);padding:0.75rem 0 0.25rem}
+.sheet-sec-title{font-size:0.625rem;font-weight:750;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);margin-bottom:0.5rem}
+.sheet-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(8.5rem,1fr));gap:0.625rem 0.875rem;margin:0}
+.sheet-pair{min-width:0}
+.sheet-pair.wide{grid-column:1 / -1}
+.sheet-pair dt{font-size:0.6875rem;font-weight:650;color:var(--muted);margin-bottom:0.125rem}
+.sheet-pair dd{margin:0;font-size:0.8125rem;font-weight:600;color:var(--text);line-height:1.4;overflow-wrap:break-word}
+.sheet-pair dd .warn{color:var(--orange)}
+.sheet-pair dd .late{color:var(--danger)}
+.sheet-pair dd .ok{color:var(--green)}
+.sheet-pair dd .wa-btn{display:flex;width:fit-content;padding:0.25rem 0.625rem;margin-top:0.3125rem;font-size:0.6875rem}
+.sheet-add{border:none;background:none;padding:0;color:var(--accent);font:inherit;font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:0.15em}
+.sheet-notes .lesson-notes{margin-top:0.375rem}
+.sheet-actions{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-top:1rem}
+.sheet-actions > *{justify-content:center;text-align:center;padding:0.6875rem 0.75rem;font-size:0.8125rem}
+.sheet-actions .save{border:none}
 #makeupModal,#quickLessonModal,#evalPopupModal{z-index:32}
 #receiptModal{z-index:33}
 .receipt-preview{display:block;width:100%;border-radius:var(--radius-sm);background:#fff;box-shadow:var(--shadow-sm)}
@@ -2090,6 +2114,19 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 <button class="btn-delete" id="btnDeleteStudent" style="display:none">Excluir Aluno Permanentemente</button>
 </div>
 <div class="actions"><button class="cancel" id="cancelBtn">Cancelar</button><button class="save" id="saveBtn">Salvar aluno</button></div>
+</div>
+</div>
+
+<!-- Ficha do aluno (só leitura; "Editar" abre o cadastro) -->
+<div class="modal-bg" id="studentSheetModal">
+<div class="modal sheet-modal">
+<div class="sheet-head">
+<div class="stu-photo-wrap sheet-photo" id="sheetPhoto"><div class="stu-photo"></div></div>
+<div class="sheet-title"><h2 id="sheetName">Aluno</h2><div class="sheet-sub" id="sheetSub"></div></div>
+<button class="close-btn-inline" id="sheetClose" aria-label="Fechar">✕</button>
+</div>
+<div id="sheetBody"></div>
+<div class="sheet-actions" id="sheetActions"></div>
 </div>
 </div>
 
@@ -3556,8 +3593,14 @@ return m && m.date ? `Remarcada p/ ${formatDateShort(m.date).slice(0,5)}${m.time
 }
 return ABSENCE_REASONS[rec.reason]?.short || "Não houve aula";
 }
+function makeupShortText(student, rec){
+const m = rec.makeupCreated && rec.reason !== "rescheduled" ? (student.makeups || []).find(x => x.id === rec.makeupCreated) : null;
+if (!m) return "";
+if (m.status === "scheduled" && m.date) return ` · reposição ${formatDateShort(m.date).slice(0,5)}${m.time ? " " + m.time : ""}`;
+return m.status === "pending" ? " · reposição pendente" : "";
+}
 function recordStatusText(rec, student){
-if (isNoClass(rec)) { const t = noClassNote(student, rec); return t.charAt(0).toLowerCase() + t.slice(1); }
+if (isNoClass(rec)) { const t = noClassNote(student, rec) + makeupShortText(student, rec); return t.charAt(0).toLowerCase() + t.slice(1); }
 return isEvaluated(rec) ? "✓ avaliada" : "✓ dada";
 }
 
@@ -3616,10 +3659,197 @@ if (xd < ed) months--;
 return Math.max(1, months);
 }
 
-function openStudentFromHome(id){
-openPage("students");
-openEdit(id);
+function openStudentFromHome(id){ openStudentSheet(id); }
+
+// ===== Ficha do aluno (ver ≠ editar) =====
+// Tocar no aluno abre a ficha só de leitura; "Editar" abre o cadastro e, ao salvar (ou
+// cancelar), volta pra ficha atualizada.
+let sheetStudentId = null;   // ficha aberta
+let sheetReturnId = null;    // cadastro aberto a partir da ficha: volta pra ela depois
+function sheetPair(label, value, wide){
+if (value === "" || value === null || value === undefined) return "";
+return `<div class="sheet-pair${wide ? " wide" : ""}"><dt>${label}</dt><dd>${value}</dd></div>`;
 }
+function sheetSection(title, pairs){
+const inner = pairs.filter(Boolean).join("");
+return inner ? `<section class="sheet-sec"><div class="sheet-sec-title">${title}</div><dl class="sheet-grid">${inner}</dl></section>` : "";
+}
+// Faltas de um período (prefixo "/mm/aaaa" ou "/aaaa"), separando avisou / não avisou.
+function absenceSplit(s, suffix){
+const list = (s.lessons || []).filter(l => l.status === "noclass" && String(l.date).endsWith(suffix));
+const notice = list.filter(l => l.reason === "absent_notice").length, noNotice = list.filter(l => l.reason === "absent_no_notice").length;
+if (!notice && !noNotice) return "Nenhuma";
+return `${notice + noNotice} <span class="${noNotice ? "warn" : ""}">(${[notice ? `${notice} avisou` : "", noNotice ? `${noNotice} sem avisar` : ""].filter(Boolean).join(", ")})</span>`;
+}
+// Presença: aulas dadas sobre as previstas desde "histórico desde", sem contar feriado/férias,
+// cancelamento do professor e remarcação.
+function attendance(s){
+const todayIso = isoOf(new Date()), start = trackingStart(s);
+const list = getStudentTimeline(s).filter(l => { const iso = isoFromBr(l.date); return iso <= todayIso && (!start || iso >= start); })
+.filter(l => !(isNoClass(l) && (l.auto || l.reason === "holiday" || l.reason === "teacher_cancel" || l.reason === "rescheduled")));
+if (!list.length) return null;
+const given = list.filter(l => !isNoClass(l)).length;
+return { given, total: list.length, pct: Math.round(given / list.length * 100) };
+}
+function daysUntilBirthday(birthIso){
+const today = new Date(); today.setHours(0,0,0,0);
+let b = birthdayThisYear(birthIso, today.getFullYear());
+if (b < today) b = birthdayThisYear(birthIso, today.getFullYear() + 1);
+return Math.round((b - today) / 86400000);
+}
+function waChip(phone){
+const link = whatsappLink(phone);
+return link ? `<a class="wa-btn" href="${link}" target="_blank" rel="noopener">WhatsApp</a>` : "";
+}
+function lessonStateText(s, l){
+if (isEvaluated(l)) return "Avaliada";
+if (isNoClass(l)) return l.auto ? (l.offLabel || "Feriado/férias") : noClassNote(s, l) + makeupShortText(s, l);
+return l.status === "pending" ? "Aguardando avaliação" : "Aula dada";
+}
+function renderStudentSheet(){
+const s = students.find(x => x.id === sheetStudentId);
+if (!s) { closeStudentSheet(); return; }
+const inactive = s.active === false;
+const photo = document.getElementById("sheetPhoto");
+photo.className = `stu-photo-wrap sheet-photo tier-${getLevelTier(s.level)}`;
+photo.querySelector(".stu-photo").textContent = initials(s.name);
+document.getElementById("sheetName").textContent = s.name;
+document.getElementById("sheetSub").innerHTML = [s.instrument ? escapeHtml(s.instrument) : "", appSettings.useLevels && s.level ? escapeHtml(s.level) : "", inactive ? `<span class="sheet-inactive">Inativo</span>` : ""].filter(Boolean).join(" · ");
+const todayIso = isoOf(new Date());
+
+// Aulas
+const freq = s.lessonFrequency === "single" ? "Avulsa" : s.lessonFrequency === "biweekly" ? "Quinzenal" : "Toda semana";
+let when = "";
+if (s.lessonFrequency === "single") {
+const next = (s.makeups || []).filter(m => m.status === "scheduled" && m.date >= todayIso).sort((a,b) => (a.date + (a.time||"")).localeCompare(b.date + (b.time||"")))[0];
+when = sheetPair("Próxima aula", next ? `${formatDateShort(next.date).slice(0,5)}${next.time ? " às " + next.time : ""}` : "Nenhuma marcada");
+} else if (studentDays(s).length) {
+when = sheetPair("Dias e horários", s.timesByDay
+? orderedDays(studentDays(s)).map(d => `${WEEKDAY_NAMES[d]} ${getStudentTimeFor(s, d)}`).join(" · ")
+: `${fullDaysText(s.days)}${s.time ? " · " + s.time : ""}`, true);
+}
+const mates = inactive ? [] : students.filter(x => x.active !== false && x.id !== s.id && sharesSlot(x, s));
+const loc = s.locationType ? escapeHtml(LOCATION_TYPES[s.locationType] || "") + (s.locationDetail && s.locationType !== "school" ? " · " + (/^https?:\/\//i.test(s.locationDetail) ? `<a class="stu-link" href="${escapeHtml(s.locationDetail)}" target="_blank" rel="noopener">${escapeHtml(s.locationDetail)}</a>` : escapeHtml(s.locationDetail)) : s.locationType === "school" && s.locationDetail ? " · " + escapeHtml(s.locationDetail) : "") : "";
+const aulas = sheetSection("Aulas", [
+sheetPair("Instrumento", s.instrument ? escapeHtml(s.instrument) : ""),
+sheetPair("Frequência", freq),
+when,
+sheetPair("Duração", `${getStudentDuration(s)} min`),
+sheetPair("Formato", mates.length ? `Turma com ${mates.map(x => escapeHtml(firstName(x.name))).join(", ")}` : "Individual", mates.length > 1),
+sheetPair("Local", loc, !!s.locationDetail),
+appSettings.useLevels ? sheetPair("Nível", s.level ? escapeHtml(s.level) : "") : ""
+]);
+
+// Contato (telefone e nascimento aparecem como "Adicionar" quando vazios)
+let birth = `<button type="button" class="sheet-add" data-sheet-add="fBirth">Adicionar</button>`;
+if (s.birthDate) {
+const age = ageText(s.birthDate), inDays = daysUntilBirthday(s.birthDate);
+birth = `${formatDateShort(s.birthDate)}${age ? ` · ${age}` : ""}<br><span class="${inDays === 0 ? "ok" : ""}">${inDays === 0 ? "Aniversário hoje! 🎂" : `Próximo aniversário em ${inDays} dia${inDays === 1 ? "" : "s"}`}</span>`;
+}
+const contato = sheetSection("Contato", [
+sheetPair("Telefone", s.phone ? `${escapeHtml(s.phone)}${waChip(s.phone)}` : `<button type="button" class="sheet-add" data-sheet-add="fPhone">Adicionar</button>`),
+sheetPair("Nascimento", birth),
+sheetPair("Responsável", s.guardianName ? escapeHtml(s.guardianName) : ""),
+sheetPair("Tel. do responsável", s.guardianPhone ? `${escapeHtml(s.guardianPhone)}${waChip(s.guardianPhone)}` : "")
+]);
+
+// Financeiro
+const mode = billingMode(s);
+const payLabel = mode === "lesson" ? "Valor por aula" : mode === "package" ? "Valor do pacote" : "Mensalidade";
+const value = mode === "monthly" ? `R$ ${moneyText(studentMonthlyValue(s))}` : priceText(s).replace(/ (por aula|o pacote)$/, "");
+const payTo = s.payTo === "school" ? "Escola" : s.payTo === "none" ? "Ninguém (bolsa)" : "Mim";
+let situation = "";
+if (mode === "monthly" && paysMe(s) && !inactive) {
+const unpaid = unpaidMonths(s);
+const late = unpaid.filter(k => k < currentMonthKey());
+const cur = currentMonthKey();
+const curText = !unpaid.includes(cur) ? `<span class="ok">Pago</span>` : isPastDue(s, cur) ? `<span class="late">Atrasado</span>` : "A pagar";
+situation = sheetPair("Este mês", curText) + (late.length ? sheetPair("Meses atrasados", `<span class="late">${late.map(monthLabel).join(", ")}</span>`, late.length > 2) : "");
+}
+const pkg = packageUsage(s);
+const rcv = receivables(s);
+const financeiro = sheetSection("Financeiro", [
+sheetPair(payLabel, s.payTo === "none" ? "Bolsa" : value),
+sheetPair("Paga para", payTo),
+sheetPair("Vencimento", Number(s.dueDay) > 0 && paysMe(s) ? `Dia ${s.dueDay}` : ""),
+situation,
+pkg ? sheetPair("Pacote", pkg.used >= pkg.size ? `<span class="warn">Terminou (${pkg.used} de ${pkg.size})</span>` : `${pkg.used} de ${pkg.size} aulas`) : "",
+rcv.length ? sheetPair("A receber", `<span class="warn">${rcv.map(c => `${escapeHtml(chargeLabel(c))} · R$ ${moneyText(c.value)}`).join("<br>")}</span>`, true) : ""
+]);
+
+// Acompanhamento
+const ref = todayIso;
+const now = new Date();
+const att = attendance(s);
+const pendingMk = (s.makeups || []).filter(m => m.status === "pending").length;
+const avg = calculateOverallAverage(s);
+const themes = (s.themes || []).map(t => getThemeById(t.themeId)?.topic).filter(Boolean);
+const acomp = sheetSection("Acompanhamento", [
+sheetPair("Entrada", s.entry ? (inactive ? formatDateShort(s.entry) : `${formatDateShort(s.entry)} · ${formatEntryDuration(s.entry, ref)} de casa`) : ""),
+inactive ? sheetPair("Saída", s.exit ? `${formatDateShort(s.exit)} · ficou ${formatEntryDuration(s.entry, s.exit)}` : "—") : "",
+sheetPair("Histórico desde", trackingStart(s) ? formatDateShort(trackingStart(s)) : ""),
+sheetPair("Faltas no mês", absenceSplit(s, `/${pad2(now.getMonth()+1)}/${now.getFullYear()}`)),
+sheetPair("Faltas no ano", absenceSplit(s, `/${now.getFullYear()}`)),
+att ? sheetPair("Presença", `${att.pct}% <span style="color:var(--muted);font-weight:500">(${att.given} de ${att.total} aulas)</span>`) : "",
+pendingMk ? sheetPair("Reposições pendentes", `<span class="warn">${pendingMk}</span>`) : "",
+avg !== null ? sheetPair("Média das avaliações", `${avg} <span style="color:var(--star)">★</span>`) : "",
+themes.length ? sheetPair("Temas", themes.map(escapeHtml).join(", "), true) : ""
+]);
+
+// Última aula (a mais recente que já passou, registrada ou automática)
+const last = getStudentTimeline(s).find(l => isoFromBr(l.date) <= todayIso);
+const ultima = last ? sheetSection("Última aula", [
+sheetPair("Data", `${last.date.slice(0,5)} · ${WEEKDAY_FULL[dateFromIso(isoFromBr(last.date)).getDay()]}`),
+sheetPair("Status", escapeHtml(lessonStateText(s, last))),
+(last.taught || last.homework) ? `<div class="sheet-pair wide sheet-notes">${lessonNotesHTML(last)}</div>` : ""
+]) : "";
+
+const body = document.getElementById("sheetBody");
+body.innerHTML = aulas + contato + financeiro + acomp + ultima;
+body.querySelectorAll("[data-sheet-add]").forEach(b => b.onclick = () => editFromSheet(s.id, b.dataset.sheetAdd));
+
+// Botões
+const wa = whatsappLink(s.phone) || whatsappLink(s.guardianPhone);
+const acts = document.getElementById("sheetActions");
+acts.innerHTML = `<button type="button" class="save" data-sheet-act="edit">Editar</button>
+<button type="button" class="btn-historico" data-sheet-act="history">Histórico de aulas</button>
+${wa ? `<a class="wa-btn" href="${wa}" target="_blank" rel="noopener">WhatsApp${!whatsappLink(s.phone) ? " (resp.)" : ""}</a>` : ""}
+${inactive ? "" : `<button type="button" class="btn-historico" data-sheet-act="extra">${s.lessonFrequency === "single" ? "+ Marcar aula" : "+ Marcar aula extra"}</button>`}`;
+acts.querySelector('[data-sheet-act="edit"]').onclick = () => editFromSheet(s.id);
+acts.querySelector('[data-sheet-act="history"]').onclick = () => openHistoryModal(s.id);
+const ex = acts.querySelector('[data-sheet-act="extra"]');
+if (ex) ex.onclick = () => openMakeupModal(s, { id: "mk" + Date.now().toString(36) + Math.random().toString(36).slice(2,6), kind:"single", status:"pending" }, true);
+}
+function openStudentSheet(id){
+sheetStudentId = id;
+renderStudentSheet();
+if (sheetStudentId !== null) document.getElementById("studentSheetModal").classList.add("show");
+}
+function closeStudentSheet(){
+document.getElementById("studentSheetModal").classList.remove("show");
+sheetStudentId = null;
+}
+function refreshStudentSheet(){
+if (sheetStudentId !== null && document.getElementById("studentSheetModal").classList.contains("show")) renderStudentSheet();
+}
+// Editar a partir da ficha (fieldId: abre o cadastro já nesse campo, ex.: telefone).
+function editFromSheet(id, fieldId){
+closeStudentSheet();
+sheetReturnId = id;
+openEdit(id);
+if (fieldId) {
+const sec = document.getElementById(fieldId).closest("details");
+if (sec) sec.open = true;
+setTimeout(() => { const el = document.getElementById(fieldId); el.scrollIntoView({ block: "center" }); el.focus(); }, 60);
+}
+}
+// Volta pra ficha depois de fechar o cadastro (salvar, cancelar ou inativar).
+function returnToSheet(){
+const id = sheetReturnId;
+sheetReturnId = null;
+if (id !== null && students.some(x => x.id === id)) openStudentSheet(id);
+}
+document.getElementById("sheetClose").onclick = closeStudentSheet;
 
 // Funções de Avaliação e Estrelas
 // Retorna a média geral do aluno considerando SOMENTE aulas avaliadas (aulas pendentes ou
@@ -5134,6 +5364,7 @@ if (currentPage === "evaluation") renderEvaluation();
 if (s && document.getElementById("historyModal").style.display === "flex" && document.getElementById("modalStudentName").textContent === s.name) renderHistoryContent(s);
 if (agendaModalDate && document.getElementById("holidayInfoModal").classList.contains("show")) openAgendaDayModal(agendaModalDate);
 refreshLessonPanel();
+refreshStudentSheet();
 }
 function afterMakeupChange(){
 const s = editingMakeup && editingMakeup.s;
@@ -5831,43 +6062,6 @@ document.getElementById("importReviewModal").classList.add("show");
 }
 document.getElementById("pendingBanner").onclick = () => showPendingList();
 
-function renderStudents(){
-const boxActive=document.getElementById("studentsActive");
-const boxInactive=document.getElementById("studentsInactive");
-boxActive.innerHTML="";
-boxInactive.innerHTML="";
-
-const sortVal = currentSort;
-const fmtVal = currentFilters.format;
-const instVal = currentFilters.instrument;
-const dayVal = currentFilters.day;
-const pendVal = currentFilters.pending;
-const searchVal = (document.getElementById("studentSearchInput")?.value || "").trim().toLowerCase();
-updateFilterDot();
-updatePendingBanner();
-
-const filterFn = (s) => {
-if (pendVal === "pending" && !hasPending(s)) return false;
-if (fmtVal !== "all" && getFormat(s) !== fmtVal) return false;
-if (instVal !== "all" && s.instrument !== instVal) return false;
-if (dayVal.length && !(s.days || []).some(d => dayVal.includes(d))) return false;
-if (searchVal && !s.name.toLowerCase().includes(searchVal)) return false;
-return true;
-};
-
-const sortFn = (a, b) => {
-if (sortVal === "name_asc") return a.name.localeCompare(b.name);
-if (sortVal === "name_desc") return b.name.localeCompare(a.name);
-if (sortVal === "entry_desc") return (b.entry || "").localeCompare(a.entry || "");
-if (sortVal === "entry_asc") return (a.entry || "").localeCompare(b.entry || "");
-if (sortVal === "level_asc") return levelRank(a.level) - levelRank(b.level);
-if (sortVal === "level_desc") return levelRank(b.level) - levelRank(a.level);
-return a.name.localeCompare(b.name);
-};
-
-const activeList = students.filter(s=>s.active!==false && filterFn(s)).sort(sortFn);
-const inactiveList = students.filter(s=>s.active===false && filterFn(s)).sort(sortFn);
-
 // Dias por extenso, na ordem da semana configurada: "Segunda", "Segunda e Sexta",
 // "Segunda, Quarta e Sexta".
 function fullDaysText(days){
@@ -5907,6 +6101,43 @@ if(years === 0) return `${months} ${months===1?'mês':'meses'}`;
 if(rem === 0) return `${years} ${years===1?'ano':'anos'}`;
 return `${years} ${years===1?'ano':'anos'} e ${rem} ${rem===1?'mês':'meses'}`;
 }
+
+function renderStudents(){
+const boxActive=document.getElementById("studentsActive");
+const boxInactive=document.getElementById("studentsInactive");
+boxActive.innerHTML="";
+boxInactive.innerHTML="";
+
+const sortVal = currentSort;
+const fmtVal = currentFilters.format;
+const instVal = currentFilters.instrument;
+const dayVal = currentFilters.day;
+const pendVal = currentFilters.pending;
+const searchVal = (document.getElementById("studentSearchInput")?.value || "").trim().toLowerCase();
+updateFilterDot();
+updatePendingBanner();
+
+const filterFn = (s) => {
+if (pendVal === "pending" && !hasPending(s)) return false;
+if (fmtVal !== "all" && getFormat(s) !== fmtVal) return false;
+if (instVal !== "all" && s.instrument !== instVal) return false;
+if (dayVal.length && !(s.days || []).some(d => dayVal.includes(d))) return false;
+if (searchVal && !s.name.toLowerCase().includes(searchVal)) return false;
+return true;
+};
+
+const sortFn = (a, b) => {
+if (sortVal === "name_asc") return a.name.localeCompare(b.name);
+if (sortVal === "name_desc") return b.name.localeCompare(a.name);
+if (sortVal === "entry_desc") return (b.entry || "").localeCompare(a.entry || "");
+if (sortVal === "entry_asc") return (a.entry || "").localeCompare(b.entry || "");
+if (sortVal === "level_asc") return levelRank(a.level) - levelRank(b.level);
+if (sortVal === "level_desc") return levelRank(b.level) - levelRank(a.level);
+return a.name.localeCompare(b.name);
+};
+
+const activeList = students.filter(s=>s.active!==false && filterFn(s)).sort(sortFn);
+const inactiveList = students.filter(s=>s.active===false && filterFn(s)).sort(sortFn);
 
 const createSquare = (s, isInactive) => {
 const el=document.createElement("div");
@@ -5975,7 +6206,7 @@ ${locRow}
 ${waRow}
 </div>
 `;
-el.onclick = () => openEdit(s.id);
+el.onclick = () => openStudentSheet(s.id);
 el.querySelectorAll("[data-stop]").forEach(a => a.onclick = (e) => e.stopPropagation());
 return el;
 };
@@ -7729,6 +7960,7 @@ updateAdvSummary();
 document.getElementById("fPayTo").onchange = () => renderPayMonthsField(editingId ? students.find(x => x.id === editingId) : null);
 document.getElementById("fDueDay").oninput = () => renderPayMonthsField(editingId ? students.find(x => x.id === editingId) : null);
 function openEdit(id=null){
+if (sheetReturnId !== id) sheetReturnId = null;
 editingId=id;
 const s=id?students.find(x=>x.id===id):null;
 document.getElementById("modalTitle").textContent=s?"Editar aluno":"Novo aluno";
@@ -7811,6 +8043,7 @@ localStorage.setItem("jp_students_v5", JSON.stringify(students));
 document.getElementById("modalBg").classList.remove("show");
 renderStudents();
 renderHome();
+returnToSheet();
 };
 
 if(!isActive) {
@@ -7820,6 +8053,7 @@ if(confirm(`Tem certeza que deseja excluir permanentemente "${s.name}"?`)){
 students = students.filter(x => x.id !== s.id);
 localStorage.setItem("jp_students_v5", JSON.stringify(students));
 document.getElementById("modalBg").classList.remove("show");
+sheetReturnId = null;
 renderStudents();
 renderHome();
 }
@@ -7834,7 +8068,7 @@ statusWrap.style.display = "none";
 document.getElementById("modalBg").classList.add("show");
 }
 
-document.getElementById("cancelBtn").onclick=()=>document.getElementById("modalBg").classList.remove("show");
+document.getElementById("cancelBtn").onclick=()=>{ document.getElementById("modalBg").classList.remove("show"); returnToSheet(); };
 
 document.getElementById("saveBtn").onclick=()=>{
 const name=document.getElementById("fName").value.trim();
@@ -7963,6 +8197,7 @@ localStorage.setItem("jp_students_v5",JSON.stringify(students));
 document.getElementById("modalBg").classList.remove("show");
 renderStudents();
 renderHome();
+returnToSheet();
 };
 
 // ===================== Avaliação automática pós-aula =====================
