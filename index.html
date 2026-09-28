@@ -605,6 +605,20 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 }
 .student-square:hover{border-color:var(--accent-line);box-shadow:var(--edge-light),var(--glow-sm),var(--shadow-sm);transform:translateY(-0.125rem)}
 .student-square.inactive{opacity:.6;filter:grayscale(.5)}
+.student-square{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.student-square.bulk-mode .sq-review-badge{display:none}
+.bulk-check{position:absolute;top:0.625rem;right:0.625rem;width:1.375rem;height:1.375rem;border-radius:0.4375rem;border:0.125rem solid rgba(148,163,184,.5);background:var(--glass-inset);display:grid;place-items:center;color:transparent;font-size:0.875rem;font-weight:900}
+.student-square.bulk-selected{border-color:var(--accent);box-shadow:var(--edge-light),var(--glow-sm)}
+.student-square.inactive.bulk-selected{opacity:.9;filter:none}
+.student-square.bulk-selected .bulk-check{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.bulk-top{display:flex;align-items:center;gap:0.375rem 0.75rem;flex-wrap:wrap;min-height:1.875rem;font-size:0.875rem;font-weight:700;color:var(--text)}
+.bulk-top button{border:none;background:none;padding:0.25rem 0;color:var(--accent);font-weight:750;font-size:0.8125rem;cursor:pointer}
+.bulk-top .bulk-sep{color:var(--muted)}
+.bulk-actions{position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);z-index:26;display:flex;gap:0.5rem;padding:0.5rem;border-radius:var(--radius-pill);border:0.0625rem solid var(--glass-border);background:var(--glass-fill-strong);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:var(--shadow-sm)}
+.bulk-actions button{min-width:7rem;padding:0.6875rem 1rem;border-radius:var(--radius-pill);font-weight:750;font-size:0.8125rem}
+#studentsPage.bulk-on{padding-bottom:5rem}
+.bulk-field .bulk-hint{font-size:0.6875rem;color:var(--muted);margin-top:0.25rem}
+.bulk-field .bulk-extra{margin-top:0.375rem}
 .stu-header{display:flex;align-items:center;gap:0.625rem;margin-bottom:0.75rem}
 .stu-photo-wrap{flex:none;width:2.875rem;height:2.875rem;border-radius:50%;padding:0.125rem}
 .stu-photo-wrap.tier-bronze{background:linear-gradient(135deg,#e3a469,#8a4d24)}
@@ -826,7 +840,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .bday-card{display:flex;align-items:center;gap:0.625rem;padding:0.5625rem 0.75rem;margin:0 0 0.5rem;border-radius:var(--radius-lg);
   border:0.0625rem solid rgba(251,191,36,.35);background:linear-gradient(135deg,rgba(251,191,36,.1),rgba(47,211,242,.05)),var(--glass-fill);
   -webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:var(--edge-light)}
-.bday-emoji{font-size:1.125rem;flex:none}
+.bday-emoji{font-size:1.125rem;flex:none;color:var(--accent);display:grid;place-items:center}
 .bday-title{flex:1;min-width:0;font-size:0.8125rem;font-weight:700;color:var(--text);overflow-wrap:break-word}
 .bday-sub{font-weight:600;color:var(--muted)}
 .bday-week{font-size:0.75rem;color:var(--muted);font-weight:600;margin:0 0.375rem 0.5rem;line-height:1.45}
@@ -1140,6 +1154,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .dots-legend > span{display:inline-flex;align-items:center;gap:0.3125rem}
 .dots-legend .dot{width:0.625rem;height:0.625rem}
 .lesson-card-item.lesson-flash{border-color:var(--accent)!important;box-shadow:var(--glow)}
+.lp-full-name{font-size:0.6875rem;font-weight:500;color:var(--muted);margin-top:0.0625rem}
 .lp-about{font-size:0.75rem;font-weight:500;color:var(--muted);margin-top:0.1875rem;line-height:1.4;overflow-wrap:break-word}
 .lp-about-label{font-weight:700;color:var(--text-2)}
 .lp-notes{margin-top:0.75rem;padding-top:0.625rem;border-top:0.0625rem dashed var(--hairline)}
@@ -1230,8 +1245,14 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .backup-line button{flex:none}
 .lr-line{border-color:var(--accent-line);background:var(--accent-soft);color:var(--text);cursor:pointer;text-align:left}
 .lr-line .lr-cta{flex:none;color:var(--accent);font-weight:750;font-size:0.75rem}
-.day-bell{margin-left:0.375rem;border:0.0625rem solid var(--hairline);background:var(--glass-inset);color:var(--accent);border-radius:50%;width:1.75rem;height:1.75rem;display:inline-grid;place-items:center;vertical-align:middle;cursor:pointer}
-.day-bell svg{width:0.875rem;height:0.875rem}
+.day-bell{margin:-0.625rem 0 -0.625rem 0.25rem;border:none;background:transparent;color:var(--accent);border-radius:50%;width:2.5rem;height:2.5rem;min-width:40px;min-height:40px;display:inline-grid;place-items:center;vertical-align:middle;cursor:pointer}
+.day-bell svg{width:1.125rem;height:1.125rem;padding:0.4375rem;box-sizing:content-box;border-radius:50%;border:0.0625rem solid var(--accent-line);background:var(--accent-soft);fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ui-icon{width:1.125rem;height:1.125rem;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.lr-line .ui-icon{color:var(--accent)}
+.backup-line .ui-icon{color:var(--accent)}
+.attention-line .ui-icon,.cloud-banner .ui-icon,.sheet-risk .ui-icon{color:var(--orange)}
+.lr-line,.backup-line,.attention-line{min-height:2.75rem}
+.lr-line span:first-of-type,.backup-line > span:first-of-type,.attention-line > span:first-child{display:flex;align-items:center;gap:0.5rem}
 .lr-row{display:flex;align-items:center;gap:0.5rem;padding:0.625rem 0;border-top:0.0625rem solid var(--hairline)}
 .lr-row:first-child{border-top:none}
 .lr-row-info{flex:1;min-width:0}
@@ -1455,6 +1476,9 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 <g id="icon-dollar"><path d="M12 2v20"/><path d="M16.5 6.5c0-1.9-1.9-3-4.5-3s-4.5 1.2-4.5 3 1.9 2.6 4.5 3 4.5 1.3 4.5 3.2-1.9 3.3-4.5 3.3-4.5-1.4-4.5-3.3"/></g>
 <g id="icon-clock"><circle cx="12" cy="12" r="9"/><path d="M12 7v5.2l3.5 2.3"/></g>
 <g id="icon-globe"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><ellipse cx="12" cy="12" rx="4.1" ry="9"/></g>
+<g id="icon-alert"><path d="M12 3.5 2.8 19.5h18.4z"/><path d="M12 10v4.5"/><path d="M12 17.2v.3"/></g>
+<g id="icon-cake"><path d="M4 20.5h16"/><path d="M5 20.5v-6.5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v6.5"/><path d="M5 16c1.2 1 2.3 1 3.5 0s2.3-1 3.5 0 2.3 1 3.5 0 2.3-1 3.5 0"/><path d="M12 12V8.5"/><path d="M12 4.5c.9.9.9 2.3 0 3-.9-.7-.9-2.1 0-3z"/></g>
+<g id="icon-save"><path d="M5 3.5h11l3.5 3.5v13H5z"/><path d="M8.5 3.5v5h6.5v-5"/><path d="M8 20.5v-6h8v6"/></g>
 <g id="icon-bell"><path d="M6.5 8.5a5.5 5.5 0 0 1 11 0c0 4.6 1.8 5.8 1.8 5.8H4.7s1.8-1.2 1.8-5.8z"/><path d="M10.2 19.5a1.9 1.9 0 0 0 3.6 0"/></g>
 <g id="icon-star"><path d="M12 3.2l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 3.1 1-6.1-4.4-4.3 6.1-.9z"/></g>
 <g id="icon-upload"><path d="M12 4v11.5"/><path d="M7.5 8.5L12 4l4.5 4.5"/><path d="M4.5 16.5v2.5a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-2.5"/></g>
@@ -1570,7 +1594,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 </div>
 
 <main id="homePage">
-<div class="cloud-banner" id="cloudBanner" style="display:none"><span id="cloudBannerText"></span><div class="cloud-banner-btns"><button type="button" id="cloudBannerRetry">Tentar de novo</button><button type="button" id="cloudBannerDetails">Ver detalhes</button></div></div>
+<div class="cloud-banner" id="cloudBanner" style="display:none"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-alert"/></svg><span id="cloudBannerText"></span><div class="cloud-banner-btns"><button type="button" id="cloudBannerRetry">Tentar de novo</button><button type="button" id="cloudBannerDetails">Ver detalhes</button></div></div>
 <div class="home-greeting-text" id="homeGreetingText">Olá, JP</div>
 <div class="home-message" id="homeMessage">
 <div class="home-message-status" id="homeMessageStatus"></div>
@@ -1589,7 +1613,8 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 
 <main id="studentsPage" style="display:none">
 <div class="page-title-bar" style="margin-top:0">
-<h2 class="page-title-text">Alunos Ativos<button type="button" class="help-icon" data-help="Aqui ficam todos os seus alunos ativos. Use os ícones ao lado para ordenar, filtrar por formato/instrumento/dia, ou buscar por nome.">!</button></h2>
+<div class="bulk-top" id="bulkTopActive" style="display:none"></div>
+<h2 class="page-title-text" id="activeTitle">Alunos Ativos<button type="button" class="help-icon" data-help="Aqui ficam todos os seus alunos ativos. Use os ícones ao lado para ordenar, filtrar por formato/instrumento/dia, ou buscar por nome.">!</button></h2>
 <div class="icon-controls-group">
 <div style="position:relative">
 <button class="icon-btn-ctrl" id="btnToggleSort" title="Ordenar lista">⇅</button>
@@ -1656,7 +1681,8 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 </div>
 </div>
 <div id="studentsActive" class="students-grid"></div>
-<div class="page-title-bar" style="margin-top:28px"><h2 class="page-title-text">Alunos Inativos (Saídas)</h2></div>
+<div class="page-title-bar" style="margin-top:28px"><div class="bulk-top" id="bulkTopInactive" style="display:none"></div><h2 class="page-title-text" id="inactiveTitle">Alunos Inativos (Saídas)</h2></div>
+<div class="bulk-actions" id="bulkActions" style="display:none"></div>
 <div id="studentsInactive" class="students-grid"></div>
 
 </main>
@@ -2842,32 +2868,32 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "7.5";
+const APP_VERSION = "7.6";
 const BACKUP_EVERY = { weekly: 7, biweekly: 15, monthly: 30, never: 0 };
 const BACKUP_LABELS = { weekly: "Toda semana", biweekly: "A cada 15 dias", monthly: "Todo mês", never: "Nunca" };
 const REMINDER_SENT_KEY = "jp_reminders_sent_v1";
 const REMINDER_GROUPS = [["eve", "Véspera"], ["later", "Mais tarde (no mesmo dia)"], ["soon", "Daqui a pouco (menos de 2 horas)"]];
 const REMINDER_DEFAULTS = {
 eve: [
-"[Saudação], [nome]! Passando pra lembrar da [aula] amanhã, às [hora]. Até lá! 🎸",
+"[Saudação], [nome]! Passando pra lembrar da [aula] amanhã, às [hora]. Até lá!",
 "[Saudação]!! Tudo certo pra [aula] de amanhã [período], às [hora]?",
-"[Saudação], [nome]! Amanhã tem [aula] às [hora]. Combinado? 🎶",
+"[Saudação], [nome]! Amanhã tem [aula] às [hora]. Combinado?",
 "Oi, [nome]! [Saudação]! Só lembrando: a [aula] é amanhã, às [hora].",
-"[Saudação], [nome]! Deixando o lembrete: amanhã [período], às [hora], tem [aula]. 😉",
+"[Saudação], [nome]! Deixando o lembrete: amanhã [período], às [hora], tem [aula].",
 "[Saudação], [nome]! A [aula] de amanhã continua às [hora]? Qualquer imprevisto, me avisa!"
 ],
 later: [
 "[Saudação]!! Tudo certo pra [aula] mais tarde, às [hora]?",
-"[Saudação], [nome]! Não esquece da [aula] hoje [período], às [hora]. 🎸",
-"[Saudação]! Hoje tem [aula] às [hora], hein! Até mais tarde 😊",
+"[Saudação], [nome]! Não esquece da [aula] hoje [período], às [hora].",
+"[Saudação]! Hoje tem [aula] às [hora], hein! Até mais tarde!",
 "[Saudação], [nome]! Passando pra lembrar da [aula] de hoje, às [hora].",
 "Oi, [nome]! [Saudação]! Hoje às [hora] tem [aula]. Até mais tarde!",
-"[Saudação]! Confirmada a [aula] de hoje [período], às [hora]? 🎶"
+"[Saudação]! Confirmada a [aula] de hoje [período], às [hora]?"
 ],
 soon: [
-"Oi, [nome]! Daqui a pouco, às [hora], tem [aula]. Até já! 🎸",
+"Oi, [nome]! Daqui a pouco, às [hora], tem [aula]. Até já!",
 "[Saudação]! Tudo certo pra [aula] daqui a pouco, às [hora]?",
-"[nome], só lembrando: a [aula] começa às [hora], daqui a pouquinho! 😉",
+"[nome], só lembrando: a [aula] começa às [hora], daqui a pouquinho!",
 "[Saudação], [nome]! Já já é hora da [aula], às [hora]. Até já!"
 ]
 };
@@ -2930,8 +2956,8 @@ const stale = !!supabaseClient && !!authCurrentUser && !!meta.dirty && pendingFo
 const showBanner = (!!supabaseClient && authCurrentUser && cloudStatus.state === "error") || stale;
 banner.style.display = showBanner ? "" : "none";
 if (showBanner) document.getElementById("cloudBannerText").textContent = stale
-? `⚠ Seus dados não estão sendo salvos na nuvem desde ${pad2(lastOk.getDate())}/${pad2(lastOk.getMonth()+1)} às ${pad2(lastOk.getHours())}:${pad2(lastOk.getMinutes())}.${cloudStatus.state === "error" ? ` Motivo: ${cloudStatus.error}.` : ""} Por enquanto as mudanças estão só neste aparelho.`
-: `⚠ Seus dados não estão sendo salvos na nuvem: ${cloudStatus.error}. Por enquanto eles estão só neste aparelho.`;
+? `Seus dados não estão sendo salvos na nuvem desde ${pad2(lastOk.getDate())}/${pad2(lastOk.getMonth()+1)} às ${pad2(lastOk.getHours())}:${pad2(lastOk.getMinutes())}.${cloudStatus.state === "error" ? ` Motivo: ${cloudStatus.error}.` : ""} Por enquanto as mudanças estão só neste aparelho.`
+: `Seus dados não estão sendo salvos na nuvem: ${cloudStatus.error}. Por enquanto eles estão só neste aparelho.`;
 }
 // Tentar de novo: se ainda não leu a nuvem nesta sessão, lê (e resolve conflitos); senão, envia.
 async function retryCloudSync(){
@@ -4101,7 +4127,7 @@ sheetPair("Observações", s.observations ? escapeHtml(s.observations) : "", tru
 ]);
 const risk = riskReasons(s);
 const riskWa = messageRecipient(s);
-const riskHtml = risk.length ? `<div class="sheet-risk"><span>⚠ Atenção: ${escapeHtml(risk.join(" · "))}</span>${riskWa ? `<a class="wa-btn" href="${whatsappLink(riskWa.phone)}" target="_blank" rel="noopener">WhatsApp</a>` : ""}</div>` : "";
+const riskHtml = risk.length ? `<div class="sheet-risk"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-alert"/></svg><span>Atenção: ${escapeHtml(risk.join(" · "))}</span>${riskWa ? `<a class="wa-btn" href="${whatsappLink(riskWa.phone)}" target="_blank" rel="noopener">WhatsApp</a>` : ""}</div>` : "";
 const body = document.getElementById("sheetBody");
 body.innerHTML = riskHtml + about + aulas + contato + financeiro + acomp + lastLessonsDotsHTML(s) + ultima;
 body.querySelectorAll("[data-dot]").forEach(b => b.onclick = () => openHistoryAt(s.id, b.dataset.dot));
@@ -4860,7 +4886,7 @@ charge: "Oi, [nome]! Passando pra lembrar da mensalidade de [mês] (R$ [valor]).
 lessonMoved: "Sua aula ficou para [dia], [data], às [hora].",
 cancel: "Oi, [nome]! Hoje não vou conseguir dar a aula das [hora]. Vamos marcar uma reposição?",
 cancelMakeup: "Oi, [nome]! Não vou conseguir dar a aula de [data original]. A reposição ficou para [dia], [data], às [hora].",
-birthday: "Feliz aniversário, [aluno]! 🎉",
+birthday: "Feliz aniversário, [aluno]!",
 lessonKept: "Oi, [nome]! A aula de [dia], [data], às [hora] está mantida. Até lá!",
 monthSummary: "Oi, [nome]! Resumo das aulas de [aluno] em [mês]:\nAulas dadas: [aulas]\nFaltas: [faltas]\nReposições: [reposições]\n\nO que trabalhamos:\n[conteúdo]\n\nPara estudar em casa: [para casa]",
 chargeItem: "Oi, [nome]! Passando pra lembrar do pagamento [referência] (R$ [valor]). Obrigado!"
@@ -4879,6 +4905,42 @@ const WEEKDAY_FULL = ["domingo","segunda-feira","terça-feira","quarta-feira","q
 const MONTH_FULL = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
 function getMessageTemplate(key){ return (appSettings.messages && appSettings.messages[key]) || DEFAULT_MESSAGES[key] || ""; }
 function firstName(n){ return String(n || "").trim().split(/\s+/)[0] || ""; }
+// ===== Nome abreviado (só no Início) =====
+// 1 nome: igual; 2: "Cecília E."; 3: "Heitor Sinval"; 4+: "Victor Hugo M.". "de/da/do/dos/das/e"
+// não contam. Se dois alunos ativos ficam iguais, usa mais letras do sobrenome ("Davi Ci." /
+// "Davi Co."); se ainda empatar, o nome completo.
+const NAME_PARTICLES = new Set(["de", "da", "do", "dos", "das", "e"]);
+function nameParts(n){ return String(n || "").trim().split(/\s+/).filter(Boolean).filter((w, i) => i === 0 || !NAME_PARTICLES.has(w.toLowerCase())); }
+function shortName(n, extra = 0){
+const p = nameParts(n);
+if (p.length <= 1) return p[0] || String(n || "").trim();
+if (p.length === 2) return `${p[0]} ${p[1].slice(0, 1 + extra)}.`;
+if (p.length === 3) return extra ? `${p[0]} ${p[1]} ${p[2].slice(0, extra)}.` : `${p[0]} ${p[1]}`;
+return `${p[0]} ${p[1]} ${p[2].slice(0, 1 + extra)}.`;
+}
+let shortNameSig = "", shortNameMap = new Map();
+function buildShortNameMap(){
+const map = new Map();
+const pool = students.filter(x => x.active !== false);
+const groups = new Map();
+pool.forEach(x => { const k = shortName(x.name).toLowerCase(); (groups.get(k) || groups.set(k, []).get(k)).push(x); });
+groups.forEach(list => {
+if (list.length === 1) { map.set(list[0].id, shortName(list[0].name)); return; }
+let names = null;
+for (let extra = 1; extra <= 4 && !names; extra++) {
+const tries = list.map(x => shortName(x.name, extra));
+if (new Set(tries.map(t => t.toLowerCase())).size === tries.length) names = tries;
+}
+list.forEach((x, i) => map.set(x.id, names ? names[i] : String(x.name).trim()));
+});
+return map;
+}
+function sn(s){
+if (!s) return "";
+const sig = students.map(x => `${x.id}:${x.name}:${x.active === false ? 0 : 1}`).join("|");
+if (sig !== shortNameSig) { shortNameSig = sig; shortNameMap = buildShortNameMap(); }
+return shortNameMap.get(s.id) || shortName(s.name);
+}
 function ageYears(birthIso){
 if (!birthIso) return null;
 const b = dateFromIso(birthIso), now = new Date();
@@ -5017,16 +5079,16 @@ return addWaRow(s, doneText, waMessageLink(s, key, vars));
 function offerLessonMessage(s, m){
 if (!m || m.status !== "scheduled" || !m.date) return null;
 const d = dateFromIso(m.date);
-return offerMessage(s, "lessonMoved", { dia: WEEKDAY_FULL[d.getDay()], data: formatDateShort(m.date).slice(0,5), hora: m.time || getStudentTimeFor(s, d.getDay()) }, `Aula de ${firstName(s.name)} marcada pra ${formatDateShort(m.date).slice(0,5)}.`);
+return offerMessage(s, "lessonMoved", { dia: WEEKDAY_FULL[d.getDay()], data: formatDateShort(m.date).slice(0,5), hora: m.time || getStudentTimeFor(s, d.getDay()) }, `Aula de ${sn(s)} marcada pra ${formatDateShort(m.date).slice(0,5)}.`);
 }
 // Professor cancelou e já marcou a reposição: uma mensagem só, dizendo as duas coisas.
 function offerCancelMakeupMessage(s, m, dateBr){
 const d = dateFromIso(m.date), orig = (dateBr || "").slice(0,5), when = formatDateShort(m.date).slice(0,5);
-return offerMessage(s, "cancelMakeup", { "data original": orig, dia: WEEKDAY_FULL[d.getDay()], data: when, hora: m.time || getStudentTimeFor(s, d.getDay()) }, `Aula de ${firstName(s.name)} de ${orig} cancelada; reposição ${when}.`);
+return offerMessage(s, "cancelMakeup", { "data original": orig, dia: WEEKDAY_FULL[d.getDay()], data: when, hora: m.time || getStudentTimeFor(s, d.getDay()) }, `Aula de ${sn(s)} de ${orig} cancelada; reposição ${when}.`);
 }
 // Depois de cancelar uma aula.
 function offerCancelMessage(s, time, dateBr){
-return offerMessage(s, "cancel", { hora: time, data: (dateBr || "").slice(0,5) }, `Aula de ${firstName(s.name)} cancelada.`);
+return offerMessage(s, "cancel", { hora: time, data: (dateBr || "").slice(0,5) }, `Aula de ${sn(s)} cancelada.`);
 }
 
 // ===== Ações rápidas nas aulas do Início =====
@@ -5109,7 +5171,7 @@ actionsHtml = `<div class="qa-btns">${whatButtonHTML(key, quickTargets[key].phas
 return `<div class="lp-student">
 <div class="lp-student-head">
 <div class="avatar-small">${initials(s.name)}</div>
-<div class="lp-student-name">${escapeHtml(s.name)}${x.kind === "extra" ? ` <span class="badge-makeup">${extraLabel(s, x.makeupId)}</span>` : ""}${aboutLineHTML(s)}</div>
+<div class="lp-student-name">${escapeHtml(sn(s))}${x.kind === "extra" ? ` <span class="badge-makeup">${extraLabel(s, x.makeupId)}</span>` : ""}${sn(s) !== s.name ? `<div class="lp-full-name">${escapeHtml(s.name)}</div>` : ""}${aboutLineHTML(s)}</div>
 </div>
 ${lastLessonHTML(s, iso)}
 ${noteable.includes(x) ? todayNotesHTML(x, date, i, noteable.length > 1) : ""}
@@ -5183,7 +5245,7 @@ if (copy) copy.onclick = () => {
 const text = box.querySelector(".lp-taught").value.trim();
 const others = boxes.filter(b => b !== box);
 const clash = others.filter(b => { const v = b.querySelector(".lp-taught").value.trim(); return v && v !== text; });
-if (clash.length && !confirm(`Trocar o "O que foi dado" de ${clash.map(b => firstName(itemOf(b).student.name)).join(", ")} por este?`)) return;
+if (clash.length && !confirm(`Trocar o "O que foi dado" de ${clash.map(b => sn(itemOf(b).student)).join(", ")} por este?`)) return;
 save(box);
 others.forEach(b => { b.querySelector(".lp-taught").value = text; save(b); });
 flash(box, "Copiado para todos ✓");
@@ -5222,8 +5284,8 @@ function openWhatHappened(targets, groupLabel){
 const t0 = targets[0];
 const before = targets.every(t => t.phase === "before");
 const title = targets.length > 1 ? `${before ? "Cancelar aula da turma" : "Não teve aula (turma)"} · ${t0.time}`
-: `${before ? "Cancelar aula" : "Não teve aula"} · ${t0.student.name}`;
-const names = targets.length > 1 ? ` · ${targets.map(t => firstName(t.student.name)).join(", ")}` : "";
+: `${before ? "Cancelar aula" : "Não teve aula"} · ${sn(t0.student)}`;
+const names = targets.length > 1 ? ` · ${targets.map(t => sn(t.student)).join(", ")}` : "";
 const extraFuture = targets.length === 1 && t0.extraFuture;
 openQuickModal(title, `${t0.entry.date}${t0.time ? " às " + t0.time : ""}${names}${extraFuture ? ` · ${extraLabel(t0.student, t0.entry.makeupId).toLowerCase()}` : ""}.`, buildReasonPicker((reason, mk) => {
 closeQuickModal();
@@ -5242,7 +5304,7 @@ function confirmOverwrite(targets, go){
 const withContent = targets.filter(t => lessonHasContent(resolveEntry(t.student, t.entry)));
 if (!withContent.length) return go();
 const body = document.createElement("div");
-body.innerHTML = `<div class="undo-q-title">${targets.length > 1 ? `${withContent.map(t => escapeHtml(firstName(t.student.name))).join(", ")}: e` : "E"}ssa aula tem anotações/avaliação. Apagar e marcar como não teve aula?</div>`;
+body.innerHTML = `<div class="undo-q-title">${targets.length > 1 ? `${withContent.map(t => escapeHtml(sn(t.student))).join(", ")}: e` : "E"}ssa aula tem anotações/avaliação. Apagar e marcar como não teve aula?</div>`;
 openQuickModal("Não teve aula", "O \"Desfazer\" do rodapé devolve as anotações e a avaliação.", body, () => { closeQuickModal(); go(); }, "Voltar", "Apagar e marcar");
 }
 // Grava o que aconteceu pra cada alvo e oferece o aviso no WhatsApp de cada aluno.
@@ -5350,7 +5412,7 @@ const asks = items.map((t, i) => ({ t, info: infos[i] })).filter(x => x.info && 
 if (!asks.length) { finishUndo(items, infos, new Map()); return; }
 const body = document.createElement("div");
 body.innerHTML = asks.map((x, i) => {
-const who = items.length > 1 ? `${escapeHtml(firstName(x.t.student.name))}: r` : "R";
+const who = items.length > 1 ? `${escapeHtml(sn(x.t.student))}: r` : "R";
 const q = x.info.state === "pending" ? `${who}emover também a reposição pendente?` : `${who}emover também a aula de ${makeupWhenText(x.t.student, x.info.m)}?`;
 const keep = x.info.state === "pending" ? "Não, manter nas reposições pendentes" : "Não, manter como aula extra";
 return `<div class="undo-q" data-undo-q="${i}"><div class="undo-q-title">${q}</div><div class="reason-chips">
@@ -5362,7 +5424,7 @@ body.querySelectorAll("[data-undo-ans]").forEach(b => b.onclick = () => {
 b.parentElement.querySelectorAll("[data-undo-ans]").forEach(x => x.classList.toggle("selected", x === b));
 });
 const t0 = items[0];
-openQuickModal(items.length > 1 ? `Desfazer (turma) · ${t0.time}` : `Desfazer · ${t0.student.name}`,
+openQuickModal(items.length > 1 ? `Desfazer (turma) · ${t0.time}` : `Desfazer · ${sn(t0.student)}`,
 `Aula de ${t0.entry.date.slice(0,5)}${t0.time ? " às " + t0.time : ""} volta a ser uma aula normal.`, body, () => {
 const choice = new Map(asks.map((x, i) => [x.t, !!body.querySelector(`[data-undo-q="${i}"] [data-undo-ans="yes"].selected`)]));
 closeQuickModal();
@@ -5377,7 +5439,7 @@ removeLessonRecord(s, t.entry);
 if (info && info.state !== "happened") {
 if (removeChoice.get(t)) s.makeups = (s.makeups || []).filter(x => x !== info.m);
 else if (info.state === "future") info.m.kind = "single"; // fica como aula extra
-} else if (info) kept.push(`${firstName(s.name)}: a aula de ${makeupWhenText(s, info.m)} já aconteceu e continua no histórico.`);
+} else if (info) kept.push(`${sn(s)}: a aula de ${makeupWhenText(s, info.m)} já aconteceu e continua no histórico.`);
 });
 saveStudents();
 refreshAfterLessonChange(items[0].student);
@@ -5386,7 +5448,7 @@ items.forEach(t => {
 const d = dateFromIso(isoFromBr(t.entry.date));
 const time = t.time || lessonTimeOf(t.student, t.entry);
 if (new Date() >= lessonStart(d, time)) return;
-offerMessage(t.student, "lessonKept", { dia: WEEKDAY_FULL[d.getDay()], data: t.entry.date.slice(0,5), hora: time }, `Aula de ${firstName(t.student.name)} de ${t.entry.date.slice(0,5)} mantida.`);
+offerMessage(t.student, "lessonKept", { dia: WEEKDAY_FULL[d.getDay()], data: t.entry.date.slice(0,5), hora: time }, `Aula de ${sn(t.student)} de ${t.entry.date.slice(0,5)} mantida.`);
 });
 if (kept.length) showInfoToast(kept.join(" "));
 }
@@ -5427,11 +5489,11 @@ if (!list.length) { box.innerHTML = ""; return; }
 box.innerHTML = `<div class="settings-group-label" style="margin-top:1.5rem">Aniversários</div>` + today.map(x => {
 const href = waMessageLink(x.s, "birthday");
 return `<div class="bday-card">
-<span class="bday-emoji" aria-hidden="true">🎂</span>
-<div class="bday-title">Hoje: ${escapeHtml(x.s.name)}${x.age > 0 && x.age < 120 ? ` <span class="bday-sub">· ${x.age} anos</span>` : ""}</div>
+<span class="bday-emoji" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-cake"/></svg></span>
+<div class="bday-title">Hoje: ${escapeHtml(sn(x.s))}${x.age > 0 && x.age < 120 ? ` <span class="bday-sub">· ${x.age} anos</span>` : ""}</div>
 ${href ? `<a class="wa-btn wa-mini" href="${href}" target="_blank" rel="noopener">Parabenizar</a>` : ""}
 </div>`;
-}).join("") + (week.length ? `<div class="bday-week">Esta semana: ${week.map(x => `${escapeHtml(firstName(x.s.name))} (${WEEKDAY_SHORT[x.date.getDay()].toLowerCase()}, ${pad2(x.date.getDate())}/${pad2(x.date.getMonth()+1)})`).join(" · ")}</div>` : "");
+}).join("") + (week.length ? `<div class="bday-week">Esta semana: ${week.map(x => `${escapeHtml(sn(x.s))} (${WEEKDAY_SHORT[x.date.getDay()].toLowerCase()}, ${pad2(x.date.getDate())}/${pad2(x.date.getMonth()+1)})`).join(" · ")}</div>` : "");
 }
 
 function renderHome(){
@@ -5513,7 +5575,7 @@ Object.keys(groups).sort().forEach(time=>{
 const g = groups[time];
 const card=document.createElement("div");
 card.className="card";
-const names=g.map(x=>escapeHtml(x.student.name)).join(", ");
+const names=g.map(x=>escapeHtml(sn(x.student))).join(", ");
 const avatarsHtml=buildAvatarCluster(g.map(x=>x.student));
 const extraKinds = [...new Set(g.filter(x => x.kind === "extra").map(x => extraLabel(x.student, x.makeupId).toLowerCase()))];
 const instruments = [...new Set(g.map(x => x.student.instrument).filter(Boolean))].join(", ");
@@ -5695,7 +5757,7 @@ const href = waMessageLink(s, "chargeItem", { referencia: (c.kind === "lesson" ?
 return `<div class="goal-row">
 <button type="button" class="goal-check" data-rcv="${i}" aria-label="Marcar ${escapeHtml(chargeLabel(c))} de ${escapeHtml(s.name)} como pago"></button>
 <div class="goal-info">
-<div class="goal-title">${escapeHtml(s.name)}</div>
+<div class="goal-title">${escapeHtml(sn(s))}</div>
 <div class="pay-meta"><span class="goal-period-badge">R$ ${moneyText(c.value)}</span><span class="pay-due">${escapeHtml(chargeLabel(c))}</span></div>
 </div>
 ${href ? `<a class="wa-btn wa-mini" href="${href}" target="_blank" rel="noopener">Cobrar</a>` : ""}
@@ -5737,7 +5799,7 @@ return `
 <div class="goal-row">
 <button type="button" class="goal-check" data-mark-paid="${r.s.id}|${r.key}" aria-label="Marcar mensalidade de ${escapeHtml(r.s.name)} (${monthLabel(r.key)}) como paga"></button>
 <div class="goal-info">
-<div class="goal-title">${escapeHtml(r.s.name)}</div>
+<div class="goal-title">${escapeHtml(sn(r.s))}</div>
 <div class="pay-meta"><span class="goal-period-badge">R$ ${studentMonthlyValue(r.s)}</span>${status}</div>
 </div>
 ${chargeLink(r.s, r.key)}
@@ -5780,7 +5842,7 @@ const row = ({ s, m }, isPending) => { const late = isPending && deadline && lat
 <div class="goal-row makeup-row${late ? " is-late" : ""}">
 <div class="avatar-small">${initials(s.name)}</div>
 <div class="goal-info">
-<div class="goal-title">${escapeHtml(s.name)}</div>
+<div class="goal-title">${escapeHtml(sn(s))}</div>
 <div class="makeup-sub">${isPending
 ? `Aula de ${m.originDate}${ABSENCE_REASONS[m.reason] ? " · " + ABSENCE_REASONS[m.reason].short : ""}${late ? ` <span class="makeup-late">· pendente há ${lateDays(m)} dias</span>` : ""}`
 : `${formatDateShort(m.date)}${m.time ? " às " + m.time : ""} · ${m.kind === "single" ? "aula extra" : m.reason === "rescheduled" ? "remarcada de " + m.originDate : "repõe " + m.originDate}`}</div>
@@ -5802,7 +5864,7 @@ m.status = "dismissed";
 m.dismissedAt = todayIso;
 saveStudents();
 renderMakeups();
-showUndoToast(`Reposição de ${firstName(s.name)} dispensada`, () => { m.status = "pending"; delete m.dismissedAt; saveStudents(); renderMakeups(); });
+showUndoToast(`Reposição de ${sn(s)} dispensada`, () => { m.status = "pending"; delete m.dismissedAt; saveStudents(); renderMakeups(); });
 });
 box.querySelectorAll("[data-makeup-dismiss]").forEach(b => b.onclick = () => {
 const { s, m } = find(b.dataset.makeupDismiss);
@@ -6592,6 +6654,192 @@ if(rem === 0) return `${years} ${years===1?'ano':'anos'}`;
 return `${years} ${years===1?'ano':'anos'} e ${rem} ${rem===1?'mês':'meses'}`;
 }
 
+// ===== Vários alunos de uma vez (toque longo num card de Meus Alunos) =====
+let bulkSel = null; // { mode: "active" | "inactive", ids: Set }
+let bulkStartedAt = 0;
+let lastStudentLists = { active: [], inactive: [] };
+function attachLongPress(el, s, isInactive){
+let timer = null, sx = 0, sy = 0;
+const stop = () => { clearTimeout(timer); timer = null; };
+el.addEventListener("pointerdown", (e) => {
+if (e.button) return;
+sx = e.clientX; sy = e.clientY; el._lp = false;
+stop();
+timer = setTimeout(() => {
+timer = null;
+el._lp = true;
+const mode = isInactive ? "inactive" : "active";
+if (bulkSel && bulkSel.mode === mode) { if (!bulkSel.ids.has(s.id)) toggleBulk(s.id); return; }
+startBulk(mode, s.id);
+}, 500);
+});
+el.addEventListener("pointermove", (e) => { if (timer && Math.hypot(e.clientX - sx, e.clientY - sy) > 10) stop(); });
+["pointerup", "pointercancel", "pointerleave"].forEach(ev => el.addEventListener(ev, stop));
+el.addEventListener("contextmenu", (e) => { if (el._lp || bulkSel) e.preventDefault(); });
+}
+function startBulk(mode, id){
+const wasOn = !!bulkSel;
+bulkSel = { mode, ids: new Set([id]) };
+bulkStartedAt = Date.now();
+if (navigator.vibrate) { try { navigator.vibrate(15); } catch (e) {} }
+if (!wasOn) { try { history.pushState({ hiBulk: 1 }, ""); } catch (e) {} }
+renderStudents();
+}
+function cancelBulk(){
+if (!bulkSel) return;
+bulkSel = null;
+renderStudents();
+if (history.state && history.state.hiBulk) { try { history.back(); } catch (e) {} }
+}
+window.addEventListener("popstate", () => { if (bulkSel) { bulkSel = null; renderStudents(); } });
+document.addEventListener("keydown", (e) => {
+if (e.key === "Escape" && bulkSel && !document.querySelector(".modal-bg.show")) cancelBulk();
+});
+function toggleBulk(id){
+if (!bulkSel) return;
+if (bulkSel.ids.has(id)) bulkSel.ids.delete(id); else bulkSel.ids.add(id);
+if (!bulkSel.ids.size) { cancelBulk(); return; }
+document.querySelectorAll(`.student-square[data-sid="${id}"]`).forEach(c => c.classList.toggle("bulk-selected", bulkSel.ids.has(id)));
+updateBulkUI();
+}
+function selectAllBulk(){
+if (!bulkSel) return;
+lastStudentLists[bulkSel.mode].forEach(x => bulkSel.ids.add(x.id));
+renderStudents();
+}
+function bulkStudents(){ return bulkSel ? students.filter(x => bulkSel.ids.has(x.id)) : []; }
+function updateBulkUI(){
+const page = document.getElementById("studentsPage");
+const actions = document.getElementById("bulkActions");
+if (actions.parentElement !== document.body) document.body.appendChild(actions); // fixo na tela, fora da página animada
+[["active", "bulkTopActive", "activeTitle"], ["inactive", "bulkTopInactive", "inactiveTitle"]].forEach(([mode, topId, titleId]) => {
+const top = document.getElementById(topId), title = document.getElementById(titleId);
+const on = !!bulkSel && bulkSel.mode === mode;
+top.style.display = on ? "" : "none";
+title.style.display = on ? "none" : "";
+const controls = title.parentElement.querySelector(".icon-controls-group");
+if (controls) controls.style.display = on ? "none" : "";
+if (on) {
+const n = bulkSel.ids.size;
+top.innerHTML = `<span>${n} selecionado${n > 1 ? "s" : ""}</span><span class="bulk-sep">·</span><button type="button" data-bulk="all">Selecionar todos</button><span class="bulk-sep">·</span><button type="button" data-bulk="cancel">Cancelar</button>`;
+top.querySelector('[data-bulk="all"]').onclick = selectAllBulk;
+top.querySelector('[data-bulk="cancel"]').onclick = cancelBulk;
+}
+});
+page.classList.toggle("bulk-on", !!bulkSel);
+if (!bulkSel) { actions.style.display = "none"; actions.innerHTML = ""; return; }
+actions.style.display = "flex";
+actions.innerHTML = bulkSel.mode === "active"
+? `<button type="button" class="save" data-bulk-act="edit">Editar</button><button type="button" class="cancel" data-bulk-act="inactivate">Inativar</button>`
+: `<button type="button" class="save" data-bulk-act="reactivate">Reativar</button>`;
+actions.querySelectorAll("[data-bulk-act]").forEach(b => b.onclick = () => ({ edit: openBulkEdit, inactivate: openBulkInactivate, reactivate: bulkReactivate })[b.dataset.bulkAct]());
+}
+// Guarda os campos que vão mudar (pra desfazer) e volta cada aluno como estava.
+function snapshotFields(list, keys){
+return list.map(x => ({ x, prev: keys.map(k => [k, Object.prototype.hasOwnProperty.call(x, k), JSON.parse(JSON.stringify(x[k] ?? null))]) }));
+}
+function restoreFields(snaps){
+snaps.forEach(({ x, prev }) => prev.forEach(([k, had, v]) => { if (had) x[k] = v; else delete x[k]; }));
+}
+function afterBulkChange(){
+saveStudents();
+renderStudents();
+renderHome();
+refreshStudentSheet();
+}
+function openBulkEdit(){
+const list = bulkStudents();
+if (!list.length) return;
+const same = (vals, fmt) => { const u = [...new Set(vals.map(v => JSON.stringify(v ?? null)))]; return u.length === 1 ? `Todos: ${fmt(vals[0])}` : "Valores diferentes"; };
+const payToLbl = v => ({ school: "Escola", none: "Ninguém (bolsa)" })[v] || "Mim";
+const locLbl = x => x ? `${LOCATION_TYPES[x.t] || "Não informado"}${x.d ? " · " + x.d : ""}` : "Não informado";
+const fields = [
+{ key: "payTo", label: "Mensalidade paga para", opts: [["me", "Mim"], ["school", "Escola"], ["none", "Ninguém (bolsa)"]], hint: same(list.map(x => x.payTo || "me"), payToLbl) },
+{ key: "value", label: "Valor da mensalidade", opts: [["auto", "Automático (tabela de valores)"], ["set", "Valor:"]], input: { type: "number", min: 0, step: "any", ph: "Ex.: 150" }, hint: same(list.map(studentMonthlyValue), v => `R$ ${moneyText(v)}`) },
+{ key: "dueDay", label: "Vencimento", opts: [["clear", "Sem vencimento"], ["set", "Dia:"]], input: { type: "number", min: 1, max: 31, ph: "1 a 31" }, hint: same(list.map(x => x.dueDay || null), v => v ? `dia ${v}` : "sem vencimento") },
+{ key: "duration", label: "Duração da aula", opts: [["clear", `Padrão (${appSettings.lessonDuration} min)`], ["set", "Minutos:"]], input: { type: "number", min: 5, max: 240, ph: "Ex.: 45" }, hint: same(list.map(x => x.duration || null), v => v ? `${v} min` : "padrão") },
+{ key: "evalFrequency", label: "Avaliar este aluno", opts: [["", `Padrão (${(EVAL_FREQUENCIES[appSettings.evalFrequency] || "Toda aula").toLowerCase()})`], ...Object.entries(EVAL_FREQUENCIES)], hint: same(list.map(x => x.evalFrequency || ""), v => v ? EVAL_FREQUENCIES[v].toLowerCase() : "padrão") },
+{ key: "instrument", label: "Instrumento", opts: (appSettings.instruments || []).map(i => [i, i]), hint: same(list.map(x => x.instrument || ""), v => v || "—") },
+...(appSettings.useLevels ? [{ key: "level", label: "Nível", opts: (appSettings.levels || []).map(l => [l, l]), hint: same(list.map(x => x.level || ""), v => v || "—") }] : []),
+{ key: "location", label: "Local da aula", opts: [["", "Não informar"], ["studio", "Estúdio / minha sala"], ["home", "Casa do aluno"], ["online", "Online"], ["school", "Escola"]], input: { type: "text", ph: "Endereço, link ou nome da escola (opcional)", showFor: ["home", "online", "school"] }, hint: same(list.map(x => x.locationType ? { t: x.locationType, d: x.locationDetail || "" } : null), locLbl) },
+{ key: "trackingSince", label: "Começar histórico em", opts: [["clear", "Desde a entrada"], ["set", "Data:"]], input: { type: "date" }, hint: same(list.map(x => x.trackingSince || null), v => v ? formatDateShort(v) : "desde a entrada") }
+];
+const body = document.createElement("div");
+body.innerHTML = fields.map(f => `<div class="field bulk-field" data-bf="${f.key}"><label>${f.label}</label>
+<select data-bsel><option value="__keep">Não alterar</option>${f.opts.map(([v, l]) => `<option value="${escapeHtml(v)}">${escapeHtml(l)}</option>`).join("")}</select>
+${f.input ? `<input class="bulk-extra" data-bin type="${f.input.type}"${f.input.min !== undefined ? ` min="${f.input.min}"` : ""}${f.input.max !== undefined ? ` max="${f.input.max}"` : ""}${f.input.step ? ` step="${f.input.step}"` : ""} placeholder="${f.input.ph || ""}" style="display:none">` : ""}
+<div class="bulk-hint">${escapeHtml(f.hint)}</div></div>`).join("");
+fields.forEach(f => {
+const box = body.querySelector(`[data-bf="${f.key}"]`), sel = box.querySelector("[data-bsel]"), inp = box.querySelector("[data-bin]");
+if (inp) sel.onchange = () => { const show = f.input.showFor ? f.input.showFor.includes(sel.value) : sel.value === "set"; inp.style.display = show ? "" : "none"; if (show && !f.input.showFor) inp.focus(); };
+});
+openQuickModal(`Editar ${list.length} aluno${list.length > 1 ? "s" : ""}`, "Só os campos que você mudar serão alterados; o resto de cada aluno fica igual.", body, () => {
+const changes = [];
+for (const f of fields) {
+const box = body.querySelector(`[data-bf="${f.key}"]`), v = box.querySelector("[data-bsel]").value, inp = box.querySelector("[data-bin]");
+if (v === "__keep") continue;
+const raw = inp ? inp.value.trim() : "";
+const optLabel = f.opts.find(o => o[0] === v)?.[1] || v;
+if (f.key === "payTo") changes.push({ label: `${f.label} → ${optLabel}`, keys: ["payTo", "charges"], apply: x => { if (v === "me") { delete x.payTo; ensurePackageCharge(x); } else x.payTo = v; } });
+else if (f.key === "value") {
+if (v === "set" && !(raw !== "" && Number(raw) >= 0)) { alert("Digite o valor da mensalidade."); return; }
+changes.push({ label: `${f.label} → ${v === "auto" ? "automático" : "R$ " + moneyText(Number(raw))}`, keys: ["value"], apply: x => { x.value = v === "auto" ? getDefaultValueFor(x) : Number(raw); } });
+} else if (f.key === "dueDay") {
+if (v === "set" && !(Number(raw) >= 1 && Number(raw) <= 31)) { alert("O vencimento precisa ser um dia de 1 a 31."); return; }
+changes.push({ label: `${f.label} → ${v === "set" ? "dia " + Math.round(Number(raw)) : "sem vencimento"}`, keys: ["dueDay"], apply: x => { if (v === "set") x.dueDay = Math.round(Number(raw)); else delete x.dueDay; } });
+} else if (f.key === "duration") {
+if (v === "set" && !(Number(raw) >= 5 && Number(raw) <= 240)) { alert("A duração precisa ficar entre 5 e 240 minutos."); return; }
+changes.push({ label: `${f.label} → ${v === "set" ? Math.round(Number(raw)) + " min" : "padrão"}`, keys: ["duration"], apply: x => { if (v === "set") x.duration = Math.round(Number(raw)); else delete x.duration; } });
+} else if (f.key === "evalFrequency") changes.push({ label: `${f.label} → ${optLabel.toLowerCase()}`, keys: ["evalFrequency"], apply: x => { if (v) x.evalFrequency = v; else delete x.evalFrequency; } });
+else if (f.key === "instrument") changes.push({ label: `${f.label} → ${v}`, keys: ["instrument"], apply: x => { x.instrument = v; } });
+else if (f.key === "level") changes.push({ label: `${f.label} → ${v}`, keys: ["level"], apply: x => { x.level = v; } });
+else if (f.key === "location") changes.push({ label: `${f.label} → ${optLabel}${raw && LOCATION_DETAIL[v] ? " · " + raw : ""}`, keys: ["locationType", "locationDetail"], apply: x => {
+if (v) x.locationType = v; else delete x.locationType;
+if (raw && LOCATION_DETAIL[v]) x.locationDetail = raw; else delete x.locationDetail;
+} });
+else if (f.key === "trackingSince") {
+if (v === "set" && !raw) { alert("Escolha a data."); return; }
+changes.push({ label: `${f.label} → ${v === "set" ? formatDateShort(raw) : "desde a entrada"}`, keys: ["trackingSince"], apply: x => { if (v === "set") x.trackingSince = raw; else delete x.trackingSince; } });
+}
+}
+if (!changes.length) { alert("Nenhum campo mudou (todos em \"Não alterar\")."); return; }
+if (!confirm(`${changes.map(c => c.label).join("\n")}\n\nem ${list.length} aluno${list.length > 1 ? "s" : ""}. Confirmar?`)) return;
+const snaps = snapshotFields(list, [...new Set(changes.flatMap(c => c.keys))]);
+list.forEach(x => changes.forEach(c => c.apply(x)));
+closeQuickModal();
+cancelBulk();
+afterBulkChange();
+showUndoToast(`${list.length} aluno${list.length > 1 ? "s" : ""} atualizado${list.length > 1 ? "s" : ""}`, () => { restoreFields(snaps); afterBulkChange(); });
+}, "Cancelar", "Salvar");
+}
+function openBulkInactivate(){
+const list = bulkStudents();
+if (!list.length) return;
+const body = document.createElement("div");
+body.innerHTML = `<div class="field"><label>Data de saída (a mesma pra todos)</label><input type="date" class="bulk-exit" value="${isoOf(new Date())}"></div>`;
+openQuickModal(`Inativar ${list.length} aluno${list.length > 1 ? "s" : ""}`, list.map(x => x.name).join(", "), body, () => {
+const date = body.querySelector(".bulk-exit").value;
+if (!date) { alert("Escolha a data de saída."); return; }
+if (!confirm(`Inativar ${list.length} aluno${list.length > 1 ? "s" : ""} com saída em ${formatDateShort(date)}?`)) return;
+const snaps = snapshotFields(list, ["active", "exit"]);
+list.forEach(x => { x.active = false; x.exit = date; });
+closeQuickModal();
+cancelBulk();
+afterBulkChange();
+list.forEach(x => offerWaitlistFor(x));
+showUndoToast(`${list.length} aluno${list.length > 1 ? "s" : ""} inativado${list.length > 1 ? "s" : ""}`, () => { restoreFields(snaps); afterBulkChange(); });
+}, "Cancelar", "Inativar");
+}
+function bulkReactivate(){
+const list = bulkStudents();
+if (!list.length || !confirm(`Reativar ${list.length} aluno${list.length > 1 ? "s" : ""}?`)) return;
+const snaps = snapshotFields(list, ["active", "exit"]);
+list.forEach(x => { x.active = true; delete x.exit; });
+cancelBulk();
+afterBulkChange();
+showUndoToast(`${list.length} aluno${list.length > 1 ? "s" : ""} reativado${list.length > 1 ? "s" : ""}`, () => { restoreFields(snaps); afterBulkChange(); });
+}
+
 function renderStudents(){
 const boxActive=document.getElementById("studentsActive");
 const boxInactive=document.getElementById("studentsInactive");
@@ -6699,8 +6947,22 @@ ${locRow}
 ${waRow}
 </div>
 `;
-el.onclick = () => openStudentSheet(s.id);
-el.querySelectorAll("[data-stop]").forEach(a => a.onclick = (e) => e.stopPropagation());
+// Seleção de vários (toque longo): no modo de seleção o toque marca/desmarca.
+const inBulk = bulkSel && bulkSel.mode === (isInactive ? "inactive" : "active");
+if (inBulk) {
+el.classList.add("bulk-mode");
+if (bulkSel.ids.has(s.id)) el.classList.add("bulk-selected");
+el.insertAdjacentHTML("afterbegin", `<span class="bulk-check" aria-hidden="true">✓</span>`);
+}
+el.dataset.sid = s.id;
+attachLongPress(el, s, isInactive);
+el.onclick = (e) => {
+if (el._lp || Date.now() - bulkStartedAt < 700) { el._lp = false; return; }
+if (bulkSel && bulkSel.mode === (isInactive ? "inactive" : "active")) { toggleBulk(s.id); return; }
+if (bulkSel) return;
+openStudentSheet(s.id);
+};
+el.querySelectorAll("[data-stop]").forEach(a => a.onclick = (e) => { e.stopPropagation(); if (bulkSel) e.preventDefault(); });
 return el;
 };
 
@@ -6724,10 +6986,12 @@ if (!dayVal.length) appendGroup("Sem dia fixo", activeList.filter(s => s.lessonF
 } else {
 activeList.forEach(s=>boxActive.appendChild(createSquare(s,false)));
 }
+lastStudentLists = { active: activeList, inactive: inactiveList };
 if (activeList.length === 0) boxActive.innerHTML = `<div class="empty" style="grid-column:1/-1">${students.some(s => s.active !== false) ? "Nenhum aluno com esses filtros." : "Nenhum aluno ativo ainda. Toque no + pra cadastrar."}</div>`;
 
 if(inactiveList.length===0) boxInactive.innerHTML="<div style='color:#94a3b8;font-size:13px;padding:10px 0'>Nenhum inativo.</div>";
 else inactiveList.forEach(s=>boxInactive.appendChild(createSquare(s,true)));
+updateBulkUI();
 
 }
 
@@ -7935,6 +8199,7 @@ group.classList.toggle("collapsed");
 }
 
 function openPage(page){
+if (bulkSel && page !== "students") cancelBulk();
 currentPage = page;
 localStorage.setItem("jp_active_page", page);
 ["homePage","agendaPage","goalsPage","studentsPage","evaluationPage","evolutionFinancialPage","evolutionQuantitativePage","studentsPerformancePage","plannerPage","settingsPage","testsPage"].forEach(id => {
@@ -8739,7 +9004,7 @@ let notifiedReminderKeys = new Set();
 function showInAppReminder(msg){
 const toast = document.createElement("div");
 toast.className = "reminder-toast";
-toast.textContent = "🔔 " + msg;
+toast.innerHTML = `<svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-bell"/></svg> <span>${escapeHtml(msg)}</span>`;
 document.body.appendChild(toast);
 setTimeout(() => toast.remove(), 6000);
 if (window.Notification && Notification.permission === "granted") {
@@ -9387,7 +9652,7 @@ function renderAttention(){
 const box = document.getElementById("attentionBox");
 if (!box) return;
 const n = students.filter(x => x.active !== false && riskReasons(x).length).length;
-box.innerHTML = n ? `<button type="button" class="attention-line"><span>⚠ ${n} aluno${n > 1 ? "s precisam" : " precisa"} de atenção</span><span>Ver ›</span></button>` : "";
+box.innerHTML = n ? `<button type="button" class="attention-line"><span><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-alert"/></svg>${n} aluno${n > 1 ? "s precisam" : " precisa"} de atenção</span><span>Ver ›</span></button>` : "";
 const b = box.querySelector("button");
 if (b) b.onclick = () => { currentFilters.attention = true; openPage("students"); renderStudents(); };
 }
@@ -9775,7 +10040,7 @@ body.innerHTML = list.length ? list.map((x, i) => {
 const at = sent[reminderKey(dateObj, x)];
 const r = messageRecipient(x.student);
 const to = r ? (r.guardian ? ` · pro responsável (${escapeHtml(r.name)})` : "") : " · sem telefone";
-return `<div class="lr-row${at ? " sent" : ""}"><div class="lr-row-info"><div class="lr-row-name">${x.time} · ${escapeHtml(x.student.name)}${x.kind === "extra" ? ` <span class="badge-makeup">${extraLabel(x.student, x.makeupId)}</span>` : ""}</div><div class="lr-row-sub">${at ? `Enviado ✓ ${hhmmOf(at)}` : "Ainda não enviado"}${to}</div></div>${r
+return `<div class="lr-row${at ? " sent" : ""}"><div class="lr-row-info"><div class="lr-row-name">${x.time} · ${escapeHtml(sn(x.student))}${x.kind === "extra" ? ` <span class="badge-makeup">${extraLabel(x.student, x.makeupId)}</span>` : ""}</div><div class="lr-row-sub">${at ? `Enviado ✓ ${hhmmOf(at)}` : "Ainda não enviado"}${to}</div></div>${r
 ? `<a class="wa-btn" data-lr="${i}" href="#" target="_blank" rel="noopener">Enviar no WhatsApp</a>`
 : `<button type="button" class="wa-btn wa-btn-muted" data-lr-phone="${i}">Cadastrar telefone</button>`}</div>`;
 }).join("") : `<div class="field-hint" style="margin:0">${isToday ? "Nenhuma aula por começar hoje." : "Nenhuma aula nesse dia."}</div>`;
@@ -9807,7 +10072,7 @@ if (n) items.push({ d, label, n });
 };
 if ((c.when === "day" || c.when === "both") && nowMin >= toMin(c.dayFrom)) add(0, "Lembrar aulas de hoje");
 if ((c.when === "eve" || c.when === "both") && nowMin >= toMin(c.eveFrom)) add(1, "Lembrar aulas de amanhã");
-box.innerHTML = items.map((it, i) => `<button type="button" class="lr-line" data-lrbox="${i}"><span>🔔 ${it.label} (${it.n})</span><span class="lr-cta">Abrir ›</span></button>`).join("");
+box.innerHTML = items.map((it, i) => `<button type="button" class="lr-line" data-lrbox="${i}"><span><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-bell"/></svg>${it.label} (${it.n})</span><span class="lr-cta">Abrir ›</span></button>`).join("");
 box.querySelectorAll("[data-lrbox]").forEach(b => b.onclick = () => openLessonReminders(items[Number(b.dataset.lrbox)].d));
 }
 document.getElementById("rowLessonReminder").onclick = () => {
@@ -10096,7 +10361,7 @@ const last = appSettings.lastBackupAt ? new Date(appSettings.lastBackupAt) : nul
 const due = days && students.length && (!last || isNaN(last) || Date.now() - last > days * 86400000);
 if (!due) { box.innerHTML = ""; return; }
 const what = freq === "monthly" ? "do mês" : freq === "biweekly" ? "da quinzena" : "da semana";
-box.innerHTML = `<div class="backup-line"><span>💾 Faça o backup ${what}${last && !isNaN(last) ? ` <span style="color:var(--muted);font-weight:500">· último em ${pad2(last.getDate())}/${pad2(last.getMonth()+1)}</span>` : ""}</span><button type="button" class="btn-edit-toggle">Fazer backup</button></div>`;
+box.innerHTML = `<div class="backup-line"><span><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-save"/></svg>Faça o backup ${what}${last && !isNaN(last) ? ` <span style="color:var(--muted);font-weight:500">· último em ${pad2(last.getDate())}/${pad2(last.getMonth()+1)}</span>` : ""}</span><button type="button" class="btn-edit-toggle">Fazer backup</button></div>`;
 box.querySelector("button").onclick = () => doBackup(true);
 }
 document.getElementById("rowBackupReminder").onclick = () => {
