@@ -854,7 +854,15 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .qa-btn{border:0.0625rem solid var(--accent-line);background:var(--accent-soft);color:var(--accent);border-radius:var(--radius-pill);padding:0.375rem 0.75rem;font-size:0.75rem;font-weight:700;white-space:nowrap;cursor:pointer}
 .qa-btn.primary{background:var(--accent);color:var(--accent-ink);box-shadow:var(--glow-sm)}
 .qa-btn.muted{border-color:rgba(148,163,184,.25);background:var(--glass-inset);color:var(--text-2)}
-.agenda-lesson-acts{flex-basis:100%;display:flex;gap:0.375rem;justify-content:flex-end}
+.agenda-lesson-acts{flex-basis:100%;display:flex;gap:0.375rem;justify-content:flex-end;align-items:center}
+.qa-undo{padding:0.25rem 0.625rem}
+.undo-toast{display:flex;align-items:center;gap:0.625rem;padding:0.625rem 0.75rem 0.625rem 0.875rem;border-radius:var(--radius-pill);border:0.0625rem solid var(--glass-border);background:var(--glass-fill-strong);
+  -webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:var(--shadow-sm);animation:toastIn .25s var(--ease-out)}
+.undo-toast-msg{flex:1;min-width:0;font-size:0.8125rem;font-weight:600;color:var(--text);line-height:1.35}
+.undo-toast-btn{flex:none;border:none;background:transparent;color:var(--accent);font-size:0.8125rem;font-weight:750;cursor:pointer;padding:0.25rem 0.375rem}
+.undo-q{padding:0.625rem 0;border-top:0.0625rem solid var(--hairline)}
+.undo-q:first-child{border-top:none;padding-top:0}
+.undo-q-title{font-size:0.875rem;font-weight:650;color:var(--text);margin-bottom:0.5rem}
 .hw-line{font-size:0.75rem;color:var(--text-2);margin-top:0.375rem;line-height:1.4;overflow-wrap:break-word;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .hw-label{color:var(--accent);font-weight:700}
 .status.off{background:rgba(148,163,184,.1);color:var(--muted);border-color:rgba(148,163,184,.3)}
@@ -3520,12 +3528,6 @@ upsertLessonRecord(student, entry, { status:"noclass", reason:"rescheduled", mak
 saveStudents();
 return m;
 }
-// Desfaz uma remarcação: tira a aula nova e devolve a original (sem registro).
-function undoReschedule(student, m){
-student.makeups = (student.makeups || []).filter(x => x !== m);
-student.lessons = (student.lessons || []).filter(l => !(l.makeupCreated === m.id && l.reason === "rescheduled" && !l.taught && !l.homework));
-saveStudents();
-}
 // A aula de uma data pede avaliação? (mesma regra da linha do tempo, pra aula que ainda
 // não entrou nela, como a de hoje antes de terminar)
 function isEvalDue(s, iso){
@@ -3646,8 +3648,6 @@ function closeHistoryModal() {
 document.getElementById('historyModal').style.display = 'none';
 }
 
-// Seletor de motivo de "Não houve aula". Em "aluno faltou e avisou" pergunta se vai repor;
-// "professor cancelou" sempre gera reposição. onPick(reason, withMakeup).
 // Seletor "O que aconteceu?" (Cancelar aula / Não teve aula), igual em todos os lugares.
 // onPick(reason, makeup):
 //   "rescheduled" + { date, time }: remarcada para outro dia (data e horário obrigatórios);
@@ -3821,9 +3821,12 @@ div.classList.add("is-noclass");
 div.innerHTML = header(`<span class="badge-not-evaluated">${lesson.auto ? "Sem aula" : "Não houve aula"}</span>`) +
 (reason ? `<div class="noclass-reason">${escapeHtml(reason)}${lesson.auto ? " · automático" : ""}</div>` : "") +
 (makeupLine ? `<div class="noclass-makeup">${makeupLine}</div>` : "") +
-(lesson.auto ? `<div class="history-actions"><button type="button" class="btn-edit-toggle btn-had-class">Teve aula mesmo assim</button></div>` : "");
+(lesson.auto ? `<div class="history-actions"><button type="button" class="btn-edit-toggle btn-had-class">Teve aula mesmo assim</button></div>`
+: `<div class="history-actions"><button type="button" class="btn-edit-toggle btn-undo">Desfazer</button></div>`);
 const had = div.querySelector(".btn-had-class");
 if (had) had.onclick = () => { upsertLessonRecord(student, lesson, { status:"given" }); rerender(); };
+const undo = div.querySelector(".btn-undo");
+if (undo) undo.onclick = () => undoRecords([{ student, entry: lesson, time: lessonTimeOf(student, lesson) }]);
 return div;
 }
 
@@ -4123,10 +4126,13 @@ const cancelled = x.off || (x.record && isNoClass(x.record));
 const note = x.off ? x.off.label : (x.record && isNoClass(x.record)) ? noClassNote(x.student, x.record) : "";
 // Aula sem registro: o mesmo botão único (Cancelar aula / Não teve aula).
 let acts = "";
-if (!cancelled && !x.record) {
 const key = `a${dateStr}-${idx}`;
+if (!cancelled && !x.record) {
 quickTargets[key] = lessonTarget(x, cellDate);
 acts = `<span class="agenda-lesson-acts">${whatButtonHTML(key, quickTargets[key].phase)}</span>`;
+} else if (isUndoable(x.record)) {
+quickTargets[key] = { student: x.student, entry: x.record, time: x.time };
+acts = `<span class="agenda-lesson-acts">${undoButtonHTML(key)}</span>`;
 }
 return `<div class="agenda-lesson-item${cancelled ? " is-off" : ""}"><span class="agenda-lesson-time">${x.time}</span><span class="agenda-lesson-name">${escapeHtml(x.student.name)}${x.kind === "extra" ? ` <span class="badge-makeup">${extraLabel(x.student, x.makeupId)}</span>` : ""}</span>${note ? `<span class="agenda-lesson-note">${escapeHtml(note)}</span>` : ""}${acts}</div>`;
 }).join("")}</div>`
@@ -4280,6 +4286,7 @@ charge: "Oi, [nome]! Passando pra lembrar da mensalidade de [mês] (R$ [valor]).
 lessonMoved: "Sua aula ficou para [dia], [data], às [hora].",
 cancel: "Oi, [nome]! Hoje não vou conseguir dar a aula das [hora]. Vamos marcar uma reposição?",
 birthday: "Feliz aniversário, [aluno]! 🎉",
+lessonKept: "Oi, [nome]! A aula de [dia], [data], às [hora] está mantida. Até lá!",
 chargeItem: "Oi, [nome]! Passando pra lembrar do pagamento [referência] (R$ [valor]). Obrigado!"
 };
 const MESSAGE_LABELS = {
@@ -4287,6 +4294,7 @@ charge: { title:"Cobrar mensalidade", vars:"[nome] [aluno] [mês] [valor]" },
 lessonMoved: { title:"Aula marcada ou remarcada", vars:"[nome] [aluno] [dia] [data] [hora]" },
 cancel: { title:"Aula cancelada", vars:"[nome] [aluno] [hora] [data]" },
 birthday: { title:"Aniversário", vars:"[nome] [aluno]" },
+lessonKept: { title:"Aula mantida (depois de desfazer)", vars:"[nome] [aluno] [dia] [data] [hora]" },
 chargeItem: { title:"Cobrar aula avulsa ou pacote", vars:"[nome] [aluno] [referência] [valor]" }
 };
 const WEEKDAY_FULL = ["domingo","segunda-feira","terça-feira","quarta-feira","quinta-feira","sexta-feira","sábado"];
@@ -4473,7 +4481,7 @@ const s = x.student;
 const key = `p${iso}-${time}-${i}`;
 let actionsHtml;
 if (x.off) actionsHtml = `<span class="qa-note">${escapeHtml(x.off.label)}</span>`;
-else if (x.record) actionsHtml = `<span class="qa-note">${recordStatusText(x.record, s)}</span>`;
+else if (x.record) actionsHtml = `<div class="qa-row">${recordWithUndoHTML(key, x)}</div>`;
 else {
 quickTargets[key] = lessonTarget(x, date);
 actionsHtml = `<div class="qa-btns">${whatButtonHTML(key, quickTargets[key].phase)}</div>`;
@@ -4492,11 +4500,14 @@ bindQuickActions(body);
 const open = group.filter(x => !x.off && !x.record);
 const footer = document.getElementById("lpFooter");
 const phase = lessonPhase(date, time);
-footer.innerHTML = open.length > 1
+const undoable = group.filter(x => isUndoable(x.record));
+footer.innerHTML = (open.length > 1
 ? `<button type="button" class="btn-delete lp-cancel">${phase === "before" ? "Cancelar aula da turma" : "Não teve aula (turma)"}</button>`
-: "";
+: "") + (undoable.length > 1 ? `<button type="button" class="btn-link-muted lp-undo">Desfazer (turma)</button>` : "");
 const cbtn = footer.querySelector(".lp-cancel");
 if (cbtn) cbtn.onclick = () => openWhatHappened(open.map(x => ({ ...lessonTarget(x, date), extraFuture: false })));
+const ubtn = footer.querySelector(".lp-undo");
+if (ubtn) ubtn.onclick = () => undoRecords(undoable.map(x => ({ student: x.student, entry: x.record, time: x.time })));
 }
 
 function bindQuickActions(root){
@@ -4509,9 +4520,11 @@ runQuickAction(b.dataset.qa, t);
 }
 function runQuickAction(action, t){
 if (action === "what") return openWhatHappened([t]);
+if (action === "undo") return undoRecords([t]);
 }
-function openQuickModal(title, info, bodyEl, onSave, closeLabel){
+function openQuickModal(title, info, bodyEl, onSave, closeLabel, saveLabel){
 document.getElementById("quickLessonCancel").textContent = closeLabel || "Cancelar";
+document.getElementById("quickLessonSave").textContent = saveLabel || "Salvar";
 document.getElementById("quickLessonTitle").textContent = title;
 document.getElementById("quickLessonInfo").textContent = info;
 const body = document.getElementById("quickLessonBody");
@@ -4538,8 +4551,10 @@ applyWhatHappened(targets, reason, mk);
 }, { time: t0.time, extraFuture }), null, "Voltar");
 }
 // Grava o que aconteceu pra cada alvo e oferece o aviso no WhatsApp de cada aluno.
-// Devolve as linhas do painel de avisos criadas (pra poder tirar se desfizer).
+// Depois mostra "Aula marcada como … · Desfazer" no rodapé por alguns segundos.
+// Devolve as linhas do painel de avisos criadas.
 function applyWhatHappened(targets, reason, mk){
+const snaps = [...new Set(targets.map(t => t.student))].map(s => ({ s, had: Array.isArray(s.makeups), lessons: JSON.parse(JSON.stringify(s.lessons || [])), makeups: JSON.parse(JSON.stringify(s.makeups || [])) }));
 const rows = [];
 targets.forEach(t => {
 const s = t.student;
@@ -4557,10 +4572,136 @@ rows.push(offerAfterNoClass(s, reason, m, t.time, t.entry.date));
 });
 saveStudents();
 refreshAfterLessonChange(targets[0].student);
-return rows.filter(Boolean);
+const made = rows.filter(Boolean);
+// Desfazer na hora: volta as aulas e reposições desses alunos como estavam, sem perguntas.
+showUndoToast(whatDoneText(reason, mk, targets.length), () => {
+snaps.forEach(x => { x.s.lessons = x.lessons; if (x.had) x.s.makeups = x.makeups; else delete x.s.makeups; });
+made.forEach(r => { if (r.isConnected) removeWaRow(r); });
+saveStudents();
+refreshAfterLessonChange(targets[0].student);
+});
+return made;
+}
+function whatDoneText(reason, mk, n){
+const d = mk && mk.date ? formatDateShort(mk.date).slice(0,5) : "";
+if (reason === "move") return `Aula mudou para ${d}`;
+if (reason === "drop") return "Aula extra tirada da agenda";
+const what = { rescheduled: `remarcada para ${d}`, absent_notice: "falta avisada", absent_no_notice: "falta sem aviso", teacher_cancel: "cancelada pelo professor", holiday: "feriado/férias" }[reason] || "sem aula";
+return `${n > 1 ? "Aula da turma marcada" : "Aula marcada"} como ${what}`;
+}
+// Aviso rápido no rodapé com "Desfazer" (some sozinho em alguns segundos). Registros feitos
+// juntos (ex.: vários alunos no pop-up de avaliação) viram um aviso só.
+let undoToast = null;
+function showUndoToast(text, onUndo){
+if (undoToast && undoToast.el.isConnected && Date.now() - undoToast.at < 800) {
+undoToast.fns.push(onUndo);
+undoToast.el.querySelector(".undo-toast-msg").textContent = `${undoToast.fns.length} aulas registradas`;
+return;
+}
+if (undoToast) undoToast.el.remove();
+const el = document.createElement("div");
+el.className = "undo-toast";
+el.innerHTML = `<span class="undo-toast-msg">${escapeHtml(text)}</span><button type="button" class="undo-toast-btn">Desfazer</button>`;
+getToastStack().appendChild(el);
+const me = undoToast = { el, at: Date.now(), fns: [onUndo] };
+const close = () => { el.remove(); if (undoToast === me) undoToast = null; };
+el.querySelector(".undo-toast-btn").onclick = () => { close(); me.fns.slice().reverse().forEach(f => f()); };
+setTimeout(close, 7000);
 }
 
-// ===== Aniversários (birthDate) =====// ===== Aniversários (birthDate) =====
+// ===== Desfazer um registro de aula (falta, cancelamento, remarcação) =====
+// O registro sai e a aula volta a ser normal: dada automaticamente se já passou, prevista se
+// for no futuro. Se o registro gerou reposição/aula remarcada que ainda não aconteceu,
+// pergunta se tira ela também; se já aconteceu, ela fica.
+function isUndoable(rec){ return !!rec && !rec.virtual && !rec.auto && isNoClass(rec); }
+function undoButtonHTML(key, label = "Desfazer"){
+return `<button type="button" class="qa-btn muted qa-undo" data-qa="undo" data-qk="${key}">${label}</button>`;
+}
+// Registro (+ Desfazer, se der) de uma aula de getLessonsOnDate.
+function recordWithUndoHTML(key, x){
+const note = `<span class="qa-note">${recordStatusText(x.record, x.student)}</span>`;
+if (!isUndoable(x.record)) return note;
+quickTargets[key] = { student: x.student, entry: x.record, time: x.time };
+return note + undoButtonHTML(key);
+}
+// Situação da reposição/aula remarcada que nasceu do registro.
+function undoMakeupInfo(s, rec){
+if (!rec.makeupCreated) return null;
+const m = (s.makeups || []).find(x => x.id === rec.makeupCreated);
+if (!m || m.status === "dismissed") return null;
+if (m.status === "pending") return { m, state: "pending" };
+const d = dateFromIso(m.date);
+const happened = (s.lessons || []).some(l => l.makeupId === m.id) || new Date() >= lessonStart(d, m.time || getStudentTimeFor(s, d.getDay()));
+return { m, state: happened ? "happened" : "future" };
+}
+function makeupWhenText(s, m){
+const d = dateFromIso(m.date);
+return `${formatDateShort(m.date).slice(0,5)} às ${m.time || getStudentTimeFor(s, d.getDay())}`;
+}
+function removeLessonRecord(s, rec){
+// Com anotações, o registro fica como aula dada (não perde o que foi escrito).
+if (rec.taught || rec.homework) { rec.status = "given"; delete rec.reason; delete rec.makeupCreated; return; }
+s.lessons = (s.lessons || []).filter(l => l !== rec);
+}
+// items: [{ student, entry (o registro), time }]
+function undoRecords(items){
+items = items.filter(t => isUndoable(t.entry));
+if (!items.length) return;
+const infos = items.map(t => undoMakeupInfo(t.student, t.entry));
+const asks = items.map((t, i) => ({ t, info: infos[i] })).filter(x => x.info && (x.info.state === "future" || x.info.state === "pending"));
+if (!asks.length) { finishUndo(items, infos, new Map()); return; }
+const body = document.createElement("div");
+body.innerHTML = asks.map((x, i) => {
+const who = items.length > 1 ? `${escapeHtml(firstName(x.t.student.name))}: r` : "R";
+const q = x.info.state === "pending" ? `${who}emover também a reposição pendente?` : `${who}emover também a aula de ${makeupWhenText(x.t.student, x.info.m)}?`;
+const keep = x.info.state === "pending" ? "Não, manter nas reposições pendentes" : "Não, manter como aula extra";
+return `<div class="undo-q" data-undo-q="${i}"><div class="undo-q-title">${q}</div><div class="reason-chips">
+<button type="button" class="filter-chip selected" data-undo-ans="yes">Sim</button>
+<button type="button" class="filter-chip" data-undo-ans="no">${keep}</button>
+</div></div>`;
+}).join("");
+body.querySelectorAll("[data-undo-ans]").forEach(b => b.onclick = () => {
+b.parentElement.querySelectorAll("[data-undo-ans]").forEach(x => x.classList.toggle("selected", x === b));
+});
+const t0 = items[0];
+openQuickModal(items.length > 1 ? `Desfazer (turma) · ${t0.time}` : `Desfazer · ${t0.student.name}`,
+`Aula de ${t0.entry.date.slice(0,5)}${t0.time ? " às " + t0.time : ""} volta a ser uma aula normal.`, body, () => {
+const choice = new Map(asks.map((x, i) => [x.t, !!body.querySelector(`[data-undo-q="${i}"] [data-undo-ans="yes"].selected`)]));
+closeQuickModal();
+finishUndo(items, infos, choice);
+}, "Voltar", "Desfazer");
+}
+function finishUndo(items, infos, removeChoice){
+const kept = [];
+items.forEach((t, i) => {
+const s = t.student, info = infos[i];
+removeLessonRecord(s, t.entry);
+if (info && info.state !== "happened") {
+if (removeChoice.get(t)) s.makeups = (s.makeups || []).filter(x => x !== info.m);
+else if (info.state === "future") info.m.kind = "single"; // fica como aula extra
+} else if (info) kept.push(`${firstName(s.name)}: a aula de ${makeupWhenText(s, info.m)} já aconteceu e continua no histórico.`);
+});
+saveStudents();
+refreshAfterLessonChange(items[0].student);
+// Aula que ainda não começou: oferece avisar que ela está mantida.
+items.forEach(t => {
+const d = dateFromIso(isoFromBr(t.entry.date));
+const time = t.time || lessonTimeOf(t.student, t.entry);
+if (new Date() >= lessonStart(d, time)) return;
+offerMessage(t.student, "lessonKept", { dia: WEEKDAY_FULL[d.getDay()], data: t.entry.date.slice(0,5), hora: time }, `Aula de ${firstName(t.student.name)} de ${t.entry.date.slice(0,5)} mantida.`);
+});
+if (kept.length) showInfoToast(kept.join(" "));
+}
+function showInfoToast(text){
+const el = document.createElement("div");
+el.className = "action-toast";
+el.innerHTML = `<span class="action-toast-msg">${escapeHtml(text)}</span><button type="button" class="action-toast-close" aria-label="Fechar">✕</button>`;
+getToastStack().appendChild(el);
+el.querySelector(".action-toast-close").onclick = () => el.remove();
+setTimeout(() => el.remove(), 9000);
+}
+
+// ===== Aniversários (birthDate) =====
 // Próximo aniversário a partir de hoje (29/02 vira 28/02 em ano que não é bissexto).
 function birthdayThisYear(birthIso, year){
 const [, m, d] = birthIso.split("-").map(Number);
@@ -4691,18 +4832,17 @@ const hw = live.map(x => ({ s:x.student, l:getLastHomework(x.student, iso) })).f
 const hwHtml = hw.map(x => `<div class="hw-line"><span class="hw-label">Para casa${g.length>1 ? " · " + escapeHtml(x.s.name.split(" ")[0]) : ""}:</span> ${escapeHtml(x.l.homework)}</div>`).join("");
 const offNote = live.length === 0 ? (g.find(x => x.off)?.off.label || "") : "";
 
-// Hoje: um botão por aluno (Cancelar aula / Não teve aula) ou o que já foi registrado.
+// Hoje: um botão por aluno (Cancelar aula / Não teve aula) ou o que já foi registrado (com
+// "Desfazer"). Nos outros dias só aparece o que já foi registrado (ex.: aula cancelada).
 let qaHtml = "";
-if (offset === 0) {
-const rows = g.filter(x => !x.off).map((x, i) => {
+const rows = g.filter(x => !x.off && (offset === 0 || x.record)).map((x, i) => {
 const label = g.length > 1 ? `<span class="qa-name">${escapeHtml(x.student.name.split(" ")[0])}</span>` : "";
-if (x.record) return `<div class="qa-row">${label}<span class="qa-note">${recordStatusText(x.record, x.student)}</span></div>`;
-const key = `t${time}-${i}`;
+const key = `t${iso}-${time}-${i}`;
+if (x.record) return `<div class="qa-row">${label}${recordWithUndoHTML(key, x)}</div>`;
 quickTargets[key] = lessonTarget(x, date);
 return `<div class="qa-row">${label}<div class="qa-btns">${whatButtonHTML(key, quickTargets[key].phase)}</div></div>`;
 });
 if (rows.length) { qaHtml = `<div class="qa-rows">${rows.join("")}</div>`; card.classList.add("has-qa"); }
-}
 
 card.classList.add("card-tappable");
 card.onclick = () => openLessonPanel(date, time);
@@ -4978,7 +5118,7 @@ document.getElementById("makeupModalInfo").textContent = single
 document.getElementById("makeupDateInput").value = m.date || "";
 document.getElementById("makeupTimeInput").value = m.time || s.time || "";
 const unBtn = document.getElementById("makeupUnscheduleBtn");
-unBtn.textContent = single ? "Cancelar esta aula" : moved ? "Desfazer remarcação (volta pro dia original)" : "Desmarcar (volta para as pendentes)";
+unBtn.textContent = single ? "Cancelar esta aula" : moved ? "Desfazer (a aula volta pro dia original)" : "Desmarcar (volta para as pendentes)";
 unBtn.style.display = scheduled ? "" : "none";
 document.getElementById("makeupModal").classList.add("show");
 }
@@ -4991,7 +5131,7 @@ if (currentPage === "home") renderHome();
 if (currentPage === "agenda") renderAgenda();
 if (currentPage === "students") renderStudents();
 if (currentPage === "evaluation") renderEvaluation();
-if (s && document.getElementById("historyModal").classList.contains("show") && document.getElementById("modalStudentName").textContent === s.name) renderHistoryContent(s);
+if (s && document.getElementById("historyModal").style.display === "flex" && document.getElementById("modalStudentName").textContent === s.name) renderHistoryContent(s);
 if (agendaModalDate && document.getElementById("holidayInfoModal").classList.contains("show")) openAgendaDayModal(agendaModalDate);
 refreshLessonPanel();
 }
@@ -5018,8 +5158,17 @@ offerLessonMessage(s, m);
 document.getElementById("makeupUnscheduleBtn").onclick = () => {
 if (!editingMakeup) return;
 const { s, m } = editingMakeup;
+if (m.reason === "rescheduled" && m.kind !== "single") {
+// Desfazer: tira a aula nova e o registro "Remarcada" da original (mesmo "Desfazer" das aulas).
+const origin = (s.lessons || []).find(l => l.makeupCreated === m.id);
+closeMakeupModal();
+if (origin) { const item = { student: s, entry: origin, time: lessonTimeOf(s, origin) }; finishUndo([item], [{ m, state: "future" }], new Map([[item, true]])); return; }
+s.makeups = (s.makeups || []).filter(x => x !== m);
+saveStudents();
+refreshAfterLessonChange(s);
+return;
+}
 if (m.kind === "single") s.makeups = (s.makeups || []).filter(x => x !== m);
-else if (m.reason === "rescheduled") undoReschedule(s, m);
 else { m.status = "pending"; delete m.date; delete m.time; }
 afterMakeupChange();
 };
