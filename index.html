@@ -830,7 +830,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .bday-title{flex:1;min-width:0;font-size:0.8125rem;font-weight:700;color:var(--text);overflow-wrap:break-word}
 .bday-sub{font-weight:600;color:var(--muted)}
 .bday-week{font-size:0.75rem;color:var(--muted);font-weight:600;margin:0 0.375rem 0.5rem;line-height:1.45}
-.card.has-qa{flex-wrap:wrap}
+.card .status.off{white-space:normal;max-width:8.5rem;line-height:1.25}
 .card-tappable{cursor:pointer}
 .lp-head{display:flex;justify-content:space-between;align-items:flex-start;gap:0.75rem;margin-bottom:1rem}
 .lp-sub{font-size:0.8125rem;color:var(--muted);font-weight:600;margin-top:0.3125rem;font-variant-numeric:tabular-nums}
@@ -856,6 +856,9 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .qa-btn.muted{border-color:rgba(148,163,184,.25);background:var(--glass-inset);color:var(--text-2)}
 .agenda-lesson-acts{flex-basis:100%;display:flex;gap:0.375rem;justify-content:flex-end;align-items:center}
 .qa-undo{padding:0.25rem 0.625rem}
+.qa-btn.qa-subtle{padding:0.25rem 0.625rem;background:transparent;border-color:rgba(148,163,184,.2);color:var(--muted);font-weight:650}
+.btn-edit-toggle.btn-subtle{background:transparent;border-color:rgba(148,163,184,.25);color:var(--muted)}
+.wa-pill{align-self:flex-end;border:0.0625rem solid rgba(74,222,128,.4);background:var(--glass-fill-strong);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);color:#86efac;border-radius:var(--radius-pill);padding:0.5rem 0.875rem;font-size:0.75rem;font-weight:750;box-shadow:var(--shadow-sm);cursor:pointer;animation:toastIn .25s var(--ease-out)}
 .undo-toast{display:flex;align-items:center;gap:0.625rem;padding:0.625rem 0.75rem 0.625rem 0.875rem;border-radius:var(--radius-pill);border:0.0625rem solid var(--glass-border);background:var(--glass-fill-strong);
   -webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:var(--shadow-sm);animation:toastIn .25s var(--ease-out)}
 .undo-toast-msg{flex:1;min-width:0;font-size:0.8125rem;font-weight:600;color:var(--text);line-height:1.35}
@@ -3628,6 +3631,15 @@ if (!m) return "";
 if (m.status === "scheduled" && m.date) return ` · reposição ${formatDateShort(m.date).slice(0,5)}${m.time ? " " + m.time : ""}`;
 return m.status === "pending" ? " · reposição pendente" : "";
 }
+// Selo do card do Início quando não teve aula (ex.: "Cancelada · reposição 30/09").
+function cardReasonText(student, rec){
+if (!isNoClass(rec)) return isEvaluated(rec) ? "Avaliada" : "Dada";
+if (rec.reason === "rescheduled") return noClassNote(student, rec).replace(/ às .*$/, "");
+const base = { teacher_cancel:"Cancelada", absent_notice:"Faltou (avisou)", absent_no_notice:"Faltou", holiday:"Feriado/férias" }[rec.reason] || "Sem aula";
+const m = rec.makeupCreated ? (student.makeups || []).find(x => x.id === rec.makeupCreated) : null;
+if (m && m.status === "scheduled" && m.date) return `${base} · reposição ${formatDateShort(m.date).slice(0,5)}`;
+return m && m.status === "pending" ? `${base} · reposição pendente` : base;
+}
 function recordStatusText(rec, student){
 if (isNoClass(rec)) { const t = noClassNote(student, rec) + makeupShortText(student, rec); return t.charAt(0).toLowerCase() + t.slice(1); }
 return isEvaluated(rec) ? "✓ avaliada" : "✓ dada";
@@ -4107,7 +4119,9 @@ div.innerHTML = header(`<span class="badge-evaluated">Avaliada</span>`) + `
 ${lessonCriteria(lesson).map(c=>`<div class="criterion-row"><span>${escapeHtml(c.label)}</span><div class="criterion-stars">${starsDisplayHTML(Number(lesson[c.key]))}</div></div>`).join('')}
 </div>
 ${lessonNotesHTML(lesson)}
-<div class="history-actions"><button type="button" class="btn-edit-toggle btn-notes">${lesson.taught || lesson.homework ? "Editar anotações" : "Anotar a aula"}</button></div>`;
+<div class="reason-slot"></div>
+<div class="history-actions"><button type="button" class="btn-edit-toggle btn-noclass btn-subtle">Não teve aula</button><button type="button" class="btn-edit-toggle btn-notes">${lesson.taught || lesson.homework ? "Editar anotações" : "Anotar a aula"}</button></div>`;
+attachNoClassButton(div, student, lesson, rerender);
 attachNotesToggle(div, student, lesson, rerender);
 return div;
 }
@@ -4136,21 +4150,13 @@ div.innerHTML = header(isPending ? `<span class="badge-not-evaluated">Aguardando
 (isPending ? `<div class="eval-criteria-wrap"></div>${notesEditorHTML(lesson)}` : lessonNotesHTML(lesson)) +
 `<div class="reason-slot"></div>
 <div class="history-actions">
-<button type="button" class="btn-edit-toggle btn-noclass">Não teve aula</button>
+<button type="button" class="btn-edit-toggle btn-noclass${lesson.virtual ? "" : " btn-subtle"}">Não teve aula</button>
 ${isPending
 ? `<button type="button" class="btn-edit-toggle btn-skip-eval">Pular avaliação</button><button type="button" class="save btn-save-eval">Salvar avaliação</button>`
 : `<button type="button" class="btn-edit-toggle btn-notes">${lesson.taught || lesson.homework ? "Editar anotações" : "Anotar a aula"}</button>`}
 </div>`;
 
-div.querySelector('.btn-noclass').onclick = () => {
-const slot = div.querySelector('.reason-slot');
-if (slot.firstChild) { slot.innerHTML = ""; return; }
-const time = lessonTimeOf(student, lesson);
-slot.appendChild(buildReasonPicker((reason, mk) => {
-applyWhatHappened([{ student, entry: lesson, time, phase: "after" }], reason, mk);
-rerender();
-}, { time }));
-};
+attachNoClassButton(div, student, lesson, rerender);
 const skip = div.querySelector('.btn-skip-eval');
 if (skip) skip.onclick = () => { upsertLessonRecord(student, lesson, { status: "given", evalSkipped: true }); rerender(); };
 
@@ -4179,6 +4185,21 @@ return div;
 }
 
 // Botão "Anotar a aula": abre os dois campos de texto no próprio cartão.
+// "Não teve aula" no cartão do histórico: abre o seletor ali mesmo. Aula com anotações ou
+// avaliação pergunta antes de apagar.
+function attachNoClassButton(div, student, lesson, rerender){
+const btn = div.querySelector('.btn-noclass');
+if (!btn) return;
+btn.onclick = () => {
+const slot = div.querySelector('.reason-slot');
+if (slot.firstChild) { slot.innerHTML = ""; return; }
+const time = lessonTimeOf(student, lesson);
+const targets = [{ student, entry: lesson, time, phase: "after" }];
+slot.appendChild(buildReasonPicker((reason, mk) => {
+confirmOverwrite(targets, () => { applyWhatHappened(targets, reason, mk); rerender(); });
+}, { time }));
+};
+}
 function attachNotesToggle(div, student, lesson, rerender){
 const btn = div.querySelector('.btn-notes');
 if (!btn) return;
@@ -4674,34 +4695,63 @@ else new MutationObserver(sync).observe(st, { childList: true, subtree: true });
 }
 return st;
 }
-let waPanel = null;
-function closeWaPanel(){ if (waPanel) waPanel.remove(); waPanel = null; }
+// Depois de ~8 s sem mexer, o painel recolhe pra um botão pequeno "Avisar (N)" no canto, que
+// reabre ao tocar. Some sozinho quando todos os avisos foram enviados ou fechados.
+let waPanel = null, waPill = null, waTimer = null;
+function closeWaPanel(){ if (waPanel) waPanel.remove(); if (waPill) waPill.remove(); waPanel = waPill = null; clearTimeout(waTimer); }
+function waPendingCount(){ return waPanel ? waPanel.querySelectorAll(".wa-row:not(.done)").length : 0; }
+function armWaCollapse(){ clearTimeout(waTimer); waTimer = setTimeout(collapseWaPanel, 8000); }
+function collapseWaPanel(){
+if (!waPanel || !document.body.contains(waPanel)) return;
+const n = waPendingCount();
+if (!n) { closeWaPanel(); return; }
+waPanel.style.display = "none";
+if (!waPill) {
+waPill = document.createElement("button");
+waPill.type = "button";
+waPill.className = "wa-pill";
+waPill.onclick = expandWaPanel;
+getToastStack().appendChild(waPill);
+}
+waPill.textContent = `Avisar (${n})`;
+}
+function expandWaPanel(){
+if (waPill) { waPill.remove(); waPill = null; }
+if (waPanel) { waPanel.style.display = ""; armWaCollapse(); }
+}
 function ensureWaPanel(){
-if (waPanel && document.body.contains(waPanel)) return waPanel;
+if (waPanel && document.body.contains(waPanel)) { expandWaPanel(); return waPanel; }
 waPanel = document.createElement("div");
 waPanel.className = "wa-panel";
 waPanel.innerHTML = `<div class="wa-panel-head"><span>Avisar os alunos</span><button type="button" class="action-toast-close" aria-label="Fechar">✕</button></div><div class="wa-panel-rows"></div>`;
 waPanel.querySelector(".action-toast-close").onclick = closeWaPanel;
+["pointerdown", "focusin", "scroll"].forEach(ev => waPanel.addEventListener(ev, armWaCollapse, true));
 getToastStack().appendChild(waPanel);
+armWaCollapse();
 return waPanel;
 }
-// Devolve a linha criada (pra poder tirar se a ação for desfeita).
-function addWaRow(s, text, href){
+// Tudo enviado ou fechado: o painel some (com uma folga pro WhatsApp abrir).
+function checkWaDone(){ if (waPanel && !waPendingCount()) setTimeout(() => { if (!waPendingCount()) closeWaPanel(); }, 1200); }
+// Devolve a linha criada (pra poder tirar se a ação for desfeita). s = aluno (sem telefone,
+// o botão abre o cadastro dele) ou null (ex.: pessoa da lista de espera).
+function addWaRow(s, text, href, btnLabel){
 const panel = ensureWaPanel();
 const row = document.createElement("div");
 row.className = "wa-row";
-row.innerHTML = `<span class="wa-row-msg">${escapeHtml(text)}${href ? "" : " Sem telefone pra avisar."}</span>${href
-? `<a class="wa-btn" href="${href}" target="_blank" rel="noopener">Avisar no WhatsApp</a>`
-: `<button type="button" class="wa-btn wa-btn-muted">Cadastrar telefone</button>`}<button type="button" class="wa-row-close" aria-label="Tirar da lista">✕</button>`;
+row.innerHTML = `<span class="wa-row-msg">${escapeHtml(text)}${href || !s ? "" : " Sem telefone pra avisar."}</span>${href
+? `<a class="wa-btn" href="${href}" target="_blank" rel="noopener">${escapeHtml(btnLabel || "Avisar no WhatsApp")}</a>`
+: s ? `<button type="button" class="wa-btn wa-btn-muted">Cadastrar telefone</button>` : ""}<button type="button" class="wa-row-close" aria-label="Tirar da lista">✕</button>`;
 const btn = row.querySelector(".wa-btn");
-btn.addEventListener("click", () => { row.classList.add("done"); if (!href) openContactField(s); });
+if (btn) btn.addEventListener("click", () => { row.classList.add("done"); if (!href) openContactField(s); checkWaDone(); });
+else row.classList.add("done"); // só informação: não segura o painel aberto
 row.querySelector(".wa-row-close").onclick = () => removeWaRow(row);
 panel.querySelector(".wa-panel-rows").appendChild(row);
 return row;
 }
 function removeWaRow(row){
 row.remove();
-if (waPanel && !waPanel.querySelector(".wa-row")) closeWaPanel();
+if (waPanel && (!waPanel.querySelector(".wa-row") || !waPendingCount())) closeWaPanel();
+else if (waPill) waPill.textContent = `Avisar (${waPendingCount()})`;
 }
 function offerMessage(s, key, vars, doneText){
 return addWaRow(s, doneText, waMessageLink(s, key, vars));
@@ -4729,8 +4779,8 @@ let quickTargets = {};
 // abrem o seletor "O que aconteceu?". Aula extra que ainda não aconteceu: "Mudar data" /
 // "Não vai mais acontecer".
 function lessonPhase(dateObj, time){ return new Date() < lessonStart(dateObj, time) ? "before" : "after"; }
-function whatButtonHTML(key, phase){
-return `<button type="button" class="qa-btn muted" data-qa="what" data-qk="${key}">${phase === "before" ? "Cancelar aula" : "Não teve aula"}</button>`;
+function whatButtonHTML(key, phase, subtle){
+return `<button type="button" class="qa-btn muted${subtle ? " qa-subtle" : ""}" data-qa="what" data-qk="${key}">${phase === "before" ? "Cancelar aula" : "Não teve aula"}</button>`;
 }
 // Alvo de uma ação a partir de uma aula de getLessonsOnDate.
 function lessonTarget(x, dateObj){
@@ -4790,8 +4840,12 @@ const s = x.student;
 const key = `p${iso}-${time}-${i}`;
 let actionsHtml;
 if (x.off) actionsHtml = `<span class="qa-note">${escapeHtml(x.off.label)}</span>`;
-else if (x.record) actionsHtml = `<div class="qa-row">${recordWithUndoHTML(key, x)}</div>`;
-else {
+else if (x.record && isNoClass(x.record)) actionsHtml = `<div class="qa-row">${recordWithUndoHTML(key, x)}</div>`;
+else if (x.record) {
+// Dada/avaliada/anotada: continua dando pra marcar que não teve aula (mais discreto).
+quickTargets[key] = lessonTarget(x, date);
+actionsHtml = `<div class="qa-row"><span class="qa-note">${recordStatusText(x.record, s)}</span>${whatButtonHTML(key, quickTargets[key].phase, true)}</div>`;
+} else {
 quickTargets[key] = lessonTarget(x, date);
 actionsHtml = `<div class="qa-btns">${whatButtonHTML(key, quickTargets[key].phase)}</div>`;
 }
@@ -4807,8 +4861,9 @@ ${noteable.includes(x) ? todayNotesHTML(x, date, i, noteable.length > 1) : ""}
 }).join("");
 bindQuickActions(body);
 bindTodayNotes(body, noteable, date);
-// Turma: um botão que age em todos que ainda não têm registro (cada bloco tem o seu também).
-const open = group.filter(x => !x.off && !x.record);
+// Turma: um botão que age em todos que ainda não têm registro de "não teve aula" (cada bloco
+// tem o seu também), mesmo com anotações/avaliação.
+const open = group.filter(x => !x.off && !(x.record && isNoClass(x.record)));
 const footer = document.getElementById("lpFooter");
 const phase = lessonPhase(date, time);
 const undoable = group.filter(x => isUndoable(x.record));
@@ -4915,8 +4970,23 @@ const names = targets.length > 1 ? ` · ${targets.map(t => firstName(t.student.n
 const extraFuture = targets.length === 1 && t0.extraFuture;
 openQuickModal(title, `${t0.entry.date}${t0.time ? " às " + t0.time : ""}${names}${extraFuture ? ` · ${extraLabel(t0.student, t0.entry.makeupId).toLowerCase()}` : ""}.`, buildReasonPicker((reason, mk) => {
 closeQuickModal();
-applyWhatHappened(targets, reason, mk);
+if (reason === "move" || reason === "drop") return applyWhatHappened(targets, reason, mk);
+confirmOverwrite(targets, () => applyWhatHappened(targets, reason, mk));
 }, { time: t0.time, extraFuture }), null, "Voltar");
+}
+// Registro salvo da aula (se já existir) no lugar da entrada virtual da linha do tempo.
+function resolveEntry(s, e){
+if (!e.virtual) return e;
+return (s.lessons || []).find(l => l.date === e.date && (e.makeupId ? l.makeupId === e.makeupId : !l.makeupId)) || e;
+}
+function lessonHasContent(e){ return !!e && !e.virtual && !isNoClass(e) && (isEvaluated(e) || !!e.taught || !!e.homework); }
+// Aula com anotações/avaliação: pergunta antes de apagar e marcar como não teve aula.
+function confirmOverwrite(targets, go){
+const withContent = targets.filter(t => lessonHasContent(resolveEntry(t.student, t.entry)));
+if (!withContent.length) return go();
+const body = document.createElement("div");
+body.innerHTML = `<div class="undo-q-title">${targets.length > 1 ? `${withContent.map(t => escapeHtml(firstName(t.student.name))).join(", ")}: e` : "E"}ssa aula tem anotações/avaliação. Apagar e marcar como não teve aula?</div>`;
+openQuickModal("Não teve aula", "O \"Desfazer\" do rodapé devolve as anotações e a avaliação.", body, () => { closeQuickModal(); go(); }, "Voltar", "Apagar e marcar");
 }
 // Grava o que aconteceu pra cada alvo e oferece o aviso no WhatsApp de cada aluno.
 // Depois mostra "Aula marcada como … · Desfazer" no rodapé por alguns segundos.
@@ -4934,8 +5004,11 @@ else if (m.kind === "single") s.makeups = s.makeups.filter(x => x !== m);
 else { m.status = "pending"; delete m.date; delete m.time; }
 return;
 }
-if (reason === "rescheduled") { rows.push(offerLessonMessage(s, rescheduleLesson(s, t.entry, mk.date, mk.time))); return; }
-const m = recordNoClass(s, t.entry, reason, mk);
+// Registro já salvo (dada, avaliada, anotada): apaga o conteúdo antes de marcar.
+const entry = resolveEntry(s, t.entry);
+if (!entry.virtual && !isNoClass(entry)) Object.keys(entry).forEach(k => { if (k !== "date" && k !== "makeupId") delete entry[k]; });
+if (reason === "rescheduled") { rows.push(offerLessonMessage(s, rescheduleLesson(s, entry, mk.date, mk.time))); return; }
+const m = recordNoClass(s, entry, reason, mk);
 rows.push(offerAfterNoClass(s, reason, m, t.time, t.entry.date));
 });
 saveStudents();
@@ -5183,7 +5256,9 @@ let statusClass = "upcoming";
 const live = realLessons(g);
 if (live.length === 0) {
 statusClass = "off";
-statusText = g.some(x => x.off && x.off.kind === "break") ? "Férias" : g.some(x => x.off) ? "Feriado" : "Sem aula";
+// Sem aula por registro: o selo diz o motivo (ex.: "Cancelada · reposição 30/09").
+const reasons = [...new Set(g.filter(x => !x.off && x.record).map(x => cardReasonText(x.student, x.record)))];
+statusText = g.some(x => x.off && x.off.kind === "break") ? "Férias" : g.some(x => x.off) ? "Feriado" : reasons.length === 1 ? reasons[0] : "Sem aula";
 card.classList.add("is-off");
 } else if (offset === 0) {
 if (now >= endTime) {
@@ -5200,22 +5275,11 @@ const hw = live.map(x => ({ s:x.student, l:getLastHomework(x.student, iso) })).f
 const hwHtml = hw.map(x => `<div class="hw-line"><span class="hw-label">Para casa${g.length>1 ? " · " + escapeHtml(x.s.name.split(" ")[0]) : ""}:</span> ${escapeHtml(x.l.homework)}</div>`).join("");
 const offNote = live.length === 0 ? (g.find(x => x.off)?.off.label || "") : "";
 
-// Hoje: um botão por aluno (Cancelar aula / Não teve aula) ou o que já foi registrado (com
-// "Desfazer"). Nos outros dias só aparece o que já foi registrado (ex.: aula cancelada).
-let qaHtml = "";
-const rows = g.filter(x => !x.off && (offset === 0 || x.record)).map((x, i) => {
-const label = g.length > 1 ? `<span class="qa-name">${escapeHtml(x.student.name.split(" ")[0])}</span>` : "";
-const key = `t${iso}-${time}-${i}`;
-if (x.record) return `<div class="qa-row">${label}${recordWithUndoHTML(key, x)}</div>`;
-quickTargets[key] = lessonTarget(x, date);
-return `<div class="qa-row">${label}<div class="qa-btns">${whatButtonHTML(key, quickTargets[key].phase)}</div></div>`;
-});
-if (rows.length) { qaHtml = `<div class="qa-rows">${rows.join("")}</div>`; card.classList.add("has-qa"); }
-
+// O card fica só com a linha de cima; as ações (Cancelar aula / Não teve aula / Desfazer /
+// anotações) ficam no painel da aula, que abre ao tocar no card.
 card.classList.add("card-tappable");
 card.onclick = () => openLessonPanel(date, time);
-card.innerHTML=`<div class="time">${time}</div>${avatarsHtml}<div class="info"><div class="name">${names}</div><div class="instrument">${escapeHtml(instruments)}${g.length>1?" · grupo":" · ind."}${extraKinds.map(k => " · " + k).join("")}${offNote ? " · " + escapeHtml(offNote) : ""}</div>${hwHtml}</div><div class="status ${statusClass}">${statusText}</div>${qaHtml}`;
-bindQuickActions(card);
+card.innerHTML=`<div class="time">${time}</div>${avatarsHtml}<div class="info"><div class="name">${names}</div><div class="instrument">${escapeHtml(instruments)}${g.length>1?" · grupo":" · ind."}${extraKinds.map(k => " · " + k).join("")}${offNote ? " · " + escapeHtml(offNote) : ""}</div>${hwHtml}</div><div class="status ${statusClass}">${escapeHtml(statusText)}</div>`;
 card.querySelectorAll("[data-home-student]").forEach(b=>{
 b.onclick=(e)=>{ e.stopPropagation(); openStudentFromHome(Number(b.dataset.homeStudent)); }});
 section.appendChild(card);
