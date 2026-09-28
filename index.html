@@ -858,6 +858,38 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .qa-undo{padding:0.25rem 0.625rem}
 .qa-btn.qa-subtle{padding:0.25rem 0.625rem;background:transparent;border-color:rgba(148,163,184,.2);color:var(--muted);font-weight:650}
 .btn-edit-toggle.btn-subtle{background:transparent;border-color:rgba(148,163,184,.25);color:var(--muted)}
+.agenda-quick{display:flex;gap:0.5rem;margin:0 0 0.875rem}
+.agenda-quick .btn-historico{flex:1;justify-content:center}
+.work-hours-rows{display:grid;gap:0.4375rem}
+.wh-row{display:flex;align-items:center;gap:0.5rem}
+.wh-day{width:2.5rem;font-size:0.75rem;font-weight:700;color:var(--text-2)}
+.wh-row input{flex:1;min-width:0;background:var(--glass-field);border:0.0625rem solid rgba(148,163,184,.18);color:var(--text);border-radius:var(--radius-sm);padding:0.5rem 0.625rem;color-scheme:dark}
+.wh-sep{font-size:0.75rem;color:var(--muted)}
+.fs-day{padding:0.625rem 0;border-top:0.0625rem solid var(--hairline)}
+.fs-day:first-child{border-top:none}
+.fs-day-name{font-size:0.75rem;font-weight:750;color:var(--text-2);margin-bottom:0.375rem}
+.fs-chips{display:flex;flex-wrap:wrap;gap:0.375rem}
+.fs-chip{font-size:0.75rem;font-weight:700;color:var(--accent);background:var(--accent-soft);border:0.0625rem solid var(--accent-line);border-radius:var(--radius-pill);padding:0.25rem 0.625rem}
+.fs-none{font-size:0.75rem;color:var(--muted)}
+.wl-item{display:flex;flex-direction:column;gap:0.5rem;padding:0.75rem 0;border-top:0.0625rem solid var(--hairline)}
+.wl-item:first-child{border-top:none}
+.wl-name{font-size:0.875rem;font-weight:700;color:var(--text)}
+.wl-sub{font-size:0.75rem;color:var(--muted);margin-top:0.125rem}
+.wl-notes{font-size:0.75rem;color:var(--text-2);margin-top:0.25rem;overflow-wrap:break-word}
+.wl-acts{display:flex;flex-wrap:wrap;align-items:center;gap:0.375rem}
+.wl-acts .btn-link-inline{margin-left:auto}
+.risk-badge{display:inline-block;margin-top:0.1875rem;font-size:0.5625rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--orange);background:rgba(251,146,60,.1);border:0.0625rem solid rgba(251,146,60,.35);padding:0.125rem 0.4375rem;border-radius:var(--radius-pill)}
+.sheet-risk{display:flex;flex-wrap:wrap;align-items:center;gap:0.5rem;margin:-0.25rem 0 0.75rem;padding:0.625rem 0.75rem;border-radius:var(--radius-md);border:0.0625rem solid rgba(251,146,60,.35);background:rgba(251,146,60,.07);font-size:0.8125rem;font-weight:650;color:var(--orange)}
+.sheet-risk span{flex:1;min-width:10rem}
+.sheet-risk .wa-btn{padding:0.3125rem 0.75rem}
+.attention-line{display:flex;align-items:center;justify-content:space-between;gap:0.5rem;width:100%;margin:0.75rem 0 0.25rem;padding:0.625rem 0.875rem;border-radius:var(--radius-md);border:0.0625rem solid rgba(251,146,60,.35);background:rgba(251,146,60,.07);color:var(--orange);font-size:0.8125rem;font-weight:700;text-align:left;cursor:pointer}
+.attention-line span:last-child{font-size:0.75rem;color:var(--text-2)}
+.makeup-late{color:var(--orange);font-weight:700}
+.makeup-row.is-late{border-color:rgba(251,146,60,.4)}
+.makeup-giveup{display:block;margin-top:0.25rem;color:var(--orange)}
+.ms-preview{white-space:pre-wrap;font-size:0.8125rem;line-height:1.5;color:var(--text-2);background:var(--glass-inset);border:0.0625rem solid var(--hairline);border-radius:var(--radius-md);padding:0.75rem;max-height:40vh;overflow:auto}
+.ms-actions{display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.75rem}
+.ms-actions > *{flex:1;justify-content:center;text-align:center}
 .wa-pill{align-self:flex-end;border:0.0625rem solid rgba(74,222,128,.4);background:var(--glass-fill-strong);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);color:#86efac;border-radius:var(--radius-pill);padding:0.5rem 0.875rem;font-size:0.75rem;font-weight:750;box-shadow:var(--shadow-sm);cursor:pointer;animation:toastIn .25s var(--ease-out)}
 .undo-toast{display:flex;align-items:center;gap:0.625rem;padding:0.625rem 0.75rem 0.625rem 0.875rem;border-radius:var(--radius-pill);border:0.0625rem solid var(--glass-border);background:var(--glass-fill-strong);
   -webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:var(--shadow-sm);animation:toastIn .25s var(--ease-out)}
@@ -1516,6 +1548,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 <div class="home-message-status" id="homeMessageStatus"></div>
 <div class="home-message-phrase" id="homeMessagePhrase"></div>
 </div>
+<div id="attentionBox"></div>
 <!-- Ordem do Início: aulas primeiro; depois reposições, aniversários e, por último,
      cobranças. -->
 <div id="nextDays"></div>
@@ -1585,6 +1618,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 </div>
 </div>
 <button type="button" class="pending-banner" id="pendingBanner" style="display:none"></button>
+<button type="button" class="pending-banner attention-bar" id="attentionFilterBar" style="display:none"></button>
 <div class="perf-search-panel" id="studentSearchPanel" style="display:none;margin-top:0;padding-top:0;border-top:none">
 <div class="search-input-wrap">
 <input type="text" id="studentSearchInput" class="student-picker-search" placeholder="Buscar aluno por nome..." autocomplete="off">
@@ -1721,6 +1755,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 <div class="page-title-bar" style="margin-top:0">
 <h2 class="page-title-text">Agenda<button type="button" class="help-icon" data-help="Veja seus dias de aula no calendário, junto com feriados nacionais e da sua cidade (configure em Configurações → Localização).">!</button></h2>
 </div>
+<div class="agenda-quick"><button type="button" class="btn-historico" id="btnFreeSlots">Horários livres</button><button type="button" class="btn-historico" id="btnWaitlist">Lista de espera</button></div>
 <div class="agenda-toolbar">
 <button type="button" class="agenda-nav-btn" id="agendaPrevBtn">‹</button>
 <div class="agenda-month-label" id="agendaMonthLabel">—</div>
@@ -1882,6 +1917,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 <div class="settings-row" id="rowValoresPadrao"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-dollar"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Valores padrões<button type="button" class="help-icon" data-help="Valores sugeridos automaticamente ao cadastrar um novo aluno, de acordo com o formato da aula (individual ou grupo).">!</button></div></div><span class="settings-row-value" id="valValoresPadrao">R$ 140</span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowDiasUteis"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-calendar"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Dias úteis<button type="button" class="help-icon" data-help="Os dias da semana em que você costuma dar aula. O cadastro de aluno novo começa sem nenhum dia marcado: os dias de cada aluno são escolhidos no cadastro dele.">!</button></div></div><span class="settings-row-value" id="valDiasUteis">Seg-Sex</span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowDuracao"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-clock"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Duração padrão da aula</div></div><span class="settings-row-value" id="valDuracao">60 min</span><span class="settings-row-chevron">›</span></div>
+<div class="settings-row" id="rowMakeupDeadline"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-clock"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Prazo para repor</div></div><span class="settings-row-value" id="valMakeupDeadline">30 dias</span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowNiveis"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-trending-up"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Níveis dos alunos<button type="button" class="help-icon" data-help="A lista de níveis que aparece no cadastro do aluno, na ordem do menor pro maior. Dá pra renomear, reordenar, adicionar, tirar ou não usar nível nenhum.">!</button></div></div><span class="settings-row-value" id="valNiveis"></span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowCriterios"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-clipboard"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Critérios de avaliação<button type="button" class="help-icon" data-help="O que você avalia em cada aula, de 0 a 5 estrelas. Renomear mantém as avaliações antigas; tirar um critério não apaga as notas que ele já tinha.">!</button></div></div><span class="settings-row-value" id="valCriterios"></span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowEvalFreq"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-star"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Frequência da avaliação<button type="button" class="help-icon" data-help="De quanto em quanto tempo o app pede pra avaliar cada aluno. Fora do dia de avaliação a aula fica só como 'Aula dada', sem pop-up nem 'Aguardando avaliação'. Dá pra mudar por aluno no cadastro dele.">!</button></div></div><span class="settings-row-value" id="valEvalFreq">Toda aula</span><span class="settings-row-chevron">›</span></div>
@@ -2301,6 +2337,52 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 </div>
 </div>
 
+<!-- Modal: Horários livres (Agenda) -->
+<div class="modal-bg" id="freeSlotsModal">
+<div class="modal">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+<h2 style="margin:0">Horários livres</h2>
+<button class="close-btn-inline" id="freeSlotsClose" aria-label="Fechar">✕</button>
+</div>
+<div class="field-hint" id="freeSlotsHint" style="margin-top:-0.25rem"></div>
+<div id="freeSlotsBody"></div>
+<div class="actions"><button class="cancel" id="freeSlotsHoursBtn">Horário de trabalho</button><button class="save" id="freeSlotsCopyBtn">Copiar</button></div>
+</div>
+</div>
+
+<!-- Modal: Lista de espera (Agenda) -->
+<div class="modal-bg" id="waitlistModal">
+<div class="modal">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+<h2 style="margin:0">Lista de espera</h2>
+<button class="close-btn-inline" id="waitlistClose" aria-label="Fechar">✕</button>
+</div>
+<div id="waitlistList"></div>
+<button type="button" class="btn-historico" id="waitlistAddBtn" style="width:100%;margin-top:0.75rem">+ Adicionar pessoa</button>
+<div id="waitlistForm" style="display:none;margin-top:0.875rem">
+<div class="field"><label>Nome</label><input id="wlName" placeholder="Ex.: Maria Lima"></div>
+<div class="field"><label>Telefone / WhatsApp</label><input id="wlPhone" type="tel" inputmode="tel" placeholder="Ex.: (31) 99999-9999"></div>
+<div class="field"><label>Instrumento</label><input id="wlInstrument" list="wlInstrumentList" placeholder="Ex.: Violão"><datalist id="wlInstrumentList"></datalist></div>
+<div class="field"><label>Dias de preferência</label>
+<div class="days" id="wlDays"><button type="button" class="wd-day" data-day="1">Seg</button><button type="button" class="wd-day" data-day="2">Ter</button><button type="button" class="wd-day" data-day="3">Qua</button><button type="button" class="wd-day" data-day="4">Qui</button><button type="button" class="wd-day" data-day="5">Sex</button><button type="button" class="wd-day" data-day="6">Sáb</button><button type="button" class="wd-day" data-day="0">Dom</button></div>
+</div>
+<div class="field"><label>Horário de preferência</label><input id="wlTime" type="time"></div>
+<div class="field"><label>Observação</label><textarea id="wlNotes" rows="2" placeholder="Ex.: só depois das 18h, quer aula em casa"></textarea></div>
+<div class="actions"><button class="cancel" id="wlCancelBtn">Cancelar</button><button class="save" id="wlSaveBtn">Salvar</button></div>
+</div>
+</div>
+</div>
+
+<!-- Modal: Prazo para repor -->
+<div class="modal-bg" id="makeupDeadlineModal">
+<div class="modal">
+<h2>Prazo para repor</h2>
+<div class="field"><label>Dias (vazio = sem prazo)</label><input type="number" id="makeupDeadlineInput" min="1" max="365" step="1" placeholder="Sem prazo"></div>
+<div class="field-hint">Reposição pendente há mais tempo que isso fica em laranja em "Reposições pendentes", com a opção "Não vai mais repor".</div>
+<div class="actions"><button class="cancel" id="makeupDeadlineCancelBtn">Cancelar</button><button class="save" id="makeupDeadlineSaveBtn">Salvar</button></div>
+</div>
+</div>
+
 <!-- Modal: Dias úteis -->
 <div class="modal-bg" id="diasUteisModal">
 <div class="modal">
@@ -2315,6 +2397,10 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 <select id="diasUteisWeekStart">
 <option value="0">Domingo</option><option value="1">Segunda</option><option value="2">Terça</option><option value="3">Quarta</option><option value="4">Quinta</option><option value="5">Sexta</option><option value="6">Sábado</option>
 </select>
+</div>
+<div class="field"><label>Horário de trabalho (usado em "Horários livres", na Agenda)</label>
+<div id="workHoursRows" class="work-hours-rows"></div>
+<div class="field-hint" style="margin:0.375rem 0 0">Dia sem horário não aparece em "Horários livres".</div>
 </div>
 <div class="field-hint">Os dias da semana em que você costuma dar aula. O cadastro de aluno novo começa sem nenhum dia marcado: você escolhe os dias de cada aluno no cadastro dele.</div>
 <div class="actions"><button class="cancel" id="diasUteisCancelBtn">Cancelar</button><button class="save" id="diasUteisSaveBtn">Salvar</button></div>
@@ -2520,7 +2606,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 <div class="modal-bg" id="receiptModal">
 <div class="modal">
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-<h2 style="margin:0">Recibo</h2>
+<h2 style="margin:0" id="receiptTitle">Recibo</h2>
 <button class="close-btn-inline" id="receiptCloseX" aria-label="Fechar">✕</button>
 </div>
 <img id="receiptPreview" class="receipt-preview" alt="Prévia do recibo">
@@ -3283,6 +3369,18 @@ appSettings.notifications.reminders = appSettings.notifications.reminderMinutes
 delete appSettings.notifications.reminderMinutes;
 }
 function saveAppSettings(){ localStorage.setItem("jp_settings_v1", JSON.stringify(appSettings)); }
+// ===== Horários (minutos desde 00:00) =====
+function toMin(t){ const [h, m] = String(t || "0:0").split(":").map(Number); return (h || 0) * 60 + (m || 0); }
+function fmtHour(t){ const m = typeof t === "number" ? t : toMin(t); return `${Math.floor(m / 60)}h${m % 60 ? pad2(m % 60) : ""}`; }
+function fromMin(m){ return `${pad2(Math.floor(m / 60))}:${pad2(m % 60)}`; }
+async function copyText(text){
+try { await navigator.clipboard.writeText(text); return true; }
+catch (e) {
+const ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select();
+let ok = false; try { ok = document.execCommand("copy"); } catch (_) {}
+ta.remove(); return ok;
+}
+}
 
 function getGroupSize(s){
   return 1 + students.filter(x=>x.active!==false && x.id!==s.id && sharesSlot(x, s)).length;
@@ -3849,8 +3947,11 @@ const about = sheetSection("Objetivo e observações", [
 sheetPair("Objetivo", s.objective ? escapeHtml(s.objective) : "", true),
 sheetPair("Observações", s.observations ? escapeHtml(s.observations) : "", true)
 ]);
+const risk = riskReasons(s);
+const riskWa = messageRecipient(s);
+const riskHtml = risk.length ? `<div class="sheet-risk"><span>⚠ Atenção: ${escapeHtml(risk.join(" · "))}</span>${riskWa ? `<a class="wa-btn" href="${whatsappLink(riskWa.phone)}" target="_blank" rel="noopener">WhatsApp</a>` : ""}</div>` : "";
 const body = document.getElementById("sheetBody");
-body.innerHTML = about + aulas + contato + financeiro + acomp + lastLessonsDotsHTML(s) + ultima;
+body.innerHTML = riskHtml + about + aulas + contato + financeiro + acomp + lastLessonsDotsHTML(s) + ultima;
 body.querySelectorAll("[data-dot]").forEach(b => b.onclick = () => openHistoryAt(s.id, b.dataset.dot));
 body.querySelectorAll("[data-sheet-add]").forEach(b => b.onclick = () => editFromSheet(s.id, b.dataset.sheetAdd));
 
@@ -3860,7 +3961,9 @@ const acts = document.getElementById("sheetActions");
 acts.innerHTML = `<button type="button" class="save" data-sheet-act="edit">Editar</button>
 <button type="button" class="btn-historico" data-sheet-act="history">Histórico de aulas</button>
 ${wa ? `<a class="wa-btn" href="${wa}" target="_blank" rel="noopener">WhatsApp${!whatsappLink(s.phone) ? " (resp.)" : ""}</a>` : ""}
-${inactive ? "" : `<button type="button" class="btn-historico" data-sheet-act="extra">${s.lessonFrequency === "single" ? "+ Marcar aula" : "+ Marcar aula extra"}</button>`}`;
+${inactive ? "" : `<button type="button" class="btn-historico" data-sheet-act="extra">${s.lessonFrequency === "single" ? "+ Marcar aula" : "+ Marcar aula extra"}</button>`}
+<button type="button" class="btn-historico" data-sheet-act="summary">Resumo do mês</button>`;
+acts.querySelector('[data-sheet-act="summary"]').onclick = () => openMonthSummary(s);
 acts.querySelector('[data-sheet-act="edit"]').onclick = () => editFromSheet(s.id);
 acts.querySelector('[data-sheet-act="history"]').onclick = () => openHistoryModal(s.id);
 const ex = acts.querySelector('[data-sheet-act="extra"]');
@@ -4607,6 +4710,7 @@ cancel: "Oi, [nome]! Hoje não vou conseguir dar a aula das [hora]. Vamos marcar
 cancelMakeup: "Oi, [nome]! Não vou conseguir dar a aula de [data original]. A reposição ficou para [dia], [data], às [hora].",
 birthday: "Feliz aniversário, [aluno]! 🎉",
 lessonKept: "Oi, [nome]! A aula de [dia], [data], às [hora] está mantida. Até lá!",
+monthSummary: "Oi, [nome]! Resumo das aulas de [aluno] em [mês]:\nAulas dadas: [aulas]\nFaltas: [faltas]\nReposições: [reposições]\n\nO que trabalhamos:\n[conteúdo]\n\nPara estudar em casa: [para casa]",
 chargeItem: "Oi, [nome]! Passando pra lembrar do pagamento [referência] (R$ [valor]). Obrigado!"
 };
 const MESSAGE_LABELS = {
@@ -4616,6 +4720,7 @@ cancel: { title:"Aula cancelada", vars:"[nome] [aluno] [hora] [data]" },
 cancelMakeup: { title:"Aula cancelada com reposição marcada", vars:"[nome] [aluno] [data original] [dia] [data] [hora]" },
 birthday: { title:"Aniversário", vars:"[nome] [aluno]" },
 lessonKept: { title:"Aula mantida (depois de desfazer)", vars:"[nome] [aluno] [dia] [data] [hora]" },
+monthSummary: { title:"Resumo do mês", vars:"[nome] [aluno] [mês] [aulas] [faltas] [reposições] [conteúdo] [para casa]" },
 chargeItem: { title:"Cobrar aula avulsa ou pacote", vars:"[nome] [aluno] [referência] [valor]" }
 };
 const WEEKDAY_FULL = ["domingo","segunda-feira","terça-feira","quarta-feira","quinta-feira","sexta-feira","sábado"];
@@ -5179,6 +5284,7 @@ ${href ? `<a class="wa-btn wa-mini" href="${href}" target="_blank" rel="noopener
 
 function renderHome(){
 renderBirthdays();
+renderAttention();
 const now=new Date();
 document.getElementById("homeGreetingText").textContent = `Olá, ${appSettings.profile.name}`;
 const months=["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
@@ -5504,23 +5610,36 @@ else if (m.status === "scheduled" && m.date >= todayIso && !(s.lessons || []).so
 if (!pending.length && !scheduled.length) { box.innerHTML = ""; return; }
 pending.sort((a,b) => parseBrDate(a.m.originDate) - parseBrDate(b.m.originDate));
 scheduled.sort((a,b) => (a.m.date + (a.m.time || "")).localeCompare(b.m.date + (b.m.time || "")));
-const row = ({ s, m }, isPending) => `
-<div class="goal-row makeup-row">
+const deadline = makeupDeadlineDays();
+const lateDays = (m) => deadline ? Math.floor((dateFromIso(todayIso) - dateFromIso(isoFromBr(m.originDate))) / 86400000) : 0;
+const row = ({ s, m }, isPending) => { const late = isPending && deadline && lateDays(m) > deadline; return `
+<div class="goal-row makeup-row${late ? " is-late" : ""}">
 <div class="avatar-small">${initials(s.name)}</div>
 <div class="goal-info">
 <div class="goal-title">${escapeHtml(s.name)}</div>
 <div class="makeup-sub">${isPending
-? `Aula de ${m.originDate}${ABSENCE_REASONS[m.reason] ? " · " + ABSENCE_REASONS[m.reason].short : ""}`
+? `Aula de ${m.originDate}${ABSENCE_REASONS[m.reason] ? " · " + ABSENCE_REASONS[m.reason].short : ""}${late ? ` <span class="makeup-late">· pendente há ${lateDays(m)} dias</span>` : ""}`
 : `${formatDateShort(m.date)}${m.time ? " às " + m.time : ""} · ${m.kind === "single" ? "aula extra" : m.reason === "rescheduled" ? "remarcada de " + m.originDate : "repõe " + m.originDate}`}</div>
+${late ? `<button type="button" class="btn-link-inline makeup-giveup" data-makeup-giveup="${s.id}|${m.id}">Não vai mais repor</button>` : ""}
 </div>
 <button type="button" class="btn-edit-toggle" data-makeup-edit="${s.id}|${m.id}">${isPending ? "Marcar" : "Alterar"}</button>
 ${isPending ? `<button type="button" class="makeup-dismiss" data-makeup-dismiss="${s.id}|${m.id}" aria-label="Dispensar reposição de ${escapeHtml(s.name)}">✕</button>` : ""}
-</div>`;
+</div>`; };
 box.innerHTML =
 (pending.length ? `<div class="settings-group-label" style="margin-top:1.5rem">Reposições pendentes</div>${pending.map(x => row(x, true)).join("")}` : "") +
 (scheduled.length ? `<div class="settings-group-label" style="margin-top:1.5rem">${scheduledTitle(scheduled.map(x => x.m))}</div>${scheduled.map(x => row(x, false)).join("")}` : "");
 const find = (key) => { const [sid, mid] = key.split("|"); const s = students.find(x => String(x.id) === sid); return { s, m: s && (s.makeups || []).find(x => x.id === mid) }; };
 box.querySelectorAll("[data-makeup-edit]").forEach(b => b.onclick = () => { const { s, m } = find(b.dataset.makeupEdit); if (m) openMakeupModal(s, m); });
+// Reposição esquecida: vira falta sem reposição (o registro da aula continua).
+box.querySelectorAll("[data-makeup-giveup]").forEach(b => b.onclick = () => {
+const { s, m } = find(b.dataset.makeupGiveup);
+if (!m) return;
+m.status = "dismissed";
+m.dismissedAt = todayIso;
+saveStudents();
+renderMakeups();
+showUndoToast(`Reposição de ${firstName(s.name)} dispensada`, () => { m.status = "pending"; delete m.dismissedAt; saveStudents(); renderMakeups(); });
+});
 box.querySelectorAll("[data-makeup-dismiss]").forEach(b => b.onclick = () => {
 const { s, m } = find(b.dataset.makeupDismiss);
 if (!m || !confirm(`Dispensar a reposição de ${s.name} (aula de ${m.originDate})? Ela sai da lista de pendentes.`)) return;
@@ -5639,6 +5758,7 @@ currentFilters.format = "all";
 currentFilters.instrument = "all";
 currentFilters.day = [];
 currentFilters.pending = "all";
+currentFilters.attention = false;
 document.querySelectorAll(".filter-chip-row .filter-chip").forEach(c => c.classList.toggle("selected", c.dataset.value === "all"));
 renderStudents();
 closeAllStudentToolbarPanels();
@@ -6154,7 +6274,7 @@ btnToggleSort.classList.remove("active");
 }});
 
 // day é uma lista (vazia = todos os dias): o filtro de dia aceita vários dias ao mesmo tempo.
-let currentFilters = { format: "all", instrument: "all", day: [], pending: "all" };
+let currentFilters = { format: "all", instrument: "all", day: [], pending: "all", attention: false };
 
 function bindFilterChipGroup(groupName, key){
 document.querySelectorAll(`.filter-chip-row[data-filter-group="${groupName}"] .filter-chip`).forEach(chip => {
@@ -6322,9 +6442,11 @@ const pendVal = currentFilters.pending;
 const searchVal = (document.getElementById("studentSearchInput")?.value || "").trim().toLowerCase();
 updateFilterDot();
 updatePendingBanner();
+updateAttentionBar();
 
 const filterFn = (s) => {
 if (pendVal === "pending" && !hasPending(s)) return false;
+if (currentFilters.attention && !riskReasons(s).length) return false;
 if (fmtVal !== "all" && getFormat(s) !== fmtVal) return false;
 if (instVal !== "all" && s.instrument !== instVal) return false;
 if (dayVal.length && !(s.days || []).some(d => dayVal.includes(d))) return false;
@@ -6397,6 +6519,7 @@ ${s.needsReview && s.needsReview.length ? `<span class="sq-review-badge" title="
 <div class="stu-name-block">
 <div class="stu-name">${s.name}</div>
 ${appSettings.useLevels && s.level ? `<div class="stu-sub">${escapeHtml(s.level)}</div>` : ""}
+${!isInactive && riskReasons(s).length ? `<span class="risk-badge" title="${escapeHtml(riskReasons(s).join(" · "))}">Atenção</span>` : ""}
 </div>
 </div>
 <div class="stu-fields">
@@ -8064,9 +8187,14 @@ if (!appSettings.profile.fullName) { if (!confirm("Seu nome completo ainda não 
 const canvas = await drawReceipt(s, item);
 const blob = await new Promise(r => canvas.toBlob(r, "image/png"));
 const slug = stripAccents(`${s.name}-${item.kind === "month" ? item.key : (item.date || item.ref)}`).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-const file = new File([blob], `recibo-${slug}.png`, { type: "image/png" });
+showImageModal(blob, `recibo-${slug}.png`, "Recibo", `Recibo de pagamento – ${s.name}`);
+}
+// Mostra uma imagem gerada (recibo, resumo do mês) com Compartilhar / Baixar.
+function showImageModal(blob, filename, title, shareText){
+const file = new File([blob], filename, { type: "image/png" });
 if (currentReceipt?.url) URL.revokeObjectURL(currentReceipt.url);
-currentReceipt = { file, url: URL.createObjectURL(blob), s };
+currentReceipt = { file, url: URL.createObjectURL(blob), title, shareText };
+document.getElementById("receiptTitle").textContent = title;
 document.getElementById("receiptPreview").src = currentReceipt.url;
 const canShare = !!(navigator.canShare && navigator.canShare({ files: [file] }));
 document.getElementById("receiptShareBtn").style.display = canShare ? "" : "none";
@@ -8082,7 +8210,7 @@ document.body.appendChild(a); a.click(); a.remove();
 };
 document.getElementById("receiptShareBtn").onclick = async () => {
 if (!currentReceipt) return;
-try { await navigator.share({ files: [currentReceipt.file], title: "Recibo", text: `Recibo de pagamento – ${currentReceipt.s.name}` }); }
+try { await navigator.share({ files: [currentReceipt.file], title: currentReceipt.title, text: currentReceipt.shareText }); }
 catch (e) { if (e && e.name !== "AbortError") document.getElementById("receiptDownloadBtn").click(); }
 };
 
@@ -8167,6 +8295,7 @@ document.getElementById("fPayTo").onchange = () => renderPayMonthsField(editingI
 document.getElementById("fDueDay").oninput = () => renderPayMonthsField(editingId ? students.find(x => x.id === editingId) : null);
 function openEdit(id=null){
 if (sheetReturnId !== id) sheetReturnId = null;
+waitlistConvertId = null;
 editingId=id;
 const s=id?students.find(x=>x.id===id):null;
 document.getElementById("modalTitle").textContent=s?"Editar aluno":"Novo aluno";
@@ -8248,6 +8377,7 @@ btnToggle.className = `btn-toggle-status ${isActive?'':'reactivate'}`;
 btnToggle.onclick = () => {
 s.active = !isActive;
 if (!s.active && !s.exit) { s.exit = new Date().toISOString().slice(0,10); }
+if (!s.active) offerWaitlistFor(s);
 localStorage.setItem("jp_students_v5", JSON.stringify(students));
 document.getElementById("modalBg").classList.remove("show");
 renderStudents();
@@ -8409,6 +8539,9 @@ document.getElementById("modalBg").classList.remove("show");
 renderStudents();
 renderHome();
 returnToSheet();
+// Veio da lista de espera ("Virar aluno"): sai da lista.
+if (waitlistConvertId !== null && !editingId) { appSettings.waitlist = waitlist().filter(x => x.id !== waitlistConvertId); saveAppSettings(); }
+waitlistConvertId = null;
 };
 
 // ===================== Avaliação automática pós-aula =====================
@@ -8614,7 +8747,7 @@ return parts.join(" · ");
 }
 
 // Versão mostrada em Configurações. Sobe a cada rodada de mudanças publicada.
-const APP_VERSION = "7.3";
+const APP_VERSION = "7.4";
 function renderSettingsSummary(){
 document.getElementById("valVersao").textContent = APP_VERSION;
 document.getElementById("settingsProfileName").textContent = appSettings.profile.name;
@@ -8625,6 +8758,7 @@ document.getElementById("valInstrumentos").textContent = `${appSettings.instrume
 document.getElementById("valValoresPadrao").textContent = `R$ ${appSettings.defaultValues.individual}`;
 document.getElementById("valDiasUteis").textContent = formatWorkDaysLabel();
 document.getElementById("valDuracao").textContent = `${appSettings.lessonDuration} min`;
+document.getElementById("valMakeupDeadline").textContent = makeupDeadlineDays() ? `${makeupDeadlineDays()} dias` : "Sem prazo";
 document.getElementById("valNiveis").textContent = appSettings.useLevels ? `${appSettings.levels.length} níve${appSettings.levels.length === 1 ? "l" : "is"}` : "Sem nível";
 document.getElementById("valCriterios").textContent = `${activeCriteria().length} critério${activeCriteria().length === 1 ? "" : "s"}`;
 document.getElementById("valEvalFreq").textContent = EVAL_FREQUENCIES[appSettings.evalFrequency] || "Toda aula";
@@ -8832,13 +8966,26 @@ closeValoresModal();
 document.getElementById("rowDiasUteis").onclick = () => {
 document.querySelectorAll("#diasUteisPicker .wd-day").forEach(b => b.classList.toggle("selected", appSettings.workDays.includes(Number(b.dataset.day))));
 document.getElementById("diasUteisWeekStart").value = String(appSettings.weekStart);
+whDraft = JSON.parse(JSON.stringify(appSettings.workHours || {}));
+renderWorkHoursRows();
 document.getElementById("diasUteisModal").classList.add("show");
 };
-document.querySelectorAll("#diasUteisPicker .wd-day").forEach(b => { b.onclick = () => b.classList.toggle("selected"); });
+document.querySelectorAll("#diasUteisPicker .wd-day").forEach(b => { b.onclick = () => { b.classList.toggle("selected"); renderWorkHoursRows(); }; });
+// Horário de trabalho de cada dia útil (appSettings.workHours = { dia: { start, end } }).
+let whDraft = {};
+function renderWorkHoursRows(){
+const sel = [...document.querySelectorAll("#diasUteisPicker .wd-day.selected")].map(b => Number(b.dataset.day));
+const box = document.getElementById("workHoursRows");
+box.innerHTML = orderedDays(sel).map(d => `<div class="wh-row"><span class="wh-day">${WEEKDAY_SHORT[d]}</span><input type="time" data-wh="${d}|start" value="${whDraft[d]?.start || ""}" aria-label="Começo (${WEEKDAY_SHORT[d]})"><span class="wh-sep">às</span><input type="time" data-wh="${d}|end" value="${whDraft[d]?.end || ""}" aria-label="Fim (${WEEKDAY_SHORT[d]})"></div>`).join("") || `<div class="field-hint" style="margin:0">Marque os dias acima.</div>`;
+box.querySelectorAll("[data-wh]").forEach(inp => inp.oninput = inp.onchange = () => { const [d, k] = inp.dataset.wh.split("|"); (whDraft[d] ??= {})[k] = inp.value; });
+}
 document.getElementById("diasUteisCancelBtn").onclick = () => document.getElementById("diasUteisModal").classList.remove("show");
 document.getElementById("diasUteisSaveBtn").onclick = () => {
 appSettings.workDays = [...document.querySelectorAll("#diasUteisPicker .wd-day.selected")].map(b => Number(b.dataset.day));
 appSettings.weekStart = Number(document.getElementById("diasUteisWeekStart").value);
+const wh = {};
+appSettings.workDays.forEach(d => { const w = whDraft[d]; if (w && w.start && w.end && w.start < w.end) wh[d] = { start: w.start, end: w.end }; });
+if (Object.keys(wh).length) appSettings.workHours = wh; else delete appSettings.workHours;
 saveAppSettings();
 renderSettingsSummary();
 document.getElementById("diasUteisModal").classList.remove("show");
@@ -8858,6 +9005,329 @@ saveAppSettings();
 renderSettingsSummary();
 document.getElementById("duracaoModal").classList.remove("show");
 };
+
+// --- Prazo para repor (appSettings.makeupDeadline: vazio = 30 dias; 0 = sem prazo) ---
+function makeupDeadlineDays(){ return appSettings.makeupDeadline === undefined ? 30 : Number(appSettings.makeupDeadline) || 0; }
+document.getElementById("rowMakeupDeadline").onclick = () => {
+document.getElementById("makeupDeadlineInput").value = makeupDeadlineDays() || "";
+document.getElementById("makeupDeadlineModal").classList.add("show");
+};
+document.getElementById("makeupDeadlineCancelBtn").onclick = () => document.getElementById("makeupDeadlineModal").classList.remove("show");
+document.getElementById("makeupDeadlineSaveBtn").onclick = () => {
+const v = Math.round(Number(document.getElementById("makeupDeadlineInput").value));
+appSettings.makeupDeadline = v > 0 ? Math.min(365, v) : 0;
+saveAppSettings();
+renderSettingsSummary();
+renderMakeups();
+document.getElementById("makeupDeadlineModal").classList.remove("show");
+};
+
+// ===== Horários livres (Agenda) =====
+// Por dia útil com horário de trabalho: os horários sem aula fixa, de duração padrão, pulando
+// as aulas (com a duração de cada aluno) de quem tem dia fixo.
+function freeSlots(){
+const step = Number(appSettings.lessonDuration) || 60;
+const wh = appSettings.workHours || {};
+return orderedDays(appSettings.workDays || []).filter(d => wh[d] && wh[d].start && wh[d].end && toMin(wh[d].start) < toMin(wh[d].end)).map(d => {
+const busy = students.filter(x => x.active !== false && x.lessonFrequency !== "single" && studentDays(x).includes(d)).map(x => { const a = toMin(getStudentTimeFor(x, d)); return [a, a + getStudentDuration(x)]; });
+const slots = [], end = toMin(wh[d].end);
+let t = toMin(wh[d].start);
+while (t + step <= end) {
+const clash = busy.filter(([a, b]) => t < b && t + step > a);
+if (clash.length) { t = Math.max(...clash.map(c => c[1])); continue; }
+slots.push(t);
+t += step;
+}
+return { d, slots };
+});
+}
+function freeSlotsText(list){
+const days = list.filter(x => x.slots.length).map(x => `${WEEKDAY_SHORT[x.d]} ${x.slots.map(fmtHour).join(", ")}`);
+return days.length ? `Horários disponíveis: ${days.join(" · ")}` : "";
+}
+function openFreeSlots(){
+const list = freeSlots();
+const hint = document.getElementById("freeSlotsHint");
+const body = document.getElementById("freeSlotsBody");
+const copyBtn = document.getElementById("freeSlotsCopyBtn");
+if (!list.length) {
+hint.textContent = "";
+body.innerHTML = `<div class="field-hint" style="margin:0">Defina o horário de trabalho de cada dia (Configurações → Dias úteis) pra ver aqui os horários sem aula.</div>`;
+} else {
+hint.textContent = `Aulas de ${Number(appSettings.lessonDuration) || 60} min, sem contar os horários fixos dos alunos (com a duração de cada um).`;
+body.innerHTML = list.map(x => `<div class="fs-day"><div class="fs-day-name">${WEEKDAY_NAMES[x.d]}</div>${x.slots.length ? `<div class="fs-chips">${x.slots.map(t => `<span class="fs-chip">${fromMin(t)}</span>`).join("")}</div>` : `<div class="fs-none">Sem horário livre</div>`}</div>`).join("");
+}
+copyBtn.textContent = "Copiar";
+copyBtn.disabled = !freeSlotsText(list);
+document.getElementById("freeSlotsModal").classList.add("show");
+}
+document.getElementById("btnFreeSlots").onclick = openFreeSlots;
+document.getElementById("freeSlotsClose").onclick = () => document.getElementById("freeSlotsModal").classList.remove("show");
+document.getElementById("freeSlotsHoursBtn").onclick = () => { document.getElementById("freeSlotsModal").classList.remove("show"); document.getElementById("rowDiasUteis").onclick(); };
+document.getElementById("freeSlotsCopyBtn").onclick = async () => {
+const text = freeSlotsText(freeSlots());
+if (!text) return;
+const ok = await copyText(text);
+const b = document.getElementById("freeSlotsCopyBtn");
+b.textContent = ok ? "Copiado ✓" : "Não deu pra copiar";
+setTimeout(() => { b.textContent = "Copiar"; }, 2200);
+};
+
+// ===== Lista de espera (appSettings.waitlist) =====
+// { id, name, phone, instrument, days:[0-6], time, notes, since }
+function waitlist(){ return Array.isArray(appSettings.waitlist) ? appSettings.waitlist : []; }
+let waitlistEditId = null;
+let waitlistConvertId = null; // "Virar aluno" em andamento: sai da lista quando salvar o cadastro
+function waitlistPrefText(p){
+const days = orderedDays(p.days || []).map(d => WEEKDAY_SHORT[d]).join(", ");
+return [p.instrument, days, p.time].filter(Boolean).map(escapeHtml).join(" · ");
+}
+function renderWaitlist(){
+const list = waitlist();
+const box = document.getElementById("waitlistList");
+box.innerHTML = list.length ? list.map(p => {
+const wa = whatsappLink(p.phone);
+return `<div class="wl-item">
+<div><div class="wl-name">${escapeHtml(p.name)}</div>
+<div class="wl-sub">${waitlistPrefText(p) || "Sem preferência"}${p.since ? ` · desde ${formatDateShort(p.since).slice(0,5)}` : ""}</div>
+${p.notes ? `<div class="wl-notes">${escapeHtml(p.notes)}</div>` : ""}</div>
+<div class="wl-acts">${wa ? `<a class="wa-btn wa-mini" href="${wa}" target="_blank" rel="noopener">WhatsApp</a>` : ""}<button type="button" class="btn-edit-toggle" data-wl-convert="${p.id}">Virar aluno</button><button type="button" class="btn-link-inline" data-wl-edit="${p.id}">Editar</button><button type="button" class="makeup-dismiss" data-wl-del="${p.id}" aria-label="Tirar ${escapeHtml(p.name)} da lista">✕</button></div>
+</div>`;
+}).join("") : `<div class="field-hint" style="margin:0">Ninguém na lista ainda. Anote aqui quem pediu horário e ainda não tem vaga.</div>`;
+box.querySelectorAll("[data-wl-convert]").forEach(b => b.onclick = () => waitlistToStudent(b.dataset.wlConvert));
+box.querySelectorAll("[data-wl-edit]").forEach(b => b.onclick = () => openWaitlistForm(b.dataset.wlEdit));
+box.querySelectorAll("[data-wl-del]").forEach(b => b.onclick = () => {
+const p = waitlist().find(x => x.id === b.dataset.wlDel);
+if (!p || !confirm(`Tirar ${p.name} da lista de espera?`)) return;
+appSettings.waitlist = waitlist().filter(x => x !== p);
+saveAppSettings();
+renderWaitlist();
+});
+}
+function openWaitlist(){
+closeWaitlistForm();
+renderWaitlist();
+document.getElementById("waitlistModal").classList.add("show");
+}
+function openWaitlistForm(id){
+const p = id ? waitlist().find(x => x.id === id) : null;
+waitlistEditId = p ? p.id : null;
+document.getElementById("wlName").value = p?.name || "";
+document.getElementById("wlPhone").value = p?.phone || "";
+document.getElementById("wlInstrument").value = p?.instrument || "";
+document.getElementById("wlInstrumentList").innerHTML = (appSettings.instruments || []).map(i => `<option value="${escapeHtml(i)}">`).join("");
+document.querySelectorAll("#wlDays .wd-day").forEach(b => b.classList.toggle("selected", (p?.days || []).includes(Number(b.dataset.day))));
+document.getElementById("wlTime").value = p?.time || "";
+document.getElementById("wlNotes").value = p?.notes || "";
+document.getElementById("waitlistForm").style.display = "";
+document.getElementById("waitlistAddBtn").style.display = "none";
+document.getElementById("wlName").focus();
+}
+function closeWaitlistForm(){
+document.getElementById("waitlistForm").style.display = "none";
+document.getElementById("waitlistAddBtn").style.display = "";
+waitlistEditId = null;
+}
+document.getElementById("btnWaitlist").onclick = openWaitlist;
+document.getElementById("waitlistClose").onclick = () => document.getElementById("waitlistModal").classList.remove("show");
+document.getElementById("waitlistAddBtn").onclick = () => openWaitlistForm(null);
+document.getElementById("wlCancelBtn").onclick = closeWaitlistForm;
+document.querySelectorAll("#wlDays .wd-day").forEach(b => b.onclick = () => b.classList.toggle("selected"));
+document.getElementById("wlSaveBtn").onclick = () => {
+const name = document.getElementById("wlName").value.trim();
+if (!name) { alert("Digite o nome."); return; }
+const data = {
+name,
+phone: document.getElementById("wlPhone").value.trim(),
+instrument: document.getElementById("wlInstrument").value.trim(),
+days: [...document.querySelectorAll("#wlDays .wd-day.selected")].map(b => Number(b.dataset.day)),
+time: document.getElementById("wlTime").value,
+notes: document.getElementById("wlNotes").value.trim()
+};
+Object.keys(data).forEach(k => { if (data[k] === "" || (Array.isArray(data[k]) && !data[k].length)) delete data[k]; });
+const list = waitlist();
+const old = waitlistEditId ? list.find(x => x.id === waitlistEditId) : null;
+if (old) { Object.keys(old).forEach(k => { if (k !== "id" && k !== "since") delete old[k]; }); Object.assign(old, data); }
+else list.push({ id: "wl" + Date.now().toString(36) + Math.random().toString(36).slice(2,5), since: isoOf(new Date()), ...data });
+appSettings.waitlist = list;
+saveAppSettings();
+closeWaitlistForm();
+renderWaitlist();
+};
+// "Virar aluno": abre o cadastro já preenchido; sai da lista quando o cadastro for salvo.
+function waitlistToStudent(id){
+const p = waitlist().find(x => x.id === id);
+if (!p) return;
+document.getElementById("waitlistModal").classList.remove("show");
+openPage("students");
+openEdit();
+waitlistConvertId = id;
+document.getElementById("fName").value = p.name;
+if (p.instrument) {
+const sel = document.getElementById("fInstrument");
+if (![...sel.options].some(o => o.value === p.instrument)) sel.add(new Option(p.instrument, p.instrument));
+sel.value = p.instrument;
+}
+document.querySelectorAll(".day").forEach(b => b.classList.toggle("selected", (p.days || []).includes(Number(b.dataset.day))));
+if (p.time) document.getElementById("fTime").value = p.time;
+if (p.phone) { document.getElementById("fPhone").value = p.phone; document.getElementById("fContactSection").open = true; refreshContactHints(); }
+if (p.notes) { document.getElementById("fObservations").value = p.notes; document.getElementById("fAboutSection").open = true; }
+renderTimesByDay();
+updateModalFormatPreview();
+}
+// Aluno inativado: alguém da lista de espera queria aquele dia/horário? (horário até 1h de
+// diferença; sem horário de preferência vale o dia todo; sem dia vale qualquer dia)
+function offerWaitlistFor(s){
+if (s.lessonFrequency === "single") return;
+waitlist().forEach(p => {
+if (!(p.days || []).length && !p.time) return;
+for (const d of studentDays(s)) {
+const t = getStudentTimeFor(s, d);
+if ((p.days || []).length && !p.days.includes(d)) continue;
+if (p.time && Math.abs(toMin(p.time) - toMin(t)) > 60) continue;
+addWaRow(null, `${p.name} da lista de espera queria ${WEEKDAY_NAMES[d].toLowerCase()} às ${fmtHour(t)}.`, whatsappLink(p.phone), "WhatsApp");
+break;
+}
+});
+}
+
+// ===== Aluno em risco de desistir =====
+// 2 faltas seguidas, 3+ faltas no mês ou mensalidade atrasada há mais de 1 mês. Feriado/férias,
+// cancelamento do professor e remarcação não contam (nem quebram a sequência).
+function monthDueDate(s, key){
+const [y, m] = key.split("-").map(Number);
+const last = new Date(y, m, 0).getDate();
+return new Date(y, m - 1, Math.min(Number(s.dueDay) > 0 ? Number(s.dueDay) : last, last));
+}
+function riskReasons(s){
+if (!s || s.active === false) return [];
+const out = [];
+const todayIso = isoOf(new Date());
+const isAbs = l => isNoClass(l) && (l.reason === "absent_notice" || l.reason === "absent_no_notice");
+const recent = getStudentTimeline(s).filter(l => isoFromBr(l.date) <= todayIso && !(isNoClass(l) && (l.auto || l.reason === "holiday" || l.reason === "teacher_cancel" || l.reason === "rescheduled"))).slice(0, 2);
+if (recent.length === 2 && recent.every(isAbs)) out.push("2 faltas seguidas");
+const month = countMonthAbsences(s);
+if (month >= 3) out.push(`${month} faltas no mês`);
+if (billingMode(s) === "monthly" && paysMe(s)) {
+const now = new Date();
+const late = unpaidMonths(s).filter(k => (now - monthDueDate(s, k)) / 86400000 > 30);
+if (late.length) out.push(`mensalidade atrasada (${late.map(monthLabel).join(", ")})`);
+}
+return out;
+}
+function renderAttention(){
+const box = document.getElementById("attentionBox");
+if (!box) return;
+const n = students.filter(x => x.active !== false && riskReasons(x).length).length;
+box.innerHTML = n ? `<button type="button" class="attention-line"><span>⚠ ${n} aluno${n > 1 ? "s precisam" : " precisa"} de atenção</span><span>Ver ›</span></button>` : "";
+const b = box.querySelector("button");
+if (b) b.onclick = () => { currentFilters.attention = true; openPage("students"); renderStudents(); };
+}
+function updateAttentionBar(){
+const bar = document.getElementById("attentionFilterBar");
+if (!bar) return;
+if (!currentFilters.attention) { bar.style.display = "none"; return; }
+bar.style.display = "flex";
+bar.innerHTML = `<span>⚠ Mostrando só quem precisa de atenção</span><span class="pending-banner-cta">Ver todos</span>`;
+bar.onclick = () => { currentFilters.attention = false; renderStudents(); };
+}
+
+// ===== Resumo do mês pro aluno ou responsável =====
+function monthSummaryData(s, key){
+const todayIso = isoOf(new Date());
+const inMonth = getStudentTimeline(s).filter(l => { const iso = isoFromBr(l.date); return iso.slice(0,7) === key && iso <= todayIso; }).reverse();
+const given = inMonth.filter(l => !isNoClass(l));
+const absences = inMonth.filter(l => isNoClass(l) && (l.reason === "absent_notice" || l.reason === "absent_no_notice")).length;
+const repos = given.filter(l => { const m = l.makeupId && (s.makeups || []).find(x => x.id === l.makeupId); return m && m.kind !== "single" && m.reason !== "rescheduled"; }).length;
+const taught = given.filter(l => l.taught && String(l.taught).trim()).map(l => `• ${l.date.slice(0,5)}: ${String(l.taught).trim()}`);
+const [y, m] = key.split("-").map(Number);
+const hw = getLastHomework(s, isoOf(new Date(y, m, 1)));
+return { key, given: given.length, absences, repos, taught, homework: hw ? String(hw.homework).trim() : "" };
+}
+function monthSummaryText(s, d){
+const r = messageRecipient(s);
+return fillMessage(getMessageTemplate("monthSummary"), { nome: r ? r.name : firstName(s.name), aluno: firstName(s.name), mes: monthLongLabel(d.key), aulas: d.given, faltas: d.absences, reposicoes: d.repos, conteudo: d.taught.join("\n") || "(sem anotações neste mês)", "para casa": d.homework || "—" });
+}
+function openMonthSummary(s){
+const cur = currentMonthKey(), prev = addMonths(cur, -1);
+const body = document.createElement("div");
+body.innerHTML = `<div class="field"><label>Mês</label><select class="ms-month"><option value="${cur}">${monthLongLabel(cur)} (este mês)</option><option value="${prev}">${monthLongLabel(prev)}</option></select></div>
+<div class="ms-preview"></div>
+<div class="ms-actions"><a class="wa-btn ms-wa" target="_blank" rel="noopener">Enviar no WhatsApp</a><button type="button" class="btn-historico ms-copy">Copiar texto</button><button type="button" class="btn-historico ms-img">Imagem</button></div>
+<div class="field-hint ms-hint" style="margin-top:0.5rem"></div>`;
+const r = messageRecipient(s);
+const update = () => {
+const d = monthSummaryData(s, body.querySelector(".ms-month").value);
+const text = monthSummaryText(s, d);
+body.querySelector(".ms-preview").textContent = text;
+const wa = body.querySelector(".ms-wa");
+if (r) wa.href = `${whatsappLink(r.phone)}?text=${encodeURIComponent(text)}`;
+wa.style.display = r ? "" : "none";
+body.querySelector(".ms-hint").textContent = r ? (isMinor(s) && s.guardianName ? `Vai pro responsável (${s.guardianName}). Texto editável em Configurações → Mensagens prontas.` : "Texto editável em Configurações → Mensagens prontas.") : "Sem telefone cadastrado: copie o texto ou gere a imagem.";
+return { d, text };
+};
+body.querySelector(".ms-month").onchange = update;
+body.querySelector(".ms-copy").onclick = async (e) => { const ok = await copyText(update().text); e.target.textContent = ok ? "Copiado ✓" : "Não deu pra copiar"; setTimeout(() => e.target.textContent = "Copiar texto", 2000); };
+body.querySelector(".ms-img").onclick = async () => {
+const { d, text } = update();
+const canvas = await drawMonthSummary(s, d);
+const blob = await new Promise(res => canvas.toBlob(res, "image/png"));
+const slug = stripAccents(`${s.name}-${d.key}`).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+showImageModal(blob, `resumo-${slug}.png`, "Resumo do mês", text);
+};
+update();
+openQuickModal(`Resumo do mês · ${s.name}`, "", body, null, "Fechar");
+}
+async function drawMonthSummary(s, d){
+const W = 1240, M = 90;
+const font = (w, size) => `${w} ${size}px Inter, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif`;
+const ink = "#0f172a", soft = "#475569", faint = "#94a3b8", accent = "#1E88E5";
+const probe = document.createElement("canvas").getContext("2d");
+probe.font = font(500, 28);
+const taught = d.taught.length ? d.taught.flatMap(t => wrapCanvasText(probe, t, W - 2 * M)) : ["Sem anotações neste mês."];
+const hw = d.homework ? wrapCanvasText(probe, d.homework, W - 2 * M) : [];
+const H = 600 + taught.length * 42 + (hw.length ? 110 + hw.length * 42 : 0) + 90;
+const canvas = document.createElement("canvas");
+canvas.width = W; canvas.height = H;
+const ctx = canvas.getContext("2d");
+ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, W, H);
+ctx.fillStyle = accent; ctx.fillRect(0, 0, W, 10);
+const logo = await tintedLogo("rgba(15,23,42,0.55)");
+if (logo) { const lh = 54, lw = logo.width * (lh / logo.height); ctx.drawImage(logo, M, 62, lw, lh); }
+ctx.textAlign = "right"; ctx.fillStyle = ink; ctx.font = font(800, 44);
+ctx.fillText("RESUMO DO MÊS", W - M, 104);
+const [y, m] = d.key.split("-").map(Number);
+ctx.fillStyle = accent; ctx.font = font(800, 34); ctx.fillText(`${MONTH_FULL[m-1]}/${y}`, W - M, 154);
+ctx.textAlign = "left";
+ctx.strokeStyle = "#e2e8f0"; ctx.lineWidth = 2;
+ctx.beginPath(); ctx.moveTo(M, 195); ctx.lineTo(W - M, 195); ctx.stroke();
+ctx.fillStyle = ink; ctx.font = font(800, 44); ctx.fillText(s.name, M, 265);
+const teacher = appSettings.profile.fullName || appSettings.profile.name || "";
+ctx.fillStyle = soft; ctx.font = font(500, 26); ctx.fillText([s.instrument, teacher ? `com ${teacher}` : ""].filter(Boolean).join(" · "), M, 308);
+const stats = [["Aulas dadas", d.given], ["Faltas", d.absences], ["Reposições", d.repos]];
+const bw = (W - 2 * M - 40) / 3;
+stats.forEach(([label, val], i) => {
+const x = M + i * (bw + 20), top = 345;
+ctx.fillStyle = "#f1f5f9"; ctx.fillRect(x, top, bw, 120);
+ctx.fillStyle = accent; ctx.font = font(800, 52); ctx.fillText(String(val), x + 28, top + 68);
+ctx.fillStyle = soft; ctx.font = font(600, 22); ctx.fillText(label.toUpperCase(), x + 28, top + 102);
+});
+let yy = 530;
+ctx.fillStyle = faint; ctx.font = font(700, 20); ctx.fillText("O QUE TRABALHAMOS", M, yy);
+yy += 44;
+ctx.fillStyle = ink; ctx.font = font(500, 28);
+taught.forEach(l => { ctx.fillText(l, M, yy); yy += 42; });
+if (hw.length) {
+yy += 40;
+ctx.fillStyle = faint; ctx.font = font(700, 20); ctx.fillText("PARA ESTUDAR EM CASA", M, yy);
+yy += 44;
+ctx.fillStyle = ink; ctx.font = font(500, 28);
+hw.forEach(l => { ctx.fillText(l, M, yy); yy += 42; });
+}
+ctx.textAlign = "center"; ctx.fillStyle = faint; ctx.font = font(500, 18); ctx.fillText("Resumo gerado pelo Hi Teacher", W / 2, H - 22);
+ctx.textAlign = "left";
+return canvas;
+}
 
 // --- Editor de lista (níveis e critérios): rascunho que só vai pra appSettings ao salvar.
 // Cada item guarda de onde veio (orig) pra saber o que foi renomeado.
