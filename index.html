@@ -1293,6 +1293,10 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .auth-toggle:hover{text-decoration:underline;text-underline-offset:0.2em}
 .auth-toggle:first-of-type{margin-top:1rem}
 .auth-loading{color:var(--muted);font-size:0.8125rem}
+.tb-migrate{display:flex;flex-direction:column;gap:0.625rem;text-align:left;color:var(--text);font-size:0.875rem;line-height:1.45}
+.tb-migrate p{margin:0}
+.tb-migrate .tb-migrate-hint{color:var(--muted);font-size:0.8125rem}
+.tb-migrate button{width:100%}
 
 /* ===== Interruptores ===== */
 .switch{position:relative;display:inline-block;width:2.75rem;height:1.5rem;flex:none}
@@ -2868,7 +2872,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "7.6";
+const APP_VERSION = "8.0";
 const BACKUP_EVERY = { weekly: 7, biweekly: 15, monthly: 30, never: 0 };
 const BACKUP_LABELS = { weekly: "Toda semana", biweekly: "A cada 15 dias", monthly: "Todo mês", never: "Nunca" };
 const REMINDER_SENT_KEY = "jp_reminders_sent_v1";
@@ -2914,7 +2918,9 @@ Storage.prototype.setItem = function(key, value){
 const changed = this === localStorage && CLOUD_SYNC_KEYS.includes(key) && this.getItem(key) !== value;
 _nativeSetItem.call(this, key, value);
 if (changed && !readSyncMeta().dirty) writeSyncMeta({ dirty: true, dirtySince: new Date().toISOString() }); // mudou aqui e ainda não foi pra nuvem
-if (this === localStorage && authCurrentUser && cloudPullOk && CLOUD_SYNC_KEYS.includes(key)) {
+// Modo tabelas (8.0): em vez de mandar tudo, guarda na fila só as linhas que mudaram.
+if (this === localStorage && authCurrentUser && CLOUD_SYNC_KEYS.includes(key) && tbActive()) tbSchedule();
+else if (this === localStorage && authCurrentUser && cloudPullOk && CLOUD_SYNC_KEYS.includes(key)) {
 clearTimeout(cloudSyncTimer);
 cloudSyncTimer = setTimeout(pushCloudData, 1500);
 }
@@ -2931,8 +2937,9 @@ function writeSyncMeta(patch){ _nativeSetItem.call(localStorage, SYNC_META_KEY, 
 let cloudStatus = { state: "idle", at: null, error: "" };
 function cloudErrorText(e){
 const code = e && e.code, msg = (e && e.message) || String(e || "");
-if (code === "42501" || /permission denied|row-level security/i.test(msg)) return "o Supabase recusou o acesso à tabela user_data, falta permissão no banco";
-if (code === "42P01" || /does not exist/i.test(msg)) return "a tabela user_data não existe no Supabase";
+const table = tbActive() ? "às tabelas de dados" : "à tabela user_data";
+if (code === "42501" || /permission denied|row-level security/i.test(msg)) return `o Supabase recusou o acesso ${table}, falta permissão no banco`;
+if (code === "42P01" || code === "PGRST205" || /does not exist|could not find the table/i.test(msg)) return tbActive() ? "as tabelas da versão 8.0 não existem no Supabase" : "a tabela user_data não existe no Supabase";
 if (/failed to fetch|network|load failed/i.test(msg)) return "sem conexão com a internet";
 return msg || "erro desconhecido";
 }
@@ -2943,16 +2950,23 @@ const banner = document.getElementById("cloudBanner");
 if (!el || !banner) return;
 const hhmm = cloudStatus.at ? `${pad2(cloudStatus.at.getHours())}:${pad2(cloudStatus.at.getMinutes())}` : "";
 el.classList.remove("cloud-ok", "cloud-bad");
+// Modo tabelas: conta as mudanças da fila que ainda não subiram.
+const tbOn = tbActive();
+const queued = tbOn ? Object.values(tbQueue()) : [];
+const waiting = queued.length ? ` ${queued.length} mudança${queued.length === 1 ? "" : "s"} esperando pra subir.` : "";
 if (!supabaseClient) el.textContent = "Sem nuvem: os dados ficam só neste aparelho.";
-else if (cloudStatus.state === "ok") { el.textContent = `✓ Tudo salvo na nuvem (${hhmm})`; el.classList.add("cloud-ok"); }
-else if (cloudStatus.state === "error") { el.textContent = `⚠ Não está salvando: ${cloudStatus.error}. Toque pra tentar de novo.`; el.classList.add("cloud-bad"); }
+else if (cloudStatus.state === "ok" && !queued.length) { el.textContent = `✓ Tudo salvo na nuvem (${hhmm})`; el.classList.add("cloud-ok"); }
+else if (cloudStatus.state === "error") { el.textContent = `⚠ Não está salvando: ${cloudStatus.error}.${waiting} Toque pra tentar de novo.`; el.classList.add("cloud-bad"); }
+else if (queued.length) el.textContent = `Salvando na nuvem…${waiting}`;
 else el.textContent = "Conectando…";
 // Aviso fixo no Início: erro ao salvar, ou mudança daqui esperando há mais de 24 h desde a
-// última gravação na nuvem que deu certo (jp_sync_meta_v1).
+// última gravação na nuvem que deu certo (jp_sync_meta_v1; no modo tabelas, a fila).
 const meta = readSyncMeta();
-const lastOk = meta.cloudAt ? new Date(meta.cloudAt) : null;
-const pendingFor = meta.dirtySince ? Date.now() - Date.parse(meta.dirtySince) : Infinity;
-const stale = !!supabaseClient && !!authCurrentUser && !!meta.dirty && pendingFor > 60000 && lastOk && !isNaN(lastOk) && Date.now() - lastOk > 86400000;
+const tm = tbOn ? tbMeta() : null;
+const oldestQueued = queued.reduce((a, x) => !a || x.at < a ? x.at : a, null);
+const lastOk = tbOn ? (tm.lastOkAt ? new Date(tm.lastOkAt) : null) : (meta.cloudAt ? new Date(meta.cloudAt) : null);
+const pendingFor = tbOn ? (oldestQueued ? Date.now() - Date.parse(oldestQueued) : 0) : (meta.dirtySince ? Date.now() - Date.parse(meta.dirtySince) : Infinity);
+const stale = !!supabaseClient && !!authCurrentUser && (tbOn ? queued.length > 0 : !!meta.dirty) && pendingFor > 60000 && lastOk && !isNaN(lastOk) && Date.now() - lastOk > 86400000;
 const showBanner = (!!supabaseClient && authCurrentUser && cloudStatus.state === "error") || stale;
 banner.style.display = showBanner ? "" : "none";
 if (showBanner) document.getElementById("cloudBannerText").textContent = stale
@@ -2963,6 +2977,7 @@ if (showBanner) document.getElementById("cloudBannerText").textContent = stale
 async function retryCloudSync(){
 if (!supabaseClient || !authCurrentUser) return;
 setCloudStatus("idle");
+if (tbActive()) { if (!tbPulledOk) await pullCloudData(); else await pushCloudData(); return; }
 if (!cloudPullOk) await pullCloudData();
 else await pushCloudData();
 }
@@ -3051,6 +3066,8 @@ list.slice(2).forEach(x => st.delete(x.id)); // fica com as 3 mais novas
 let cloudPushWarned = false;
 async function pushCloudData(){
 if (!supabaseClient || !authCurrentUser) return false;
+if (tbActive()) return tbSyncNow(); // modo tabelas: só as linhas que mudaram
+if (tbMeta().mode === "tables" && tbMeta().userId === authCurrentUser.id && !cloudPullOk) return false;
 const data = {};
 CLOUD_SYNC_KEYS.forEach(k => { const v = localStorage.getItem(k); if (v !== null) data[k] = v; });
 const updatedAt = new Date().toISOString();
@@ -3082,7 +3099,7 @@ setTimeout(() => toast.remove(), 9000);
 // Uma leitura da nuvem por vez (o login dispara duas; as duas aplicavam a nuvem juntas).
 let cloudPulling = null;
 function pullCloudData(){
-if (!cloudPulling) cloudPulling = pullCloudDataNow().finally(() => { cloudPulling = null; });
+if (!cloudPulling) cloudPulling = cloudStart().finally(() => { cloudPulling = null; });
 return cloudPulling;
 }
 async function pullCloudDataNow(){
@@ -3103,12 +3120,13 @@ if (cloudUnchanged) { cloudPullOk = true; await pushCloudData(); return; }
 const localSum = dataSummary(k => localStorage.getItem(k));
 const localHasData = localSum.students > 0 || localSum.plans > 0;
 // Aparelho já sincronizado com esta conta e sem mudança pendente (ou sem dados): vale a nuvem.
-if ((sameUser && !meta.dirty) || !localHasData) { await saveDeviceSnapshot("Antes de trazer os dados da nuvem"); applyCloudData(cloud, row.updated_at); location.reload(); return; }
+if ((sameUser && !meta.dirty) || !localHasData) { await saveDeviceSnapshot("Antes de trazer os dados da nuvem"); applyCloudData(cloud, row.updated_at); cloudReloading = true; location.reload(); return; }
 // Os dois lados têm dados que o outro não tem: pergunta em vez de apagar um deles.
 const choice = await askSyncConflict(localSum, dataSummary(k => cloud[k]), row.updated_at);
 if (choice === "local") { cloudPullOk = true; await pushCloudData(); return; }
 await saveDeviceSnapshot("Antes de trazer os dados da nuvem");
 applyCloudData(cloud, row.updated_at);
+cloudReloading = true;
 location.reload();
 } catch(e) {
 console.error("Falha ao carregar dados da nuvem:", e);
@@ -3116,6 +3134,697 @@ console.error("Falha ao carregar dados da nuvem:", e);
 setCloudStatus("error", cloudErrorText(e));
 }
 }
+
+// ================== Dados em tabelas (8.0) ==================
+// Antes: uma linha por conta em user_data com tudo num JSON, e cada envio substituía a
+// linha inteira. Agora cada aluno, aula, reposição e pagamento é uma linha própria
+// (students, student_private, lessons, makeups, payments) e o resto do professor fica em
+// teacher_data. O localStorage continua sendo o cache (as mesmas chaves jp_*, o app lê e
+// grava igual); esta camada compara o cache com o que já foi para a nuvem ("sombra": um
+// hash por linha), põe só as linhas alteradas numa fila guardada no aparelho e envia a
+// fila quando há internet. user_data fica intacto (backup). Chave de volta:
+// appSettings.storageMode / teacher_data.storage_mode = "json". Ver HI-TEACHER.md.
+const TB_META_KEY = "jp_tables_meta_v1";     // { userId, mode, orgId, lastPull, lastOkAt, lastMigrationError }
+const TB_SHADOW_KEY = "jp_tables_shadow_v1"; // { chave da linha: hash do conteúdo que já foi (ou está na fila) }
+const TB_QUEUE_KEY = "jp_tables_queue_v1";   // { chave da linha: { t, op, row, at } } mudanças esperando internet
+const TB_ORPHANS_KEY = "jp_tables_orphans_v1"; // linhas da nuvem cujo aluno ainda não chegou
+const TB_TABLES = ["students", "student_private", "lessons", "makeups", "payments"];
+const TB_CODE = { students:"s", student_private:"p", lessons:"l", makeups:"m", payments:"$" };
+const TB_BY_CODE = { s:"students", p:"student_private", l:"lessons", m:"makeups", $:"payments" };
+const TB_TD_KEYS = CLOUD_SYNC_KEYS.filter(k => k !== "jp_students_v5");
+// [chave no aluno, coluna, tipo]. Valor de tipo diferente (ou null) vai pro "extra", sem perder nada.
+const TB_COLS = {
+students: [["name","name","text"],["active","active","bool"],["instrument","instrument","text"],["level","level","text"],["days","days","json"],["time","time","text"],["lessonFrequency","lesson_frequency","text"],["entry","entry","date"],["exit","exit","date"],["payTo","pay_to","text"],["value","value","num"]],
+// Só do professor (nunca vai para o aluno): observações, objetivo, pendências da importação
+// e os temas com a nota de desempenho.
+student_private: [["observations","observations","text"],["objective","objective","text"],["needsReview","needs_review","json"],["themes","themes","json"]],
+lessons: [["date","date","brdate"],["time","time","text"],["status","status","text"],["reason","reason","text"],["makeupId","makeup_id","text"],["taught","taught","text"],["homework","homework","text"],["evalSkipped","eval_skipped","bool"]],
+makeups: [["id","legacy_id","text"],["originDate","origin_date","brdate"],["date","date","date"],["time","time","text"],["status","status","text"],["reason","reason","text"],["kind","kind","text"],["dismissedAt","dismissed_at","date"]],
+payments: [["id","legacy_id","text"],["kind","kind","chargekind"],["ref","ref","text"],["value","value","num"],["paid","paid","bool"],["paidDate","paid_at","date"]]
+};
+const TB_PRIVATE_KEYS = TB_COLS.student_private.map(c => c[0]);
+// Colunas que entram no hash (o que conta como "mudou"). position fica de fora: tirar um
+// aluno do meio da lista não deve reenviar todos os outros.
+const TB_CONTENT = {
+students: ["id","legacy_id","extra", ...TB_COLS.students.map(c => c[1])],
+student_private: ["id","student_id","extra", ...TB_COLS.student_private.map(c => c[1])],
+lessons: ["id","student_id","extra","scores", ...TB_COLS.lessons.map(c => c[1])],
+makeups: ["id","student_id","extra", ...TB_COLS.makeups.map(c => c[1])],
+payments: ["id","student_id","extra", ...TB_COLS.payments.map(c => c[1])]
+};
+const TB_NUM_COLS = new Set(["value"]);
+
+let tbReady = false;     // modo tabelas ativo nesta sessão (pode estar sem internet)
+let tbPulledOk = false;  // já baixou da nuvem nesta sessão
+let tbTimer = null;
+let cloudReloading = false;
+
+function tbRead(key, fallback){ try { return JSON.parse(localStorage.getItem(key) || "null") || fallback; } catch(e) { return fallback; } }
+function tbWrite(key, obj){ _nativeSetItem.call(localStorage, key, JSON.stringify(obj)); }
+function tbMeta(){ return tbRead(TB_META_KEY, {}); }
+function tbSetMeta(patch){ tbWrite(TB_META_KEY, { ...tbMeta(), ...patch }); }
+function tbQueue(){ return tbRead(TB_QUEUE_KEY, {}); }
+function tbActive(){ return tbReady && !!authCurrentUser; }
+function tbDeviceId(){
+let id = localStorage.getItem("jp_device_id_v1");
+if (!id) { id = "dev-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); _nativeSetItem.call(localStorage, "jp_device_id_v1", id); }
+return id;
+}
+
+// Hash de 128 bits (cyrb128): serve pra sombra e pra gerar o uuid fixo de cada linha
+// (a mesma aula gera sempre o mesmo id, em qualquer aparelho).
+function tbCyrb128(str){
+let h1 = 1779033703, h2 = 3144134277, h3 = 1013904242, h4 = 2773480762;
+for (let i = 0, k; i < str.length; i++) {
+k = str.charCodeAt(i);
+h1 = h2 ^ Math.imul(h1 ^ k, 597399067); h2 = h3 ^ Math.imul(h2 ^ k, 2869860233);
+h3 = h4 ^ Math.imul(h3 ^ k, 951274213); h4 = h1 ^ Math.imul(h4 ^ k, 2716044179);
+}
+h1 = Math.imul(h3 ^ (h1 >>> 18), 597399067); h2 = Math.imul(h4 ^ (h2 >>> 22), 2869860233);
+h3 = Math.imul(h1 ^ (h3 >>> 17), 951274213); h4 = Math.imul(h2 ^ (h4 >>> 19), 2716044179);
+h1 ^= (h2 ^ h3 ^ h4); h2 ^= h1; h3 ^= h1; h4 ^= h1;
+return [h1 >>> 0, h2 >>> 0, h3 >>> 0, h4 >>> 0];
+}
+function tbUuid(...parts){
+const hex = tbCyrb128(parts.join("|")).map(n => n.toString(16).padStart(8, "0")).join("");
+return `${hex.slice(0,8)}-${hex.slice(8,12)}-5${hex.slice(13,16)}-${"89ab"[parseInt(hex[16], 16) & 3]}${hex.slice(17,20)}-${hex.slice(20,32)}`;
+}
+function tbStable(v){
+if (Array.isArray(v)) return "[" + v.map(x => x === undefined ? "null" : tbStable(x)).join(",") + "]";
+if (v && typeof v === "object") return "{" + Object.keys(v).filter(k => v[k] !== undefined).sort().map(k => JSON.stringify(k) + ":" + tbStable(v[k])).join(",") + "}";
+return JSON.stringify(v === undefined ? null : v);
+}
+function tbHash(t, row){
+if (t === "teacher_data") return tbCyrb128(tbStable(row.value)).slice(0, 2).map(n => n.toString(36)).join(".");
+const c = {};
+TB_CONTENT[t].forEach(k => { let v = row[k]; if (v === undefined) v = null; if (v !== null && TB_NUM_COLS.has(k)) v = Number(v); c[k] = v; });
+return tbCyrb128(tbStable(c)).slice(0, 2).map(n => n.toString(36)).join(".");
+}
+
+function tbIsoOk(v){ return typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) && !isNaN(Date.parse(v + "T00:00:00Z")) && new Date(v + "T00:00:00Z").toISOString().slice(0, 10) === v; }
+function tbTypeOk(type, v){
+if (v === null || v === undefined) return false;
+if (type === "text") return typeof v === "string" && v.indexOf("\u0000") < 0;
+if (type === "bool") return typeof v === "boolean";
+if (type === "num") return typeof v === "number" && isFinite(v);
+if (type === "json") return true;
+if (type === "date") return tbIsoOk(v);
+if (type === "brdate") return typeof v === "string" && /^\d{2}\/\d{2}\/\d{4}$/.test(v) && tbIsoOk(isoFromBr(v));
+if (type === "chargekind") return v === "lesson" || v === "package";
+return false;
+}
+// Objeto do app -> colunas + extra.
+function tbMapOut(obj, cols, row){
+const extra = { ...obj };
+cols.forEach(([key, col, type]) => {
+row[col] = null;
+if (tbTypeOk(type, obj[key])) { row[col] = type === "brdate" ? isoFromBr(obj[key]) : obj[key]; delete extra[key]; }
+});
+row.extra = extra;
+return row;
+}
+// Colunas + extra -> objeto do app.
+function tbMapIn(row, cols){
+const obj = { ...(row.extra || {}) };
+cols.forEach(([key, col, type]) => {
+const v = row[col];
+if (v === null || v === undefined) return;
+obj[key] = type === "brdate" ? brOf(dateFromIso(v)) : type === "num" ? Number(v) : v;
+});
+return obj;
+}
+// Chaves repetidas (ex.: duas aulas com a mesma data) ganham "#2", "#3"...
+function tbDedup(){ const seen = {}; return k => { seen[k] = (seen[k] || 0) + 1; return seen[k] > 1 ? `${k}#${seen[k]}` : k; }; }
+const TB_LESSON_KEYS = new Set(TB_COLS.lessons.map(c => c[0]));
+
+// Monta todas as linhas a partir das chaves jp_* (get = de onde ler: aparelho, backup, JSON da nuvem).
+function tbRowsFrom(get, uid, orgId){
+const out = new Map();
+const add = (t, row) => out.set(TB_CODE[t] + ":" + row.id, { t, row });
+let list = [];
+try { list = JSON.parse(get("jp_students_v5") || "[]") || []; } catch(e) {}
+if (!Array.isArray(list)) list = [];
+const sKeyOf = tbDedup();
+list.forEach((s, pos) => {
+if (!s || typeof s !== "object" || Array.isArray(s)) return;
+const sKey = sKeyOf(s.id === undefined || s.id === null ? "noid" : String(s.id));
+const sid = tbUuid(uid, "student", sKey);
+const rest = { ...s };
+["lessons","makeups","charges","paidMonths","paidMonth","paidDates", ...TB_PRIVATE_KEYS].forEach(k => delete rest[k]);
+if (typeof s.id === "number") delete rest.id;
+add("students", tbMapOut(rest, TB_COLS.students, { id: sid, org_id: orgId || null, teacher_id: uid, legacy_id: s.id === undefined || s.id === null ? null : String(s.id), position: pos }));
+const priv = {};
+TB_PRIVATE_KEYS.forEach(k => { if (k in s) priv[k] = s[k]; });
+add("student_private", tbMapOut(priv, TB_COLS.student_private, { id: tbUuid(uid, "private", sKey), student_id: sid, teacher_id: uid }));
+const lKey = tbDedup();
+(Array.isArray(s.lessons) ? s.lessons : []).forEach((l, i) => {
+if (!l || typeof l !== "object" || Array.isArray(l)) return;
+const key = lKey(`${l.date}|${l.makeupId || ""}`);
+const scores = {}, other = {};
+Object.keys(l).forEach(k => { if (!TB_LESSON_KEYS.has(k) && typeof l[k] === "number" && isFinite(l[k])) scores[k] = l[k]; else other[k] = l[k]; });
+const row = tbMapOut(other, TB_COLS.lessons, { id: tbUuid(uid, "lesson", sKey, key), student_id: sid, teacher_id: uid, position: i });
+row.scores = Object.keys(scores).length ? scores : null;
+add("lessons", row);
+});
+const mKey = tbDedup();
+(Array.isArray(s.makeups) ? s.makeups : []).forEach((m, i) => {
+if (!m || typeof m !== "object" || Array.isArray(m)) return;
+add("makeups", tbMapOut(m, TB_COLS.makeups, { id: tbUuid(uid, "makeup", sKey, mKey(String(m.id))), student_id: sid, teacher_id: uid, position: i }));
+});
+// Pagamentos: meses (paidMonths + paidMonth + paidDates) e cobranças de aula/pacote (charges).
+const paid = new Set(Array.isArray(s.paidMonths) ? s.paidMonths.map(String) : []);
+if (s.paidMonth) paid.add(String(s.paidMonth));
+const dates = (s.paidDates && typeof s.paidDates === "object" && !Array.isArray(s.paidDates)) ? s.paidDates : {};
+[...new Set([...paid, ...Object.keys(dates)])].sort().forEach(ref => {
+const at = tbIsoOk(dates[ref]) ? dates[ref] : null;
+const extra = (ref in dates && !at) ? { paidDate: dates[ref] } : {};
+add("payments", { id: tbUuid(uid, "pay-month", sKey, ref), student_id: sid, teacher_id: uid, kind: "month", ref, value: null, paid: paid.has(ref), paid_at: at, legacy_id: null, position: null, extra });
+});
+const cKey = tbDedup();
+(Array.isArray(s.charges) ? s.charges : []).forEach((c, i) => {
+if (!c || typeof c !== "object" || Array.isArray(c)) return;
+add("payments", tbMapOut(c, TB_COLS.payments, { id: tbUuid(uid, "charge", sKey, cKey(String(c.id))), student_id: sid, teacher_id: uid, position: i }));
+});
+});
+TB_TD_KEYS.forEach(k => {
+const raw = get(k);
+let value = null;
+if (raw !== null && raw !== undefined) { try { value = JSON.parse(raw); } catch(e) { value = { __raw: String(raw) }; } }
+out.set("td:" + k, { t: "teacher_data", row: { key: k, value } });
+});
+return out;
+}
+// Contagem direto do JSON (pra conferir a migração sem usar o mesmo código que a fez).
+function tbJsonCounts(get){
+let list = [];
+try { list = JSON.parse(get("jp_students_v5") || "[]") || []; } catch(e) {}
+const ok = x => x && typeof x === "object" && !Array.isArray(x);
+const c = { students: 0, lessons: 0, makeups: 0, payments: 0 };
+(Array.isArray(list) ? list : []).filter(ok).forEach(s => {
+c.students++;
+c.lessons += (Array.isArray(s.lessons) ? s.lessons : []).filter(ok).length;
+c.makeups += (Array.isArray(s.makeups) ? s.makeups : []).filter(ok).length;
+const months = new Set([...(Array.isArray(s.paidMonths) ? s.paidMonths.map(String) : []), ...(s.paidMonth ? [String(s.paidMonth)] : []), ...Object.keys(ok(s.paidDates) ? s.paidDates : {})]);
+c.payments += months.size + (Array.isArray(s.charges) ? s.charges : []).filter(ok).length;
+});
+return c;
+}
+// Linhas -> chaves jp_* (o inverso de tbRowsFrom).
+function tbCompose(map){
+const by = { students: [], student_private: {}, lessons: {}, makeups: {}, payments: {} };
+const td = {};
+map.forEach(({ t, row }) => {
+if (t === "teacher_data") { td[row.key] = row.value; return; }
+if (t === "students") by.students.push(row);
+else (by[t][row.student_id] ??= []).push(row);
+});
+const posSort = (a, b) => (a.position ?? 1e9) - (b.position ?? 1e9) || String(a.legacy_id || a.id).localeCompare(String(b.legacy_id || b.id));
+by.students.sort(posSort);
+const list = by.students.map(r => {
+const s = tbMapIn(r, TB_COLS.students);
+if (!("id" in (r.extra || {})) && r.legacy_id !== null && r.legacy_id !== undefined) s.id = isNaN(Number(r.legacy_id)) ? r.legacy_id : Number(r.legacy_id);
+(by.student_private[r.id] || []).forEach(p => Object.assign(s, tbMapIn(p, TB_COLS.student_private)));
+s.lessons = (by.lessons[r.id] || []).sort(posSort).map(l => ({ ...tbMapIn(l, TB_COLS.lessons), ...(l.scores || {}) }));
+const mk = (by.makeups[r.id] || []).sort(posSort).map(m => tbMapIn(m, TB_COLS.makeups));
+if (mk.length) s.makeups = mk;
+const pays = by.payments[r.id] || [];
+const months = pays.filter(p => p.kind === "month").sort((a, b) => String(a.ref).localeCompare(String(b.ref)));
+if (months.length) {
+s.paidMonths = months.filter(p => p.paid).map(p => p.ref);
+s.paidMonth = s.paidMonths.length ? s.paidMonths[s.paidMonths.length - 1] : null;
+const pd = {};
+months.forEach(p => { if (p.paid_at) pd[p.ref] = p.paid_at; else if (p.extra && "paidDate" in p.extra) pd[p.ref] = p.extra.paidDate; });
+if (Object.keys(pd).length) s.paidDates = pd;
+}
+const ch = pays.filter(p => p.kind !== "month").sort(posSort).map(p => tbMapIn(p, TB_COLS.payments));
+if (ch.length) s.charges = ch;
+return s;
+});
+const data = { jp_students_v5: JSON.stringify(list) };
+TB_TD_KEYS.forEach(k => {
+const v = td[k];
+data[k] = v === null || v === undefined ? null : (v && typeof v === "object" && "__raw" in v && Object.keys(v).length === 1 ? v.__raw : JSON.stringify(v));
+});
+return data;
+}
+function tbLocalRows(){ const m = tbMeta(); return tbRowsFrom(k => localStorage.getItem(k), authCurrentUser.id, m.orgId); }
+function tbWriteLocal(data){
+CLOUD_SYNC_KEYS.forEach(k => {
+if (data[k] === null || data[k] === undefined) localStorage.removeItem(k);
+else _nativeSetItem.call(localStorage, k, data[k]);
+});
+}
+function tbHashes(map){ const h = {}; map.forEach((x, k) => { h[k] = tbHash(x.t, x.row); }); return h; }
+
+// Compara o aparelho com a sombra e põe na fila só as linhas que mudaram (ou sumiram).
+function tbDiff(){
+if (!authCurrentUser) return 0;
+const local = tbLocalRows();
+const shadow = tbRead(TB_SHADOW_KEY, {});
+const queue = tbQueue();
+const at = new Date().toISOString();
+let n = 0;
+local.forEach(({ t, row }, k) => {
+const h = tbHash(t, row);
+if (shadow[k] === h) return;
+queue[k] = { t, op: "up", row, at }; shadow[k] = h; n++;
+});
+Object.keys(shadow).forEach(k => {
+if (local.has(k)) return;
+const code = k.split(":")[0];
+queue[k] = code === "td" ? { t: "teacher_data", op: "up", row: { key: k.slice(3), value: null }, at } : { t: TB_BY_CODE[code], op: "del", id: k.slice(code.length + 1), at };
+delete shadow[k]; n++;
+});
+if (n) { tbWrite(TB_SHADOW_KEY, shadow); tbWrite(TB_QUEUE_KEY, queue); }
+return n;
+}
+
+// Envia a fila: um upsert por linha alterada (em lotes), alunos antes das aulas.
+let tbFlushing = null;
+function tbFlush(){
+if (!tbFlushing) tbFlushing = tbFlushNow().finally(() => { tbFlushing = null; });
+return tbFlushing;
+}
+async function tbFlushNow(){
+if (!supabaseClient || !authCurrentUser) return false;
+const uid = authCurrentUser.id;
+const queue = tbQueue();
+const keys = Object.keys(queue);
+const sent = []; // [chave, at] aceitas pela nuvem
+const orgId = tbMeta().orgId || null;
+let failure = null;
+try {
+for (const t of TB_TABLES) {
+const ups = keys.filter(k => queue[k].t === t && queue[k].op === "up");
+for (let i = 0; i < ups.length; i += 500) {
+const part = ups.slice(i, i + 500);
+const rows = part.map(k => ({ ...queue[k].row, ...(t === "students" ? { org_id: queue[k].row.org_id || orgId } : {}), teacher_id: uid, deleted: false, changed_at: queue[k].at }));
+const { error } = await supabaseClient.from(t).upsert(rows, { onConflict: "id" });
+if (error) throw error;
+part.forEach(k => sent.push([k, queue[k].at]));
+}
+}
+// Excluídos: a linha fica na nuvem, marcada "deleted" (nada é apagado de verdade).
+for (const t of [...TB_TABLES].reverse()) {
+const dels = keys.filter(k => queue[k].t === t && queue[k].op === "del");
+for (let i = 0; i < dels.length; i += 200) {
+const part = dels.slice(i, i + 200);
+const at = part.map(k => queue[k].at).sort().pop();
+const { error } = await supabaseClient.from(t).update({ deleted: true, changed_at: at }).in("id", part.map(k => queue[k].id)).eq("teacher_id", uid);
+if (error) throw error;
+part.forEach(k => sent.push([k, queue[k].at]));
+}
+}
+const tds = keys.filter(k => queue[k].t === "teacher_data");
+if (tds.length) {
+const data = {}, key_times = {};
+tds.forEach(k => { data[queue[k].row.key] = queue[k].row.value; key_times[queue[k].row.key] = queue[k].at; });
+const { error } = await supabaseClient.from("teacher_data").upsert({ teacher_id: uid, org_id: orgId, data, key_times }, { onConflict: "teacher_id" });
+if (error) throw error;
+tds.forEach(k => sent.push([k, queue[k].at]));
+}
+} catch(e) { failure = e; }
+// Tira da fila o que foi aceito (se não mudou de novo enquanto enviava).
+const q = tbQueue();
+sent.forEach(([k, at]) => { if (q[k] && q[k].at === at) delete q[k]; });
+if (sent.length) tbWrite(TB_QUEUE_KEY, q);
+if (failure) {
+console.error("Falha ao enviar para as tabelas:", failure);
+setCloudStatus("error", cloudErrorText(failure));
+if (!cloudPushWarned) { cloudPushWarned = true; showCloudWarning("Não consegui salvar na nuvem. Suas mudanças estão guardadas neste aparelho e sobem quando der."); }
+return false;
+}
+if (!Object.keys(q).length) tbSetMeta({ lastOkAt: new Date().toISOString() });
+setCloudStatus("ok");
+return true;
+}
+// Evita recarregar em círculo (no máximo 3 recarregamentos da sincronização por minuto).
+function tbReloadOk(){
+let list = [];
+try { list = JSON.parse(sessionStorage.getItem("hi_tb_reloads") || "[]").filter(t => Date.now() - t < 60000); } catch(e) {}
+if (list.length >= 3) { console.warn("Sincronização: recarregamento evitado (muitos seguidos)."); return false; }
+try { sessionStorage.setItem("hi_tb_reloads", JSON.stringify([...list, Date.now()])); } catch(e) {}
+return true;
+}
+function tbSchedule(){ clearTimeout(tbTimer); tbTimer = setTimeout(tbSyncNow, 1500); }
+async function tbSyncNow(){
+clearTimeout(tbTimer);
+if (!tbActive()) return false;
+try { tbDiff(); } catch(e) { console.error("Falha ao preparar as mudanças:", e); setCloudStatus("error", cloudErrorText(e)); return false; }
+renderCloudStatus();
+const ok = await tbFlush();
+return ok && !Object.keys(tbQueue()).length;
+}
+
+// Baixa da nuvem (tudo, ou só o que mudou desde a última vez, com 5 min de folga).
+async function tbFetch(full){
+const uid = authCurrentUser.id;
+const meta = tbMeta();
+const since = !full && meta.lastPull ? new Date(Date.parse(meta.lastPull) - 5 * 60000).toISOString() : null;
+const rows = [];
+let maxAt = meta.lastPull || null;
+for (const t of TB_TABLES) {
+for (let from = 0; ; from += 1000) {
+let q = supabaseClient.from(t).select("*").eq("teacher_id", uid);
+if (since) q = q.gt("updated_at", since);
+const { data, error } = await q.order("id").range(from, from + 999);
+if (error) throw error;
+(data || []).forEach(r => { rows.push({ t, row: r }); if (!maxAt || Date.parse(r.updated_at) > Date.parse(maxAt)) maxAt = r.updated_at; });
+if (!data || data.length < 1000) break;
+}
+}
+const { data: td, error } = await supabaseClient.from("teacher_data").select("data, key_times, updated_at").eq("teacher_id", uid).maybeSingle();
+if (error) throw error;
+return { rows, td, maxAt };
+}
+// Aplica o que veio da nuvem no aparelho: vale a alteração mais recente por linha.
+// Devolve true se mudou alguma coisa aqui.
+function tbApply(rows, td, local){
+const shadow = tbRead(TB_SHADOW_KEY, {});
+const queue = tbQueue();
+const orphans = tbRead(TB_ORPHANS_KEY, {});
+let changed = false;
+const newer = (q, at) => q && Date.parse(q.at) > (Date.parse(at || 0) || 0);
+const all = [...Object.values(orphans), ...rows].sort((a, b) => TB_TABLES.indexOf(a.t) - TB_TABLES.indexOf(b.t));
+const nextOrphans = {};
+all.forEach(({ t, row }) => {
+const k = TB_CODE[t] + ":" + row.id;
+if (newer(queue[k], row.changed_at)) return; // a daqui é mais nova: vai subir
+if (t !== "students" && !row.deleted && !local.has("s:" + row.student_id)) { nextOrphans[k] = { t, row }; return; }
+delete queue[k];
+if (row.deleted) { if (local.has(k)) { local.delete(k); changed = true; } delete shadow[k]; return; }
+const clean = { ...row };
+["created_at","updated_at","changed_at","deleted"].forEach(x => delete clean[x]);
+const h = tbHash(t, clean);
+if (!local.has(k) || tbHash(t, local.get(k).row) !== h) { local.set(k, { t, row: clean }); changed = true; }
+shadow[k] = h;
+});
+if (td && td.data) {
+Object.keys(td.data).forEach(key => {
+if (!TB_TD_KEYS.includes(key)) return;
+const k = "td:" + key;
+if (newer(queue[k], (td.key_times || {})[key])) return;
+delete queue[k];
+const row = { key, value: td.data[key] };
+const h = tbHash("teacher_data", row);
+if (!local.has(k) || tbHash("teacher_data", local.get(k).row) !== h) { local.set(k, { t: "teacher_data", row }); changed = true; }
+shadow[k] = h;
+});
+}
+tbWrite(TB_SHADOW_KEY, shadow);
+tbWrite(TB_QUEUE_KEY, queue);
+tbWrite(TB_ORPHANS_KEY, nextOrphans);
+return changed;
+}
+// Abertura normal no modo tabelas: guarda o que mudou aqui, baixa o que mudou lá, envia.
+async function tbOpen(){
+tbReady = true;
+tbDiff();
+const { rows, td, maxAt } = await tbFetch(false);
+const local = tbLocalRows();
+const before = [TB_SHADOW_KEY, TB_QUEUE_KEY, TB_ORPHANS_KEY].map(k => [k, localStorage.getItem(k)]);
+const changed = tbApply(rows, td, local);
+tbPulledOk = true;
+if (changed && !tbReloadOk()) {
+// Não dá pra recarregar agora: deixa pra aplicar na próxima abertura (sem mexer no aparelho).
+before.forEach(([k, v]) => { if (v === null) localStorage.removeItem(k); else _nativeSetItem.call(localStorage, k, v); });
+await tbFlush();
+return;
+}
+tbSetMeta({ lastPull: maxAt });
+if (changed) {
+tbWriteLocal(tbCompose(local));
+await tbFlush();
+cloudReloading = true;
+location.reload();
+return;
+}
+await tbFlush();
+}
+// Primeira vez deste aparelho no modo tabelas (outro aparelho já migrou, conta nova, ou
+// outra conta estava aqui). Mesmas regras do JSON: nunca apaga sem perguntar.
+async function tbAdopt(ud){
+const uid = authCurrentUser.id;
+const { rows, td, maxAt } = await tbFetch(true);
+const cloud = new Map();
+tbWrite(TB_ORPHANS_KEY, {});
+rows.forEach(({ t, row }) => { if (!row.deleted) { const c = { ...row }; ["created_at","updated_at","changed_at","deleted"].forEach(x => delete c[x]); cloud.set(TB_CODE[t] + ":" + row.id, { t, row: c }); } });
+TB_TD_KEYS.forEach(k => cloud.set("td:" + k, { t: "teacher_data", row: { key: k, value: td && td.data && k in td.data ? td.data[k] : null } }));
+const local = tbLocalRows();
+const cloudData = tbCompose(cloud);
+const cloudSum = dataSummary(k => cloudData[k]);
+const localSum = dataSummary(k => localStorage.getItem(k));
+const cloudEmpty = !rows.length && !(td && td.data && Object.values(td.data).some(v => v !== null));
+const localHasData = localSum.students > 0 || localSum.plans > 0;
+const jm = readSyncMeta();
+const start = shadow => { tbWrite(TB_SHADOW_KEY, shadow); tbWrite(TB_QUEUE_KEY, {}); tbSetMeta({ userId: uid, mode: "tables", lastPull: maxAt }); tbReady = true; tbPulledOk = true; };
+const useCloud = async () => {
+await saveDeviceSnapshot("Antes de trazer os dados da nuvem");
+tbWriteLocal(cloudData);
+start(tbHashes(tbLocalRows()));
+cloudReloading = true;
+location.reload();
+};
+// Nuvem vazia (conta nova): sobe o que o aparelho tem.
+if (cloudEmpty) { start({}); await tbSyncNow(); return; }
+const lh = tbHashes(local), ch = tbHashes(cloud);
+const same = Object.keys(lh).length === Object.keys(ch).length && Object.keys(lh).every(k => lh[k] === ch[k]);
+if (same) { start(ch); setCloudStatus("ok"); return; }
+if (!localHasData || (jm.userId === uid && !jm.dirty)) return useCloud();
+// Aparelho estava em dia com o JSON da nuvem e mudou coisas depois: essas mudanças sobem
+// (só as linhas que ele mudou), o resto vem das tabelas.
+if (jm.userId === uid && jm.dirty && ud && ud.data && jm.cloudAt && Date.parse(jm.cloudAt) === Date.parse(ud.updated_at)) {
+start(tbHashes(tbRowsFrom(k => ud.data[k] ?? null, uid, tbMeta().orgId)));
+tbDiff();
+const merged = tbLocalRows();
+const changed = tbApply(rows, td, merged);
+tbWriteLocal(tbCompose(merged));
+await tbFlush();
+if (changed && tbReloadOk()) { cloudReloading = true; location.reload(); }
+return;
+}
+const choice = await askSyncConflict(localSum, cloudSum, td && td.updated_at);
+if (choice === "local") { start(ch); await tbSyncNow(); return; }
+return useCloud();
+}
+
+// ---- Migração do JSON (user_data) para as tabelas: uma vez por conta ----
+function tbMigrationScreen(html){
+const el = document.getElementById("authLoading");
+el.innerHTML = html;
+document.getElementById("authForm").style.display = "none";
+el.style.display = "block";
+showAuthGate("Hi Teacher 8.0");
+}
+function tbAskBackup(){
+return new Promise(resolve => {
+tbMigrationScreen(`<div class="tb-migrate"><p><b>Atualizando o jeito de guardar seus dados.</b> Isso é feito uma vez só. Não feche o app.</p><p class="tb-migrate-hint">Antes, salve uma cópia dos seus dados (o mesmo arquivo de "Exportar dados"): guarde no celular ou mande pra você mesmo.</p><button type="button" class="save" id="tbBackupGo">Salvar cópia e continuar</button><button type="button" class="cancel" id="tbBackupLater">Agora não</button></div>`);
+document.getElementById("tbBackupGo").onclick = async () => { try { await doBackup(true); } catch(e) {} resolve(true); };
+document.getElementById("tbBackupLater").onclick = () => resolve(false);
+});
+}
+async function tbCount(t, uid){
+const { count, error } = await supabaseClient.from(t).select("id", { count: "exact", head: true }).eq("teacher_id", uid).eq("deleted", false);
+if (error) throw error;
+return count || 0;
+}
+async function tbMigrate(orgId){
+const uid = authCurrentUser.id, dev = tbDeviceId();
+const { data: locked, error: lockErr } = await supabaseClient.rpc("hi_try_migration_lock", { p_device: dev });
+if (lockErr) throw lockErr;
+if (!locked) { console.warn("Outro aparelho está atualizando os dados agora; este continua no modo antigo."); return false; }
+const release = () => supabaseClient.rpc("hi_release_migration_lock", { p_device: dev });
+try {
+if (!(await tbAskBackup())) { await release(); return false; }
+// O backup grava a data dele nas configurações: sobe já pro JSON, e o JSON para de receber
+// envios enquanto copia (senão o user_data mudaria no meio da cópia).
+clearTimeout(cloudSyncTimer);
+if (readSyncMeta().dirty) await pushCloudData();
+cloudPullOk = false;
+await saveDeviceSnapshot("Antes de atualizar o jeito de guardar os dados (8.0)");
+tbMigrationScreen(`<div class="tb-migrate"><p><b>Atualizando o jeito de guardar seus dados.</b> Isso é feito uma vez só. Não feche o app.</p><p class="tb-migrate-hint" id="tbMigrateStep">Copiando…</p></div>`);
+const step = txt => { const el = document.getElementById("tbMigrateStep"); if (el) el.textContent = txt; };
+// Lê o JSON (já igual ao da nuvem nesta hora) e grava nas tabelas, em lotes.
+const snap = {};
+CLOUD_SYNC_KEYS.forEach(k => { snap[k] = localStorage.getItem(k); });
+const rows = tbRowsFrom(k => snap[k], uid, orgId);
+const at = new Date().toISOString();
+// Linhas que já estão na nuvem e não estão no JSON (tentativa anterior, ou volta do modo
+// JSON): ficam marcadas como excluídas.
+const stale = {};
+for (const t of TB_TABLES) {
+for (let from = 0; ; from += 1000) {
+const { data, error } = await supabaseClient.from(t).select("id").eq("teacher_id", uid).eq("deleted", false).order("id").range(from, from + 999);
+if (error) throw error;
+(data || []).forEach(r => { if (!rows.has(TB_CODE[t] + ":" + r.id)) (stale[t] ??= []).push(r.id); });
+if (!data || data.length < 1000) break;
+}
+}
+let done = 0;
+const total = [...rows.values()].filter(x => x.t !== "teacher_data").length;
+for (const t of TB_TABLES) {
+const list = [...rows.values()].filter(x => x.t === t).map(x => ({ ...x.row, deleted: false, changed_at: at }));
+for (let i = 0; i < list.length; i += 400) {
+const { error } = await supabaseClient.from(t).upsert(list.slice(i, i + 400), { onConflict: "id" });
+if (error) throw error;
+done += Math.min(400, list.length - i);
+step(`Copiando… ${Math.round(done / Math.max(1, total) * 100)}%`);
+}
+}
+for (const t of [...TB_TABLES].reverse()) {
+const ids = stale[t] || [];
+for (let i = 0; i < ids.length; i += 200) {
+const { error } = await supabaseClient.from(t).update({ deleted: true, changed_at: at }).in("id", ids.slice(i, i + 200)).eq("teacher_id", uid);
+if (error) throw error;
+}
+}
+const data = {}, key_times = {};
+TB_TD_KEYS.forEach(k => { data[k] = rows.get("td:" + k).row.value; key_times[k] = at; });
+const { error: tdErr } = await supabaseClient.from("teacher_data").upsert({ teacher_id: uid, org_id: orgId, data, key_times }, { onConflict: "teacher_id" });
+if (tdErr) throw tdErr;
+// Confere: mesmos números de alunos, aulas, reposições e pagamentos do JSON.
+step("Conferindo…");
+const want = tbJsonCounts(k => snap[k]);
+const got = { students: await tbCount("students", uid), lessons: await tbCount("lessons", uid), makeups: await tbCount("makeups", uid), payments: await tbCount("payments", uid) };
+const priv = await tbCount("student_private", uid);
+const { data: tdBack, error: tdBackErr } = await supabaseClient.from("teacher_data").select("data").eq("teacher_id", uid).maybeSingle();
+if (tdBackErr) throw tdBackErr;
+const bad = Object.keys(want).filter(k => want[k] !== got[k]).map(k => `${k}: JSON ${want[k]}, tabelas ${got[k]}`);
+if (priv !== want.students) bad.push(`student_private: JSON ${want.students}, tabelas ${priv}`);
+TB_TD_KEYS.forEach(k => { if (tbStable((tdBack && tdBack.data || {})[k] ?? null) !== tbStable(data[k] ?? null)) bad.push(`teacher_data: ${k} diferente`); });
+if (bad.length) throw new Error("Contagem diferente — " + bad.join("; "));
+const { data: udNow } = await supabaseClient.from("user_data").select("updated_at").eq("user_id", uid).maybeSingle();
+const { error: doneErr } = await supabaseClient.from("teacher_data").update({ migrated_at: new Date().toISOString(), json_at: udNow ? udNow.updated_at : null, migration_error: null, migration_lock_at: null, migration_lock_by: null }).eq("teacher_id", uid);
+if (doneErr) throw doneErr;
+tbWrite(TB_SHADOW_KEY, tbHashes(rows));
+tbWrite(TB_QUEUE_KEY, {});
+tbWrite(TB_ORPHANS_KEY, {});
+tbSetMeta({ userId: uid, mode: "tables", orgId, lastPull: null, lastOkAt: new Date().toISOString(), lastMigrationError: null });
+console.info("Migração para tabelas concluída:", got);
+return true;
+} catch(e) {
+const msg = (e && (e.message || e.code)) || String(e);
+console.error("Migração para tabelas não concluída (continua no JSON):", e);
+tbSetMeta({ lastMigrationError: `${new Date().toISOString()} ${msg}` });
+try { await supabaseClient.from("teacher_data").update({ migration_error: `${new Date().toISOString()} ${msg}`.slice(0, 2000) }).eq("teacher_id", uid); } catch(x) {}
+try { await release(); } catch(x) {}
+cloudPullOk = true; // continua no JSON, como antes
+tbMigrationScreen(`<div class="tb-migrate"><p>Não foi possível atualizar agora, seus dados continuam seguros.</p></div>`);
+await new Promise(r => setTimeout(r, 2500));
+return false;
+} finally {
+const el = document.getElementById("authLoading");
+if (el) el.textContent = "Carregando seus dados…";
+}
+}
+function tbIsMissingTableError(e){
+const code = e && e.code, msg = (e && e.message) || "";
+return code === "42P01" || code === "PGRST205" || code === "PGRST202" || code === "42883" || /does not exist|could not find/i.test(msg);
+}
+function tbIsNetworkError(e){ return /failed to fetch|network|load failed|fetch/i.test((e && e.message) || String(e || "")); }
+
+// Chave de volta. setStorageMode("json") = todos os aparelhos voltam a usar o user_data;
+// setStorageMode("tables") = voltam para as tabelas (copiando de novo o que mudou no JSON).
+// Também dá pra abrir o app com ?armazenamento=json ou ?armazenamento=tabelas.
+async function setStorageMode(mode){
+if (mode !== "json" && mode !== "tables") return;
+appSettings.storageMode = mode;
+saveAppSettings();
+if (supabaseClient && authCurrentUser) {
+if (tbActive()) await tbSyncNow();
+try { await supabaseClient.from("teacher_data").update({ storage_mode: mode }).eq("teacher_id", authCurrentUser.id); } catch(e) {}
+if (!tbActive() && cloudPullOk) { clearTimeout(cloudSyncTimer); await pushCloudData(); }
+}
+cloudReloading = true;
+location.reload();
+}
+window.setStorageMode = setStorageMode;
+
+async function cloudStart(){
+try { await cloudStartNow(); }
+catch(e) { console.error("Falha ao carregar dados da nuvem:", e); setCloudStatus("error", cloudErrorText(e)); }
+}
+// Ao entrar: decide se usa as tabelas ou o JSON, e migra se precisar.
+async function cloudStartNow(){
+if (!supabaseClient || !authCurrentUser) return;
+const uid = authCurrentUser.id;
+const meta = tbMeta();
+const param = new URLSearchParams(location.search).get("armazenamento");
+const wanted = param === "json" ? "json" : (param === "tabelas" || param === "tables") ? "tables" : null;
+if (param !== null) { try { const u = new URL(location.href); u.searchParams.delete("armazenamento"); history.replaceState(null, "", u.toString()); } catch(e) {} }
+if (wanted && appSettings.storageMode !== wanted) { appSettings.storageMode = wanted; _nativeSetItem.call(localStorage, "jp_settings_v1", JSON.stringify(appSettings)); }
+let td, orgId;
+try {
+const r = await supabaseClient.rpc("hi_ensure_teacher", { p_name: (appSettings.profile && appSettings.profile.name) || "" });
+if (r.error) throw r.error;
+orgId = r.data;
+if (wanted) await supabaseClient.from("teacher_data").update({ storage_mode: wanted }).eq("teacher_id", uid);
+const q = await supabaseClient.from("teacher_data").select("storage_mode, migrated_at, json_at, json_since").eq("teacher_id", uid).maybeSingle();
+if (q.error) throw q.error;
+td = q.data || {};
+} catch(e) {
+if (meta.userId === uid && meta.mode === "tables") {
+// Sem internet (ou nuvem fora do ar): segue nas tabelas com a fila guardada no aparelho.
+tbReady = true;
+setCloudStatus("error", cloudErrorText(e));
+return;
+}
+if (!tbIsNetworkError(e)) console.warn("Tabelas da 8.0 indisponíveis; usando o JSON (user_data):", e);
+tbSetMeta({ mode: "json" });
+return pullCloudDataNow();
+}
+tbSetMeta({ orgId });
+const forceJson = td.storage_mode === "json" || (!td.storage_mode && appSettings.storageMode === "json");
+if (forceJson) {
+if (meta.userId === uid && meta.mode === "tables") {
+// Voltando pro JSON: manda a fila e baixa o que mudou nas tabelas. O primeiro aparelho a
+// abrir depois da volta (user_data mais velho que json_since) sobe os dados pro user_data;
+// os outros pegam o user_data (ou, se tinham mudança na fila, o app pergunta qual manter).
+tbReady = true;
+tbDiff();
+const hadQueued = Object.keys(tbQueue()).length > 0;
+if (!(await tbSyncNow())) { tbReady = false; return; }
+const { rows, td: tdRow } = await tbFetch(false);
+const local = tbLocalRows();
+const changed = tbApply(rows, tdRow, local);
+if (changed) tbWriteLocal(tbCompose(local));
+tbReady = false;
+tbSetMeta({ mode: "json" });
+const { data: udRow } = await supabaseClient.from("user_data").select("updated_at").eq("user_id", uid).maybeSingle();
+if (!udRow || !td.json_since || Date.parse(udRow.updated_at) < Date.parse(td.json_since)) {
+if (!(await pushCloudData())) return;
+} else writeSyncMeta({ userId: uid, dirty: hadQueued, cloudAt: null });
+if (changed) { cloudReloading = true; location.reload(); return; }
+}
+tbSetMeta({ mode: "json" });
+return pullCloudDataNow();
+}
+const { data: ud, error: udErr } = await supabaseClient.from("user_data").select(td.migrated_at && meta.userId === uid ? "updated_at" : "data, updated_at").eq("user_id", uid).maybeSingle();
+if (udErr && !tbIsMissingTableError(udErr) && !/permission/i.test(udErr.message || "")) throw udErr;
+const jsonChangedAfter = ud && td.migrated_at && (!td.json_at || Date.parse(ud.updated_at) > Date.parse(td.json_at) + 1000);
+if (td.migrated_at && !jsonChangedAfter) {
+if (meta.userId === uid && meta.mode === "tables") return tbOpen();
+return tbAdopt(ud);
+}
+// Conta nova (nada no JSON nem neste aparelho): já nasce nas tabelas.
+const localSum = dataSummary(k => localStorage.getItem(k));
+if (!td.migrated_at && !ud && !localSum.students && !localSum.plans) {
+const { error } = await supabaseClient.from("teacher_data").update({ migrated_at: new Date().toISOString() }).eq("teacher_id", uid);
+if (error) throw error;
+tbSetMeta({ userId: null });
+return tbAdopt(null);
+}
+// Migração (ou nova cópia, se o JSON mudou depois de voltar pro modo JSON): primeiro o
+// fluxo de sempre deixa o aparelho igual ao user_data (perguntando se houver conflito).
+tbSetMeta({ mode: "json" });
+await pullCloudDataNow();
+if (cloudReloading || !cloudPullOk) return;
+clearTimeout(cloudSyncTimer);
+if (readSyncMeta().dirty) await pushCloudData();
+if (await tbMigrate(orgId)) { cloudPullOk = false; await tbOpen(); }
+}
+// Voltou a internet: sobe a fila do modo tabelas.
+window.addEventListener("online", () => { if (tbActive()) tbSyncNow(); });
 
 function showAuthGate(subtitle){
 document.getElementById("authSubtitle").textContent = subtitle || "Entre pra acessar seus dados.";
