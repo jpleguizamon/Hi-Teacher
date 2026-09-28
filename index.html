@@ -1222,6 +1222,34 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .cloud-banner{display:flex;align-items:center;gap:0.625rem;margin:0 0 1rem;padding:0.75rem 0.875rem;border-radius:var(--radius-md);
   border:0.0625rem solid rgba(251,146,60,.45);background:rgba(251,146,60,.1);color:#fed7aa;font-size:0.8125rem;font-weight:600;line-height:1.4}
 .cloud-banner span{flex:1;min-width:0}
+.cloud-banner{flex-wrap:wrap}
+.cloud-banner-btns{display:flex;gap:0.375rem;flex:none}
+.settings-row.row-flash{box-shadow:inset 0 0 0 0.125rem var(--orange)}
+.backup-line,.lr-line{display:flex;align-items:center;justify-content:space-between;gap:0.625rem;width:100%;margin:0.625rem 0 0.25rem;padding:0.5rem 0.625rem 0.5rem 0.875rem;border-radius:var(--radius-md);border:0.0625rem solid var(--hairline);background:var(--glass-inset);font-size:0.8125rem;font-weight:600;color:var(--text-2)}
+.backup-line span,.lr-line span{flex:1;min-width:0}
+.backup-line button{flex:none}
+.lr-line{border-color:var(--accent-line);background:var(--accent-soft);color:var(--text);cursor:pointer;text-align:left}
+.lr-line .lr-cta{flex:none;color:var(--accent);font-weight:750;font-size:0.75rem}
+.day-bell{margin-left:0.375rem;border:0.0625rem solid var(--hairline);background:var(--glass-inset);color:var(--accent);border-radius:50%;width:1.75rem;height:1.75rem;display:inline-grid;place-items:center;vertical-align:middle;cursor:pointer}
+.day-bell svg{width:0.875rem;height:0.875rem}
+.lr-row{display:flex;align-items:center;gap:0.5rem;padding:0.625rem 0;border-top:0.0625rem solid var(--hairline)}
+.lr-row:first-child{border-top:none}
+.lr-row-info{flex:1;min-width:0}
+.lr-row-name{font-size:0.875rem;font-weight:700;color:var(--text)}
+.lr-row-sub{font-size:0.75rem;color:var(--muted);margin-top:0.125rem}
+.lr-row.sent .lr-row-sub{color:var(--green)}
+.lr-row.sent .wa-btn{opacity:.6}
+.snap-row{display:flex;align-items:center;gap:0.625rem;padding:0.625rem 0;border-top:0.0625rem solid var(--hairline)}
+.snap-row:first-child{border-top:none}
+.snap-info{flex:1;min-width:0;font-size:0.8125rem;color:var(--text)}
+.snap-info div{font-size:0.75rem;color:var(--muted);margin-top:0.125rem}
+.rp-group{border:0.0625rem solid var(--glass-border-soft);border-radius:var(--radius-md);padding:0.75rem;margin-bottom:0.75rem;background:var(--glass-inset)}
+.rp-group-title{font-size:0.8125rem;font-weight:750;color:var(--text);margin-bottom:0.5rem}
+.rp-row{margin-bottom:0.5rem}
+.rp-row textarea{width:100%;background:var(--glass-field);border:0.0625rem solid rgba(148,163,184,.18);color:var(--text);border-radius:var(--radius-sm);padding:0.5rem 0.625rem;font:inherit;font-size:0.8125rem;resize:vertical}
+.rp-row-foot{display:flex;justify-content:flex-end;gap:0.75rem;margin-top:0.1875rem}
+.rp-example{font-size:0.75rem;color:var(--text-2);margin-top:0.5rem;line-height:1.45}
+.rp-example b{color:var(--accent)}
 .cloud-banner button{flex:none;border:0.0625rem solid rgba(251,146,60,.5);background:transparent;color:#fed7aa;border-radius:var(--radius-pill);padding:0.375rem 0.75rem;font-size:0.75rem;font-weight:700;cursor:pointer}
 .cloud-ok{color:var(--green)!important}
 .cloud-bad{color:var(--orange)!important}
@@ -1542,13 +1570,15 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 </div>
 
 <main id="homePage">
-<div class="cloud-banner" id="cloudBanner" style="display:none"><span id="cloudBannerText"></span><button type="button" id="cloudBannerRetry">Tentar de novo</button></div>
+<div class="cloud-banner" id="cloudBanner" style="display:none"><span id="cloudBannerText"></span><div class="cloud-banner-btns"><button type="button" id="cloudBannerRetry">Tentar de novo</button><button type="button" id="cloudBannerDetails">Ver detalhes</button></div></div>
 <div class="home-greeting-text" id="homeGreetingText">Olá, JP</div>
 <div class="home-message" id="homeMessage">
 <div class="home-message-status" id="homeMessageStatus"></div>
 <div class="home-message-phrase" id="homeMessagePhrase"></div>
 </div>
+<div id="lessonReminderBox"></div>
 <div id="attentionBox"></div>
+<div id="backupBox"></div>
 <!-- Ordem do Início: aulas primeiro; depois reposições, aniversários e, por último,
      cobranças. -->
 <div id="nextDays"></div>
@@ -1922,7 +1952,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 <div class="settings-row" id="rowCriterios"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-clipboard"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Critérios de avaliação<button type="button" class="help-icon" data-help="O que você avalia em cada aula, de 0 a 5 estrelas. Renomear mantém as avaliações antigas; tirar um critério não apaga as notas que ele já tinha.">!</button></div></div><span class="settings-row-value" id="valCriterios"></span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowEvalFreq"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-star"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Frequência da avaliação<button type="button" class="help-icon" data-help="De quanto em quanto tempo o app pede pra avaliar cada aluno. Fora do dia de avaliação a aula fica só como 'Aula dada', sem pop-up nem 'Aguardando avaliação'. Dá pra mudar por aluno no cadastro dele.">!</button></div></div><span class="settings-row-value" id="valEvalFreq">Toda aula</span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowFerias"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-sun"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Férias e recesso<button type="button" class="help-icon" data-help="Períodos sem aula, pra todos os alunos ou só pra um. As aulas nesses dias (e nos feriados da Agenda) ficam automaticamente como 'Não houve aula', sem avaliação.">!</button></div><div class="settings-row-sub">Períodos sem aula, gerais ou por aluno</div></div><span class="settings-row-value" id="valFerias">Nenhum</span><span class="settings-row-chevron">›</span></div>
-<div class="settings-row" id="rowMensagens"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-message"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Mensagens prontas<button type="button" class="help-icon" data-help="Textos que o app já deixa escritos pra mandar no WhatsApp: cobrar mensalidade, avisar aula marcada ou cancelada e parabenizar no aniversário. As palavras entre colchetes são trocadas pelos dados do aluno.">!</button></div><div class="settings-row-sub">Cobrança, aula remarcada, cancelamento, aniversário</div></div><span class="settings-row-chevron">›</span></div>
+<div class="settings-row" id="rowMensagens"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-message"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Mensagens prontas<button type="button" class="help-icon" data-help="Textos que o app já deixa escritos pra mandar no WhatsApp: cobrar mensalidade, avisar aula marcada ou cancelada e parabenizar no aniversário. As palavras entre colchetes são trocadas pelos dados do aluno.">!</button></div><div class="settings-row-sub">Cobrança, aula remarcada, cancelamento, aniversário, lembrete de aula</div></div><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowIdioma"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-globe"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Idioma</div></div><span class="settings-row-value">Português</span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowChartsStart"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-trending-up"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Início dos gráficos<button type="button" class="help-icon" data-help="Meses antes dessa data aparecem apagados nos gráficos, em vez de parecerem um resultado zero.">!</button></div><div class="settings-row-sub">A partir de quando os gráficos começam a contar</div></div><span class="settings-row-value" id="valChartsStart">Desde o início</span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowGrowthGoal"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-target"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Meta de crescimento mensal<button type="button" class="help-icon" data-help="Defina quanto espera crescer por mês. Sem meta definida, o app calcula uma média automática com base no seu histórico, descartando meses fora do padrão (como um mês de matrículas em massa ou de saída de vários alunos).">!</button></div><div class="settings-row-sub">Usada para marcar em verde/vermelho se o mês bateu a meta</div></div><span class="settings-row-value" id="valGrowthGoal">Sem meta</span><span class="settings-row-chevron">›</span></div>
@@ -1932,12 +1962,15 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 <div class="settings-group-label">Notificações</div>
 <div class="settings-card">
 <div class="settings-row" id="rowLembrete"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-bell"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Lembrete antes da aula<button type="button" class="help-icon" data-help="Mostra um aviso dentro do app pouco antes de cada aula começar, enquanto o Hi Teacher estiver aberto no navegador.">!</button></div></div><span class="settings-row-value" id="valLembrete">Ativado</span><span class="settings-row-chevron">›</span></div>
+<div class="settings-row" id="rowLessonReminder"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-message"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Lembrete de aula (WhatsApp)</div><div class="settings-row-sub">Botão no Início pra lembrar os alunos da aula</div></div><span class="settings-row-value" id="valLessonReminder">Na véspera</span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowAvalPendente"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-star"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Avaliação pendente</div><div class="settings-row-sub">Avisar quando uma aula ainda não foi avaliada</div></div><span class="settings-row-value" id="valAvalPendente">Ativado</span><span class="settings-row-chevron">›</span></div>
 </div>
 
 <div class="settings-group-label">Dados</div>
 <div class="settings-card">
-<div class="settings-row" id="rowExportarDados"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-upload"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Exportar dados (backup)</div></div><span class="settings-row-chevron">›</span></div>
+<div class="settings-row" id="rowExportarDados"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-upload"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Exportar dados (backup)</div><div class="settings-row-sub" id="valLastBackup">Nenhum backup ainda</div></div><span class="settings-row-chevron">›</span></div>
+<div class="settings-row" id="rowBackupReminder"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-bell"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Lembrar de fazer backup</div></div><span class="settings-row-value" id="valBackupReminder">Toda semana</span><span class="settings-row-chevron">›</span></div>
+<div class="settings-row" id="rowRestoreSnapshot"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-download"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Restaurar cópia do aparelho</div><div class="settings-row-sub" id="valSnapshots">Cópias automáticas guardadas neste aparelho</div></div><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowImportarDados"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-download"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Importar dados</div></div><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowApagarDados"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-trash"/></svg></span><div class="settings-row-text"><div class="settings-row-title" style="color:#f87171">Apagar todos os dados</div></div><span class="settings-row-chevron">›</span></div>
 <input type="file" id="importFileInput" accept="application/json" style="display:none">
@@ -2337,6 +2370,30 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 </div>
 </div>
 
+<!-- Modal: Lembrar de fazer backup -->
+<div class="modal-bg" id="backupReminderModal">
+<div class="modal">
+<h2>Lembrar de fazer backup</h2>
+<div class="field"><label>Mostrar o lembrete no Início</label>
+<select id="backupReminderSelect"><option value="weekly">Toda semana</option><option value="biweekly">A cada 15 dias</option><option value="monthly">Todo mês</option><option value="never">Nunca</option></select></div>
+<div class="field-hint">O backup é o mesmo arquivo de "Exportar dados". No celular dá pra mandar direto pro WhatsApp, Drive ou e-mail.</div>
+<div class="actions"><button class="cancel" id="backupReminderCancelBtn">Cancelar</button><button class="save" id="backupReminderSaveBtn">Salvar</button></div>
+</div>
+</div>
+
+<!-- Modal: Lembrete de aula (WhatsApp) -->
+<div class="modal-bg" id="lessonReminderModal">
+<div class="modal">
+<h2>Lembrete de aula</h2>
+<div class="field"><label>Quando lembrar</label>
+<select id="lrWhen"><option value="eve">Na véspera</option><option value="day">No mesmo dia</option><option value="both">Os dois</option></select></div>
+<div class="field" id="lrEveField"><label>Véspera, a partir de</label><input type="time" id="lrEveFrom"></div>
+<div class="field" id="lrDayField"><label>Mesmo dia, a partir de</label><input type="time" id="lrDayFrom"></div>
+<div class="field-hint">A partir desse horário, o Início mostra "Lembrar aulas de amanhã" / "Lembrar aulas de hoje". O sino nos títulos de hoje e de amanhã abre o mesmo painel a qualquer hora. As frases ficam em Mensagens prontas → Lembrete de aula.</div>
+<div class="actions"><button class="cancel" id="lrCancelBtn">Cancelar</button><button class="save" id="lrSaveBtn">Salvar</button></div>
+</div>
+</div>
+
 <!-- Modal: Horários livres (Agenda) -->
 <div class="modal-bg" id="freeSlotsModal">
 <div class="modal">
@@ -2484,6 +2541,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 <h2>Mensagens prontas</h2>
 <div class="field-hint">As palavras entre colchetes viram os dados de verdade: [nome] é quem recebe (o responsável, se o aluno for menor de idade e tiver responsável cadastrado), [aluno] é o primeiro nome do aluno.</div>
 <div id="mensagensFields"></div>
+<div id="reminderPhrasesFields"></div>
 <div class="actions"><button class="cancel" id="mensagensCancelBtn">Cancelar</button><button class="save" id="mensagensSaveBtn">Salvar</button></div>
 </div>
 </div>
@@ -2783,6 +2841,37 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
+// Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
+const APP_VERSION = "7.5";
+const BACKUP_EVERY = { weekly: 7, biweekly: 15, monthly: 30, never: 0 };
+const BACKUP_LABELS = { weekly: "Toda semana", biweekly: "A cada 15 dias", monthly: "Todo mês", never: "Nunca" };
+const REMINDER_SENT_KEY = "jp_reminders_sent_v1";
+const REMINDER_GROUPS = [["eve", "Véspera"], ["later", "Mais tarde (no mesmo dia)"], ["soon", "Daqui a pouco (menos de 2 horas)"]];
+const REMINDER_DEFAULTS = {
+eve: [
+"[Saudação], [nome]! Passando pra lembrar da [aula] amanhã, às [hora]. Até lá! 🎸",
+"[Saudação]!! Tudo certo pra [aula] de amanhã [período], às [hora]?",
+"[Saudação], [nome]! Amanhã tem [aula] às [hora]. Combinado? 🎶",
+"Oi, [nome]! [Saudação]! Só lembrando: a [aula] é amanhã, às [hora].",
+"[Saudação], [nome]! Deixando o lembrete: amanhã [período], às [hora], tem [aula]. 😉",
+"[Saudação], [nome]! A [aula] de amanhã continua às [hora]? Qualquer imprevisto, me avisa!"
+],
+later: [
+"[Saudação]!! Tudo certo pra [aula] mais tarde, às [hora]?",
+"[Saudação], [nome]! Não esquece da [aula] hoje [período], às [hora]. 🎸",
+"[Saudação]! Hoje tem [aula] às [hora], hein! Até mais tarde 😊",
+"[Saudação], [nome]! Passando pra lembrar da [aula] de hoje, às [hora].",
+"Oi, [nome]! [Saudação]! Hoje às [hora] tem [aula]. Até mais tarde!",
+"[Saudação]! Confirmada a [aula] de hoje [período], às [hora]? 🎶"
+],
+soon: [
+"Oi, [nome]! Daqui a pouco, às [hora], tem [aula]. Até já! 🎸",
+"[Saudação]! Tudo certo pra [aula] daqui a pouco, às [hora]?",
+"[nome], só lembrando: a [aula] começa às [hora], daqui a pouquinho! 😉",
+"[Saudação], [nome]! Já já é hora da [aula], às [hora]. Até já!"
+]
+};
+
 
 let authCurrentUser = null;
 let cloudSyncTimer = null;
@@ -2798,7 +2887,7 @@ const _nativeSetItem = Storage.prototype.setItem;
 Storage.prototype.setItem = function(key, value){
 const changed = this === localStorage && CLOUD_SYNC_KEYS.includes(key) && this.getItem(key) !== value;
 _nativeSetItem.call(this, key, value);
-if (changed) writeSyncMeta({ dirty: true }); // mudou aqui e ainda não foi pra nuvem
+if (changed && !readSyncMeta().dirty) writeSyncMeta({ dirty: true, dirtySince: new Date().toISOString() }); // mudou aqui e ainda não foi pra nuvem
 if (this === localStorage && authCurrentUser && cloudPullOk && CLOUD_SYNC_KEYS.includes(key)) {
 clearTimeout(cloudSyncTimer);
 cloudSyncTimer = setTimeout(pushCloudData, 1500);
@@ -2832,9 +2921,17 @@ if (!supabaseClient) el.textContent = "Sem nuvem: os dados ficam só neste apare
 else if (cloudStatus.state === "ok") { el.textContent = `✓ Tudo salvo na nuvem (${hhmm})`; el.classList.add("cloud-ok"); }
 else if (cloudStatus.state === "error") { el.textContent = `⚠ Não está salvando: ${cloudStatus.error}. Toque pra tentar de novo.`; el.classList.add("cloud-bad"); }
 else el.textContent = "Conectando…";
-const showBanner = !!supabaseClient && authCurrentUser && cloudStatus.state === "error";
+// Aviso fixo no Início: erro ao salvar, ou mudança daqui esperando há mais de 24 h desde a
+// última gravação na nuvem que deu certo (jp_sync_meta_v1).
+const meta = readSyncMeta();
+const lastOk = meta.cloudAt ? new Date(meta.cloudAt) : null;
+const pendingFor = meta.dirtySince ? Date.now() - Date.parse(meta.dirtySince) : Infinity;
+const stale = !!supabaseClient && !!authCurrentUser && !!meta.dirty && pendingFor > 60000 && lastOk && !isNaN(lastOk) && Date.now() - lastOk > 86400000;
+const showBanner = (!!supabaseClient && authCurrentUser && cloudStatus.state === "error") || stale;
 banner.style.display = showBanner ? "" : "none";
-if (showBanner) document.getElementById("cloudBannerText").textContent = `⚠ Seus dados não estão sendo salvos na nuvem: ${cloudStatus.error}. Por enquanto eles estão só neste aparelho.`;
+if (showBanner) document.getElementById("cloudBannerText").textContent = stale
+? `⚠ Seus dados não estão sendo salvos na nuvem desde ${pad2(lastOk.getDate())}/${pad2(lastOk.getMonth()+1)} às ${pad2(lastOk.getHours())}:${pad2(lastOk.getMinutes())}.${cloudStatus.state === "error" ? ` Motivo: ${cloudStatus.error}.` : ""} Por enquanto as mudanças estão só neste aparelho.`
+: `⚠ Seus dados não estão sendo salvos na nuvem: ${cloudStatus.error}. Por enquanto eles estão só neste aparelho.`;
 }
 // Tentar de novo: se ainda não leu a nuvem nesta sessão, lê (e resolve conflitos); senão, envia.
 async function retryCloudSync(){
@@ -2881,6 +2978,48 @@ else localStorage.removeItem(k);
 writeSyncMeta({ userId: authCurrentUser.id, cloudAt, dirty: false });
 }
 
+// ===== Cópias de segurança no aparelho (IndexedDB "hiteacher_backups") =====
+// Guardadas antes de trazer os dados da nuvem por cima dos daqui, antes de importar um backup
+// e antes de restaurar uma cópia. Ficam as 3 últimas. Não vão pra nuvem.
+function snapDb(){
+return new Promise((resolve, reject) => {
+const r = indexedDB.open("hiteacher_backups", 1);
+r.onupgradeneeded = () => r.result.createObjectStore("snaps", { keyPath: "id" });
+r.onsuccess = () => resolve(r.result);
+r.onerror = () => reject(r.error);
+});
+}
+function snapTx(db, mode, fn){
+return new Promise((resolve, reject) => {
+const tx = db.transaction("snaps", mode);
+const out = fn(tx.objectStore("snaps"));
+tx.oncomplete = () => resolve(out && out.result !== undefined ? out.result : undefined);
+tx.onerror = () => reject(tx.error);
+});
+}
+async function listDeviceSnapshots(){
+try { const db = await snapDb(); const all = await snapTx(db, "readonly", st => st.getAll()); return (all || []).sort((a, b) => b.id - a.id); }
+catch (e) { return []; }
+}
+// Uma de cada vez (duas leituras da nuvem ao mesmo tempo gravavam a mesma cópia duas vezes).
+let snapChain = Promise.resolve();
+function saveDeviceSnapshot(reason){ snapChain = snapChain.then(() => saveDeviceSnapshotNow(reason)); return snapChain; }
+async function saveDeviceSnapshotNow(reason){
+try {
+const data = {};
+CLOUD_SYNC_KEYS.forEach(k => { const v = localStorage.getItem(k); if (v !== null) data[k] = v; });
+const sum = dataSummary(k => data[k] ?? null);
+if (!sum.students && !sum.plans) return; // nada pra proteger
+const list = await listDeviceSnapshots();
+if (list[0] && JSON.stringify(list[0].data) === JSON.stringify(data)) return; // igual à última
+const db = await snapDb();
+await snapTx(db, "readwrite", st => {
+st.put({ id: Date.now(), at: new Date().toISOString(), reason, students: sum.students, active: sum.active, lessons: sum.lessons, data });
+list.slice(2).forEach(x => st.delete(x.id)); // fica com as 3 mais novas
+});
+} catch (e) { console.warn("Não consegui guardar a cópia no aparelho:", e); }
+}
+
 // O supabase-js não lança erro: devolve { error }. Antes esse erro era ignorado, então um
 // envio que falhava nunca aparecia e os dados ficavam só no aparelho sem ninguém saber.
 let cloudPushWarned = false;
@@ -2914,7 +3053,13 @@ document.body.appendChild(toast);
 setTimeout(() => toast.remove(), 9000);
 }
 
-async function pullCloudData(){
+// Uma leitura da nuvem por vez (o login dispara duas; as duas aplicavam a nuvem juntas).
+let cloudPulling = null;
+function pullCloudData(){
+if (!cloudPulling) cloudPulling = pullCloudDataNow().finally(() => { cloudPulling = null; });
+return cloudPulling;
+}
+async function pullCloudDataNow(){
 if (!supabaseClient) return;
 try {
 const { data: row, error } = await supabaseClient.from("user_data").select("data, updated_at").eq("user_id", authCurrentUser.id).maybeSingle();
@@ -2932,10 +3077,11 @@ if (cloudUnchanged) { cloudPullOk = true; await pushCloudData(); return; }
 const localSum = dataSummary(k => localStorage.getItem(k));
 const localHasData = localSum.students > 0 || localSum.plans > 0;
 // Aparelho já sincronizado com esta conta e sem mudança pendente (ou sem dados): vale a nuvem.
-if ((sameUser && !meta.dirty) || !localHasData) { applyCloudData(cloud, row.updated_at); location.reload(); return; }
+if ((sameUser && !meta.dirty) || !localHasData) { await saveDeviceSnapshot("Antes de trazer os dados da nuvem"); applyCloudData(cloud, row.updated_at); location.reload(); return; }
 // Os dois lados têm dados que o outro não tem: pergunta em vez de apagar um deles.
 const choice = await askSyncConflict(localSum, dataSummary(k => cloud[k]), row.updated_at);
 if (choice === "local") { cloudPullOk = true; await pushCloudData(); return; }
+await saveDeviceSnapshot("Antes de trazer os dados da nuvem");
 applyCloudData(cloud, row.updated_at);
 location.reload();
 } catch(e) {
@@ -3135,6 +3281,12 @@ location.reload();
 document.getElementById("btnLogout").onclick = document.getElementById("rowSairConta").onclick;
 document.getElementById("rowCloudSync").onclick = retryCloudSync;
 document.getElementById("cloudBannerRetry").onclick = retryCloudSync;
+// Ver detalhes: Configurações → Conta → Salvar na nuvem.
+document.getElementById("cloudBannerDetails").onclick = () => {
+openPage("settings");
+const row = document.getElementById("rowCloudSync");
+setTimeout(() => { row.scrollIntoView({ block: "center" }); row.classList.add("row-flash"); setTimeout(() => row.classList.remove("row-flash"), 1800); }, 80);
+};
 
 supabaseClient.auth.onAuthStateChange(async (event, session) => {
 if (event === "PASSWORD_RECOVERY") {
@@ -4739,9 +4891,9 @@ function isMinor(s){ const a = ageYears(s.birthDate); return a !== null && a < 1
 // Pra quem vai a mensagem: responsável (menor de idade com responsável), senão o aluno.
 function messageRecipient(s){
 const hasGuardian = !!(s.guardianName || s.guardianPhone);
-if (hasGuardian && isMinor(s) && whatsappLink(s.guardianPhone)) return { phone: s.guardianPhone, name: firstName(s.guardianName) || firstName(s.name) };
+if (hasGuardian && isMinor(s) && whatsappLink(s.guardianPhone)) return { phone: s.guardianPhone, name: firstName(s.guardianName) || firstName(s.name), guardian: true };
 if (whatsappLink(s.phone)) return { phone: s.phone, name: firstName(s.name) };
-if (whatsappLink(s.guardianPhone)) return { phone: s.guardianPhone, name: firstName(s.guardianName) || firstName(s.name) };
+if (whatsappLink(s.guardianPhone)) return { phone: s.guardianPhone, name: firstName(s.guardianName) || firstName(s.name), guardian: true };
 return null;
 }
 function fillMessage(tpl, vars){
@@ -5285,6 +5437,9 @@ ${href ? `<a class="wa-btn wa-mini" href="${href}" target="_blank" rel="noopener
 function renderHome(){
 renderBirthdays();
 renderAttention();
+renderBackupBox();
+renderLessonReminderBox();
+renderCloudStatus();
 const now=new Date();
 document.getElementById("homeGreetingText").textContent = `Olá, ${appSettings.profile.name}`;
 const months=["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
@@ -5340,6 +5495,15 @@ const head=document.createElement("div");
 head.className="day-head";
 let suffix = offset===0 ? " (hoje)" : offset===1 ? " (amanhã)" : ` (daqui a ${offset} dias)`;
 head.textContent=`${shortDays[dayKey]}, ${date.getDate()} de ${months[date.getMonth()]}${suffix}`;
+if (offset <= 1) {
+const bell = document.createElement("button");
+bell.type = "button";
+bell.className = "day-bell";
+bell.title = bell.ariaLabel = `Lembrar as aulas de ${offset === 0 ? "hoje" : "amanhã"} no WhatsApp`;
+bell.innerHTML = `<svg viewBox="0 0 24 24"><use href="#icon-bell"/></svg>`;
+bell.onclick = (e) => { e.stopPropagation(); openLessonReminders(new Date(date)); };
+head.appendChild(bell);
+}
 section.appendChild(head);
 
 const groups={};
@@ -8747,7 +8911,6 @@ return parts.join(" · ");
 }
 
 // Versão mostrada em Configurações. Sobe a cada rodada de mudanças publicada.
-const APP_VERSION = "7.4";
 function renderSettingsSummary(){
 document.getElementById("valVersao").textContent = APP_VERSION;
 document.getElementById("settingsProfileName").textContent = appSettings.profile.name;
@@ -8758,6 +8921,11 @@ document.getElementById("valInstrumentos").textContent = `${appSettings.instrume
 document.getElementById("valValoresPadrao").textContent = `R$ ${appSettings.defaultValues.individual}`;
 document.getElementById("valDiasUteis").textContent = formatWorkDaysLabel();
 document.getElementById("valDuracao").textContent = `${appSettings.lessonDuration} min`;
+const lb = appSettings.lastBackupAt ? new Date(appSettings.lastBackupAt) : null;
+document.getElementById("valLastBackup").textContent = lb && !isNaN(lb) ? `Último backup: ${pad2(lb.getDate())}/${pad2(lb.getMonth()+1)}` : "Nenhum backup ainda";
+document.getElementById("valBackupReminder").textContent = BACKUP_LABELS[appSettings.backupReminder || "weekly"];
+document.getElementById("valLessonReminder").textContent = lessonReminderLabel();
+listDeviceSnapshots().then(l => { document.getElementById("valSnapshots").textContent = l.length ? `${l.length} cópia${l.length > 1 ? "s" : ""} guardada${l.length > 1 ? "s" : ""} (a mais nova de ${pad2(new Date(l[0].at).getDate())}/${pad2(new Date(l[0].at).getMonth()+1)})` : "Nenhuma cópia ainda"; });
 document.getElementById("valMakeupDeadline").textContent = makeupDeadlineDays() ? `${makeupDeadlineDays()} dias` : "Sem prazo";
 document.getElementById("valNiveis").textContent = appSettings.useLevels ? `${appSettings.levels.length} níve${appSettings.levels.length === 1 ? "l" : "is"}` : "Sem nível";
 document.getElementById("valCriterios").textContent = `${activeCriteria().length} critério${activeCriteria().length === 1 ? "" : "s"}`;
@@ -9527,6 +9695,9 @@ document.getElementById("rowMensagens").onclick = () => {
 const values = {};
 Object.keys(DEFAULT_MESSAGES).forEach(k => values[k] = getMessageTemplate(k));
 renderMessagesFields(values);
+rpDraft = {};
+REMINDER_GROUPS.forEach(([g]) => rpDraft[g] = [...reminderPhrases(g)]);
+renderReminderPhrases();
 document.getElementById("mensagensModal").classList.add("show");
 };
 document.getElementById("mensagensCancelBtn").onclick = () => document.getElementById("mensagensModal").classList.remove("show");
@@ -9537,10 +9708,157 @@ const k = t.dataset.msgKey, v = t.value.trim();
 if (v && v !== DEFAULT_MESSAGES[k]) next[k] = v; // guarda só o que mudou
 });
 appSettings.messages = next;
+// Frases do lembrete: guarda o grupo inteiro só se mudou (mínimo 1 frase; vazio = padrão).
+const rp = {};
+REMINDER_GROUPS.forEach(([g]) => {
+const list = (rpDraft[g] || []).map(t => t.trim()).filter(Boolean);
+if (list.length && JSON.stringify(list) !== JSON.stringify(REMINDER_DEFAULTS[g])) rp[g] = list;
+});
+if (Object.keys(rp).length) appSettings.reminderPhrases = rp; else delete appSettings.reminderPhrases;
 saveAppSettings();
 document.getElementById("mensagensModal").classList.remove("show");
 if (currentPage === "home") renderHome();
 };
+
+// ===== Lembrete de aula no WhatsApp =====
+// Frases por situação, escolhidas na hora do envio: "eve" = a aula é amanhã; "later" = hoje,
+// daqui a 2 h ou mais; "soon" = hoje, em menos de 2 h. Rotação: número da semana do ano +
+// posição do aluno na lista do dia (a turma não recebe o mesmo texto).
+function reminderPhrases(g){ const c = appSettings.reminderPhrases && appSettings.reminderPhrases[g]; return Array.isArray(c) && c.length ? c : REMINDER_DEFAULTS[g]; }
+function lessonReminderCfg(){ return Object.assign({ when: "eve", eveFrom: "12:00", dayFrom: "07:00" }, appSettings.lessonReminder || {}); }
+function lessonReminderLabel(){
+const c = lessonReminderCfg();
+return c.when === "day" ? `No mesmo dia · ${c.dayFrom}` : c.when === "both" ? "Véspera e mesmo dia" : `Na véspera · ${c.eveFrom}`;
+}
+// [Saudação] pela hora do envio; [período] pela hora da aula.
+function greetingFor(d){ const h = d.getHours(); return h >= 5 && h < 12 ? "Bom dia" : h >= 12 && h < 18 ? "Boa tarde" : "Boa noite"; }
+function periodFor(time){ const h = Math.floor(toMin(time) / 60); return h < 12 ? "de manhã" : h < 18 ? "à tarde" : "à noite"; }
+function weekOfYear(d){ return Math.floor((new Date(d.getFullYear(), d.getMonth(), d.getDate()) - new Date(d.getFullYear(), 0, 1)) / (7 * 86400000)); }
+function reminderSituation(dateObj, time, now){
+if (isoOf(dateObj) !== isoOf(now)) return "eve";
+return lessonStart(dateObj, time) - now >= 2 * 3600000 ? "later" : "soon";
+}
+function fillReminder(tpl, vars){ return fillMessage(tpl, vars); }
+function reminderText(s, dateObj, time, pos, now = new Date()){
+const list = reminderPhrases(reminderSituation(dateObj, time, now));
+const r = messageRecipient(s);
+return fillReminder(list[(weekOfYear(now) + pos) % list.length], {
+saudacao: greetingFor(now), periodo: periodFor(time), nome: r ? r.name : firstName(s.name), hora: fmtHour(time),
+aula: r && r.guardian ? `aula de ${firstName(s.name)}` : "nossa aula"
+});
+}
+// Aulas do dia pra lembrar: sem as canceladas, remarcadas e de feriado/férias; hoje, só as
+// que ainda não começaram. Inclui aula extra e reposição marcada.
+function reminderLessons(dateObj){
+const now = new Date(), today = isoOf(dateObj) === isoOf(now);
+return getLessonsOnDate(dateObj).filter(x => !x.off && !(x.record && isNoClass(x.record)) && (!today || now < lessonStart(dateObj, x.time)));
+}
+// Envios ficam guardados só neste aparelho, por aula (os últimos 7 dias).
+function reminderSentMap(){ try { return JSON.parse(localStorage.getItem(REMINDER_SENT_KEY) || "{}") || {}; } catch (e) { return {}; } }
+function reminderKey(dateObj, x){ return `${isoOf(dateObj)}|${x.time}|${x.student.id}|${x.makeupId || ""}`; }
+function markReminderSent(key){
+const m = reminderSentMap();
+m[key] = new Date().toISOString();
+const cutoff = isoOf(new Date(Date.now() - 7 * 86400000));
+Object.keys(m).forEach(k => { if (k.slice(0, 10) < cutoff) delete m[k]; });
+localStorage.setItem(REMINDER_SENT_KEY, JSON.stringify(m));
+}
+function hhmmOf(iso){ const d = new Date(iso); return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`; }
+function openLessonReminders(dateObj){
+dateObj = new Date(dateObj); dateObj.setHours(0, 0, 0, 0);
+const list = reminderLessons(dateObj);
+const isToday = isoOf(dateObj) === isoOf(new Date());
+const body = document.createElement("div");
+const render = () => {
+const sent = reminderSentMap();
+body.innerHTML = list.length ? list.map((x, i) => {
+const at = sent[reminderKey(dateObj, x)];
+const r = messageRecipient(x.student);
+const to = r ? (r.guardian ? ` · pro responsável (${escapeHtml(r.name)})` : "") : " · sem telefone";
+return `<div class="lr-row${at ? " sent" : ""}"><div class="lr-row-info"><div class="lr-row-name">${x.time} · ${escapeHtml(x.student.name)}${x.kind === "extra" ? ` <span class="badge-makeup">${extraLabel(x.student, x.makeupId)}</span>` : ""}</div><div class="lr-row-sub">${at ? `Enviado ✓ ${hhmmOf(at)}` : "Ainda não enviado"}${to}</div></div>${r
+? `<a class="wa-btn" data-lr="${i}" href="#" target="_blank" rel="noopener">Enviar no WhatsApp</a>`
+: `<button type="button" class="wa-btn wa-btn-muted" data-lr-phone="${i}">Cadastrar telefone</button>`}</div>`;
+}).join("") : `<div class="field-hint" style="margin:0">${isToday ? "Nenhuma aula por começar hoje." : "Nenhuma aula nesse dia."}</div>`;
+body.querySelectorAll("[data-lr]").forEach(a => a.onclick = (e) => {
+const i = Number(a.dataset.lr), x = list[i], key = reminderKey(dateObj, x);
+const at = reminderSentMap()[key];
+if (at && !confirm(`Você já mandou o lembrete pra ${firstName(x.student.name)} às ${hhmmOf(at)}. Mandar de novo?`)) { e.preventDefault(); return; }
+// A frase é escolhida agora, na hora do toque.
+a.href = `${whatsappLink(messageRecipient(x.student).phone)}?text=${encodeURIComponent(reminderText(x.student, dateObj, x.time, i))}`;
+markReminderSent(key);
+setTimeout(() => { render(); renderLessonReminderBox(); }, 300);
+});
+body.querySelectorAll("[data-lr-phone]").forEach(b => b.onclick = () => { closeQuickModal(); openContactField(list[Number(b.dataset.lrPhone)].student); });
+};
+render();
+openQuickModal(isToday ? "Lembrar aulas de hoje" : `Lembrar aulas de ${isoOf(dateObj) === isoOf(new Date(Date.now() + 86400000)) ? "amanhã" : brOf(dateObj).slice(0,5)}`,
+`${WEEKDAY_FULL[dateObj.getDay()]}, ${brOf(dateObj).slice(0,5)}. A frase muda conforme a hora e o aluno.`, body, null, "Fechar");
+}
+function renderLessonReminderBox(){
+const box = document.getElementById("lessonReminderBox");
+if (!box) return;
+const c = lessonReminderCfg(), now = new Date(), nowMin = now.getHours() * 60 + now.getMinutes();
+const sent = reminderSentMap();
+const items = [];
+const add = (offset, label) => {
+const d = new Date(now); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + offset);
+const n = reminderLessons(d).filter(x => !sent[reminderKey(d, x)]).length;
+if (n) items.push({ d, label, n });
+};
+if ((c.when === "day" || c.when === "both") && nowMin >= toMin(c.dayFrom)) add(0, "Lembrar aulas de hoje");
+if ((c.when === "eve" || c.when === "both") && nowMin >= toMin(c.eveFrom)) add(1, "Lembrar aulas de amanhã");
+box.innerHTML = items.map((it, i) => `<button type="button" class="lr-line" data-lrbox="${i}"><span>🔔 ${it.label} (${it.n})</span><span class="lr-cta">Abrir ›</span></button>`).join("");
+box.querySelectorAll("[data-lrbox]").forEach(b => b.onclick = () => openLessonReminders(items[Number(b.dataset.lrbox)].d));
+}
+document.getElementById("rowLessonReminder").onclick = () => {
+const c = lessonReminderCfg();
+document.getElementById("lrWhen").value = c.when;
+document.getElementById("lrEveFrom").value = c.eveFrom;
+document.getElementById("lrDayFrom").value = c.dayFrom;
+document.getElementById("lrWhen").onchange();
+document.getElementById("lessonReminderModal").classList.add("show");
+};
+document.getElementById("lrWhen").onchange = () => {
+const w = document.getElementById("lrWhen").value;
+document.getElementById("lrEveField").style.display = w === "day" ? "none" : "";
+document.getElementById("lrDayField").style.display = w === "eve" ? "none" : "";
+};
+document.getElementById("lrCancelBtn").onclick = () => document.getElementById("lessonReminderModal").classList.remove("show");
+document.getElementById("lrSaveBtn").onclick = () => {
+appSettings.lessonReminder = {
+when: document.getElementById("lrWhen").value,
+eveFrom: document.getElementById("lrEveFrom").value || "12:00",
+dayFrom: document.getElementById("lrDayFrom").value || "07:00"
+};
+saveAppSettings();
+renderSettingsSummary();
+renderLessonReminderBox();
+document.getElementById("lessonReminderModal").classList.remove("show");
+};
+// Mensagens prontas → "Lembrete de aula": as frases de cada grupo, editáveis.
+let rpDraft = {};
+function rpExample(g){
+const now = new Date();
+const d = new Date(now); d.setHours(0, 0, 0, 0);
+let time;
+if (g === "eve") { d.setDate(d.getDate() + 1); time = "19:00"; }
+else time = fromMin(Math.min(now.getHours() * 60 + now.getMinutes() + (g === "later" ? 180 : 60), 23 * 60 + 30));
+const list = (rpDraft[g] || []).map(t => t.trim()).filter(Boolean);
+if (!list.length) return "";
+const idx = weekOfYear(now) % list.length;
+const text = fillReminder(list[idx], { saudacao: greetingFor(now), periodo: periodFor(time), nome: "Ana", hora: fmtHour(time), aula: "nossa aula" });
+return `Exemplo agora (frase ${idx + 1}, aluna Ana, aula às ${fmtHour(time)}${g === "eve" ? " de amanhã" : ""}): <b>${escapeHtml(text)}</b>`;
+}
+function renderReminderPhrases(){
+const box = document.getElementById("reminderPhrasesFields");
+box.innerHTML = `<div class="settings-group-label" style="margin:1.25rem 0 0.5rem">Lembrete de aula</div><div class="field-hint">A frase é escolhida na hora do envio: véspera (aula amanhã), mais tarde (hoje, daqui a 2 h ou mais) ou daqui a pouco (menos de 2 h). Troca toda semana, e cada aluno da turma recebe uma diferente.</div>` +
+REMINDER_GROUPS.map(([g, title]) => `<div class="rp-group"><div class="rp-group-title">${title}</div>${rpDraft[g].map((t, i) => `<div class="rp-row"><textarea rows="2" data-rp="${g}|${i}">${escapeHtml(t)}</textarea><div class="rp-row-foot">${i < REMINDER_DEFAULTS[g].length && t !== REMINDER_DEFAULTS[g][i] ? `<button type="button" class="btn-link-inline" data-rp-reset="${g}|${i}">Voltar ao padrão</button>` : ""}${rpDraft[g].length > 1 ? `<button type="button" class="btn-link-inline" style="color:var(--danger)" data-rp-del="${g}|${i}">Apagar</button>` : ""}</div></div>`).join("")}<button type="button" class="btn-link-inline" data-rp-add="${g}">+ Adicionar frase</button><div class="msg-vars" style="margin-top:0.5rem">[Saudação] [nome] [aula] [hora] [período]</div><div class="rp-example" data-rp-ex="${g}">${rpExample(g)}</div></div>`).join("");
+const at = (v) => { const [g, i] = v.split("|"); return [g, Number(i)]; };
+box.querySelectorAll("[data-rp]").forEach(t => t.oninput = () => { const [g, i] = at(t.dataset.rp); rpDraft[g][i] = t.value; box.querySelector(`[data-rp-ex="${g}"]`).innerHTML = rpExample(g); });
+box.querySelectorAll("[data-rp-reset]").forEach(b => b.onclick = () => { const [g, i] = at(b.dataset.rpReset); rpDraft[g][i] = REMINDER_DEFAULTS[g][i]; renderReminderPhrases(); });
+box.querySelectorAll("[data-rp-del]").forEach(b => b.onclick = () => { const [g, i] = at(b.dataset.rpDel); if (rpDraft[g].length > 1) rpDraft[g].splice(i, 1); renderReminderPhrases(); });
+box.querySelectorAll("[data-rp-add]").forEach(b => b.onclick = () => { const g = b.dataset.rpAdd; rpDraft[g].push(""); renderReminderPhrases(); const last = box.querySelector(`[data-rp="${g}|${rpDraft[g].length - 1}"]`); if (last) last.focus(); });
+}
 
 // --- Idioma ---
 document.getElementById("rowIdioma").onclick = () => {
@@ -9741,19 +10059,74 @@ renderGoals();
 };
 
 // --- Dados: exportar / importar / apagar ---
-document.getElementById("rowExportarDados").onclick = () => {
+document.getElementById("rowExportarDados").onclick = () => doBackup(false);
+// Backup = o arquivo de "Exportar dados". share=true usa o compartilhar do celular (WhatsApp,
+// Drive, e-mail) quando dá; senão baixa. Guarda a data em appSettings.lastBackupAt.
+async function doBackup(share){
 const data = {};
 CLOUD_SYNC_KEYS.forEach(k => { const v = localStorage.getItem(k); if (v !== null) data[k] = v; });
 const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+const name = `hi-teacher-backup-${isoOf(new Date())}.json`;
+if (share && window.File && navigator.canShare) {
+const file = new File([blob], name, { type: "application/json" });
+if (navigator.canShare({ files: [file] })) {
+try { await navigator.share({ files: [file], title: "Backup do Hi Teacher" }); markBackupDone(); return; }
+catch (e) { if (e && e.name === "AbortError") return; }
+}
+}
 const url = URL.createObjectURL(blob);
 const a = document.createElement("a");
-const dateStr = new Date().toISOString().slice(0,10);
-a.href = url;
-a.download = `hi-teacher-backup-${dateStr}.json`;
-document.body.appendChild(a);
-a.click();
-a.remove();
-URL.revokeObjectURL(url);
+a.href = url; a.download = name;
+document.body.appendChild(a); a.click(); a.remove();
+setTimeout(() => URL.revokeObjectURL(url), 1000);
+markBackupDone();
+}
+function markBackupDone(){
+appSettings.lastBackupAt = new Date().toISOString();
+saveAppSettings();
+renderSettingsSummary();
+renderBackupBox();
+}
+function renderBackupBox(){
+const box = document.getElementById("backupBox");
+if (!box) return;
+const freq = appSettings.backupReminder || "weekly";
+const days = BACKUP_EVERY[freq] || 0;
+const last = appSettings.lastBackupAt ? new Date(appSettings.lastBackupAt) : null;
+const due = days && students.length && (!last || isNaN(last) || Date.now() - last > days * 86400000);
+if (!due) { box.innerHTML = ""; return; }
+const what = freq === "monthly" ? "do mês" : freq === "biweekly" ? "da quinzena" : "da semana";
+box.innerHTML = `<div class="backup-line"><span>💾 Faça o backup ${what}${last && !isNaN(last) ? ` <span style="color:var(--muted);font-weight:500">· último em ${pad2(last.getDate())}/${pad2(last.getMonth()+1)}</span>` : ""}</span><button type="button" class="btn-edit-toggle">Fazer backup</button></div>`;
+box.querySelector("button").onclick = () => doBackup(true);
+}
+document.getElementById("rowBackupReminder").onclick = () => {
+document.getElementById("backupReminderSelect").value = appSettings.backupReminder || "weekly";
+document.getElementById("backupReminderModal").classList.add("show");
+};
+document.getElementById("backupReminderCancelBtn").onclick = () => document.getElementById("backupReminderModal").classList.remove("show");
+document.getElementById("backupReminderSaveBtn").onclick = () => {
+appSettings.backupReminder = document.getElementById("backupReminderSelect").value;
+saveAppSettings();
+renderSettingsSummary();
+renderBackupBox();
+document.getElementById("backupReminderModal").classList.remove("show");
+};
+// Restaurar uma das cópias guardadas no aparelho.
+document.getElementById("rowRestoreSnapshot").onclick = async () => {
+const list = await listDeviceSnapshots();
+const body = document.createElement("div");
+const when = iso => { const d = new Date(iso); return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()} às ${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };
+body.innerHTML = list.length ? list.map((x, i) => `<div class="snap-row"><div class="snap-info">${when(x.at)}<div>${escapeHtml(x.reason || "")} · ${x.students} aluno${x.students === 1 ? "" : "s"} (${x.active} ativo${x.active === 1 ? "" : "s"})</div></div><button type="button" class="btn-edit-toggle" data-snap="${i}">Restaurar</button></div>`).join("")
+: `<div class="field-hint" style="margin:0">Nenhuma cópia ainda. O app guarda uma aqui (as 3 últimas) antes de trazer os dados da nuvem por cima dos deste aparelho e antes de importar um backup.</div>`;
+body.querySelectorAll("[data-snap]").forEach(b => b.onclick = async () => {
+const x = list[Number(b.dataset.snap)];
+if (!x || !confirm(`Restaurar a cópia de ${when(x.at)} (${x.students} aluno${x.students === 1 ? "" : "s"})? Os dados atuais deste aparelho serão substituídos (uma cópia deles fica guardada aqui antes).`)) return;
+await saveDeviceSnapshot("Antes de restaurar uma cópia");
+CLOUD_SYNC_KEYS.forEach(k => { if (x.data[k] !== undefined) localStorage.setItem(k, x.data[k]); else localStorage.removeItem(k); });
+if (supabaseClient && authCurrentUser) { clearTimeout(cloudSyncTimer); await pushCloudData(); }
+location.reload();
+});
+openQuickModal("Restaurar cópia do aparelho", "Cópias automáticas guardadas neste aparelho (as 3 últimas).", body, null, "Fechar");
 };
 
 document.getElementById("rowImportarDados").onclick = () => {
@@ -9769,6 +10142,7 @@ const data = JSON.parse(ev.target.result);
 const keysFound = Object.keys(data).filter(k => CLOUD_SYNC_KEYS.includes(k));
 if (keysFound.length === 0) { alert("Esse arquivo não parece ser um backup válido do Hi Teacher."); return; }
 if (!confirm(`Importar este backup vai substituir os dados atuais (alunos, aulas, configurações etc.). Deseja continuar?`)) return;
+await saveDeviceSnapshot("Antes de importar um backup");
 keysFound.forEach(k => localStorage.setItem(k, data[k]));
 let doneMsg = "Dados importados! O app vai recarregar agora.";
 if (supabaseClient && authCurrentUser) {
