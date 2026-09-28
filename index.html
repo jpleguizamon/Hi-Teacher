@@ -895,10 +895,20 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .wa-btn{flex:none;display:inline-flex;align-items:center;padding:0.5625rem 0.875rem;border-radius:var(--radius-pill);font-size:0.75rem;font-weight:700;color:#86efac;background:rgba(74,222,128,.1);border:0.0625rem solid rgba(74,222,128,.35);text-decoration:none;white-space:nowrap}
 .wa-btn-muted{color:var(--text-2);background:var(--glass-inset);border-color:rgba(148,163,184,.3)}
 .wa-mini{padding:0.375rem 0.75rem;align-self:center}
-.action-toast{position:fixed;left:50%;bottom:1.25rem;transform:translateX(-50%);z-index:70;width:min(92vw,26rem);display:flex;align-items:center;gap:0.625rem;
-  padding:0.75rem 0.875rem;border-radius:var(--radius-md);border:0.0625rem solid var(--accent-line);background:var(--glass-fill-strong);
+#toastStack{position:fixed;left:50%;bottom:1.25rem;transform:translateX(-50%);z-index:70;width:min(92vw,26rem);display:flex;flex-direction:column;gap:0.5rem;pointer-events:none}
+#toastStack > *{pointer-events:auto}
+.action-toast,.wa-panel{border-radius:var(--radius-md);border:0.0625rem solid var(--accent-line);background:var(--glass-fill-strong);
   -webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:var(--shadow-sm),var(--glow-sm);animation:toastIn .25s var(--ease-out)}
-@keyframes toastIn{from{transform:translate(-50%,0.75rem)}to{transform:translate(-50%,0)}}
+.action-toast{display:flex;align-items:center;gap:0.625rem;padding:0.75rem 0.875rem}
+@keyframes toastIn{from{transform:translateY(0.75rem)}to{transform:none}}
+.wa-panel{padding:0.5rem 0.75rem 0.625rem;max-height:50vh;overflow:auto}
+.wa-panel-head{display:flex;align-items:center;justify-content:space-between;font-size:0.6875rem;font-weight:750;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.wa-row{display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0;border-top:0.0625rem solid var(--hairline)}
+.wa-row:first-child{border-top:none}
+.wa-row-msg{flex:1;min-width:0;font-size:0.8125rem;font-weight:600;color:var(--text);line-height:1.35}
+.wa-row .wa-btn{padding:0.4375rem 0.75rem}
+.wa-row.done .wa-btn{opacity:.55}
+.wa-row-close{flex:none;width:1.5rem;height:1.5rem;border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:0.75rem}
 .action-toast-msg{flex:1;min-width:0;font-size:0.8125rem;font-weight:600;color:var(--text);line-height:1.35}
 .action-toast-close{flex:none;width:1.75rem;height:1.75rem;border-radius:50%;border:none;background:transparent;color:var(--muted);cursor:pointer}
 .msg-field-foot{display:flex;justify-content:space-between;align-items:center;gap:0.5rem;margin-top:0.375rem}
@@ -3494,7 +3504,8 @@ return (mk && mk.time) || getStudentTimeFor(student, dateFromIso(isoFromBr(entry
 // Depois de registrar "não houve aula": aviso com a mensagem certa no WhatsApp.
 function offerAfterNoClass(student, reason, m, time, dateBr){
 if (m && m.status === "scheduled") return offerLessonMessage(student, m);
-if (reason === "teacher_cancel") offerCancelMessage(student, time, dateBr);
+if (reason === "teacher_cancel") return offerCancelMessage(student, time, dateBr);
+return null;
 }
 // Remarcar em um passo: a aula original vira "não houve aula · Remarcada" e nasce a aula
 // extra já marcada. Remarcar uma aula extra que ainda não aconteceu só muda a data dela.
@@ -4297,10 +4308,10 @@ function showActionToast(msg, actionLabel, href, onAction){
 document.querySelectorAll(".action-toast").forEach(t => t.remove());
 const t = document.createElement("div");
 t.className = "action-toast";
+getToastStack().appendChild(t);
 t.innerHTML = `<span class="action-toast-msg">${escapeHtml(msg)}</span>${href
 ? `<a class="wa-btn" href="${href}" target="_blank" rel="noopener">${escapeHtml(actionLabel)}</a>`
 : `<button type="button" class="wa-btn wa-btn-muted">${escapeHtml(actionLabel)}</button>`}<button type="button" class="action-toast-close" aria-label="Fechar">✕</button>`;
-document.body.appendChild(t);
 const close = () => t.remove();
 t.querySelector(".action-toast-close").onclick = close;
 const act = t.querySelector(".wa-btn");
@@ -4315,20 +4326,55 @@ const sec = document.getElementById("fContactSection");
 sec.open = true;
 setTimeout(() => { sec.scrollIntoView({ block: "center" }); document.getElementById("fPhone").focus(); }, 60);
 }
+// ===== Painel de avisos no WhatsApp =====
+// Uma linha por aluno, cada uma com o seu botão. Ações que mexem em vários alunos (turma)
+// juntam todos no mesmo painel, que fica aberto até o professor fechar.
+function getToastStack(){
+let st = document.getElementById("toastStack");
+if (!st) { st = document.createElement("div"); st.id = "toastStack"; document.body.appendChild(st); }
+return st;
+}
+let waPanel = null;
+function closeWaPanel(){ if (waPanel) waPanel.remove(); waPanel = null; }
+function ensureWaPanel(){
+if (waPanel && document.body.contains(waPanel)) return waPanel;
+waPanel = document.createElement("div");
+waPanel.className = "wa-panel";
+waPanel.innerHTML = `<div class="wa-panel-head"><span>Avisar os alunos</span><button type="button" class="action-toast-close" aria-label="Fechar">✕</button></div><div class="wa-panel-rows"></div>`;
+waPanel.querySelector(".action-toast-close").onclick = closeWaPanel;
+getToastStack().appendChild(waPanel);
+return waPanel;
+}
+// Devolve a linha criada (pra poder tirar se a ação for desfeita).
+function addWaRow(s, text, href){
+const panel = ensureWaPanel();
+const row = document.createElement("div");
+row.className = "wa-row";
+row.innerHTML = `<span class="wa-row-msg">${escapeHtml(text)}${href ? "" : " Sem telefone pra avisar."}</span>${href
+? `<a class="wa-btn" href="${href}" target="_blank" rel="noopener">Avisar no WhatsApp</a>`
+: `<button type="button" class="wa-btn wa-btn-muted">Cadastrar telefone</button>`}<button type="button" class="wa-row-close" aria-label="Tirar da lista">✕</button>`;
+const btn = row.querySelector(".wa-btn");
+btn.addEventListener("click", () => { row.classList.add("done"); if (!href) openContactField(s); });
+row.querySelector(".wa-row-close").onclick = () => removeWaRow(row);
+panel.querySelector(".wa-panel-rows").appendChild(row);
+return row;
+}
+function removeWaRow(row){
+row.remove();
+if (waPanel && !waPanel.querySelector(".wa-row")) closeWaPanel();
+}
 function offerMessage(s, key, vars, doneText){
-const href = waMessageLink(s, key, vars);
-if (href) showActionToast(doneText, "Avisar no WhatsApp", href);
-else showActionToast(`${doneText} Sem telefone pra avisar.`, "Cadastrar telefone", null, () => openContactField(s));
+return addWaRow(s, doneText, waMessageLink(s, key, vars));
 }
 // Depois de marcar/remarcar uma aula extra ou reposição.
 function offerLessonMessage(s, m){
-if (!m || m.status !== "scheduled" || !m.date) return;
+if (!m || m.status !== "scheduled" || !m.date) return null;
 const d = dateFromIso(m.date);
-offerMessage(s, "lessonMoved", { dia: WEEKDAY_FULL[d.getDay()], data: formatDateShort(m.date).slice(0,5), hora: m.time || getStudentTimeFor(s, d.getDay()) }, `Aula de ${firstName(s.name)} marcada pra ${formatDateShort(m.date).slice(0,5)}.`);
+return offerMessage(s, "lessonMoved", { dia: WEEKDAY_FULL[d.getDay()], data: formatDateShort(m.date).slice(0,5), hora: m.time || getStudentTimeFor(s, d.getDay()) }, `Aula de ${firstName(s.name)} marcada pra ${formatDateShort(m.date).slice(0,5)}.`);
 }
 // Depois de cancelar uma aula.
 function offerCancelMessage(s, time, dateBr){
-offerMessage(s, "cancel", { hora: time, data: (dateBr || "").slice(0,5) }, `Aula de ${firstName(s.name)} cancelada.`);
+return offerMessage(s, "cancel", { hora: time, data: (dateBr || "").slice(0,5) }, `Aula de ${firstName(s.name)} cancelada.`);
 }
 
 // ===== Ações rápidas nas aulas do Início =====
@@ -4498,7 +4544,7 @@ openQuickModal(title || `Cancelar aula · ${t0.student.name}`, `${t0.entry.date}
 const made = targets.map(t => ({ t, m: recordNoClass(t.student, t.entry, reason, withMakeup) }));
 closeQuickModal();
 refreshAfterLessonChange(t0.student);
-made.forEach(({ t, m }, i) => setTimeout(() => offerAfterNoClass(t.student, reason, m, t.time, t.entry.date), i * 150));
+made.forEach(({ t, m }) => offerAfterNoClass(t.student, reason, m, t.time, t.entry.date));
 }, { time: t0.time, fixedReason: "teacher_cancel" }), null, "Voltar");
 }
 // Aulas passadas recentes (7 dias) que ficaram sem registro: a última de cada aluno.
@@ -7964,7 +8010,7 @@ if (!st.noClass && !activeCriteria().every(c => st.values[c.key] > 0)) { alert(`
 }
 group.items.forEach(({ student, entry }, i) => {
 const st = states[i];
-if (st.noClass) { const m = recordNoClass(student, entry, st.reason, st.withMakeup); setTimeout(() => offerAfterNoClass(student, st.reason, m, group.time, entry.date), 100); return; }
+if (st.noClass) { const m = recordNoClass(student, entry, st.reason, st.withMakeup); offerAfterNoClass(student, st.reason, m, group.time, entry.date); return; }
 const notes = readNotes(st.el);
 const fields = { status:"evaluated", ...st.values };
 if (notes.taught) fields.taught = notes.taught;
