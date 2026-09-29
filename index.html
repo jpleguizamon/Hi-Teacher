@@ -1313,23 +1313,24 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .stu-wait b{color:var(--heading)}
 .stu-wait.bad b{color:var(--danger)}
 .stu-wait-hint{font-size:0.75rem;color:var(--muted);margin:-0.5rem 0 1rem}
-#authGate:not(.hidden) ~ #studentApp{visibility:hidden}
-#studentApp.hidden{display:none}
-body.student-mode .app,body.student-mode .sidebar,body.student-mode .overlay{display:none!important}
-#studentApp{position:relative;z-index:1;max-width:40rem;margin:0 auto;padding:0 1rem calc(5.5rem + env(safe-area-inset-bottom))}
-.stu-head{display:flex;align-items:center;justify-content:space-between;gap:0.75rem;padding:0.875rem 0 0.625rem}
-.stu-logo{height:2rem;width:auto}
-.stu-picker{flex:1;min-width:0;max-width:18rem;background:var(--glass-field);color:var(--text);border:0.0625rem solid var(--glass-border);border-radius:var(--radius-pill);padding:0.5rem 0.875rem;font:inherit;font-size:0.8125rem;font-weight:650}
-.stu-tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;justify-content:space-around;padding:0.375rem 0.25rem calc(0.375rem + env(safe-area-inset-bottom));background:var(--glass-fill-strong);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border-top:0.0625rem solid var(--glass-border)}
-.stu-tabs button{flex:1;display:flex;flex-direction:column;align-items:center;gap:0.1875rem;background:none;border:none;color:var(--muted);font:inherit;font-size:0.6875rem;font-weight:650;padding:0.375rem 0;border-radius:var(--radius-md);cursor:pointer;min-height:44px}
-.stu-tabs button .ui-icon{width:1.375rem;height:1.375rem}
-.stu-tabs button.active{color:var(--accent)}
-.stu-tabs button.active .ui-icon{filter:drop-shadow(0 0 0.375rem rgba(47,211,242,.5))}
+body.student-mode #app,body.student-mode #sidebar,body.student-mode #overlay{display:none!important}
+body:not(.student-mode) .stu-shell{display:none!important}
+.stu-avatar{padding:0;cursor:pointer;font-family:inherit}
+.stu-avatar:focus-visible{outline:0.125rem solid var(--accent);outline-offset:0.125rem}
+.stu-picker{display:block;margin-top:0.375rem;max-width:100%;background:var(--glass-field);color:var(--text);border:0.0625rem solid var(--glass-border);border-radius:var(--radius-pill);padding:0.3125rem 0.75rem;font:inherit;font-size:0.75rem;font-weight:650}
+/* Modo demonstração: faixa fixa acima do cabeçalho */
+.demo-bar{position:fixed;left:0;right:0;top:0;z-index:40;height:2.5rem;display:flex;align-items:center;justify-content:center;gap:0.75rem;padding:0 1rem;
+  background:color-mix(in srgb,var(--orange) 22%,var(--bg));border-bottom:0.0625rem solid color-mix(in srgb,var(--orange) 55%,transparent);color:var(--text);font-size:0.8125rem;font-weight:700}
+.demo-bar span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.demo-bar button{flex:none;border:0.0625rem solid color-mix(in srgb,var(--orange) 60%,transparent);background:transparent;color:var(--text);border-radius:var(--radius-pill);padding:0.3125rem 0.75rem;font:inherit;font-size:0.75rem;font-weight:750;cursor:pointer}
+body.demo-on{padding-top:2.5rem}
+body.demo-on header{top:2.5rem}
+body.demo-on .sidebar.stu-shell{top:2.5rem}
+@media (min-width: 900px){ body.demo-on .sidebar.stu-shell{top:2.5rem;height:calc(100vh - 2.5rem)} }
 .stu-hello{font-size:1.5rem;font-weight:750;color:var(--heading);letter-spacing:-0.02em;margin:0.5rem 0 0.25rem}
 .stu-hello-sub{color:var(--muted);font-size:0.875rem;margin-bottom:0.5rem}
-.stu-card{background:var(--glass-fill);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:0.0625rem solid var(--glass-border);border-radius:var(--radius-lg);padding:1rem;margin:0.875rem 0;box-shadow:var(--edge-light)}
+.stu-card{margin:0 0 1.5rem!important;background:var(--glass-fill);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:0.0625rem solid var(--glass-border);border-radius:var(--radius-lg);padding:1rem;margin:0.875rem 0;box-shadow:var(--edge-light)}
 .stu-card.stu-next{background:var(--glass-fill-raised);border-color:var(--accent-line)}
-.stu-card-title{font-size:0.6875rem;font-weight:750;text-transform:uppercase;letter-spacing:.07em;color:var(--accent);margin-bottom:0.625rem}
 .stu-next-when{font-size:1.25rem;font-weight:750;color:var(--heading);letter-spacing:-0.01em}
 .stu-next-meta{color:var(--text-2);font-size:0.875rem;margin-top:0.25rem}
 .stu-absent-btn{margin-top:0.75rem}
@@ -1337,21 +1338,21 @@ body.student-mode .app,body.student-mode .sidebar,body.student-mode .overlay{dis
 .stu-muted{color:var(--muted);font-size:0.75rem;margin-top:0.125rem}
 .stu-hw{white-space:pre-wrap;color:var(--text);font-size:0.9375rem;line-height:1.5}
 .stu-notice{font-size:0.8125rem;line-height:1.45;padding:0.5rem 0;border-top:0.0625rem solid var(--hairline);color:var(--text)}
-.stu-card-title + .stu-notice{border-top:none;padding-top:0}
+.stu-card > .stu-notice:first-child{border-top:none;padding-top:0}
 .stu-notice.warn{color:var(--orange)}
 .stu-notice.bad{color:var(--danger)}
 .stu-notice.ok{color:var(--green)}
 .stu-row{display:flex;align-items:center;gap:0.625rem;padding:0.625rem 0;border-top:0.0625rem solid var(--hairline)}
 .stu-row.col{flex-direction:column;align-items:stretch;gap:0.25rem}
-.stu-card-title + .stu-row{border-top:none;padding-top:0}
+.stu-card > .stu-row:first-child{border-top:none;padding-top:0}
 .stu-row-main{flex:1;min-width:0}
 .stu-row-title{font-size:0.875rem;font-weight:700;color:var(--text)}
 .stu-row-acts{flex:none;display:flex;gap:0.375rem}
-.stu-status{display:inline-block;font-size:0.75rem;font-weight:650;color:var(--text-2);margin-top:0.1875rem}
-.stu-status.ok{color:var(--green)}
+.stu-status{display:inline-block;font-size:0.75rem;font-weight:650;color:var(--text-2);margin-top:0.25rem;padding:0.125rem 0.625rem;border-radius:var(--radius-pill);border:0.0625rem solid var(--glass-border-soft);background:var(--glass-inset)}
+.stu-status.ok{color:var(--green);border-color:color-mix(in srgb,var(--green) 40%,transparent);background:color-mix(in srgb,var(--green) 12%,transparent)}
 .stu-status.off{color:var(--muted)}
-.stu-status.wait{color:var(--orange)}
-.stu-status.bad{color:var(--danger)}
+.stu-status.wait{color:var(--orange);border-color:color-mix(in srgb,var(--orange) 40%,transparent);background:color-mix(in srgb,var(--orange) 12%,transparent)}
+.stu-status.bad{color:var(--danger);border-color:var(--danger-border);background:color-mix(in srgb,var(--danger) 12%,transparent)}
 .stu-absent-form:not(:empty){padding:0.5rem 0 0.75rem}
 .stu-evals{display:flex;flex-wrap:wrap;gap:0.25rem 0.875rem;font-size:0.75rem;color:var(--text-2)}
 .stu-evals b{color:var(--star);font-weight:400;letter-spacing:.05em}
@@ -1360,6 +1361,7 @@ body.student-mode .app,body.student-mode .sidebar,body.student-mode .overlay{dis
 .stu-teacher-photo{width:2.75rem;height:2.75rem;border-radius:50%;background-size:cover;background-position:center;flex:none;border:0.0625rem solid var(--glass-border)}
 .stu-sub-list{margin-top:0.625rem}
 .stu-logout{width:100%;margin:0.5rem 0 1rem}
+.demo-actions{display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.625rem}
 .metro-bpm{display:flex;align-items:center;justify-content:center;gap:1.25rem;text-align:center}
 .metro-bpm span{display:block;font-size:3rem;font-weight:800;color:var(--heading);font-variant-numeric:tabular-nums;line-height:1}
 .metro-bpm small{font-size:0.75rem;color:var(--muted);font-weight:700;letter-spacing:.08em}
@@ -1692,18 +1694,6 @@ body.student-mode .app,body.student-mode .sidebar,body.student-mode .overlay{dis
 <div class="auth-error" id="onbError"></div>
 <div class="actions"><button class="save" id="onbSubmitBtn" style="width:100%">Concluir configuração</button></div>
 </div>
-</div>
-<!-- Modo aluno (8.1): telas do aluno/responsável. O app do professor fica escondido. -->
-<div id="studentApp" class="hidden">
-<header class="stu-head"><img class="stu-logo" id="stuLogo" alt="Hi Teacher"><select id="stuPicker" class="stu-picker" aria-label="Aluno" style="display:none"></select></header>
-<main id="stuMain"></main>
-<nav class="stu-tabs" aria-label="Menu do aluno">
-<button type="button" data-stu-tab="home"><svg class="ui-icon" viewBox="0 0 24 24"><use href="#icon-home"/></svg><span>Início</span></button>
-<button type="button" data-stu-tab="lessons"><svg class="ui-icon" viewBox="0 0 24 24"><use href="#icon-calendar"/></svg><span>Aulas</span></button>
-<button type="button" data-stu-tab="money"><svg class="ui-icon" viewBox="0 0 24 24"><use href="#icon-dollar"/></svg><span>Financeiro</span></button>
-<button type="button" data-stu-tab="tools"><svg class="ui-icon" viewBox="0 0 24 24"><use href="#icon-music"/></svg><span>Ferramentas</span></button>
-<button type="button" data-stu-tab="profile"><svg class="ui-icon" viewBox="0 0 24 24"><use href="#icon-user"/></svg><span>Perfil</span></button>
-</nav>
 </div>
 <div class="app" id="app">
 <header>
@@ -2218,6 +2208,47 @@ body.student-mode .app,body.student-mode .sidebar,body.student-mode .overlay{dis
 <button type="button" class="sidebar-logout" id="btnLogout"><svg viewBox="0 0 24 24"><use href="#icon-logout"/></svg><span>Sair da conta</span></button>
 </div>
 </aside>
+<!-- Modo aluno (8.2): mesma casca do professor (cabeçalho de vidro, menu-drawer no celular,
+     barra lateral fixa no computador), com ids próprios. Só aparece com body.student-mode. -->
+<div class="app stu-shell" id="stuShell">
+<header>
+<button class="menu-btn" id="stuMenuBtn" aria-label="Abrir menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18"/><path d="M3 12h18"/><path d="M3 18h18"/></svg></button>
+<div class="top">
+<div>
+<img class="header-app-title" id="stuLogo" alt="Hi Teacher">
+<div class="date" id="stuPageTitle">Início</div>
+<select id="stuPicker" class="stu-picker" aria-label="Aluno" style="display:none"></select>
+</div>
+<button type="button" class="avatar stu-avatar" id="stuAvatar" aria-label="Abrir o perfil"></button>
+</div>
+</header>
+<main id="stuMain"></main>
+</div>
+<div class="overlay stu-shell" id="stuOverlay"></div>
+<aside class="sidebar stu-shell" id="stuSidebar">
+<div class="side-logo"><img class="side-logo-img" id="stuSideLogo" alt="Hi Teacher"></div>
+<div class="nav">
+<button class="nav-item" data-stu-page="home"><span class="nav-item-row"><svg class="nav-icon" viewBox="0 0 24 24"><use href="#icon-home"/></svg>Início</span></button>
+<button class="nav-item" data-stu-page="lessons"><span class="nav-item-row"><svg class="nav-icon" viewBox="0 0 24 24"><use href="#icon-calendar"/></svg>Aulas</span></button>
+<button class="nav-item" data-stu-page="money"><span class="nav-item-row"><svg class="nav-icon" viewBox="0 0 24 24"><use href="#icon-dollar"/></svg>Financeiro</span></button>
+<div class="nav-group collapsed">
+<button class="nav-group-title" onclick="toggleNavGroup(this)">
+<span class="nav-item-row"><svg class="nav-icon" viewBox="0 0 24 24"><use href="#icon-music"/></svg>Ferramentas</span>
+<span class="chevron">▾</span>
+</button>
+<div class="nav-sub">
+<button class="nav-item" data-stu-page="metronome">Metrônomo</button>
+<button class="nav-item" data-stu-page="tuner">Afinador</button>
+</div>
+</div>
+</div>
+<div class="sidebar-footer">
+<button class="settings-btn" id="stuProfileNav" data-stu-page="profile"><svg viewBox="0 0 24 24"><use href="#icon-user"/></svg><span>Perfil</span></button>
+<button type="button" class="sidebar-logout" id="stuLogoutNav"><svg viewBox="0 0 24 24"><use href="#icon-logout"/></svg><span id="stuLogoutLabel">Sair da conta</span></button>
+</div>
+</aside>
+<div class="demo-bar" id="demoBar" style="display:none"><span id="demoBarText"></span><button type="button" id="demoExit">Sair da demonstração</button></div>
+
 
 <div class="modal-bg" id="importModal">
 <div class="modal" style="max-width:34rem">
@@ -3009,7 +3040,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.1.1";
+const APP_VERSION = "8.2";
 const BACKUP_EVERY = { weekly: 7, biweekly: 15, monthly: 30, never: 0 };
 const BACKUP_LABELS = { weekly: "Toda semana", biweekly: "A cada 15 dias", monthly: "Todo mês", never: "Nunca" };
 const REMINDER_SENT_KEY = "jp_reminders_sent_v1";
@@ -3052,6 +3083,8 @@ let cloudPullOk = false;
 // a cada tecla digitada — só manda a versão mais recente, já "assentada").
 const _nativeSetItem = Storage.prototype.setItem;
 Storage.prototype.setItem = function(key, value){
+// Demonstração do modo aluno (8.2): os dados do professor ficam intocados.
+if (this === localStorage && typeof demoMode !== "undefined" && demoMode && CLOUD_SYNC_KEYS.includes(key)) return;
 const changed = this === localStorage && CLOUD_SYNC_KEYS.includes(key) && this.getItem(key) !== value;
 _nativeSetItem.call(this, key, value);
 if (changed && !readSyncMeta().dirty) writeSyncMeta({ dirty: true, dirtySince: new Date().toISOString() }); // mudou aqui e ainda não foi pra nuvem
@@ -3620,6 +3653,7 @@ return true;
 function tbSchedule(){ clearTimeout(tbTimer); tbTimer = setTimeout(tbSyncNow, 1500); }
 async function tbSyncNow(){
 clearTimeout(tbTimer);
+if (typeof demoMode !== "undefined" && demoMode) { tbTimer = setTimeout(tbSyncNow, 3000); return false; } // demonstração aberta: sincroniza depois
 if (!tbActive()) return false;
 try { tbDiff(); } catch(e) { console.error("Falha ao preparar as mudanças:", e); setCloudStatus("error", cloudErrorText(e)); return false; }
 renderCloudStatus();
@@ -3985,7 +4019,7 @@ if (await tbMigrate(orgId)) { cloudPullOk = false; await tbOpen(); }
 window.addEventListener("online", () => { if (tbActive()) tbSyncNow(); });
 
 // ===================== App do aluno (8.1) =====================
-// Um app só: quem entrou como aluno/responsável vê o "modo aluno" (#studentApp), com telas
+// Um app só: quem entrou como aluno/responsável vê o "modo aluno" (#stuShell/#stuSidebar, mesma casca do professor), com telas
 // próprias. Os dados vêm das tabelas da 8.0 (só as linhas dele, pelo RLS) e o motor de aulas
 // é o mesmo do professor: no modo aluno, "students" vira [o aluno escolhido] e appSettings
 // recebe (só na memória, nunca salvo) o que o professor publica em teacher_public.
@@ -3996,7 +4030,7 @@ const STU_PICK_KEY = "jp_student_pick_v1";
 let studentMode = false;
 let stu = null;          // { links, students:[{s, uuid, row, link, tp, view}], requests, joins }
 let stuCur = null;       // item selecionado de stu.students
-let stuTab = "home";
+let stuTab = localStorage.getItem("jp_stu_active_page") || "home"; // página do modo aluno (separada da do professor)
 let stuPollTimer = null;
 let stuStarting = null;
 const PARTICLES = new Set(["da","de","do","das","dos","e","di","du"]);
@@ -4246,7 +4280,7 @@ function stuStartPoll(){
 stuStopPoll();
 stuPollTimer = setInterval(() => { if (document.visibilityState === "visible") startStudentMode(true); }, 30000);
 }
-document.addEventListener("visibilitychange", () => { if (studentMode && document.visibilityState === "visible") startStudentMode(true); });
+document.addEventListener("visibilitychange", () => { if (studentMode && !demoMode && document.visibilityState === "visible") startStudentMode(true); });
 
 // ---------- Dados do aluno ----------
 async function stuFetch(){
@@ -4319,7 +4353,6 @@ if (!raw) { stuEntryHTML(`<div class="stu-wait">Sem conexão com a internet. Ten
 stu = stuBuild(raw);
 if (!stu.students.length) {
 document.body.classList.remove("student-mode");
-document.getElementById("studentApp").classList.add("hidden");
 const e = readEntry();
 if (e.code && e.teacherName) { stuStopPoll(); return stuEntryForm(); }
 const open = stu.joins.find(j => j.status === "pending" || j.status === "waitlist") || stu.joins.find(j => j.status === "rejected" && !e.dismissedReject);
@@ -4330,25 +4363,31 @@ return e.kind ? stuEntryCode() : stuEntryKind();
 stuStopPoll();
 hideAuthGate();
 document.getElementById("onboardingGate").classList.add("hidden");
-document.body.classList.add("student-mode");
-document.getElementById("studentApp").classList.remove("hidden");
 const pick = localStorage.getItem(STU_PICK_KEY);
-stuApplyContext(stu.students.find(x => x.link.id === pick) || stu.students[0]);
+stuShowShell(stu.students.find(x => x.link.id === pick) || stu.students[0]);
+}
+// Mostra a casca do modo aluno já no aluno escolhido (também usado pela demonstração).
+function stuShowShell(item){
+closeMenu();
+document.body.classList.add("student-mode");
+stuApplyContext(item);
 stuRenderPicker();
+document.querySelectorAll("#stuSidebar [data-stu-page]").forEach(b => b.classList.toggle("active", b.dataset.stuPage === stuTab));
+document.querySelectorAll("#stuSidebar .nav-group").forEach(g => g.classList.toggle("collapsed", !g.querySelector(`[data-stu-page="${stuTab}"]`)));
 stuRender();
 }
 function stuRenderPicker(){
 const sel = document.getElementById("stuPicker");
-const logo = document.querySelector(".side-logo-img");
-const img = document.getElementById("stuLogo");
-if (logo && img && !img.src) img.src = logo.src;
+const logo = document.querySelector("#sidebar .side-logo-img");
+["stuLogo", "stuSideLogo"].forEach(id => { const img = document.getElementById(id); if (logo && img && !img.getAttribute("src")) img.src = logo.src; });
+const av = document.getElementById("stuAvatar");
+av.textContent = initials(stuCur.s.name || "A");
 if (stu.students.length < 2) { sel.style.display = "none"; return; }
 sel.style.display = "";
 sel.innerHTML = stu.students.map(x => `<option value="${x.link.id}">${escapeHtml(firstName(x.s.name))}${x.s.instrument ? " · " + escapeHtml(x.s.instrument) : ""} com ${escapeHtml(x.tp.display_name || "Professor")}</option>`).join("");
 sel.value = stuCur.link.id;
-sel.onchange = () => { _nativeSetItem.call(localStorage, STU_PICK_KEY, sel.value); stuApplyContext(stu.students.find(x => x.link.id === sel.value)); stuRender(); };
+sel.onchange = () => { _nativeSetItem.call(localStorage, STU_PICK_KEY, sel.value); stuApplyContext(stu.students.find(x => x.link.id === sel.value)); document.getElementById("stuAvatar").textContent = initials(stuCur.s.name || "A"); stuRender(); };
 }
-document.querySelectorAll("[data-stu-tab]").forEach(b => b.onclick = () => { stuTab = b.dataset.stuTab; stuRender(); window.scrollTo(0, 0); });
 
 // ---------- Aulas do aluno (mesmo motor do professor) ----------
 function stuLessonKey(br, makeupId){ return `${br}|${makeupId || ""}`; }
@@ -4408,24 +4447,57 @@ return items;
 }
 function stuPayReq(key){ return stuRequestsFor("payment_notice").find(r => r.payload && r.payload.key === key && r.status !== "cancelled"); }
 async function stuSendRequest(type, payload){
+if (demoMode === "view") { showCloudWarning("Só visualização: nada foi enviado."); return false; }
+if (demoMode) {
+stu.requests.unshift({ id: "demo" + Date.now(), student_id: stuCur.uuid, author_user_id: "demo", type, payload, status: "pending", created_at: new Date().toISOString() });
+showCloudWarning("Demonstração: nada foi enviado.");
+stuRender();
+return true;
+}
 const { error } = await supabaseClient.from("student_requests").insert({ student_id: stuCur.uuid, author_user_id: authCurrentUser.id, type, payload });
 if (error) { alert(/fetch|network/i.test(error.message || "") ? "Sem conexão. Tente de novo quando tiver internet." : "Não foi possível enviar agora. Tente de novo."); return false; }
 await startStudentMode(true);
 return true;
 }
 async function stuCancelRequest(r){
+if (demoMode) { if (demoMode === "demo") { r.status = "cancelled"; stuRender(); } showCloudWarning(demoMode === "demo" ? "Demonstração: nada foi enviado." : "Só visualização: nada foi enviado."); return; }
 const { error } = await supabaseClient.from("student_requests").update({ status: "cancelled" }).eq("id", r.id);
 if (error) { alert("Não foi possível cancelar agora. Tente de novo."); return; }
 await startStudentMode(true);
 }
 
 // ---------- Telas ----------
-function stuCard(title, inner, extraCls){ return `<section class="stu-card${extraCls ? " " + extraCls : ""}">${title ? `<div class="stu-card-title">${title}</div>` : ""}${inner}</section>`; }
-function stuRender(){
-document.querySelectorAll("[data-stu-tab]").forEach(b => b.classList.toggle("active", b.dataset.stuTab === stuTab));
-if (stuTab !== "tools") toolsStopAll();
+// Título de seção igual ao do professor (caixa alta pequena) + card de vidro.
+function stuCard(title, inner, extraCls){ return `${title ? `<div class="settings-group-label">${title}</div>` : ""}<section class="stu-card${extraCls ? " " + extraCls : ""}">${inner}</section>`; }
+const STU_PAGES = { home: "Início", lessons: "Aulas", money: "Financeiro", metronome: "Metrônomo", tuner: "Afinador", profile: "Perfil" };
+// Troca de página do modo aluno: mesma animação e mesma lógica de menu do openPage do professor.
+function stuOpenPage(page){
+if (!STU_PAGES[page]) page = "home";
+stuTab = page;
+if (!demoMode) _nativeSetItem.call(localStorage, "jp_stu_active_page", page);
+document.querySelectorAll("#stuSidebar [data-stu-page]").forEach(b => b.classList.toggle("active", b.dataset.stuPage === page));
+document.querySelectorAll("#stuSidebar .nav-group").forEach(g => g.classList.toggle("collapsed", !g.querySelector(`[data-stu-page="${page}"]`)));
+closeStuMenu();
+stuRender();
 const main = document.getElementById("stuMain");
-const r = { home: stuHomeHTML, lessons: stuLessonsHTML, money: stuMoneyHTML, tools: toolsHTML, profile: stuProfileHTML }[stuTab] || stuHomeHTML;
+main.style.animation = "none"; void main.offsetWidth; main.style.animation = "";
+window.scrollTo(0, 0);
+}
+function closeStuMenu(){ document.getElementById("stuSidebar").classList.remove("open"); document.getElementById("stuOverlay").classList.remove("open"); }
+document.getElementById("stuMenuBtn").onclick = () => { document.getElementById("stuSidebar").classList.add("open"); document.getElementById("stuOverlay").classList.add("open"); };
+document.getElementById("stuOverlay").onclick = closeStuMenu;
+document.querySelectorAll("#stuSidebar [data-stu-page]").forEach(b => b.onclick = () => stuOpenPage(b.dataset.stuPage));
+document.getElementById("stuAvatar").onclick = () => stuOpenPage("profile");
+document.getElementById("stuLogoutNav").onclick = () => { if (demoMode) return demoExit(); if (confirm("Sair da conta?")) stuSignOut(); };
+document.getElementById("demoExit").onclick = () => demoExit();
+function stuRender(){
+if (!STU_PAGES[stuTab]) stuTab = "home";
+if (stuTab !== "metronome") metroStop();
+if (stuTab !== "tuner") tunerStop();
+document.getElementById("stuPageTitle").textContent = STU_PAGES[stuTab];
+document.querySelectorAll("#stuSidebar [data-stu-page]").forEach(b => b.classList.toggle("active", b.dataset.stuPage === stuTab));
+const main = document.getElementById("stuMain");
+const r = { home: stuHomeHTML, lessons: stuLessonsHTML, money: stuMoneyHTML, metronome: metroHTML, tuner: tunerHTML, profile: stuProfileHTML }[stuTab];
 main.innerHTML = r();
 stuBind(main);
 }
@@ -4533,8 +4605,8 @@ return stuCard("Meus dados", `<dl class="sheet-grid">${pairs.filter(p => p[1]).m
 <div class="actions"><button class="cancel" id="stuChangeCancel">Cancelar</button><button class="save" id="stuChangeSend">Enviar pedido</button></div></div>
 ${changes.length ? `<div class="stu-sub-list">${changes.map(r => `<div class="stu-muted">Pedido de ${formatDateShort(r.created_at.slice(0,10)).slice(0,5)}: ${r.status === "pending" ? "aguardando o professor" : r.status === "accepted" ? "aplicado" : "não aceito"}${r.response ? ` · "${escapeHtml(r.response)}"` : ""}</div>`).join("")}</div>` : ""}`)
 + stuCard("Professor", `<div class="stu-teacher">${tp.photo ? `<span class="stu-teacher-photo" style="background-image:url(${escapeHtml(tp.photo)})"></span>` : ""}<div><div class="stu-row-title">${escapeHtml(tp.display_name || "Professor")}</div>${tp.city || tp.state ? `<div class="stu-muted">${escapeHtml([tp.city, tp.state].filter(Boolean).join(" – "))}</div>` : ""}</div></div>`)
-+ (isTeacherToo(authCurrentUser.id) ? `<button type="button" class="btn-historico stu-logout" id="stuTeacherBtn">Voltar para o modo professor</button>` : "")
-+ `<button type="button" class="cancel stu-logout" id="stuLogoutBtn">Sair da conta</button>`;
++ (!demoMode && isTeacherToo(authCurrentUser.id) ? `<button type="button" class="btn-historico stu-logout" id="stuTeacherBtn">Voltar para o modo professor</button>` : "")
++ (demoMode ? "" : `<button type="button" class="cancel stu-logout" id="stuLogoutBtn">Sair da conta</button>`);
 }
 function stuBind(main){
 main.querySelectorAll("[data-absent]").forEach(b => b.onclick = () => {
@@ -4590,7 +4662,9 @@ const lo = main.querySelector("#stuLogoutBtn");
 if (lo) lo.onclick = () => { if (confirm("Sair da conta?")) stuSignOut(); };
 const tb = main.querySelector("#stuTeacherBtn");
 if (tb) tb.onclick = () => switchRole("teacher");
-if (stuTab === "tools") toolsBind(main);
+if (stuTab === "metronome" || stuTab === "tuner") toolsBind(main);
+// "Ver como aluno": botões de enviar desligados.
+if (demoMode === "view") main.querySelectorAll("[data-absent],[data-paid],[data-cancel-req],#stuChangeBtn").forEach(b => { b.disabled = true; b.textContent = "Só visualização"; b.onclick = null; });
 }
 
 // ===================== Ferramentas: metrônomo e afinador =====================
@@ -4719,13 +4793,15 @@ document.getElementById("tunerStatus").textContent = ok ? "Afinado ✓" : cents 
 document.querySelectorAll("[data-string]").forEach(b => b.classList.toggle("on", Number(b.dataset.string) === target));
 }
 function toolsStopAll(){ metroStop(); tunerStop(); }
-function toolsHTML(){
+function metroHTML(){
 return stuCard("Metrônomo", `<div class="metro-bpm"><button type="button" class="metro-step" data-bpm="-1">−</button><div><span id="metroBpm">${metro.bpm}</span><small>BPM</small></div><button type="button" class="metro-step" data-bpm="1">+</button></div>
 <input type="range" min="30" max="240" value="${metro.bpm}" id="metroRange" class="metro-range" aria-label="Andamento">
 <div class="reason-chips metro-sigs">${METRO_SIGS.map(([l, n]) => `<button type="button" class="filter-chip${metro.beats === n ? " selected" : ""}" data-sig="${n}">${l}</button>`).join("")}</div>
 <div class="metro-dots">${Array.from({ length: metro.beats }, (_, i) => `<span class="metro-dot${i === 0 ? " first" : ""}"></span>`).join("")}</div>
-<div class="actions"><button class="save" id="metroToggle">${metro.running ? "Parar" : "Tocar"}</button><button class="cancel" id="metroTap">Tocar no ritmo</button></div>`)
-+ stuCard("Afinador", `<div class="reason-chips">${Object.entries(TUNINGS).map(([k, t]) => `<button type="button" class="filter-chip${tuner.mode === k ? " selected" : ""}" data-tuning="${k}">${t.label}</button>`).join("")}</div>
+<div class="actions"><button class="save" id="metroToggle">${metro.running ? "Parar" : "Tocar"}</button><button class="cancel" id="metroTap">Tocar no ritmo</button></div>`);
+}
+function tunerHTML(){
+return stuCard("Afinador", `<div class="reason-chips">${Object.entries(TUNINGS).map(([k, t]) => `<button type="button" class="filter-chip${tuner.mode === k ? " selected" : ""}" data-tuning="${k}">${t.label}</button>`).join("")}</div>
 <div class="tuner-strings">${TUNINGS[tuner.mode].notes.map(n => `<span data-string="${noteToMidi(n)}">${NOTE_PT[n.replace(/-?\d$/, "")]}</span>`).join("")}</div>
 <div class="tuner-note" id="tunerNote">—</div><div class="stu-muted" id="tunerFreq"></div>
 <div class="tuner-scale"><span class="tuner-center"></span><span class="tuner-needle" id="tunerNeedle"></span></div>
@@ -4733,6 +4809,7 @@ return stuCard("Metrônomo", `<div class="metro-bpm"><button type="button" class
 <div class="actions"><button class="save" id="tunerToggle">${tuner.stream ? "Desligar afinador" : "Ligar afinador"}</button></div>`);
 }
 function toolsBind(main){
+if (!main.querySelector("#metroToggle")) return tunerBind(main);
 main.querySelectorAll("[data-bpm]").forEach(b => b.onclick = () => metroSetBpm(metro.bpm + Number(b.dataset.bpm)));
 main.querySelector("#metroRange").oninput = e => metroSetBpm(Number(e.target.value));
 main.querySelectorAll("[data-sig]").forEach(b => b.onclick = () => { metro.beats = Number(b.dataset.sig); metro.beat = 0; const was = metro.running; metroStop(); stuRender(); if (was) metroStart(); });
@@ -4743,8 +4820,116 @@ metro.taps = metro.taps.filter(x => t - x < 2500);
 metro.taps.push(t);
 if (metro.taps.length >= 2) { const iv = []; for (let i = 1; i < metro.taps.length; i++) iv.push(metro.taps[i] - metro.taps[i - 1]); metroSetBpm(60000 / (iv.reduce((a, b) => a + b, 0) / iv.length)); }
 };
+}
+function tunerBind(main){
+if (!main.querySelector("#tunerToggle")) return;
 main.querySelectorAll("[data-tuning]").forEach(b => b.onclick = () => { tuner.mode = b.dataset.tuning; const on = !!tuner.stream; stuRender(); if (on) { document.getElementById("tunerToggle").textContent = "Desligar afinador"; } });
 main.querySelector("#tunerToggle").onclick = () => { if (tuner.stream) tunerStop(); else tunerStart(); };
+}
+// ===================== Modo demonstração (8.2) =====================
+// O professor vê o app do aluno sem outra conta: "demo" (aluno fictício gerado na hora, só no
+// aparelho) ou "view" (o que um aluno real vê, só leitura, a partir dos dados do aparelho do
+// professor, sem nada privado). Nada vai pra nuvem: as telas são as mesmas do modo aluno, os
+// dados do professor ficam guardados na memória e o setItem ignora as chaves jp_* enquanto dura.
+let demoMode = null;      // null | "demo" | "view"
+let demoSaved = null;
+function demoEnter(kind, stuObj, label){
+if (demoMode) return;
+demoSaved = { students, appSettings, stu, stuCur, stuTab, page: currentPage, scroll: window.scrollY, sheet: sheetStudentId, studentMode };
+if (typeof closeQuickModal === "function") closeQuickModal();
+closeStudentSheet();
+document.querySelectorAll(".modal-bg.show").forEach(m => m.classList.remove("show"));
+appSettings = JSON.parse(JSON.stringify(appSettings));
+demoMode = kind;
+studentMode = true;
+stu = stuObj;
+stuTab = "home";
+document.getElementById("demoBarText").textContent = label;
+document.getElementById("demoBar").style.display = "";
+document.body.classList.add("demo-on");
+document.getElementById("stuLogoutLabel").textContent = "Sair da demonstração";
+stuShowShell(stu.students[0]);
+window.scrollTo(0, 0);
+}
+function demoExit(){
+if (!demoMode) return;
+metroStop(); tunerStop();
+const d = demoSaved;
+students = d.students; appSettings = d.appSettings; stu = d.stu; stuCur = d.stuCur; stuTab = d.stuTab;
+studentMode = d.studentMode; demoMode = null; demoSaved = null;
+document.getElementById("demoBar").style.display = "none";
+document.body.classList.remove("demo-on", "student-mode");
+document.getElementById("stuLogoutLabel").textContent = "Sair da conta";
+openPage(d.page);
+if (d.sheet !== null && d.sheet !== undefined && students.some(x => x.id === d.sheet)) openStudentSheet(d.sheet);
+setTimeout(() => window.scrollTo(0, d.scroll || 0), 0);
+}
+// Aluno fictício: aulas com uma remarcada, uma reposição e um feriado; histórico anotado e
+// avaliado; uma mensalidade paga (com recibo), uma a pagar e uma atrasada.
+function demoStudent(){
+const t = appSettings;
+const today = new Date(); today.setHours(0,0,0,0);
+const day = n => { const d = new Date(today); d.setDate(d.getDate() + n); return d; };
+const monthKey = n => { const d = new Date(today.getFullYear(), today.getMonth() + n, 1); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}`; };
+const days = [day(1).getDay(), day(4).getDay()];
+const s = { id: -424242, name: "Ana Demo", instrument: (t.instruments || [])[0] || "Violão", days, time: "18:00", entry: isoOf(day(-200)), trackingSince: isoOf(day(-35)), active: true,
+value: 150, dueDay: today.getDate() <= 26 ? today.getDate() + 3 : 31, phone: "(11) 90000-0000", birthDate: "2006-05-12", locationType: "studio", lessons: [], makeups: [] };
+const fut = [], past = [];
+for (let i = 1; i <= 35 && fut.length < 6; i++) if (days.includes(day(i).getDay())) fut.push(day(i));
+for (let i = -35; i <= -1; i++) if (days.includes(day(i).getDay())) past.push(day(i));
+// Remarcada: a 2ª próxima aula muda pra o dia seguinte, às 19h.
+const moved = new Date(fut[1]); moved.setDate(moved.getDate() + 1);
+s.makeups.push({ id: "mkdemo1", originDate: brOf(fut[1]), reason: "rescheduled", status: "scheduled", date: isoOf(moved), time: "19:00" });
+s.lessons.push({ date: brOf(fut[1]), status: "noclass", reason: "rescheduled", makeupCreated: "mkdemo1" });
+// Falta avisada com reposição marcada.
+const absent = past[past.length - 2];
+const rep = new Date(fut[2]); rep.setDate(rep.getDate() + 2);
+s.makeups.push({ id: "mkdemo2", originDate: brOf(absent), reason: "absent_notice", status: "scheduled", date: isoOf(rep), time: "17:00" });
+s.lessons.push({ date: brOf(absent), status: "noclass", reason: "absent_notice", makeupCreated: "mkdemo2" });
+const crit = (t.criteria || []).filter(c => c && c.key && !c.removed);
+const topics = [["Escala de Dó maior e dedilhado", "Escala de Dó 10 min por dia, devagar"], ["Acordes G, C e D com troca no tempo", "Trocar G-C-D com o metrônomo a 70 BPM"], ["Ritmo de balada e primeira música", "Tocar a música inteira 3 vezes"], ["Leitura de cifra", "Ler e tocar a cifra da página 4"], ["Revisão e dúvidas", "Revisar tudo que vimos no mês"]];
+past.filter(d => d !== absent).forEach((d, i) => {
+const [taught, homework] = topics[i % topics.length];
+const l = { date: brOf(d), status: i % 2 === 0 ? "evaluated" : "given", taught, homework };
+if (l.status === "evaluated") crit.forEach((c, k) => { l[c.key] = 3 + ((i + k) % 3); });
+s.lessons.push(l);
+});
+s.paidMonths = [monthKey(-2)]; s.paidMonth = monthKey(-2);
+s.paidDates = { [monthKey(-2)]: isoOf(new Date(today.getFullYear(), today.getMonth() - 2, 8)) };
+const loc = t.location || {};
+const tp = { display_name: (t.profile || {}).name || "Professor", full_name: (t.profile || {}).fullName || "", document: (t.profile || {}).document || null, photo: (t.profile || {}).photo || null,
+city: loc.city || "", state: loc.state || null,
+breaks: [...(t.breaks || []).filter(b => !b.studentId), { id: "brdemo", label: "Feriado", start: isoOf(fut[3]), end: isoOf(fut[3]) }],
+settings: { lessonDuration: t.lessonDuration, paymentsSince: monthKey(-2), criteria: t.criteria, evalFrequency: "every", instruments: t.instruments, weekStart: t.weekStart },
+show_evaluations: true };
+return { links: [], joins: [], requests: [], at: new Date().toISOString(), students: [{ s, uuid: "demo", row: {}, link: { id: "demo", role: "student" }, tp, view: { group: false } }] };
+}
+function startDemo(){ demoEnter("demo", demoStudent(), "Modo demonstração"); }
+// "Ver como": o mesmo que o aluno recebe (linhas públicas do aluno, teacher_public e
+// student_view), montado com os dados deste aparelho. Nada de student_private/lesson_private.
+async function startViewAs(s){
+const map = studentUuidMap(), u = map.of(s);
+const rows = tbLocalRows();
+const m = new Map();
+const show = !!appSettings.showEvalsToStudents;
+rows.forEach((x, k) => {
+if (!["students","lessons","makeups","payments"].includes(x.t)) return;
+if (x.t === "students" ? x.row.id !== u : x.row.student_id !== u) return;
+const row = x.t === "lessons" && !show ? { ...x.row, scores: null } : x.row;
+m.set(k, { t: x.t, row });
+});
+const scores = {};
+if (show) rows.forEach(x => { if (x.t === "lesson_private" && x.row.student_id === u) scores[x.row.lesson_id] = x.row.scores; });
+const view = studentViewInfo(s, scores);
+// Notas só se o professor mostra (igual ao aluno, que as recebe pelo student_view).
+if (view.scores) m.forEach((x, k) => { if (x.t === "lessons" && view.scores[x.row.id]) m.set(k, { t: x.t, row: { ...x.row, scores: view.scores[x.row.id] } }); });
+const s2 = JSON.parse(tbCompose(m).jp_students_v5)[0];
+if (!s2) { alert("Não achei os dados desse aluno neste aparelho."); return; }
+if (s2.value === undefined && view.monthlyValue !== undefined) s2.value = view.monthlyValue;
+let requests = [];
+try { const r = await supabaseClient.from("student_requests").select("*").eq("student_id", u).order("created_at", { ascending: false }); if (!r.error) requests = r.data || []; } catch(e) {}
+const link = (inbox.links || []).find(l => l.student_id === u) || { id: "view", role: "student" };
+demoEnter("view", { links: [link], joins: [], requests, at: new Date().toISOString(), students: [{ s: s2, uuid: u, row: {}, link, tp: tpPayload(), view }] }, `Vendo como ${firstName(s.name)} (só leitura)`);
 }
 // ===================== App do aluno: lado do professor (8.1) =====================
 // Chave para alunos, pedidos de entrada, recados dos alunos, acesso ao app na ficha e o que
@@ -5082,9 +5267,12 @@ const j = inbox.joins.find(x => x.user_id === l.user_id && x.student_id === u) |
 const who = l.role === "guardian" ? `${escapeHtml(firstName(j?.guardian_name || "Responsável"))} (responsável)` : escapeHtml(firstName(j?.student_name || s.name));
 return `<div class="sheet-pair wide"><dt>Acesso ao app</dt><dd>${who} tem acesso (desde ${formatDateShort(String(l.created_at).slice(0,10)).slice(0,5)}) <button type="button" class="btn-link-inline" data-unlink="${l.id}">Remover acesso</button></dd></div>`;
 }).join("");
-return `<section class="sheet-sec"><div class="sheet-sec-title">App do aluno</div><dl class="sheet-grid">${rows}</dl></section>`;
+return `<section class="sheet-sec"><div class="sheet-sec-title">App do aluno</div><dl class="sheet-grid">${rows}</dl>
+<div class="demo-actions"><button type="button" class="btn-historico" data-view-as>Ver como ${escapeHtml(firstName(s.name))}</button><button type="button" class="btn-historico" data-demo>Ver demonstração</button></div></section>`;
 }
 function bindAppAccess(body, s){
+const va = body.querySelector("[data-view-as]"); if (va) va.onclick = () => startViewAs(s);
+const dm = body.querySelector("[data-demo]"); if (dm) dm.onclick = startDemo;
 body.querySelectorAll("[data-unlink]").forEach(b => b.onclick = async () => {
 if (!confirm(`Remover o acesso ao app? A pessoa deixa de ver as aulas e o financeiro de ${s.name}. O cadastro do aluno não muda.`)) return;
 const { error } = await supabaseClient.from("student_links").delete().eq("id", b.dataset.unlink);
@@ -5121,14 +5309,22 @@ function inviteText(code){
 const t = appSettings.studentInviteMsg || "Baixe o Hi Teacher em [link], toque em Entrar como aluno e use a minha chave: [chave]";
 return t.replace(/\[link\]/g, appLink()).replace(/\[chave\]/g, code);
 }
+// Botão "Ver demonstração" (funciona sem internet e mesmo antes de ter a chave).
+function demoButtonHTML(){ return `<button type="button" class="btn-historico" data-demo style="width:100%;margin-top:0.75rem">Ver demonstração do app do aluno</button>`; }
+function bindDemoButton(body){ const b = body.querySelector("[data-demo]"); if (b) b.onclick = startDemo; }
 async function openStudentKey(){
-if (!tbActive()) { alert("A chave para alunos fica disponível depois que a atualização dos dados (versão 8.0) terminar neste aparelho. Verifique a internet e abra o app de novo."); return; }
 const body = document.createElement("div");
+if (!tbActive()) {
+body.innerHTML = `<div class="field-hint" style="margin:0">A chave para alunos fica disponível depois que a atualização dos dados (versão 8.0) terminar neste aparelho. Verifique a internet e abra o app de novo.</div>` + demoButtonHTML();
+bindDemoButton(body);
+openQuickModal("Chave para alunos", "Com ela o aluno (ou o responsável) pede pra entrar no app.", body, null, "Fechar");
+return;
+}
 body.innerHTML = `<div class="field-hint" style="margin:0">Gerando a chave…</div>`;
 openQuickModal("Chave para alunos", "Com ela o aluno (ou o responsável) pede pra entrar no app. Você aceita cada pedido.", body, null, "Fechar");
 let c;
 try { c = await ensureTeacherCode(false); }
-catch(e) { body.innerHTML = `<div class="field-hint" style="margin:0">Não consegui abrir a chave agora (sem internet?). Tente de novo.</div>`; return; }
+catch(e) { body.innerHTML = `<div class="field-hint" style="margin:0">Não consegui abrir a chave agora (sem internet?). Tente de novo.</div>` + demoButtonHTML(); bindDemoButton(body); return; }
 const firstTime = !appSettings.studentCode;
 if (appSettings.studentCode !== c.code) { appSettings.studentCode = c.code; saveAppSettings(); }
 if (firstTime) { teacherPublish(true); inboxStart(); }
@@ -5139,7 +5335,8 @@ body.innerHTML = `<div class="key-big" id="keyCode">${escapeHtml(c.code)}</div>
 <div class="field" style="margin-top:0.75rem"><label>Mensagem pra compartilhar</label><textarea id="keyMsg" rows="3"></textarea><div class="field-hint">[link] e [chave] são trocados pelo endereço do app e pela sua chave.</div></div>
 <div class="toggle-field"><label>Pausar pedidos</label><label class="switch"><input type="checkbox" id="keyPause" ${c.active ? "" : "checked"}><span class="switch-slider"></span></label></div>
 <div class="toggle-field"><label>Mostrar avaliações para os alunos</label><label class="switch"><input type="checkbox" id="keyEvals" ${appSettings.showEvalsToStudents ? "checked" : ""}><span class="switch-slider"></span></label></div>
-<button type="button" class="btn-historico" id="keyNew" style="width:100%;margin-top:0.5rem">Gerar nova chave</button>`;
+<button type="button" class="btn-historico" id="keyNew" style="width:100%;margin-top:0.5rem">Gerar nova chave</button>` + demoButtonHTML();
+bindDemoButton(body);
 const msg = body.querySelector("#keyMsg");
 msg.value = appSettings.studentInviteMsg || "Baixe o Hi Teacher em [link], toque em Entrar como aluno e use a minha chave: [chave]";
 msg.onchange = () => { appSettings.studentInviteMsg = msg.value.trim() || undefined; saveAppSettings(); };
@@ -10280,14 +10477,14 @@ document.querySelector("header").style.display = (page==="settings"||page==="tes
 document.getElementById("settingsTopbar").style.display = (page==="settings") ? "flex" : "none";
 document.getElementById("testsTopbar").style.display = (page==="tests") ? "flex" : "none";
 
-document.querySelectorAll(".nav button.nav-item").forEach(b => {
+document.querySelectorAll("#sidebar .nav button.nav-item").forEach(b => {
 const matchesPage = b.dataset.page === page;
 b.classList.toggle("active", matchesPage);
 });
 
 document.getElementById("settingsNavBtn")?.classList.toggle("active", page==="settings");
 
-document.querySelectorAll('.nav-group').forEach(group => {
+document.querySelectorAll('#sidebar .nav-group').forEach(group => {
 const hasActiveSub = group.querySelector(`[data-page="${page}"]`);
 if (hasActiveSub) { group.classList.remove('collapsed'); }
 else { group.classList.add('collapsed'); }
