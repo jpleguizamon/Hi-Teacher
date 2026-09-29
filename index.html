@@ -2152,6 +2152,7 @@ body.student-mode .app,body.student-mode .sidebar,body.student-mode .overlay{dis
 <div class="settings-group-label">Conta</div>
 <div class="settings-card">
 <div class="settings-row" id="rowCloudSync"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-upload"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Salvar na nuvem</div><div class="settings-row-sub" id="valCloudStatus">Conectando…</div></div><span class="settings-row-value" id="valCloudAction">Sincronizar</span></div>
+<div class="settings-row" id="rowStudentMode"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-user"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Entrar como aluno/responsável</div><div class="settings-row-sub">Pra quem também é aluno ou responsável por um aluno</div></div><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowSairConta"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-logout"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Sair da conta</div><div class="settings-row-sub" id="valContaEmail"></div></div></div>
 </div>
 </main>
@@ -3008,7 +3009,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.1";
+const APP_VERSION = "8.1.1";
 const BACKUP_EVERY = { weekly: 7, biweekly: 15, monthly: 30, never: 0 };
 const BACKUP_LABELS = { weekly: "Toda semana", biweekly: "A cada 15 dias", monthly: "Todo mês", never: "Nunca" };
 const REMINDER_SENT_KEY = "jp_reminders_sent_v1";
@@ -3284,9 +3285,16 @@ const TB_META_KEY = "jp_tables_meta_v1";     // { userId, mode, orgId, lastPull,
 const TB_SHADOW_KEY = "jp_tables_shadow_v1"; // { chave da linha: hash do conteúdo que já foi (ou está na fila) }
 const TB_QUEUE_KEY = "jp_tables_queue_v1";   // { chave da linha: { t, op, row, at } } mudanças esperando internet
 const TB_ORPHANS_KEY = "jp_tables_orphans_v1"; // linhas da nuvem cujo aluno ainda não chegou
-const TB_TABLES = ["students", "student_private", "lessons", "makeups", "payments"];
-const TB_CODE = { students:"s", student_private:"p", lessons:"l", makeups:"m", payments:"$" };
-const TB_BY_CODE = { s:"students", p:"student_private", l:"lessons", m:"makeups", $:"payments" };
+const TB_TABLES_BASE = ["students", "student_private", "lessons", "lesson_private", "makeups", "payments"];
+const TB_CODE = { students:"s", student_private:"p", lessons:"l", lesson_private:"k", makeups:"m", payments:"$" };
+const TB_BY_CODE = { s:"students", p:"student_private", l:"lessons", k:"lesson_private", m:"makeups", $:"payments" };
+// 8.1.1: notas por critério em lesson_private (só o professor). Enquanto o SQL da 8.1.1 não
+// foi rodado, continua como na 8.1 (notas em lessons.scores).
+let tbV811 = false;
+function tbTables(){ return tbV811 ? TB_TABLES_BASE : TB_TABLES_BASE.filter(t => t !== "lesson_private"); }
+// Campos do aluno que o app do aluno usa (ficam em students). O resto (ex.: frequência de
+// avaliação, campos desconhecidos) vai pra student_private: só o professor lê.
+const TB_STUDENT_PUBLIC = new Set(["id","timesByDay","biweeklyStart","trackingSince","duration","locationType","locationDetail","phone","birthDate","guardianName","guardianPhone","dueDay","packageSize","packageStart","packagePrice","lessonPrice","format"]);
 const TB_TD_KEYS = CLOUD_SYNC_KEYS.filter(k => k !== "jp_students_v5");
 // [chave no aluno, coluna, tipo]. Valor de tipo diferente (ou null) vai pro "extra", sem perder nada.
 const TB_COLS = {
@@ -3305,6 +3313,7 @@ const TB_CONTENT = {
 students: ["id","legacy_id","extra", ...TB_COLS.students.map(c => c[1])],
 student_private: ["id","student_id","extra", ...TB_COLS.student_private.map(c => c[1])],
 lessons: ["id","student_id","extra","scores", ...TB_COLS.lessons.map(c => c[1])],
+lesson_private: ["id","lesson_id","student_id","scores","extra"],
 makeups: ["id","student_id","extra", ...TB_COLS.makeups.map(c => c[1])],
 payments: ["id","student_id","extra", ...TB_COLS.payments.map(c => c[1])]
 };
@@ -3405,12 +3414,15 @@ list.forEach((s, pos) => {
 if (!s || typeof s !== "object" || Array.isArray(s)) return;
 const sKey = sKeyOf(s.id === undefined || s.id === null ? "noid" : String(s.id));
 const sid = tbUuid(uid, "student", sKey);
-const rest = { ...s };
-["lessons","makeups","charges","paidMonths","paidMonth","paidDates", ...TB_PRIVATE_KEYS].forEach(k => delete rest[k]);
+const rest = {}, priv = {};
+const nested = new Set(["lessons","makeups","charges","paidMonths","paidMonth","paidDates"]);
+const studentCols = new Set(TB_COLS.students.map(c => c[0]));
+Object.keys(s).forEach(k => {
+if (nested.has(k)) return;
+if (studentCols.has(k) || TB_STUDENT_PUBLIC.has(k)) rest[k] = s[k]; else priv[k] = s[k];
+});
 if (typeof s.id === "number") delete rest.id;
 add("students", tbMapOut(rest, TB_COLS.students, { id: sid, org_id: orgId || null, teacher_id: uid, legacy_id: s.id === undefined || s.id === null ? null : String(s.id), position: pos }));
-const priv = {};
-TB_PRIVATE_KEYS.forEach(k => { if (k in s) priv[k] = s[k]; });
 add("student_private", tbMapOut(priv, TB_COLS.student_private, { id: tbUuid(uid, "private", sKey), student_id: sid, teacher_id: uid }));
 const lKey = tbDedup();
 (Array.isArray(s.lessons) ? s.lessons : []).forEach((l, i) => {
@@ -3419,8 +3431,10 @@ const key = lKey(`${l.date}|${l.makeupId || ""}`);
 const scores = {}, other = {};
 Object.keys(l).forEach(k => { if (!TB_LESSON_KEYS.has(k) && typeof l[k] === "number" && isFinite(l[k])) scores[k] = l[k]; else other[k] = l[k]; });
 const row = tbMapOut(other, TB_COLS.lessons, { id: tbUuid(uid, "lesson", sKey, key), student_id: sid, teacher_id: uid, position: i });
-row.scores = Object.keys(scores).length ? scores : null;
+const hasScores = Object.keys(scores).length > 0;
+row.scores = hasScores && !tbV811 ? scores : null;
 add("lessons", row);
+if (hasScores && tbV811) add("lesson_private", { id: row.id, lesson_id: row.id, student_id: sid, teacher_id: uid, scores, extra: {} });
 });
 const mKey = tbDedup();
 (Array.isArray(s.makeups) ? s.makeups : []).forEach((m, i) => {
@@ -3467,7 +3481,7 @@ return c;
 }
 // Linhas -> chaves jp_* (o inverso de tbRowsFrom).
 function tbCompose(map){
-const by = { students: [], student_private: {}, lessons: {}, makeups: {}, payments: {} };
+const by = { students: [], student_private: {}, lessons: {}, lesson_private: {}, makeups: {}, payments: {} };
 const td = {};
 map.forEach(({ t, row }) => {
 if (t === "teacher_data") { td[row.key] = row.value; return; }
@@ -3480,7 +3494,8 @@ const list = by.students.map(r => {
 const s = tbMapIn(r, TB_COLS.students);
 if (!("id" in (r.extra || {})) && r.legacy_id !== null && r.legacy_id !== undefined) s.id = isNaN(Number(r.legacy_id)) ? r.legacy_id : Number(r.legacy_id);
 (by.student_private[r.id] || []).forEach(p => Object.assign(s, tbMapIn(p, TB_COLS.student_private)));
-s.lessons = (by.lessons[r.id] || []).sort(posSort).map(l => ({ ...tbMapIn(l, TB_COLS.lessons), ...(l.scores || {}) }));
+const lp = new Map((by.lesson_private[r.id] || []).map(x => [x.lesson_id, x]));
+s.lessons = (by.lessons[r.id] || []).sort(posSort).map(l => ({ ...tbMapIn(l, TB_COLS.lessons), ...(l.scores || {}), ...((lp.get(l.id) || {}).scores || {}) }));
 const mk = (by.makeups[r.id] || []).sort(posSort).map(m => tbMapIn(m, TB_COLS.makeups));
 if (mk.length) s.makeups = mk;
 const pays = by.payments[r.id] || [];
@@ -3550,7 +3565,7 @@ const sent = []; // [chave, at] aceitas pela nuvem
 const orgId = tbMeta().orgId || null;
 let failure = null;
 try {
-for (const t of TB_TABLES) {
+for (const t of tbTables()) {
 const ups = keys.filter(k => queue[k].t === t && queue[k].op === "up");
 for (let i = 0; i < ups.length; i += 500) {
 const part = ups.slice(i, i + 500);
@@ -3561,7 +3576,7 @@ part.forEach(k => sent.push([k, queue[k].at]));
 }
 }
 // Excluídos: a linha fica na nuvem, marcada "deleted" (nada é apagado de verdade).
-for (const t of [...TB_TABLES].reverse()) {
+for (const t of [...tbTables()].reverse()) {
 const dels = keys.filter(k => queue[k].t === t && queue[k].op === "del");
 for (let i = 0; i < dels.length; i += 200) {
 const part = dels.slice(i, i + 200);
@@ -3619,7 +3634,7 @@ const meta = tbMeta();
 const since = !full && meta.lastPull ? new Date(Date.parse(meta.lastPull) - 5 * 60000).toISOString() : null;
 const rows = [];
 let maxAt = meta.lastPull || null;
-for (const t of TB_TABLES) {
+for (const t of tbTables()) {
 for (let from = 0; ; from += 1000) {
 let q = supabaseClient.from(t).select("*").eq("teacher_id", uid);
 if (since) q = q.gt("updated_at", since);
@@ -3641,7 +3656,7 @@ const queue = tbQueue();
 const orphans = tbRead(TB_ORPHANS_KEY, {});
 let changed = false;
 const newer = (q, at) => q && Date.parse(q.at) > (Date.parse(at || 0) || 0);
-const all = [...Object.values(orphans), ...rows].sort((a, b) => TB_TABLES.indexOf(a.t) - TB_TABLES.indexOf(b.t));
+const all = [...Object.values(orphans), ...rows].sort((a, b) => tbTables().indexOf(a.t) - tbTables().indexOf(b.t));
 const nextOrphans = {};
 all.forEach(({ t, row }) => {
 const k = TB_CODE[t] + ":" + row.id;
@@ -3788,7 +3803,7 @@ const at = new Date().toISOString();
 // Linhas que já estão na nuvem e não estão no JSON (tentativa anterior, ou volta do modo
 // JSON): ficam marcadas como excluídas.
 const stale = {};
-for (const t of TB_TABLES) {
+for (const t of tbTables()) {
 for (let from = 0; ; from += 1000) {
 const { data, error } = await supabaseClient.from(t).select("id").eq("teacher_id", uid).eq("deleted", false).order("id").range(from, from + 999);
 if (error) throw error;
@@ -3798,7 +3813,7 @@ if (!data || data.length < 1000) break;
 }
 let done = 0;
 const total = [...rows.values()].filter(x => x.t !== "teacher_data").length;
-for (const t of TB_TABLES) {
+for (const t of tbTables()) {
 const list = [...rows.values()].filter(x => x.t === t).map(x => ({ ...x.row, deleted: false, changed_at: at }));
 for (let i = 0; i < list.length; i += 400) {
 const { error } = await supabaseClient.from(t).upsert(list.slice(i, i + 400), { onConflict: "id" });
@@ -3807,7 +3822,7 @@ done += Math.min(400, list.length - i);
 step(`Copiando… ${Math.round(done / Math.max(1, total) * 100)}%`);
 }
 }
-for (const t of [...TB_TABLES].reverse()) {
+for (const t of [...tbTables()].reverse()) {
 const ids = stale[t] || [];
 for (let i = 0; i < ids.length; i += 200) {
 const { error } = await supabaseClient.from(t).update({ deleted: true, changed_at: at }).in("id", ids.slice(i, i + 200)).eq("teacher_id", uid);
@@ -3890,6 +3905,7 @@ const wanted = param === "json" ? "json" : (param === "tabelas" || param === "ta
 if (param !== null) { try { const u = new URL(location.href); u.searchParams.delete("armazenamento"); history.replaceState(null, "", u.toString()); } catch(e) {} }
 if (wanted && appSettings.storageMode !== wanted) { appSettings.storageMode = wanted; _nativeSetItem.call(localStorage, "jp_settings_v1", JSON.stringify(appSettings)); }
 let td, orgId;
+tbV811 = !!meta.v811;
 try {
 const r = await supabaseClient.rpc("hi_ensure_teacher", { p_name: (appSettings.profile && appSettings.profile.name) || "" });
 if (r.error) throw r.error;
@@ -3898,7 +3914,13 @@ if (wanted) await supabaseClient.from("teacher_data").update({ storage_mode: wan
 const q = await supabaseClient.from("teacher_data").select("storage_mode, migrated_at, json_at, json_since").eq("teacher_id", uid).maybeSingle();
 if (q.error) throw q.error;
 td = q.data || {};
+// Notas em lesson_private (8.1.1)? Só usa se a tabela existe no Supabase.
+const lp = await supabaseClient.from("lesson_private").select("id", { head: true, count: "exact" }).limit(1);
+if (!lp.error) tbV811 = true; else if (tbIsMissingTableError(lp.error) || /permission/i.test(lp.error.message || "")) tbV811 = false;
+tbSetMeta({ v811: tbV811 });
 } catch(e) {
+// O servidor recusou criar dados de professor: a conta é de aluno (8.1.1).
+if (/Conta de aluno/i.test((e && e.message) || "")) { saveRole(uid, "student"); cloudReloading = true; location.reload(); return; }
 if (meta.userId === uid && meta.mode === "tables") {
 // Sem internet (ou nuvem fora do ar): segue nas tabelas com a fila guardada no aparelho.
 tbReady = true;
@@ -3982,11 +4004,19 @@ const PARTICLES = new Set(["da","de","do","das","dos","e","di","du"]);
 function readEntry(){ try { return JSON.parse(localStorage.getItem(ENTRY_KEY) || "null") || {}; } catch(e) { return {}; } }
 function writeEntry(patch){ const v = patch === null ? null : { ...readEntry(), ...patch }; if (v === null) localStorage.removeItem(ENTRY_KEY); else _nativeSetItem.call(localStorage, ENTRY_KEY, JSON.stringify(v)); }
 function readRoles(){ try { return JSON.parse(localStorage.getItem(ROLE_KEY) || "null") || {}; } catch(e) { return {}; } }
-function saveRole(uid, role){ const r = readRoles(); r[uid] = role; _nativeSetItem.call(localStorage, ROLE_KEY, JSON.stringify(r)); }
+function saveRole(uid, role){
+const r = readRoles(); r[uid] = role; _nativeSetItem.call(localStorage, ROLE_KEY, JSON.stringify(r));
+if (role === "teacher") { const t = tbRead("jp_role_teacher_v1", {}); t[uid] = true; tbWrite("jp_role_teacher_v1", t); }
+}
+// A conta já foi usada como professor neste aparelho (pode trocar de modo).
+function isTeacherToo(uid){ return !!tbRead("jp_role_teacher_v1", {})[uid] || readSyncMeta().userId === uid || tbMeta().userId === uid; }
+function switchRole(role){ saveRole(authCurrentUser.id, role); writeEntry(null); cloudReloading = true; location.reload(); }
 
-// Professor ou aluno? A escolha feita na tela de entrada vale; senão, a última usada neste
-// aparelho; senão, uma conta sem nada de professor e com vínculo/pedido de aluno é aluno.
-// Sem internet (ou sem as tabelas), é professor, como sempre foi.
+// Professor ou aluno? Nunca no chute (8.1.1): a escolha feita na tela de entrada vale; senão,
+// a última usada neste aparelho; senão, o aparelho já tem dados de professor dessa conta;
+// senão, pergunta ao Supabase (conta com dados de professor = professor; sem isso e com
+// vínculo/pedido de aluno = aluno). Sem conseguir consultar, devolve null e o app mostra
+// "Não foi possível conectar" sem salvar papel nenhum.
 let roleResolving = null;
 function resolveAppRole(user){
 if (!roleResolving || roleResolving.uid !== user.id) roleResolving = { uid: user.id, p: resolveAppRoleNow(user) };
@@ -3998,21 +4028,32 @@ if (entry.role === "teacher") { saveRole(uid, "teacher"); writeEntry(null); retu
 if (entry.role === "student") { saveRole(uid, "student"); writeEntry({ role: null }); return "student"; }
 const known = readRoles()[uid];
 if (known) return known;
+if (readSyncMeta().userId === uid || tbMeta().userId === uid) { saveRole(uid, "teacher"); return "teacher"; }
+const bad = r => r.error && !tbIsMissingTableError(r.error);
 try {
 // Conta com dados de professor: professor (sem perguntar mais nada).
 const [td, ud] = await Promise.all([
 supabaseClient.from("teacher_data").select("teacher_id").eq("teacher_id", uid).maybeSingle(),
 supabaseClient.from("user_data").select("user_id").eq("user_id", uid).maybeSingle()
 ]);
+if (bad(td) || bad(ud)) return null;
 let role = "teacher";
 if (!td.data && !ud.data) {
 const [links, joins] = await Promise.all([supabaseClient.from("student_links").select("id").eq("user_id", uid).limit(1), supabaseClient.rpc("hi_my_join_requests")]);
-if (links.error || joins.error) return "teacher";
+if (bad(links) || bad(joins)) return null;
 if ((links.data || []).length > 0 || (joins.data || []).length > 0) role = "student";
 }
 saveRole(uid, role);
 return role;
-} catch(e) { return "teacher"; }
+} catch(e) { return null; }
+}
+function showRoleRetry(){
+roleResolving = null;
+const el = stuEntryHTML(`<div class="stu-wait">Não foi possível conectar.</div>
+<div class="actions"><button class="save" id="roleRetry" style="width:100%">Tentar de novo</button></div>
+<button type="button" class="auth-toggle" id="roleOut">Sair da conta</button>`, "Verifique a internet");
+el.querySelector("#roleRetry").onclick = () => location.reload();
+el.querySelector("#roleOut").onclick = stuSignOut;
 }
 
 // ---------- Tela de entrada (antes de logar e enquanto o pedido não é aceito) ----------
@@ -4038,6 +4079,10 @@ authCardParts("stuEntry");
 document.getElementById("authSubtitle").textContent = subtitle || "";
 const el = document.getElementById("stuEntry");
 el.innerHTML = html;
+if (authCurrentUser && studentMode && isTeacherToo(authCurrentUser.id)) {
+const b = document.createElement("button"); b.type = "button"; b.className = "auth-toggle"; b.textContent = "Voltar para o modo professor";
+b.onclick = () => switchRole("teacher"); el.appendChild(b);
+}
 showAuthGate(subtitle || "");
 document.getElementById("authSubtitle").textContent = subtitle || "";
 return el;
@@ -4047,36 +4092,49 @@ const el = stuEntryHTML(`<div class="entry-big">
 <button type="button" class="entry-btn" data-kind="student"><b>Sou aluno</b><span>Eu faço as aulas</span></button>
 <button type="button" class="entry-btn" data-kind="guardian"><b>Sou responsável por um aluno</b><span>Pai, mãe ou responsável</span></button>
 </div><button type="button" class="auth-toggle" data-back>Voltar</button>`, "Entrar como aluno");
-el.querySelectorAll("[data-kind]").forEach(b => b.onclick = () => { writeEntry({ kind: b.dataset.kind }); stuEntryCode(); });
-el.querySelector("[data-back]").onclick = () => { if (authCurrentUser) stuSignOut(); else showEntryChoice(); };
+el.querySelectorAll("[data-kind]").forEach(b => b.onclick = () => { writeEntry({ kind: b.dataset.kind }); if (authCurrentUser) stuEntryCode(); else stuEntryAuth(); });
+const back = el.querySelector("[data-back]");
+if (authCurrentUser) back.textContent = "Sair da conta";
+back.onclick = () => { if (authCurrentUser) stuSignOut(); else { writeEntry(null); showEntryChoice(); } };
 }
+// A chave só é procurada com a conta já aberta (8.1.1), um toque por busca (cada busca
+// conta no limite de 10 a cada 10 minutos) e com tempo máximo de 10 s.
 function stuEntryCode(){
 const e = readEntry();
-const el = stuEntryHTML(`<div class="field"><label>Chave do professor</label><input type="text" id="stuCodeInput" placeholder="Ex.: JP543" autocapitalize="characters" autocomplete="off" value="${escapeHtml(e.code || "")}"></div>
+const el = stuEntryHTML(`<div class="field"><label>Chave do professor</label><input type="text" id="stuCodeInput" placeholder="Ex.: JP5432" autocapitalize="characters" autocomplete="off" value="${escapeHtml(e.code || "")}"></div>
 <div class="stu-code-result" id="stuCodeResult"></div>
-<div class="actions"><button class="save" id="stuCodeNext" style="width:100%" disabled>Continuar</button></div>
+<div class="actions"><button class="save" id="stuCodeNext" style="width:100%">Procurar chave</button></div>
 <button type="button" class="auth-toggle" data-back>Voltar</button>`, "Peça a chave ao seu professor");
 const input = el.querySelector("#stuCodeInput"), res = el.querySelector("#stuCodeResult"), next = el.querySelector("#stuCodeNext");
-let found = null, timer = null, seq = 0;
+let found = null, seq = 0;
+const show = (t, cls) => { res.textContent = t; res.className = "stu-code-result" + (cls ? " " + cls : ""); };
 const check = async () => {
 const code = input.value.trim().toUpperCase();
-found = null; next.disabled = true;
-if (!/^[A-Z]{1,4}\d{3}$/.test(code)) { res.textContent = code.length >= 5 ? "Chave não encontrada" : ""; res.className = "stu-code-result" + (code.length >= 5 ? " bad" : ""); return; }
-res.textContent = "Procurando…"; res.className = "stu-code-result";
+found = null; next.textContent = "Procurar chave";
+if (!/^[A-Z]{1,4}\d{3,4}$/.test(code)) { show(code ? "Chave não encontrada" : "Digite a chave.", "bad"); return; }
+show("Procurando…");
+next.disabled = true;
 const my = ++seq;
-const { data, error } = await supabaseClient.rpc("hi_find_teacher_code", { p_code: code });
+const out = await Promise.race([supabaseClient.rpc("hi_find_teacher_code", { p_code: code }), new Promise(r => setTimeout(() => r({ timeout: true }), 10000))]);
 if (my !== seq) return;
-const row = !error && Array.isArray(data) ? data[0] : null;
-if (error) { res.textContent = /fetch|network/i.test(error.message || "") ? "Sem conexão. Tente de novo." : "Não foi possível procurar agora."; res.className = "stu-code-result bad"; return; }
-if (!row) { res.textContent = "Chave não encontrada"; res.className = "stu-code-result bad"; return; }
-if (!row.accepting) { res.textContent = `${row.display_name} não está aceitando pedidos agora.`; res.className = "stu-code-result bad"; return; }
-found = { code, teacherId: row.teacher_id, teacherName: row.display_name, instruments: Array.isArray(row.instruments) ? row.instruments : [] };
-res.textContent = `Professor: ${row.display_name}`; res.className = "stu-code-result ok";
 next.disabled = false;
+if (out.timeout || (out.error && /fetch|network|timeout/i.test(out.error.message || ""))) {
+res.className = "stu-code-result bad";
+res.innerHTML = `Não foi possível procurar agora. <button type="button" class="btn-link-inline" id="stuCodeRetry">Tentar de novo</button>`;
+res.querySelector("#stuCodeRetry").onclick = check;
+return;
+}
+if (out.error) { show(/Muitas tentativas/i.test(out.error.message || "") ? "Muitas tentativas, espere alguns minutos." : "Não foi possível procurar agora.", "bad"); return; }
+const row = Array.isArray(out.data) ? out.data[0] : null;
+if (!row) { show("Chave não encontrada", "bad"); return; }
+if (!row.accepting) { show(`${row.display_name} não está aceitando pedidos agora.`, "bad"); return; }
+found = { code, teacherName: row.display_name, instruments: Array.isArray(row.instruments) ? row.instruments : [] };
+show(`Professor: ${row.display_name}`, "ok");
+next.textContent = "Continuar";
 };
-input.oninput = () => { clearTimeout(timer); timer = setTimeout(check, 350); };
-if (input.value) check();
-next.onclick = () => { if (!found) return; writeEntry(found); if (authCurrentUser) stuEntryForm(); else stuEntryAuth(); };
+input.oninput = () => { seq++; found = null; next.disabled = false; next.textContent = "Procurar chave"; show(""); };
+input.onkeydown = ev => { if (ev.key === "Enter") next.click(); };
+next.onclick = () => { if (found) { writeEntry(found); stuEntryForm(); } else check(); };
 el.querySelector("[data-back]").onclick = () => stuEntryKind();
 setTimeout(() => input.focus(), 50);
 }
@@ -4086,7 +4144,7 @@ authMode = "signup";
 applyAuthMode();
 authCardParts("authForm");
 document.getElementById("authStuBack").style.display = "block";
-document.getElementById("authSubtitle").textContent = `Crie sua conta (ou entre, se já tiver) · ${readEntry().teacherName || ""}`;
+document.getElementById("authSubtitle").textContent = "Crie sua conta (ou entre, se já tiver). Depois você digita a chave do professor.";
 }
 function stuEntryForm(){
 const e = readEntry();
@@ -4116,7 +4174,7 @@ const sel = el.querySelector("select#sfInstrument");
 if (sel) sel.onchange = () => { el.querySelector("#sfInstrumentOther").style.display = sel.value ? "none" : ""; };
 const birth = el.querySelector("#sfBirth"), minor = el.querySelector("#sfMinor");
 if (minor) birth.onchange = () => { const a = ageYears(birth.value); minor.style.display = a !== null && a < 18 ? "" : "none"; };
-el.querySelector("#sfOtherKey").onclick = () => { writeEntry({ code: "", teacherId: null, teacherName: null }); stuEntryCode(); };
+el.querySelector("#sfOtherKey").onclick = () => { writeEntry({ code: "", teacherName: null }); stuEntryCode(); };
 el.querySelector("#sfLogout").onclick = stuSignOut;
 el.querySelector("#sfSend").onclick = async () => {
 const v = id => (el.querySelector("#" + id)?.value || "").trim();
@@ -4124,7 +4182,7 @@ const err = el.querySelector("#sfError");
 const instrument = sel ? (sel.value || v("sfInstrumentOther")) : v("sfInstrument");
 const age = ageYears(v("sfBirth"));
 const row = {
-teacher_id: e.teacherId, user_id: authCurrentUser.id, role: guardian ? "guardian" : "student",
+role: guardian ? "guardian" : "student",
 student_name: v("sfName"), student_phone: guardian ? null : (v("sfPhone") || null), student_birth_date: v("sfBirth") || null,
 instrument: instrument || null,
 guardian_name: (guardian || (age !== null && age < 18)) ? (v("sfGuardianName") || null) : null,
@@ -4136,17 +4194,20 @@ if (!guardian && !row.student_phone) { err.textContent = "Preencha seu telefone.
 if (!row.student_birth_date) { err.textContent = "Preencha a data de nascimento."; return; }
 if (!guardian && age !== null && age < 18 && (!row.guardian_name || !row.guardian_phone)) { err.textContent = "Menor de 18 anos: preencha nome e telefone do responsável."; return; }
 const btn = el.querySelector("#sfSend"); btn.disabled = true; err.textContent = "";
-const { error } = await supabaseClient.from("join_requests").insert(row);
+const { error } = await supabaseClient.rpc("hi_create_join_request", { p_code: e.code, p_role: row.role, p_student_name: row.student_name, p_student_phone: row.student_phone, p_student_birth_date: row.student_birth_date, p_instrument: row.instrument, p_guardian_name: row.guardian_name, p_guardian_phone: row.guardian_phone });
 btn.disabled = false;
 if (error) {
 const m = error.message || "";
 err.textContent = /pendente para este professor/i.test(m) ? "Você já tem um pedido esperando resposta desse professor."
 : /Limite de 3/i.test(m) ? "Você já tem 3 pedidos esperando resposta. Espere algum ser respondido."
-: /row-level security|violates/i.test(m) ? "Esse professor não está aceitando pedidos agora."
+: /não está aceitando|row-level security|violates/i.test(m) ? "Esse professor não está aceitando pedidos agora."
+: /Muitas tentativas/i.test(m) ? "Muitas tentativas, espere alguns minutos."
+: /Chave não encontrada/i.test(m) ? "Chave não encontrada. Toque em Usar outra chave."
+: /própria chave/i.test(m) ? "Essa é a sua própria chave de professor."
 : /fetch|network/i.test(m) ? "Sem conexão. Tente de novo." : "Não foi possível enviar. Tente de novo.";
 return;
 }
-writeEntry({ code: "", teacherId: null, teacherName: null, kind: null });
+writeEntry({ code: "", teacherName: null, instruments: null, kind: null });
 startStudentMode(true);
 };
 }
@@ -4163,7 +4224,7 @@ const html = j.status === "rejected"
 <div class="stu-wait-hint">Esta tela atualiza sozinha.</div>
 <div class="actions sync-actions"><button class="cancel" id="swCancel">Cancelar pedido</button><button class="cancel" id="swOther">Usar outra chave</button></div>`;
 const el = stuEntryHTML(html + `<button type="button" class="auth-toggle" id="swLogout">Sair da conta</button>`, "Entrar como aluno");
-el.querySelector("#swOther").onclick = () => { stuStopPoll(); writeEntry({ code: "", teacherId: null }); if (readEntry().kind) stuEntryCode(); else stuEntryKind(); };
+el.querySelector("#swOther").onclick = () => { stuStopPoll(); writeEntry({ code: "", teacherName: null }); if (readEntry().kind) stuEntryCode(); else stuEntryKind(); };
 el.querySelector("#swLogout").onclick = stuSignOut;
 const c = el.querySelector("#swCancel");
 if (c) c.onclick = async () => {
@@ -4216,9 +4277,11 @@ const row = raw.students.find(s => s.id === link.student_id && alive(s));
 if (!row) return null;
 const m = new Map();
 m.set("s:" + row.id, { t: "students", row });
-[["lessons", raw.lessons], ["makeups", raw.makeups], ["payments", raw.payments]].forEach(([t, arr]) => arr.filter(r => r.student_id === row.id && alive(r)).forEach(r => m.set(TB_CODE[t] + ":" + r.id, { t, row: r })));
-const s = JSON.parse(tbCompose(m).jp_students_v5)[0];
 const view = (raw.views.find(v => v.student_id === row.id) || {}).info || {};
+// Notas: só vêm no student_view, quando o professor liga "Mostrar avaliações".
+const sc = view.scores || {};
+[["lessons", raw.lessons], ["makeups", raw.makeups], ["payments", raw.payments]].forEach(([t, arr]) => arr.filter(r => r.student_id === row.id && alive(r)).forEach(r => m.set(TB_CODE[t] + ":" + r.id, { t, row: t === "lessons" && sc[r.id] ? { ...r, scores: sc[r.id] } : r })));
+const s = JSON.parse(tbCompose(m).jp_students_v5)[0];
 if (s.value === undefined && view.monthlyValue !== undefined && view.monthlyValue !== null) s.value = view.monthlyValue;
 const tp = raw.tps.find(t => t.teacher_id === row.teacher_id) || {};
 return { s, uuid: row.id, row, link, tp, view };
@@ -4258,7 +4321,7 @@ if (!stu.students.length) {
 document.body.classList.remove("student-mode");
 document.getElementById("studentApp").classList.add("hidden");
 const e = readEntry();
-if (e.teacherId) { stuStopPoll(); return stuEntryForm(); }
+if (e.code && e.teacherName) { stuStopPoll(); return stuEntryForm(); }
 const open = stu.joins.find(j => j.status === "pending" || j.status === "waitlist") || stu.joins.find(j => j.status === "rejected" && !e.dismissedReject);
 if (open) { stuEntryWaiting(open); if (!stuPollTimer) stuStartPoll(); return; }
 stuStopPoll();
@@ -4470,6 +4533,7 @@ return stuCard("Meus dados", `<dl class="sheet-grid">${pairs.filter(p => p[1]).m
 <div class="actions"><button class="cancel" id="stuChangeCancel">Cancelar</button><button class="save" id="stuChangeSend">Enviar pedido</button></div></div>
 ${changes.length ? `<div class="stu-sub-list">${changes.map(r => `<div class="stu-muted">Pedido de ${formatDateShort(r.created_at.slice(0,10)).slice(0,5)}: ${r.status === "pending" ? "aguardando o professor" : r.status === "accepted" ? "aplicado" : "não aceito"}${r.response ? ` · "${escapeHtml(r.response)}"` : ""}</div>`).join("")}</div>` : ""}`)
 + stuCard("Professor", `<div class="stu-teacher">${tp.photo ? `<span class="stu-teacher-photo" style="background-image:url(${escapeHtml(tp.photo)})"></span>` : ""}<div><div class="stu-row-title">${escapeHtml(tp.display_name || "Professor")}</div>${tp.city || tp.state ? `<div class="stu-muted">${escapeHtml([tp.city, tp.state].filter(Boolean).join(" – "))}</div>` : ""}</div></div>`)
++ (isTeacherToo(authCurrentUser.id) ? `<button type="button" class="btn-historico stu-logout" id="stuTeacherBtn">Voltar para o modo professor</button>` : "")
 + `<button type="button" class="cancel stu-logout" id="stuLogoutBtn">Sair da conta</button>`;
 }
 function stuBind(main){
@@ -4524,6 +4588,8 @@ if (await stuSendRequest("change_data", { changes: f === "other" ? {} : { [f]: v
 }
 const lo = main.querySelector("#stuLogoutBtn");
 if (lo) lo.onclick = () => { if (confirm("Sair da conta?")) stuSignOut(); };
+const tb = main.querySelector("#stuTeacherBtn");
+if (tb) tb.onclick = () => switchRole("teacher");
 if (stuTab === "tools") toolsBind(main);
 }
 
@@ -4732,8 +4798,10 @@ settings: { lessonDuration: appSettings.lessonDuration, paymentsSince: appSettin
 show_evaluations: !!appSettings.showEvalsToStudents
 };
 }
-function studentViewInfo(s){
+function studentViewInfo(s, scores){
 const info = { group: getFormat(s) === "Grupo", breaks: (appSettings.breaks || []).filter(b => b.studentId === s.id).map(({ studentId, ...b }) => b) };
+// Notas por critério só quando "Mostrar avaliações para os alunos" está ligado (8.1.1).
+if (appSettings.showEvalsToStudents && scores && Object.keys(scores).length) info.scores = scores;
 if (s.value === undefined) info.monthlyValue = getDefaultValueFor(s);
 return info;
 }
@@ -4750,12 +4818,17 @@ if (!error) cache.tp = h;
 }
 if (inbox.loaded) {
 const map = studentUuidMap();
+const scoresBy = {};
+if (appSettings.showEvalsToStudents) tbLocalRows().forEach(({ t, row }) => {
+if (t === "lesson_private") (scoresBy[row.student_id] ??= {})[row.lesson_id] = row.scores;
+else if (t === "lessons" && row.scores) (scoresBy[row.student_id] ??= {})[row.id] = row.scores;
+});
 const rows = [];
 cache.sv = cache.sv || {};
 [...new Set(inbox.links.map(l => l.student_id))].forEach(u => {
 const s = map.student(u);
 if (!s) return;
-const row = { student_id: u, teacher_id: authCurrentUser.id, info: studentViewInfo(s) };
+const row = { student_id: u, teacher_id: authCurrentUser.id, info: studentViewInfo(s, scoresBy[u]) };
 const hh = tbCyrb128(tbStable(row.info)).join(".");
 if (force || cache.sv[u] !== hh) { rows.push(row); cache.sv[u] = hh; }
 });
@@ -5035,7 +5108,7 @@ const { data: cur, error } = await supabaseClient.from("teacher_codes").select("
 if (error) throw error;
 if (cur && !renew) return cur;
 for (let i = 0; i < 12; i++) {
-const code = codeInitials() + String(Math.floor(Math.random() * 1000)).padStart(3, "0");
+const code = codeInitials() + String(Math.floor(Math.random() * 10000)).padStart(4, "0");
 const q = cur ? supabaseClient.from("teacher_codes").update({ code }).eq("teacher_id", uid) : supabaseClient.from("teacher_codes").insert({ teacher_id: uid, code, active: true });
 const { error: e } = await q;
 if (!e) return { ...(cur || { active: true }), code };
@@ -5278,8 +5351,9 @@ document.getElementById("authSubmitBtn").disabled = false;
 
 document.getElementById("entryTeacher").onclick = showTeacherLogin;
 document.getElementById("entryStudent").onclick = () => { writeEntry({ role: "student" }); stuEntryKind(); };
-document.getElementById("authStuBack").onclick = () => { const e = readEntry(); if (e.role === "student") stuEntryCode(); else { writeEntry(null); showEntryChoice(); } };
+document.getElementById("authStuBack").onclick = () => { const e = readEntry(); if (e.role === "student") stuEntryKind(); else { writeEntry(null); showEntryChoice(); } };
 document.getElementById("rowStudentKey").onclick = openStudentKey;
+document.getElementById("rowStudentMode").onclick = () => { if (authCurrentUser && confirm("Abrir o modo aluno/responsável nesta conta? Seus dados de professor continuam salvos. Pra voltar: Perfil → Voltar para o modo professor.")) switchRole("student"); };
 document.getElementById("rowSairConta").onclick = async () => {
 await supabaseClient.auth.signOut();
 location.reload();
@@ -5309,7 +5383,9 @@ if (studentMode) { startStudentMode(true); return; }
 authCardParts("authLoading");
 showAuthGate();
 // Aluno/responsável (8.1): modo aluno, sem nada do professor (não sincroniza dados de professor).
-if (await resolveAppRole(session.user) === "student") { await startStudentMode(); updateTestsVisibility(); return; }
+const role = await resolveAppRole(session.user);
+if (role === null) { showRoleRetry(); return; }
+if (role === "student") { await startStudentMode(); updateTestsVisibility(); return; }
 await pullCloudData();
 hideAuthGate();
 if (!appSettings.onboarded) showOnboarding();
@@ -5321,7 +5397,7 @@ applyAuthMode();
 // Antes de entrar: "Sou professor" ou "Entrar como aluno" (a escolha fica guardada até o
 // login, inclusive se precisar confirmar o email).
 const entry = readEntry();
-if (entry.role === "student" && entry.teacherId) stuEntryAuth();
+if (entry.role === "student" && entry.kind) stuEntryAuth();
 else showEntryChoice();
 }
 updateTestsVisibility();
