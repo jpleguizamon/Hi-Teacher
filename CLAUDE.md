@@ -11,5 +11,6 @@ Lido automaticamente no começo de toda sessão. As regras do app estão em `HI-
 ## Economia de créditos (pedido do dono)
 - **Sem atualizações no meio do trabalho.** Não narrar o que está fazendo nem mandar mensagens de progresso. Só o resumo final quando terminar (ou uma pergunta, se estiver bloqueado de verdade).
 - **Não mandar prints.** Tirar print só quando precisar conferir algo visual, e não enviar.
+- O dono não é da área técnica: no resumo final, usar palavras do dia a dia, sem termos técnicos (JSON, SQL, RLS, tabela, commit...). Curto: o que mudou, o que deu certo, o que pode não ter dado certo e o que ele precisa fazer.
 - Responder sempre no estilo da skill `caveman`, nível **lite** (`.claude/skills/caveman/SKILL.md`): frases completas em português, sem enrolação, sem repetir o que já foi dito.
 - Ler do `index.html` só os trechos necessários (grep + leitura por faixa de linhas), nunca o arquivo inteiro.
