@@ -1419,6 +1419,11 @@ button.metro-dot{width:1.75rem;height:1.75rem;padding:0;cursor:pointer}
 .stat-row b{display:block;font-size:1.25rem;font-weight:800;color:var(--heading);font-variant-numeric:tabular-nums}
 .stat-row span{display:block;font-size:0.6875rem;color:var(--muted);margin-top:0.125rem}
 .stat-row + .actions{margin-top:0.875rem}
+.stu-subsec{padding:0.875rem 0;border-top:0.0625rem solid var(--hairline)}
+.stu-subsec:first-child{border-top:none;padding-top:0}
+.stu-subsec:last-child{padding-bottom:0}
+.stu-sub-title{font-size:0.6875rem;font-weight:750;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);margin-bottom:0.375rem}
+.stu-subsec .actions{margin-top:0.875rem}
 .board-item{font-size:0.875rem;line-height:1.5;color:var(--text);padding:0.5rem 0;border-top:0.0625rem solid var(--hairline)}
 .stu-card > .board-item:first-child{border-top:none;padding-top:0}
 .board-lbl{display:block;font-size:0.6875rem;font-weight:750;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);margin-bottom:0.125rem}
@@ -3276,7 +3281,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.3";
+const APP_VERSION = "8.3.1";
 // App instalável e sem internet (8.3): só no endereço https (GitHub Pages). Arquivo aberto do
 // computador ou endereço sem o sw.js segue como antes.
 if ("serviceWorker" in navigator && location.protocol === "https:") window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
@@ -4795,32 +4800,38 @@ ${link && soon ? `<a class="save stu-online" href="${escapeHtml(link)}" target="
 ${st.canAbsent ? `<button type="button" class="btn-historico stu-absent-btn" data-absent="${escapeHtml(next.key)}">Vou faltar</button>` : ""}
 <div class="stu-absent-form" data-absent-form="${escapeHtml(next.key)}"></div>`, "stu-next");
 } else html += stuCard("Próxima aula", `<div class="stu-empty">Nenhuma aula marcada nas próximas semanas.</div>`);
+// Avisos logo depois da próxima aula; o resto agrupado em seções com subseções (como no professor).
+const notes = stuNotices(up);
+if (notes.length) html += stuCard("Avisos", notes.map(n => `<div class="stu-notice ${n.cls || ""}">${n.html}</div>`).join(""));
+const study = [];
 const hw = stuLastHomework();
 if (hw) {
 const done = jMap(d, "hwDone")[hwKeyOf(hw)];
 const g = hwGoals(hw.homework);
 const today = new Date(); today.setHours(0,0,0,0);
 const todayMin = g.min ? practiceIn(d, today.getTime(), today.getTime() + 86400000).min : 0;
-html += stuCard("Para estudar em casa", `<div class="stu-hw">${escapeHtml(hw.homework)}</div><div class="stu-muted">Da aula de ${escapeHtml(hw.date.slice(0,5))}</div>
+study.push(stuSub("Lição de casa", `<div class="stu-hw">${escapeHtml(hw.homework)}</div><div class="stu-muted">Da aula de ${escapeHtml(hw.date.slice(0,5))}</div>
 ${g.min ? `<div class="hw-goal"><div class="hw-bar"><span style="width:${Math.min(100, Math.round(todayMin / g.min * 100))}%"></span></div><div class="stu-muted">Hoje: ${todayMin} de ${g.min} min</div></div>` : ""}
 <div class="song-acts">${done ? `<span class="stu-status ok">Feito em ${formatDateShort(isoOf(new Date(done.at))).slice(0,5)}</span><button type="button" class="btn-link-inline" data-hwundo>Desfazer</button>` : `<button type="button" class="save" data-hwdone>Feito ✓</button>`}
-<button type="button" class="btn-edit-toggle" data-hwpractice>Praticar agora</button>${g.from && g.to ? `<button type="button" class="btn-edit-toggle" data-hwtrain="${g.from}|${g.to}">Metrônomo ${g.from} → ${g.to}</button>` : ""}</div>`);
+${g.from && g.to ? `<button type="button" class="btn-edit-toggle" data-hwtrain="${g.from}|${g.to}">Metrônomo ${g.from} → ${g.to}</button>` : ""}</div>`));
 }
 const themes = Array.isArray(stuCur.view.themes) ? themesSorted() : [];
-if (themes.length) { const t = themes[0]; html += stuCard("Matéria da semana", `<button type="button" class="mat-line" data-go="material"><span class="stu-row-title">${escapeHtml(t.topic)}</span>${(t.images || []).length ? `<img src="${escapeHtml(t.images[0])}" alt="" loading="lazy">` : ""}<span class="lr-cta">Ver</span></button>`); }
-const board = content.board || {};
-if (board.tip || board.video || board.challenge) html += stuCard("Mural do professor", `${board.tip ? `<div class="board-item"><span class="board-lbl">Dica da semana</span>${escapeHtml(board.tip)}</div>` : ""}
-${board.video && /^https?:\/\//i.test(board.video) ? `<div class="board-item"><span class="board-lbl">Vídeo recomendado</span><a class="stu-link" href="${escapeHtml(board.video)}" target="_blank" rel="noopener">${escapeHtml(board.videoTitle || "Assistir")}</a></div>` : ""}
-${board.challenge ? `<div class="board-item"><span class="board-lbl">Desafio da semana</span>${escapeHtml(board.challenge)}<div><button type="button" class="btn-edit-toggle" data-challenge>Gravar o desafio</button></div></div>` : ""}`);
-const ev = stuNextEvents()[0];
-if (ev) html += stuCard("Próximo evento", stuEventHTML(ev));
+if (themes.length) { const t = themes[0]; study.push(stuSub("Matéria da semana", `<button type="button" class="mat-line" data-go="material"><span class="stu-row-title">${escapeHtml(t.topic)}</span>${(t.images || []).length ? `<img src="${escapeHtml(t.images[0])}" alt="" loading="lazy">` : ""}<span class="lr-cta">Ver</span></button>`)); }
 const wk = practiceIn(d, weekStartOf(new Date()).getTime(), Date.now() + 1), streak = practiceStreak(d);
-html += stuCard("Estudo em casa", `<div class="stat-row"><div><b>${wk.days}</b><span>dia${wk.days === 1 ? "" : "s"} nesta semana</span></div><div><b>${minText(wk.min)}</b><span>praticados</span></div><div><b>${streak}</b><span>seguidos</span></div></div>
-<div class="actions"><button class="save" data-go="practice">Praticar agora</button></div>`);
-const notes = stuNotices(up);
-if (notes.length) html += stuCard("Avisos", notes.map(n => `<div class="stu-notice ${n.cls || ""}">${n.html}</div>`).join(""));
+study.push(stuSub("Sua semana", `<div class="stat-row"><div><b>${wk.days}</b><span>dia${wk.days === 1 ? "" : "s"} praticando</span></div><div><b>${minText(wk.min)}</b><span>praticados</span></div><div><b>${streak}</b><span>seguidos</span></div></div>
+<div class="actions"><button class="save" ${hw ? "data-hwpractice" : `data-go="practice"`}>Praticar agora</button></div>`));
+html += stuCard("Estudo em casa", study.join(""));
+const board = content.board || {}, prof = [];
+if (board.tip) prof.push(stuSub("Dica da semana", `<div class="stu-hw">${escapeHtml(board.tip)}</div>`));
+if (board.video && /^https?:\/\//i.test(board.video)) prof.push(stuSub("Vídeo recomendado", `<a class="stu-link" href="${escapeHtml(board.video)}" target="_blank" rel="noopener">${escapeHtml(board.videoTitle || "Assistir")}</a>`));
+if (board.challenge) prof.push(stuSub("Desafio da semana", `<div class="stu-hw">${escapeHtml(board.challenge)}</div><div class="song-acts"><button type="button" class="btn-edit-toggle" data-challenge>Gravar o desafio</button></div>`));
+const ev = stuNextEvents()[0];
+if (ev) prof.push(stuSub("Próximo evento", stuEventHTML(ev)));
+if (prof.length) html += stuCard("Do professor", prof.join(""));
 return html;
 }
+// Subseção dentro de um card: título pequeno em azul e linha separando da anterior.
+function stuSub(title, inner){ return `<div class="stu-subsec"><div class="stu-sub-title">${title}</div>${inner}</div>`; }
 function stuNextEvents(){
 const today = isoOf(new Date());
 return (Array.isArray(stuContent().events) ? stuContent().events : []).filter(e => e && e.date >= today).sort((a, b) => (a.date + (a.time || "")).localeCompare(b.date + (b.time || "")));
