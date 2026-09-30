@@ -6,12 +6,12 @@
 <meta name="theme-color" content="#05060B">
 <meta name="color-scheme" content="dark">
 <title>Hi Teacher</title>
-<link rel="manifest" href="manifest.json">
-<link rel="icon" type="image/png" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Hi Teacher">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
@@ -1330,10 +1330,12 @@ body:not(.student-mode) .stu-shell{display:none!important}
   background:color-mix(in srgb,var(--orange) 22%,var(--bg));border-bottom:0.0625rem solid color-mix(in srgb,var(--orange) 55%,transparent);color:var(--text);font-size:0.8125rem;font-weight:700}
 .demo-bar span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .demo-bar button{flex:none;border:0.0625rem solid color-mix(in srgb,var(--orange) 60%,transparent);background:transparent;color:var(--text);border-radius:var(--radius-pill);padding:0.3125rem 0.75rem;font:inherit;font-size:0.75rem;font-weight:750;cursor:pointer}
-body.demo-on{padding-top:2.5rem}
-body.demo-on header{top:2.5rem}
-body.demo-on .sidebar.stu-shell{top:2.5rem}
-@media (min-width: 900px){ body.demo-on .sidebar.stu-shell{top:2.5rem;height:calc(100vh - 2.5rem)} }
+/* Faixas fixas no topo (demonstração e sem internet) empurram o cabeçalho pra baixo; o
+   entalhe do iPhone (safe-area) fica com a primeira faixa visível. */
+body.demo-on{--demo-h:2.5rem}
+body.net-off{--net-h:1.75rem}
+body.demo-on,body.net-off{--hsat:0px;padding-top:calc(var(--demo-h) + var(--net-h) + var(--sat))}
+body.demo-on header,body.net-off header,body.demo-on .settings-topbar,body.net-off .settings-topbar{top:calc(var(--demo-h) + var(--net-h) + var(--sat))}
 .stu-hello{font-size:1.5rem;font-weight:750;color:var(--heading);letter-spacing:-0.02em;margin:0.5rem 0 0.25rem}
 .stu-hello-sub{color:var(--muted);font-size:0.875rem;margin-bottom:0.5rem}
 .stu-card{margin:0 0 1.5rem!important;background:var(--glass-fill);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);border:0.0625rem solid var(--glass-border);border-radius:var(--radius-lg);padding:1rem;margin:0.875rem 0;box-shadow:var(--edge-light)}
@@ -1793,6 +1795,38 @@ body.kid-mode .stu-hello::after{content:" 🎵"}
 @media (prefers-reduced-motion: reduce) {
   *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
 }
+
+/* ===== App instalável (8.4): entalhe/barra de gestos do iPhone, faixas e instalar ===== */
+:root{--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);--sal:env(safe-area-inset-left,0px);--sar:env(safe-area-inset-right,0px);--hsat:var(--sat);--demo-h:0rem;--net-h:0rem}
+header{padding-top:calc(0.8125rem + var(--hsat));padding-left:calc(1.25rem + var(--sal));padding-right:calc(1.25rem + var(--sar))}
+.menu-btn{top:calc(0.8125rem + var(--hsat));left:calc(1.25rem + var(--sal))}
+.settings-topbar{padding-top:calc(0.9375rem + var(--hsat))}
+.settings-topbar .settings-back-btn{top:calc(50% + var(--hsat) / 2);left:calc(0.9375rem + var(--sal))}
+.sidebar{padding-top:calc(1.375rem + var(--sat) + var(--demo-h) + var(--net-h));padding-bottom:calc(1.375rem + var(--sab));padding-left:calc(0.875rem + var(--sal))}
+@media (min-width: 900px){ .sidebar{top:calc(var(--demo-h) + var(--net-h));height:calc(100vh - var(--demo-h) - var(--net-h));padding-top:calc(1.375rem + var(--hsat))} }
+main{padding-bottom:calc(2.5rem + var(--sab));padding-left:calc(1.125rem + var(--sal));padding-right:calc(1.125rem + var(--sar))}
+.modal-bg{padding-top:calc(1.25rem + var(--sat));padding-bottom:calc(1.25rem + var(--toast-h, 0px) + var(--sab))}
+.modal{max-height:calc(85vh - var(--toast-h, 0px) - var(--sat) - var(--sab))}
+#authGate,#onboardingGate{padding-top:calc(1.5rem + var(--sat));padding-bottom:calc(1.5rem + var(--sab))}
+#toastStack{bottom:calc(1.25rem + var(--sab));z-index:110} /* acima da tela de login: o aviso de versão nova precisa aparecer lá também */
+.reminder-toast,.agenda-today-fab{bottom:calc(1.5rem + var(--sab))}
+.bulk-actions{bottom:calc(1rem + var(--sab))}
+.demo-bar{height:calc(2.5rem + var(--sat));padding-top:var(--sat)}
+.net-bar{display:none}
+body.net-off .net-bar{display:flex;position:fixed;left:0;right:0;top:var(--demo-h);z-index:39;height:calc(1.75rem + var(--sat));padding:var(--sat) 1rem 0;align-items:center;justify-content:center;background:color-mix(in srgb,var(--muted) 16%,var(--bg));border-bottom:0.0625rem solid var(--hairline);color:var(--text-2);font-size:0.75rem;font-weight:650;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.demo-on.net-off .net-bar{top:calc(var(--demo-h) + var(--sat));height:1.75rem;padding-top:0}
+html.standalone .only-browser{display:none}
+@media (display-mode: standalone){ .only-browser{display:none} }
+.pwa-update .undo-toast-btn{font-weight:800}
+.install-steps{margin:0;padding:0;list-style:none;counter-reset:st;display:flex;flex-direction:column;gap:0.75rem}
+.install-steps li{display:flex;align-items:center;gap:0.75rem;font-size:0.9375rem;line-height:1.4;color:var(--text)}
+.install-steps li::before{counter-increment:st;content:counter(st);flex:none;width:1.5rem;height:1.5rem;border-radius:50%;display:grid;place-items:center;background:var(--accent-soft);border:0.0625rem solid var(--accent-line);color:var(--accent);font-size:0.75rem;font-weight:800}
+.install-ic{flex:none;width:2rem;height:2rem;color:var(--accent);border-radius:0.5rem}
+.install-warn{font-size:0.9375rem;font-weight:700;color:var(--orange);margin-bottom:0.5rem}
+.install-url{font-size:0.8125rem;color:var(--text-2);word-break:break-all;padding:0.5rem 0.75rem;border-radius:var(--radius-sm);background:var(--glass-inset);border:0.0625rem solid var(--hairline)}
+.install-nudge{display:flex;align-items:center;gap:0.75rem}
+.install-nudge img{width:3rem;height:3rem;border-radius:0.75rem;flex:none;border:0.0625rem solid var(--glass-border)}
+.install-nudge + .song-acts .save{padding:0.5rem 1rem;font-size:0.8125rem}
 </style>
 </head>
 <body>
@@ -2349,6 +2383,7 @@ body.kid-mode .stu-hello::after{content:" 🎵"}
 <div class="settings-card">
 <div class="settings-row" id="rowFeedback"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-message"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Enviar feedback</div></div><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowTermos"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-file-text"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Termos e privacidade</div></div><span class="settings-row-chevron">›</span></div>
+<div class="settings-row" id="rowInstallApp" style="display:none"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-download"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Instalar o app</div><div class="settings-row-sub">Abre em tela cheia, com ícone na tela inicial</div></div><span class="settings-row-chevron">›</span></div>
 <div class="settings-row"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-info"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Versão do app</div></div><span class="settings-row-value" id="valVersao"></span></div>
 </div>
 
@@ -3162,7 +3197,7 @@ body.kid-mode .stu-hello::after{content:" 🎵"}
 <div class="field-hint" style="margin-bottom:0.75rem">Adicione um ou mais avisos, com a antecedência exata que quiser.</div>
 <div id="reminderList" style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:0.75rem"></div>
 <button type="button" class="btn-historico" id="reminderAddBtn" style="width:100%;margin-bottom:0.75rem">+ Adicionar lembrete</button>
-<div class="field-hint">O lembrete aparece como um aviso dentro do app enquanto ele estiver aberto no navegador.</div>
+<div class="field-hint">O lembrete aparece como um aviso dentro do app enquanto ele estiver aberto<span class="only-browser"> no navegador</span>.</div>
 <div class="actions"><button class="cancel" id="reminderCancelBtn">Cancelar</button><button class="save" id="reminderSaveBtn">Salvar</button></div>
 </div>
 </div>
@@ -3281,10 +3316,156 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.3.1";
-// App instalável e sem internet (8.3): só no endereço https (GitHub Pages). Arquivo aberto do
-// computador ou endereço sem o sw.js segue como antes.
-if ("serviceWorker" in navigator && location.protocol === "https:") window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+const APP_VERSION = "8.4";
+// ===================== App instalável (8.4) =====================
+// Service worker (sw.js), aviso de versão nova, faixa "Sem internet", botão "Instalar o app",
+// atalhos do ícone (?p=...) e botão voltar do celular fechando modal/menu no app instalado.
+// Tudo protegido por try/catch: se algo falhar, o app segue como no navegador.
+const PWA = { reg: null, waiting: null, prompt: null, userAsked: false, checked: 0 };
+function pwaStandalone(){ try { return (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true; } catch(e) { return false; } }
+function isStandalone(){ return pwaStandalone(); }
+function pwaIsIOS(){ return /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1); }
+// iPhone fora do Safari (Chrome, Instagram, WhatsApp, Facebook…): não dá pra instalar dali.
+function pwaIOSNotSafari(){ const ua = navigator.userAgent; return pwaIsIOS() && (/CriOS|FxiOS|EdgiOS|OPiOS|Instagram|FBAN|FBAV|FB_IAB|WhatsApp|Line\/|GSA\/|Snapchat|Twitter/i.test(ua) || !/Safari\//.test(ua)); }
+function pwaCanInstall(){ return !pwaStandalone() && (!!PWA.prompt || pwaIsIOS()); }
+if (pwaStandalone()) document.documentElement.classList.add("standalone");
+// Atalhos do ícone (manifesto): ?p=inicio | agenda | aulas. Vale pro professor e pro aluno
+// (cada um abre a página equivalente) e o parâmetro sai do endereço.
+(function(){
+try {
+const q = new URLSearchParams(location.search), p = q.get("p");
+if (!p) return;
+const map = { inicio: ["home", "home"], agenda: ["agenda", "lessons"], aulas: ["agenda", "lessons"] }[p];
+// (roda antes da troca do setItem, então é o setItem normal do navegador)
+if (map) { localStorage.setItem("jp_active_page", map[0]); localStorage.setItem("jp_stu_active_page", map[1]); }
+q.delete("p");
+history.replaceState(history.state, "", location.pathname + (q.toString() ? "?" + q : "") + location.hash);
+} catch(e) {}
+})();
+if ("serviceWorker" in navigator && (location.protocol === "https:" || /^(localhost|127\.0\.0\.1)$/.test(location.hostname))) {
+window.addEventListener("load", async () => {
+try {
+const reg = await navigator.serviceWorker.register(`sw.js?v=${encodeURIComponent(APP_VERSION)}`);
+PWA.reg = reg;
+const watch = w => { if (w) w.addEventListener("statechange", () => { if (w.state === "installed" && navigator.serviceWorker.controller) pwaShowUpdate(w); }); };
+if (reg.waiting && navigator.serviceWorker.controller) pwaShowUpdate(reg.waiting);
+watch(reg.installing);
+reg.addEventListener("updatefound", () => watch(reg.installing));
+// Só recarrega depois que a pessoa tocou em "Atualizar".
+let reloading = false;
+navigator.serviceWorker.addEventListener("controllerchange", () => { if (PWA.userAsked && !reloading) { reloading = true; location.reload(); } });
+// Confere se tem versão nova quando o app volta pra frente (no máximo a cada 30 min).
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && Date.now() - PWA.checked > 1800000) { PWA.checked = Date.now(); reg.update().catch(() => {}); } });
+} catch(e) { console.warn("App instalável: não consegui registrar o service worker.", e); }
+});
+}
+function pwaShowUpdate(w){
+try {
+PWA.waiting = w;
+if (document.getElementById("pwaUpdate")) return;
+const el = document.createElement("div");
+el.id = "pwaUpdate"; el.className = "undo-toast pwa-update";
+el.innerHTML = `<span class="undo-toast-msg">Nova versão disponível</span><button type="button" class="undo-toast-btn">Atualizar</button>`;
+getToastStack().appendChild(el);
+el.querySelector("button").onclick = () => {
+PWA.userAsked = true;
+el.remove();
+if (PWA.waiting) PWA.waiting.postMessage({ type: "SKIP_WAITING" });
+setTimeout(() => location.reload(), 2500);
+};
+} catch(e) {}
+}
+// ---------- Sem internet ----------
+function netBarUpdate(){
+try {
+let bar = document.getElementById("netBar");
+if (!bar) { bar = document.createElement("div"); bar.id = "netBar"; bar.className = "net-bar"; bar.setAttribute("role", "status"); document.body.appendChild(bar); }
+const off = navigator.onLine === false;
+document.body.classList.toggle("net-off", off);
+if (!off) { bar.textContent = ""; return; }
+let when = "";
+if (typeof studentMode !== "undefined" && studentMode && !demoMode && typeof stu !== "undefined" && stu && stu.at) { const d = new Date(stu.at); if (!isNaN(d)) when = ` · atualizado em ${pad2(d.getDate())}/${pad2(d.getMonth() + 1)} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`; }
+bar.textContent = `Sem internet — usando os dados salvos neste aparelho${when}`;
+} catch(e) {}
+}
+window.addEventListener("offline", () => { netBarUpdate(); try { if (studentMode && !demoMode && stuCur) stuRender(); } catch(e) {} });
+window.addEventListener("online", () => { netBarUpdate(); try { if (studentMode && !demoMode && stuCur) startStudentMode(true); } catch(e) {} });
+document.addEventListener("DOMContentLoaded", netBarUpdate);
+// ---------- Instalar o app ----------
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); PWA.prompt = e; pwaRefresh(); });
+window.addEventListener("appinstalled", () => { PWA.prompt = null; pwaRefresh(); try { stuToast("App instalado. Abra pelo ícone na tela inicial."); } catch(e) {} });
+// Mostra/esconde as linhas "Instalar o app" (Configurações do professor; Perfil e Início do aluno).
+function pwaRefresh(){
+try {
+const row = document.getElementById("rowInstallApp");
+if (row) row.style.display = pwaCanInstall() ? "" : "none";
+if (typeof studentMode !== "undefined" && studentMode && stuCur && (stuTab === "home" || stuTab === "profile")) stuRender();
+} catch(e) {}
+}
+async function pwaInstall(){
+if (PWA.prompt) {
+const p = PWA.prompt;
+try { p.prompt(); await p.userChoice; } catch(e) {}
+PWA.prompt = null;
+pwaRefresh();
+return;
+}
+const body = document.createElement("div");
+if (pwaIsIOS() && pwaIOSNotSafari()) {
+body.innerHTML = `<div class="install-warn">Abra este endereço no Safari para instalar.</div>
+<div class="install-url">${escapeHtml(location.origin + location.pathname)}</div>
+<div class="actions"><button type="button" class="save" id="installCopy">Copiar endereço</button></div>`;
+body.querySelector("#installCopy").onclick = async e => { const ok = await copyText(location.origin + location.pathname); e.target.textContent = ok ? "Copiado ✓" : "Não deu pra copiar"; };
+} else if (pwaIsIOS()) {
+const share = `<svg class="install-ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M8 7l4-4 4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
+const add = `<svg class="install-ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
+body.innerHTML = `<ol class="install-steps">
+<li>${share}<span>Toque em <b>Compartilhar</b> (o ícone do quadrado com a seta), na barra do Safari.</span></li>
+<li>${add}<span>Role a lista e toque em <b>Adicionar à Tela de Início</b>.</span></li>
+<li><img class="install-ic" src="icons/icon-192.png" alt=""><span>Toque em <b>Adicionar</b>. O Hi Teacher aparece na sua tela inicial.</span></li></ol>`;
+} else {
+body.innerHTML = `<div class="field-hint" style="margin:0">No menu do navegador (⋮), toque em <b>Instalar app</b> ou <b>Adicionar à tela inicial</b>.</div>`;
+}
+openQuickModal("Instalar o app", "O Hi Teacher abre em tela cheia, com ícone próprio, e a parte básica funciona sem internet.", body, null, "Fechar");
+}
+// ---------- Botão voltar no app instalado: fecha modal/menu antes de sair ----------
+const layerState = { pushed: 0, ignore: 0, raf: 0 };
+function openLayers(){
+const out = [...document.querySelectorAll(".modal-bg")].filter(m => m.classList.contains("show") || m.style.display === "flex");
+["sidebar", "stuSidebar"].forEach(id => { const el = document.getElementById(id); if (el && el.classList.contains("open")) out.push(el); });
+return out;
+}
+function closeTopLayer(){
+const layers = openLayers(), el = layers[layers.length - 1];
+if (!el) return;
+if (el.id === "sidebar") return closeMenu();
+if (el.id === "stuSidebar") return closeStuMenu();
+if (el.id === "studentSheetModal") return closeStudentSheet();
+if (el.id === "quickLessonModal") return closeQuickModal();
+if (el.id === "makeupModal" && typeof closeMakeupModal === "function") return closeMakeupModal();
+if (el.id === "historyModal") return closeHistoryModal();
+el.classList.remove("show");
+}
+function layerSync(){
+layerState.raf = 0;
+if (!pwaStandalone()) return;
+const n = openLayers().length;
+while (layerState.pushed < n) { layerState.pushed++; try { history.pushState({ hiLayer: layerState.pushed }, ""); } catch(e) {} }
+if (layerState.pushed > n) { const k = layerState.pushed - n; layerState.pushed = n; layerState.ignore += k; history.go(-k); }
+}
+window.addEventListener("popstate", e => {
+if (layerState.ignore > 0) { layerState.ignore--; e.hiLayer = true; return; }
+if (layerState.pushed > 0) { layerState.pushed--; e.hiLayer = true; closeTopLayer(); }
+});
+document.addEventListener("DOMContentLoaded", () => {
+if (!pwaStandalone() || !window.MutationObserver) return;
+new MutationObserver(list => {
+if (layerState.raf) return;
+if (!list.some(m => m.target.classList && (m.target.classList.contains("modal-bg") || m.target.classList.contains("sidebar")))) return;
+layerState.raf = requestAnimationFrame(layerSync);
+}).observe(document.body, { subtree: true, attributes: true, attributeFilter: ["class", "style"] });
+});
+
 const BACKUP_EVERY = { weekly: 7, biweekly: 15, monthly: 30, never: 0 };
 const BACKUP_LABELS = { weekly: "Toda semana", biweekly: "A cada 15 dias", monthly: "Todo mês", never: "Nunca" };
 const REMINDER_SENT_KEY = "jp_reminders_sent_v1";
@@ -4788,6 +4969,9 @@ const next = up.find(x => !x.off && !(x.record && isNoClass(x.record)));
 const nm = stuGreetName();
 let html = `<div class="stu-hello">Olá${nm ? ", " + escapeHtml(nm) : ""}!</div>`;
 if (stuCur.link.role === "guardian") html += `<div class="stu-hello-sub">Acompanhando ${escapeHtml(s.name)}</div>`;
+// Convite pra instalar (8.4): até a pessoa instalar ou tocar em "Agora não" (volta depois de 30 dias).
+if (!demoMode && pwaCanInstall() && Date.now() > Number(localStorage.getItem(INSTALL_NUDGE_KEY) || 0)) html += stuCard("", `<div class="install-nudge"><img src="icons/icon-192.png" alt=""><div><div class="stu-row-title">Instale o Hi Teacher na sua tela inicial</div><div class="stu-muted">Abre em tela cheia, como um aplicativo.</div></div></div>
+<div class="song-acts"><button type="button" class="save" data-install>Como instalar</button><button type="button" class="btn-link-inline" data-install-later>Agora não</button></div>`);
 if (next) {
 const st = stuLessonStatus(next);
 const link = stuLinkURL(s), soon = next.date.getTime() - new Date().setHours(0,0,0,0) < 86400000;
@@ -5011,16 +5195,13 @@ return `<div class="stu-row"><div class="stu-row-main"><div class="stu-row-title
 }
 const STU_CHANGE_FIELDS = [["phone", "Telefone"], ["birthDate", "Data de nascimento"], ["name", "Nome"], ["guardianName", "Nome do responsável"], ["guardianPhone", "Telefone do responsável"], ["other", "Outra coisa"]];
 const KID_KEY = "jp_stu_kid_v1";
+const INSTALL_NUDGE_KEY = "jp_install_nudge_v1";
 function stuKidMode(){ if (!stuCur) return false; if (demoMode) return !!(stuCur._kid); return !!tbRead(KID_KEY, {})[ptKey()]; }
-let installPrompt = null;
-window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); installPrompt = e; });
-function isStandalone(){ return window.matchMedia && window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true; }
 function stuProfileHTML(){
 const s = stuCur.s, tp = stuCur.tp, content = stuContent();
 const days = s.lessonFrequency === "single" ? "Aulas avulsas" : studentDays(s).length ? orderedDays(studentDays(s)).map(d => `${WEEKDAY_NAMES[d]} ${getStudentTimeFor(s, d)}`).join(" · ") : "";
 const pairs = [["Nome", s.name], ["Telefone", s.phone], ["Nascimento", s.birthDate ? formatDateShort(s.birthDate) : ""], ["Responsável", s.guardianName], ["Tel. do responsável", s.guardianPhone], ["Instrumento", s.instrument], ["Aulas", days]];
 const changes = stuRequestsFor("change_data").filter(r => r.status !== "cancelled").slice(0, 5);
-const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
 return stuCard("Meus dados", `<dl class="sheet-grid">${pairs.filter(p => p[1]).map(([k, v]) => `<div class="sheet-pair"><dt>${k}</dt><dd>${escapeHtml(v)}</dd></div>`).join("")}</dl>
 <button type="button" class="btn-historico" id="stuChangeBtn" style="width:100%;margin-top:0.75rem">Pedir alteração</button>
 <div id="stuChangeForm" style="display:none;margin-top:0.75rem">
@@ -5032,7 +5213,7 @@ ${changes.length ? `<div class="stu-sub-list">${changes.map(r => `<div class="st
 + stuCard("Professor", `<div class="stu-teacher">${tp.photo ? `<span class="stu-teacher-photo" style="background-image:url(${escapeHtml(tp.photo)})"></span>` : ""}<div><div class="stu-row-title">${escapeHtml(tp.display_name || "Professor")}</div>${tp.city || tp.state ? `<div class="stu-muted">${escapeHtml([tp.city, tp.state].filter(Boolean).join(" – "))}</div>` : ""}</div></div>`)
 + (content.rules ? stuCard("Regras e combinados", `<div class="stu-hw">${escapeHtml(content.rules)}</div>`) : "")
 + stuCard("Preferências", `<div class="toggle-field"><label>Modo criança (botões maiores e figurinhas)</label><label class="switch"><input type="checkbox" id="stuKid" ${stuKidMode() ? "checked" : ""}><span class="switch-slider"></span></label></div>
-${isStandalone() ? "" : installPrompt ? `<button type="button" class="btn-historico" id="stuInstall" style="width:100%;margin-top:0.5rem">Instalar o app no celular</button>` : `<div class="stu-muted" style="margin-top:0.5rem">Pra usar como aplicativo: ${ios ? "no Safari, toque em Compartilhar → Adicionar à Tela de Início." : "no menu do navegador, toque em Instalar app (ou Adicionar à tela inicial)."}</div>`}`)
+${pwaCanInstall() ? `<button type="button" class="btn-historico" id="stuInstall" style="width:100%;margin-top:0.75rem">Instalar o app</button>` : ""}`)
 + (!demoMode && isTeacherToo(authCurrentUser.id) ? `<button type="button" class="btn-historico stu-logout" id="stuTeacherBtn">Voltar para o modo professor</button>` : "")
 + (demoMode ? "" : `<button type="button" class="cancel stu-logout" id="stuLogoutBtn">Sair da conta</button>`);
 }
@@ -5139,7 +5320,12 @@ if (await stuSendRequest("change_data", { changes: f === "other" ? {} : { [f]: v
 const kid = main.querySelector("#stuKid");
 if (kid) kid.onchange = () => { if (demoMode) stuCur._kid = kid.checked; else { const all = tbRead(KID_KEY, {}); if (kid.checked) all[ptKey()] = true; else delete all[ptKey()]; tbWrite(KID_KEY, all); } document.body.classList.toggle("kid-mode", kid.checked); if (kid.checked) kidReward("Modo criança ligado!"); };
 const inst = main.querySelector("#stuInstall");
-if (inst) inst.onclick = async () => { if (!installPrompt) return; installPrompt.prompt(); try { await installPrompt.userChoice; } catch(e) {} installPrompt = null; stuRender(); };
+if (inst) inst.onclick = pwaInstall;
+main.querySelectorAll("[data-install]").forEach(b => b.onclick = pwaInstall);
+const nudgeNo = main.querySelector("[data-install-later]");
+if (nudgeNo) nudgeNo.onclick = () => { _nativeSetItem.call(localStorage, INSTALL_NUDGE_KEY, String(Date.now() + 30 * 86400000)); stuRender(); };
+// Sem internet: botões que enviam algo ficam desligados (o resto, como metrônomo, segue).
+if (!demoMode && navigator.onLine === false) main.querySelectorAll("[data-absent],[data-paid],[data-cancel-req],#stuChangeBtn,[data-resched],[data-mkpick],#songAsk,[data-sreq]").forEach(b => { b.disabled = true; b.textContent = "Precisa de internet"; b.onclick = null; });
 const lo = main.querySelector("#stuLogoutBtn");
 if (lo) lo.onclick = () => { if (confirm("Sair da conta?")) stuSignOut(); };
 const tb = main.querySelector("#stuTeacherBtn");
@@ -7870,6 +8056,7 @@ document.getElementById("entryStudent").onclick = () => { writeEntry({ role: "st
 document.getElementById("authStuBack").onclick = () => { const e = readEntry(); if (e.role === "student") stuEntryKind(); else { writeEntry(null); showEntryChoice(); } };
 document.getElementById("rowStudentKey").onclick = openStudentKey;
 document.getElementById("rowStudentContent").onclick = openStudentContent;
+document.getElementById("rowInstallApp").onclick = pwaInstall;
 document.getElementById("rowStudentMode").onclick = () => { if (authCurrentUser && confirm("Abrir o modo aluno/responsável nesta conta? Seus dados de professor continuam salvos. Pra voltar: Perfil → Voltar para o modo professor.")) switchRole("student"); };
 document.getElementById("rowSairConta").onclick = async () => {
 await supabaseClient.auth.signOut();
@@ -11274,7 +11461,7 @@ bulkSel = null;
 renderStudents();
 if (history.state && history.state.hiBulk) { try { history.back(); } catch (e) {} }
 }
-window.addEventListener("popstate", () => { if (bulkSel) { bulkSel = null; renderStudents(); } });
+window.addEventListener("popstate", e => { if (e.hiLayer) return; if (bulkSel) { bulkSel = null; renderStudents(); } });
 document.addEventListener("keydown", (e) => {
 if (e.key === "Escape" && bulkSel && !document.querySelector(".modal-bg.show")) cancelBulk();
 });
@@ -13764,6 +13951,7 @@ return parts.join(" · ");
 // Versão mostrada em Configurações. Sobe a cada rodada de mudanças publicada.
 function renderSettingsSummary(){
 document.getElementById("valVersao").textContent = APP_VERSION;
+document.getElementById("rowInstallApp").style.display = pwaCanInstall() ? "" : "none";
 document.getElementById("valStudentKey").textContent = appSettings.studentCode || "";
 document.getElementById("valStudentContent").textContent = studentContentLabel();
 document.getElementById("settingsProfileName").textContent = appSettings.profile.name;
