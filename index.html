@@ -3316,7 +3316,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.4.1";
+const APP_VERSION = "8.4.2";
 // ===================== App instalável (8.4) =====================
 // Service worker (sw.js), aviso de versão nova, faixa "Sem internet", botão "Instalar o app",
 // atalhos do ícone (?p=...) e botão voltar do celular fechando modal/menu no app instalado.
@@ -3976,6 +3976,16 @@ data[k] = v === null || v === undefined ? null : (v && typeof v === "object" && 
 });
 return data;
 }
+// Sem a tabela lesson_private (SQL da 8.1.1 não instalado): tira da fila e da sombra o que era
+// dela. As notas voltam a ir dentro da própria aula (a aula muda e sobe de novo sozinha).
+function tbDropLessonPrivate(){
+[TB_QUEUE_KEY, TB_SHADOW_KEY, TB_ORPHANS_KEY].forEach(key => {
+const o = tbRead(key, {});
+let n = 0;
+Object.keys(o).forEach(k => { if (k.startsWith("k:")) { delete o[k]; n++; } });
+if (n) tbWrite(key, o);
+});
+}
 function tbLocalRows(){ const m = tbMeta(); return tbRowsFrom(k => localStorage.getItem(k), authCurrentUser.id, m.orgId); }
 function tbWriteLocal(data){
 CLOUD_SYNC_KEYS.forEach(k => {
@@ -4029,6 +4039,7 @@ for (let i = 0; i < ups.length; i += 500) {
 const part = ups.slice(i, i + 500);
 const rows = part.map(k => ({ ...queue[k].row, ...(t === "students" ? { org_id: queue[k].row.org_id || orgId } : {}), teacher_id: uid, deleted: false, changed_at: queue[k].at }));
 const { error } = await supabaseClient.from(t).upsert(rows, { onConflict: "id" });
+if (error && t === "lesson_private" && tbIsMissingTableError(error)) { tbV811 = false; tbSetMeta({ v811: false }); tbDropLessonPrivate(); tbTimer = setTimeout(tbSyncNow, 1500); break; }
 if (error) throw error;
 part.forEach(k => sent.push([k, queue[k].at]));
 }
@@ -4098,6 +4109,7 @@ for (let from = 0; ; from += 1000) {
 let q = supabaseClient.from(t).select("*").eq("teacher_id", uid);
 if (since) q = q.gt("updated_at", since);
 const { data, error } = await q.order("id").range(from, from + 999);
+if (error && t === "lesson_private" && tbIsMissingTableError(error)) { tbV811 = false; tbSetMeta({ v811: false }); tbDropLessonPrivate(); break; }
 if (error) throw error;
 (data || []).forEach(r => { rows.push({ t, row: r }); if (!maxAt || Date.parse(r.updated_at) > Date.parse(maxAt)) maxAt = r.updated_at; });
 if (!data || data.length < 1000) break;
@@ -4374,9 +4386,13 @@ const q = await supabaseClient.from("teacher_data").select("storage_mode, migrat
 if (q.error) throw q.error;
 td = q.data || {};
 // Notas em lesson_private (8.1.1)? Só usa se a tabela existe no Supabase.
-const lp = await supabaseClient.from("lesson_private").select("id", { head: true, count: "exact" }).limit(1);
+// 8.4.2: consulta normal (a consulta "só contar" do Supabase responde "ok" mesmo sem a
+// tabela, e o app achava que o SQL da 8.1.1 estava instalado: a sincronização falhava toda
+// vez com "as tabelas da versão 8.0 não existem").
+const lp = await supabaseClient.from("lesson_private").select("id").limit(1);
 if (!lp.error) tbV811 = true; else if (tbIsMissingTableError(lp.error) || /permission/i.test(lp.error.message || "")) tbV811 = false;
 tbSetMeta({ v811: tbV811 });
+if (!tbV811) tbDropLessonPrivate();
 } catch(e) {
 // O servidor recusou criar dados de professor: a conta é de aluno (8.1.1).
 if (/Conta de aluno/i.test((e && e.message) || "")) { saveRole(uid, "student"); cloudReloading = true; location.reload(); return; }
