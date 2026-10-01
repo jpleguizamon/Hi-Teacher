@@ -1353,7 +1353,7 @@ body.demo-on header,body.net-off header,body.demo-on .settings-topbar,body.net-o
 .stu-notice.ok{color:var(--green)}
 .stu-row{display:flex;align-items:center;gap:0.625rem;padding:0.625rem 0;border-top:0.0625rem solid var(--hairline)}
 .stu-row.col{flex-direction:column;align-items:stretch;gap:0.25rem}
-.stu-card > .stu-row:first-child{border-top:none;padding-top:0}
+.stu-card > .stu-row:first-child,.stu-sub-title + .stu-row,.stu-sub-title + .stu-absent-form + .stu-row{border-top:none;padding-top:0}
 .stu-row-main{flex:1;min-width:0}
 .stu-row-title{font-size:0.875rem;font-weight:700;color:var(--text)}
 .stu-row-acts{flex:none;display:flex;gap:0.375rem}
@@ -1407,7 +1407,7 @@ button.metro-dot{width:1.75rem;height:1.75rem;padding:0;cursor:pointer}
 .stu-timer-chip{border:0.0625rem solid var(--accent-line);background:var(--accent-soft);color:var(--accent);border-radius:var(--radius-pill);padding:0.375rem 0.625rem;font:inherit;font-size:0.75rem;font-weight:750;font-variant-numeric:tabular-nums;cursor:pointer;white-space:nowrap}
 .stu-online{display:block;text-align:center;text-decoration:none;margin-top:0.75rem;padding:0.75rem}
 .stu-remind{color:var(--accent)}
-.stu-ics{width:100%;margin-top:0.875rem}
+.stu-ics{width:100%;margin:0.25rem 0 0.375rem}
 .stu-rules-line{margin:-1rem 0 1.5rem;padding:0 0.25rem}
 .stu-acts-wrap{flex-wrap:wrap;justify-content:flex-end;max-width:55%}
 .song-acts{display:flex;flex-wrap:wrap;align-items:center;gap:0.5rem;margin-top:0.625rem}
@@ -1827,6 +1827,15 @@ html.standalone .only-browser{display:none}
 .install-nudge{display:flex;align-items:center;gap:0.75rem}
 .install-nudge img{width:3rem;height:3rem;border-radius:0.75rem;flex:none;border:0.0625rem solid var(--glass-border)}
 .install-nudge + .song-acts .save{padding:0.5rem 1rem;font-size:0.8125rem}
+.stu-bell{position:relative;width:2.625rem;height:2.625rem;flex:none;display:grid;place-items:center;padding:0;border-radius:var(--radius-sm);border:0.0625rem solid var(--glass-border);background:var(--glass-fill);color:var(--text-2);cursor:pointer;box-shadow:var(--edge-light),var(--shadow-sm)}
+.stu-bell svg{width:1.25rem;height:1.25rem;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.stu-bell:hover{border-color:var(--accent-line);color:var(--accent)}
+.stu-bell-badge{position:absolute;top:-0.3125rem;right:-0.3125rem;min-width:1.125rem;height:1.125rem;padding:0 0.3125rem;border-radius:var(--radius-pill);background:var(--orange);color:#1a0d02;font-size:0.6875rem;font-weight:800;display:grid;place-items:center;line-height:1}
+.stu-days{margin:0 -0.5rem 0.5rem}
+.stu-card-note{font-size:0.8125rem;margin:0.5rem 0.25rem 0}
+.stu-next-acts{margin:0.625rem 0.25rem 0}
+.stu-online-mini{text-decoration:none;padding:0.4375rem 0.875rem;font-size:0.8125rem}
+.stu-week-sub{margin-top:0}
 </style>
 </head>
 <body>
@@ -2474,6 +2483,7 @@ html.standalone .only-browser{display:none}
 <select id="stuPicker" class="stu-picker" aria-label="Aluno" style="display:none"></select>
 </div>
 <div class="stu-head-right"><button type="button" class="stu-timer-chip" id="stuTimerChip" style="display:none" aria-label="Voltar pro cronômetro"></button>
+<button type="button" class="stu-bell" id="stuBell" aria-label="Notificações"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-bell"/></svg><span class="stu-bell-badge" id="stuBellBadge" style="display:none"></span></button>
 <button type="button" class="avatar stu-avatar" id="stuAvatar" aria-label="Abrir o perfil"></button></div>
 </div>
 </header>
@@ -3316,7 +3326,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.4.2";
+const APP_VERSION = "8.5";
 // ===================== App instalável (8.4) =====================
 // Service worker (sw.js), aviso de versão nova, faixa "Sem internet", botão "Instalar o app",
 // atalhos do ícone (?p=...) e botão voltar do celular fechando modal/menu no app instalado.
@@ -4946,6 +4956,7 @@ document.getElementById("stuOverlay").onclick = closeStuMenu;
 document.querySelectorAll("#stuSidebar [data-stu-page]").forEach(b => b.onclick = () => stuOpenPage(b.dataset.stuPage));
 document.getElementById("stuAvatar").onclick = () => stuOpenPage("profile");
 document.getElementById("stuTimerChip").onclick = () => stuOpenPage("practice");
+document.getElementById("stuBell").onclick = stuOpenNotices;
 document.getElementById("stuLogoutNav").onclick = () => { if (demoMode) return demoExit(); if (confirm("Sair da conta?")) stuSignOut(); };
 document.getElementById("demoExit").onclick = () => demoExit();
 let stuRenderedTab = null;
@@ -4963,6 +4974,7 @@ metronome: metroHTML, tuner: tunerHTML, chords: chordsHTML, ear: earHTML, readin
 main.innerHTML = r();
 stuBind(main);
 ptTick();
+stuBellUpdate();
 }
 function stuGreetName(){
 if (stuCur.link.role === "guardian") return firstName(stuCur.s.guardianName || "") || "";
@@ -4978,31 +4990,93 @@ const min = /(\d{1,3})\s*min/i.exec(t);
 const bpm = /(\d{2,3})\s*(?:bpm)?\s*(?:→|->|a|até|ate|para|pra)\s*(\d{2,3})\s*bpm/i.exec(t);
 return { min: min ? Number(min[1]) : null, from: bpm ? Number(bpm[1]) : null, to: bpm ? Number(bpm[2]) : null };
 }
+// Início do aluno (8.5): mesmo desenho do Início do professor. Saudação com a situação do dia
+// e uma frase do contexto do aluno; aulas dos próximos dias em cards por dia; uma seção de
+// estudo da semana (lição, matéria e o que o professor deixou no mural) e o próximo evento.
+// Os avisos ficam no sino do cabeçalho.
+const DAY_NAMES = ["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"];
+function stuGreetStatus(up){
+const s = stuCur.s, guardian = stuCur.link.role === "guardian", who = guardian ? firstName(s.name) : "";
+const today = isoOf(new Date());
+const real = up.filter(x => !x.off && !(x.record && isNoClass(x.record)));
+const t = real.find(x => x.iso === today);
+if (t) return guardian ? `${who} tem aula hoje às ${t.time}.` : `Você tem aula hoje às ${t.time}.`;
+const n = real[0];
+if (!n) return guardian ? `${who} não tem aula marcada nas próximas semanas.` : "Nenhuma aula marcada nas próximas semanas.";
+const days = Math.round((n.date - new Date().setHours(0,0,0,0)) / 86400000);
+const when = days === 1 ? `amanhã às ${n.time}` : `${WEEKDAY_FULL[n.date.getDay()]}, ${pad2(n.date.getDate())}/${pad2(n.date.getMonth() + 1)}, às ${n.time}`;
+return guardian ? `A próxima aula de ${who} é ${when}.` : `Sua próxima aula é ${when}.`;
+}
+// Frase do dia, pelo contexto do aluno: data especial, aula hoje, lição, prática da semana.
+function stuGreetPhrase(up){
+const now = new Date(), d = journal(), s = stuCur.s, guardian = stuCur.link.role === "guardian";
+const dayOfYear = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 86400000);
+const md = `${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
+const special = { "01-01": "Feliz Ano Novo! Que este ano venha cheio de música. 🎉", "10-01": "Hoje é o Dia Internacional da Música! 🎶", "10-12": "Feliz Dia das Crianças! 🎈", "11-22": "Feliz Dia do Músico! 🎵", "12-25": "Feliz Natal! Que tal tocar uma música pra família hoje? 🎄" }[md];
+if (special) return special;
+if (s.birthDate && s.birthDate.slice(5) === md) return guardian ? `Hoje é aniversário de ${firstName(s.name)}! 🎂` : "Feliz aniversário! 🎂 Que a música te acompanhe neste novo ano.";
+const today = isoOf(now);
+const hasToday = up.some(x => x.iso === today && !x.off && !(x.record && isNoClass(x.record)));
+const hw = stuLastHomework(), hwDone = hw && jMap(d, "hwDone")[hwKeyOf(hw)];
+const wk = practiceIn(d, weekStartOf(now).getTime(), now.getTime() + 1), streak = practiceStreak(d);
+const pick = list => list[dayOfYear % list.length];
+if (guardian) {
+if (hasToday) return "Dia de aula! Ajude a lembrar do material.";
+if (hw && !hwDone) return "Tem lição de casa da última aula. Vale perguntar como está indo.";
+return wk.days ? `Praticou ${wk.days} dia${wk.days === 1 ? "" : "s"} nesta semana. Um elogio sempre ajuda!` : "Nenhuma prática registrada nesta semana ainda.";
+}
+let phrase;
+if (streak >= 3) phrase = pick([`${streak} dias seguidos praticando. Não quebre a sequência!`, `Sequência de ${streak} dias! Constância é o que faz a diferença.`]);
+else if (hasToday && hw && !hwDone) phrase = pick(["Dia de aula! Ainda dá tempo de revisar a lição antes.", "Aula hoje: uma passada rápida na lição de casa faz diferença."]);
+else if (hasToday) phrase = pick(["Dia de aula! Leve suas dúvidas.", "Hoje tem aula. Aproveite pra perguntar o que travou na semana."]);
+else if (hw && !hwDone) phrase = pick(["Que tal 15 minutos na lição de casa hoje?", "A lição de casa está esperando por você. Um pouco por dia já ajuda."]);
+else if (!wk.n) phrase = pick(["Nenhuma prática nesta semana ainda. Que tal começar hoje?", "Um pouquinho de prática hoje já conta. Bora?"]);
+else phrase = pick([`${minText(wk.min)} de prática nesta semana. Bom ritmo!`, "Você está praticando bem nesta semana. Continue assim!"]);
+if (now.getDate() === 1) phrase += " Começou um mês novo: bom momento pra rever suas metas.";
+return phrase;
+}
+function stuDaySections(up){
+const s = stuCur.s, tp = stuCur.tp, content = stuContent(), now = new Date();
+const byDay = new Map();
+up.forEach(x => { if (!byDay.has(x.iso)) byDay.set(x.iso, []); byDay.get(x.iso).push(x); });
+const days = [...byDay.keys()].sort().slice(0, 3);
+if (!days.length) return `<div class="empty">Nenhuma aula marcada nas próximas semanas.</div>`;
+const firstReal = up.find(x => !x.off && !(x.record && isNoClass(x.record)));
+const teacherAvatar = `<div class="avatar-cluster"><div class="avatar-span2"><div class="avatar-small"${tp.photo ? ` style="background-image:url(${escapeHtml(tp.photo)});background-size:cover;color:transparent"` : ""}>${escapeHtml(initials(tp.display_name || "P"))}</div></div></div>`;
+return days.map((iso, i) => {
+const date = dateFromIso(iso), offset = Math.round((date - new Date().setHours(0,0,0,0)) / 86400000);
+const suffix = offset === 0 ? " (hoje)" : offset === 1 ? " (amanhã)" : ` (daqui a ${offset} dias)`;
+const cards = byDay.get(iso).map(x => {
+const off = x.off || (x.record && isNoClass(x.record));
+const st = stuLessonStatus(x);
+const start = lessonStart(x.date, x.time), end = lessonEnd(x.date, x.time, s);
+let status = "Em breve", cls = "upcoming";
+if (off) { cls = "off"; status = x.off ? (x.off.kind === "break" ? "Férias" : "Feriado") : cardReasonText(s, x.record); }
+else if (st.cls === "wait") { cls = "upcoming"; status = "Falta avisada"; }
+else if (offset === 0 && now >= end) { cls = "completed"; status = "Dada"; }
+else if (offset === 0 && now >= start) { cls = "ongoing"; status = "Andamento"; }
+const meta = [`com ${tp.display_name || "o professor"}`, x.kind === "extra" ? extraLabel(s, x.makeupId).toLowerCase() : "", stuIsGroup() ? "grupo" : "", x.off ? x.off.label : ""].filter(Boolean).map(escapeHtml).join(" · ");
+const isNext = firstReal && x.key === firstReal.key;
+const link = stuLinkURL(s);
+const acts = isNext && !off ? `${content.reminder ? `<div class="stu-remind stu-card-note">Lembrete: ${escapeHtml(content.reminder)}</div>` : ""}
+<div class="song-acts stu-next-acts">${link && offset === 0 ? `<a class="save stu-online-mini" href="${escapeHtml(link)}" target="_blank" rel="noopener">Entrar na aula online</a>` : ""}${st.canAbsent ? `<button type="button" class="btn-edit-toggle" data-absent="${escapeHtml(x.key)}">Vou faltar</button>` : ""}<button type="button" class="btn-link-inline" data-go="lessons">Ver aulas</button></div>
+<div class="stu-absent-form" data-absent-form="${escapeHtml(x.key)}"></div>` : "";
+return `<div class="card${off ? " is-off" : ""}"><div class="time">${escapeHtml(x.time)}</div>${teacherAvatar}<div class="info"><div class="name">${escapeHtml(s.instrument ? `Aula de ${s.instrument}` : "Aula")}</div><div class="instrument">${meta}${stuPlaceHTML(s) && !off ? ` · ${stuPlaceHTML(s)}` : ""}</div></div><div class="status ${cls}">${escapeHtml(status)}</div></div>${acts}`;
+}).join("");
+return `<section class="day-section${i === 0 ? " focused" : ""}"><div class="day-head">${DAY_NAMES[date.getDay()]}, ${date.getDate()} de ${MONTH_FULL[date.getMonth()]}${suffix}</div>${cards}</section>`;
+}).join("");
+}
 function stuHomeHTML(){
 const s = stuCur.s, content = stuContent(), d = journal();
 const up = stuUpcoming(28);
-const next = up.find(x => !x.off && !(x.record && isNoClass(x.record)));
 const nm = stuGreetName();
-let html = `<div class="stu-hello">Olá${nm ? ", " + escapeHtml(nm) : ""}!</div>`;
-if (stuCur.link.role === "guardian") html += `<div class="stu-hello-sub">Acompanhando ${escapeHtml(s.name)}</div>`;
+let html = `<div class="home-greeting-text">Olá${nm ? ", " + escapeHtml(nm) : ""}</div>
+<div class="home-message"><div class="home-message-status">${escapeHtml(stuGreetStatus(up))}</div><div class="home-message-phrase">${escapeHtml(stuGreetPhrase(up))}</div></div>`;
 // Convite pra instalar (8.4): até a pessoa instalar ou tocar em "Agora não" (volta depois de 30 dias).
 if (!demoMode && pwaCanInstall() && Date.now() > Number(localStorage.getItem(INSTALL_NUDGE_KEY) || 0)) html += stuCard("", `<div class="install-nudge"><img src="icons/icon-192.png" alt=""><div><div class="stu-row-title">Instale o Hi Teacher na sua tela inicial</div><div class="stu-muted">Abre em tela cheia, como um aplicativo.</div></div></div>
 <div class="song-acts"><button type="button" class="save" data-install>Como instalar</button><button type="button" class="btn-link-inline" data-install-later>Agora não</button></div>`);
-if (next) {
-const st = stuLessonStatus(next);
-const link = stuLinkURL(s), soon = next.date.getTime() - new Date().setHours(0,0,0,0) < 86400000;
-html += stuCard("Próxima aula", `<div class="stu-next-when">${escapeHtml(stuWhen(next.date, next.time))}</div>
-<div class="stu-next-meta">${getStudentDuration(s)} min${stuIsGroup() ? " · Aula em grupo" : ""}${next.kind === "extra" ? " · " + escapeHtml(extraLabel(s, next.makeupId)) : ""}</div>
-${stuPlaceHTML(s) ? `<div class="stu-next-meta">${stuPlaceHTML(s)}</div>` : ""}
-${content.reminder ? `<div class="stu-next-meta stu-remind">Lembrete: ${escapeHtml(content.reminder)}</div>` : ""}
-${st.cls === "wait" ? `<div class="stu-status wait">${escapeHtml(st.text)}</div>` : ""}
-${link && soon ? `<a class="save stu-online" href="${escapeHtml(link)}" target="_blank" rel="noopener">Entrar na aula online</a>` : ""}
-${st.canAbsent ? `<button type="button" class="btn-historico stu-absent-btn" data-absent="${escapeHtml(next.key)}">Vou faltar</button>` : ""}
-<div class="stu-absent-form" data-absent-form="${escapeHtml(next.key)}"></div>`, "stu-next");
-} else html += stuCard("Próxima aula", `<div class="stu-empty">Nenhuma aula marcada nas próximas semanas.</div>`);
-// Avisos logo depois da próxima aula; o resto agrupado em seções com subseções (como no professor).
-const notes = stuNotices(up);
-if (notes.length) html += stuCard("Avisos", notes.map(n => `<div class="stu-notice ${n.cls || ""}">${n.html}</div>`).join(""));
+html += `<div class="stu-days">${stuDaySections(up)}</div>`;
+// Estudo da semana: o que estudar (lição, matéria) e o que o professor deixou (mural), juntos.
 const study = [];
 const hw = stuLastHomework();
 if (hw) {
@@ -5017,18 +5091,33 @@ ${g.from && g.to ? `<button type="button" class="btn-edit-toggle" data-hwtrain="
 }
 const themes = Array.isArray(stuCur.view.themes) ? themesSorted() : [];
 if (themes.length) { const t = themes[0]; study.push(stuSub("Matéria da semana", `<button type="button" class="mat-line" data-go="material"><span class="stu-row-title">${escapeHtml(t.topic)}</span>${(t.images || []).length ? `<img src="${escapeHtml(t.images[0])}" alt="" loading="lazy">` : ""}<span class="lr-cta">Ver</span></button>`)); }
+const board = content.board || {};
+if (board.challenge) study.push(stuSub("Desafio da semana", `<div class="stu-hw">${escapeHtml(board.challenge)}</div><div class="song-acts"><button type="button" class="btn-edit-toggle" data-challenge>Gravar o desafio</button></div>`));
+if (board.tip) study.push(stuSub("Dica do professor", `<div class="stu-hw">${escapeHtml(board.tip)}</div>`));
+if (board.video && /^https?:\/\//i.test(board.video)) study.push(stuSub("Vídeo recomendado", `<a class="stu-link" href="${escapeHtml(board.video)}" target="_blank" rel="noopener">${escapeHtml(board.videoTitle || "Assistir")}</a>`));
 const wk = practiceIn(d, weekStartOf(new Date()).getTime(), Date.now() + 1), streak = practiceStreak(d);
-study.push(stuSub("Sua semana", `<div class="stat-row"><div><b>${wk.days}</b><span>dia${wk.days === 1 ? "" : "s"} praticando</span></div><div><b>${minText(wk.min)}</b><span>praticados</span></div><div><b>${streak}</b><span>seguidos</span></div></div>
+study.push(stuSub("Sua prática", `<div class="stat-row"><div><b>${wk.days}</b><span>dia${wk.days === 1 ? "" : "s"} praticando</span></div><div><b>${minText(wk.min)}</b><span>praticados</span></div><div><b>${streak}</b><span>seguidos</span></div></div>
 <div class="actions"><button class="save" ${hw ? "data-hwpractice" : `data-go="practice"`}>Praticar agora</button></div>`));
-html += stuCard("Estudo em casa", study.join(""));
-const board = content.board || {}, prof = [];
-if (board.tip) prof.push(stuSub("Dica da semana", `<div class="stu-hw">${escapeHtml(board.tip)}</div>`));
-if (board.video && /^https?:\/\//i.test(board.video)) prof.push(stuSub("Vídeo recomendado", `<a class="stu-link" href="${escapeHtml(board.video)}" target="_blank" rel="noopener">${escapeHtml(board.videoTitle || "Assistir")}</a>`));
-if (board.challenge) prof.push(stuSub("Desafio da semana", `<div class="stu-hw">${escapeHtml(board.challenge)}</div><div class="song-acts"><button type="button" class="btn-edit-toggle" data-challenge>Gravar o desafio</button></div>`));
+html += stuCard("Estudo da semana", study.join(""));
 const ev = stuNextEvents()[0];
-if (ev) prof.push(stuSub("Próximo evento", stuEventHTML(ev)));
-if (prof.length) html += stuCard("Do professor", prof.join(""));
+if (ev) html += stuCard("Próximo evento", stuEventHTML(ev));
 return html;
+}
+// Sino do cabeçalho: os avisos (antes no Início), com o número no selo.
+function stuBellUpdate(){
+const b = document.getElementById("stuBell"), n = document.getElementById("stuBellBadge");
+if (!b || !stuCur) return;
+let count = 0;
+try { count = stuNotices(stuUpcoming(28)).length; } catch(e) {}
+n.textContent = count; n.style.display = count ? "" : "none";
+b.setAttribute("aria-label", count ? `Notificações (${count})` : "Notificações");
+}
+function stuOpenNotices(){
+const notes = stuNotices(stuUpcoming(28));
+const body = document.createElement("div");
+body.innerHTML = notes.length ? notes.map(n => `<div class="stu-notice ${n.cls || ""}">${n.html}</div>`).join("") : `<div class="stu-empty">Nenhuma notificação por enquanto.</div>`;
+body.querySelectorAll("[data-go]").forEach(x => x.onclick = () => { closeQuickModal(); stuOpenPage(x.dataset.go); });
+openQuickModal("Notificações", "", body, null, "Fechar");
 }
 // Subseção dentro de um card: título pequeno em azul e linha separando da anterior.
 function stuSub(title, inner){ return `<div class="stu-subsec"><div class="stu-sub-title">${title}</div>${inner}</div>`; }
@@ -5131,7 +5220,7 @@ function stuLessonsHTML(){
 const s = stuCur.s;
 const up = stuUpcoming(28);
 const rules = stuResched();
-const upHtml = up.length ? up.map(x => {
+const upRow = x => {
 const st = stuLessonStatus(x);
 const rr = stuReschedReq(x.key);
 const can = st.canAbsent && !rr && stuCanReschedule(x) === null;
@@ -5139,19 +5228,30 @@ return `<div class="stu-row"><div class="stu-row-main"><div class="stu-row-title
 ${st.text ? `<div class="stu-status ${st.cls}">${escapeHtml(st.text)}</div>` : ""}${rr ? `<div class="stu-status wait">Pedido pra remarcar para ${escapeHtml(slotLabel(rr.payload.toIso, rr.payload.toTime))} — aguardando o professor</div>` : ""}</div>
 <div class="stu-row-acts">${st.req ? `<button type="button" class="btn-edit-toggle" data-cancel-req="${st.req.id}">Cancelar aviso</button>` : rr ? `<button type="button" class="btn-edit-toggle" data-cancel-req="${rr.id}">Cancelar pedido</button>` : st.canAbsent ? `${can ? `<button type="button" class="btn-edit-toggle" data-resched="${escapeHtml(x.key)}">Remarcar</button>` : ""}<button type="button" class="btn-edit-toggle" data-absent="${escapeHtml(x.key)}">Vou faltar</button>` : ""}</div></div>
 <div class="stu-absent-form" data-absent-form="${escapeHtml(x.key)}"></div>`;
-}).join("") : `<div class="stu-empty">Nenhuma aula nas próximas 4 semanas.</div>`;
+};
+// 8.5: próximas aulas em subseções por semana (segunda a domingo).
+const wk0 = weekStartOf(new Date()).getTime();
+const weekName = n => n === 0 ? "Esta semana" : n === 1 ? "Semana que vem" : `Daqui a ${n} semanas`;
+const byWeek = new Map();
+up.forEach(x => { const n = Math.round((weekStartOf(x.date).getTime() - wk0) / (7 * 86400000)); if (!byWeek.has(n)) byWeek.set(n, []); byWeek.get(n).push(x); });
+const upHtml = up.length ? [...byWeek.keys()].sort((a, b) => a - b).map(n => stuSub(weekName(n), byWeek.get(n).map(upRow).join(""))).join("") : stuSub("Próximas 4 semanas", `<div class="stu-empty">Nenhuma aula nas próximas 4 semanas.</div>`);
 const content = stuContent();
 const showEval = !!stuCur.tp.show_evaluations, starsOk = showEval && content.evalView !== "chart";
 const crit = (appSettings.criteria || []).filter(c => c && c.key && !c.removed);
 const todayIso = isoOf(new Date());
 const past = getStudentTimeline(s).filter(l => isoFromBr(l.date) <= todayIso).slice(0, 40);
-const pastHtml = past.length ? past.map(l => {
+const pastRow = l => {
 const status = isNoClass(l) ? (l.auto ? (l.offLabel || "Feriado/férias") : cardReasonText(s, l)) : "Dada";
 const cls = isNoClass(l) ? (l.auto || l.reason === "holiday" ? "off" : l.reason === "rescheduled" ? "off" : "bad") : "ok";
 const evalHtml = starsOk && isEvaluated(l) ? `<div class="stu-evals">${crit.filter(c => typeof l[c.key] === "number").map(c => `<span>${escapeHtml(c.label)} <b>${"★".repeat(Math.round(l[c.key]))}${"☆".repeat(Math.max(0, 5 - Math.round(l[c.key])))}</b></span>`).join("")}</div>` : "";
 return `<div class="stu-row col"><div class="stu-row-title">${escapeHtml(l.date.slice(0,5))} · ${escapeHtml(WEEKDAY_FULL[dateFromIso(isoFromBr(l.date)).getDay()])}${l.makeupId ? ` <span class="badge-makeup">${escapeHtml(extraLabel(s, l.makeupId))}</span>` : ""}</div>
 <div class="stu-status ${cls}">${escapeHtml(status)}</div>${lessonNotesHTML(l)}${evalHtml}</div>`;
-}).join("") : `<div class="stu-empty">Ainda não há aulas no histórico.</div>`;
+};
+// Histórico em subseções por mês.
+const byMonth = new Map();
+past.forEach(l => { const k = isoFromBr(l.date).slice(0, 7); if (!byMonth.has(k)) byMonth.set(k, []); byMonth.get(k).push(l); });
+const monthName = k => { const [y, m] = k.split("-").map(Number); const t = MONTH_FULL[m - 1]; return `${t[0].toUpperCase()}${t.slice(1)}${y !== new Date().getFullYear() ? " de " + y : ""}`; };
+const pastHtml = past.length ? [...byMonth.keys()].map(k => stuSub(monthName(k), byMonth.get(k).map(pastRow).join(""))).join("") : `<div class="stu-empty">Ainda não há aulas no histórico.</div>`;
 // Reposições pendentes: o aluno escolhe um horário vago e o professor confirma.
 const pend = (s.makeups || []).filter(m => m.status === "pending" && m.kind !== "single");
 const pendHtml = pend.length ? pend.map(m => {
@@ -5161,9 +5261,10 @@ return `<div class="stu-row"><div class="stu-row-main"><div class="stu-row-title
 <div class="stu-absent-form" data-mk-form="${escapeHtml(m.id)}"></div>`;
 }).join("") : "";
 const evalChart = showEval ? evalChartSVG(s) : "";
-return stuCard("Próximas aulas", upHtml + `<button type="button" class="btn-historico stu-ics" id="stuIcs">Colocar as aulas na agenda do celular</button><div class="stu-muted">Com lembrete 1 dia e 1 hora antes de cada aula.</div>`)
-+ (pendHtml ? stuCard("Reposições pendentes", pendHtml) : "")
-+ (rules.on ? `<div class="stu-muted stu-rules-line">Remarcação: até ${rules.minHours} h antes${rules.maxMonth ? `, no máximo ${rules.maxMonth} por mês` : ""}.</div>` : "")
+// Seção "Próximas aulas": semanas, reposições pendentes e agenda do celular como subseções.
+return stuCard("Próximas aulas", upHtml
++ (pendHtml ? stuSub("Reposições pendentes", pendHtml) : "")
++ stuSub("Agenda do celular", `<button type="button" class="btn-historico stu-ics" id="stuIcs">Colocar as aulas na agenda do celular</button><div class="stu-muted">Com lembrete 1 dia e 1 hora antes de cada aula.${rules.on ? ` Remarcação: até ${rules.minHours} h antes${rules.maxMonth ? `, no máximo ${rules.maxMonth} por mês` : ""}.` : ""}</div>`))
 + (evalChart ? stuCard("Evolução nas avaliações", evalChart) : "")
 + stuCard("Histórico", pastHtml);
 }
