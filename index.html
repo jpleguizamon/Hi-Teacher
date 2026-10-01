@@ -1967,6 +1967,57 @@ html.standalone .only-browser{display:none}
 .notice-btn span:first-child{flex:1}
 #quickLessonBody > .notice-btn:first-child{border-top:none}
 .study-row.still .settings-row-chevron{display:none}
+/* App do aluno 8.8 */
+.ws-card{padding:1rem;display:flex;flex-direction:column;gap:0.875rem;margin-bottom:1.5rem}
+.ws-head{display:flex;align-items:baseline;justify-content:space-between;gap:0.5rem}
+.ws-label{font-size:0.75rem;font-weight:750;color:var(--accent)}
+.ws-meta{font-size:0.6875rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.ws-text{font-size:0.9375rem;font-weight:600;line-height:1.45;margin-top:0.25rem;overflow-wrap:break-word}
+.ws-min{margin-top:0.5rem}
+.ws-chal{display:flex;gap:0.5rem;align-items:flex-start;margin-top:0.625rem;font-size:0.8125rem;line-height:1.45;color:var(--text-2);overflow-wrap:break-word}
+.ws-chal b{color:var(--text);font-weight:700}
+.ws-chal .ui-icon{flex:none;width:1rem;height:1rem;margin-top:0.125rem;color:var(--accent)}
+.ws-acts{display:flex;flex-wrap:wrap;gap:0.375rem;margin-top:0.75rem}
+.ws-acts .study-pill{min-height:2.25rem;padding:0.375rem 0.75rem}
+.ws-line{display:flex;align-items:center;gap:0.5rem;width:100%;padding:0.625rem 0.75rem;border:none;border-radius:var(--radius-sm);background:rgba(47,211,242,.06);color:var(--text-2);font:inherit;font-size:0.8125rem;text-align:left;cursor:pointer}
+.ws-line span:not(.settings-row-chevron){flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ws-line b{color:var(--text);font-weight:650}
+.ws-line .ui-icon{flex:none;width:1rem;height:1rem;color:var(--accent)}
+.ws-line:hover{background:rgba(47,211,242,.1)}
+.ws-tip{padding-left:0.75rem;border-left:0.1875rem solid var(--accent)}
+.ws-quote{font-size:0.875rem;line-height:1.5;color:var(--text);overflow-wrap:break-word}
+.ws-tip .ws-meta{margin-top:0.25rem}
+.ws-tip .study-link{margin-top:0.5rem}
+.up-date{flex:none;width:2.5rem;display:flex;flex-direction:column;align-items:center;line-height:1.1}
+.up-date b{font-size:1.125rem;font-weight:750;font-variant-numeric:tabular-nums;color:var(--text)}
+.up-date span{font-size:0.6875rem;color:var(--muted);text-transform:lowercase}
+.up-kicker{display:block;font-size:0.6875rem;font-weight:750;color:var(--accent);margin-bottom:0.125rem}
+.up-when{font-variant-numeric:tabular-nums}
+.up-next{background:rgba(47,211,242,.06)}
+.up-next .up-date b{color:var(--accent)}
+.hist-lesson{display:flex;gap:0.75rem;align-items:flex-start}
+.hist-body{flex:1;min-width:0}
+.hist-body .stu-status{margin:0 0 0.25rem}
+.hist-taught{font-size:0.875rem;font-weight:650;line-height:1.4;overflow-wrap:break-word}
+.hist-home{font-size:0.8125rem;color:var(--text-2);line-height:1.45;margin-top:0.25rem;overflow-wrap:break-word}
+.hist-home span{color:var(--muted)}
+.hist-off .up-date b{color:var(--muted)}
+.hist-lesson .hist-stars{display:flex;align-items:center;gap:0.5rem;margin-top:0.375rem;white-space:nowrap;overflow:hidden}
+.hist-lesson .hist-stars > span:last-child{overflow:hidden;text-overflow:ellipsis;color:var(--muted)}
+.ac-list{display:flex;flex-direction:column;margin-top:0.25rem;border:0.0625rem solid var(--hairline);border-radius:var(--radius-sm);overflow:hidden}
+.ac-list:empty{display:none}
+.ac-item{display:flex;align-items:center;gap:0.5rem;min-height:2.5rem;padding:0.5rem 0.75rem;border:none;border-bottom:0.0625rem solid var(--hairline);background:var(--surface-2,transparent);color:var(--text);font:inherit;font-size:0.8125rem;text-align:left;cursor:pointer}
+.ac-item:last-child{border-bottom:none}
+.ac-item:hover,.ac-item:focus-visible{background:rgba(47,211,242,.08)}
+.ac-item small{margin-left:auto;color:var(--muted);font-size:0.6875rem}
+.pt-other-input{display:flex;flex-direction:column;gap:0.5rem;align-items:stretch;margin-top:0.625rem}
+.pt-other-input[hidden]{display:none}
+.pt-other-input .field{flex:1;margin:0}
+.pt-other-input .save{flex:none}
+.money-lock{text-align:center;padding:0.5rem 0}
+.money-lock .ui-icon{width:2rem;height:2rem;color:var(--accent)}
+.money-lock .pin-row{display:flex;gap:0.5rem;justify-content:center;margin-top:0.875rem}
+.money-lock input{max-width:9rem;text-align:center;letter-spacing:.3em;font-variant-numeric:tabular-nums}
 </style>
 </head>
 <body>
@@ -1996,6 +2047,7 @@ html.standalone .only-browser{display:none}
 <g id="icon-pin"><path d="M20 10.2c0 6-8 11.3-8 11.3s-8-5.3-8-11.3a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="2.7"/></g>
 <g id="icon-sun"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2"/><path d="M12 19.5v2"/><path d="M4.6 4.6L6 6"/><path d="M18 18l1.4 1.4"/><path d="M2.5 12h2"/><path d="M19.5 12h2"/><path d="M4.6 19.4L6 18"/><path d="M18 6l1.4-1.4"/></g>
 <g id="icon-info"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5"/><circle cx="12" cy="8" r="0.9" fill="currentColor" stroke="none"/></g>
+<g id="icon-lock"><rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.5" r="1.2" fill="currentColor" stroke="none"/></g>
 <g id="icon-user"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c1.2-4 4-6 7.5-6s6.3 2 7.5 6"/></g>
 <g id="icon-tool"><path d="M14.5 6.5a4 4 0 0 0 5 5l-9 9a2.1 2.1 0 0 1-3-3z"/><path d="M14.5 6.5 17 4l3 3-2.5 2.5"/></g>
 <g id="icon-camera"><path d="M4 8.5a1.5 1.5 0 0 1 1.5-1.5h2l1-2h7l1 2h2A1.5 1.5 0 0 1 20 8.5v9A1.5 1.5 0 0 1 18.5 19h-13A1.5 1.5 0 0 1 4 17.5z"/><circle cx="12" cy="13" r="3.5"/></g>
@@ -3457,7 +3509,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.7";
+const APP_VERSION = "8.8";
 // ===================== App instalável (8.4) =====================
 // Service worker (sw.js), aviso de versão nova, faixa "Sem internet", botão "Instalar o app",
 // atalhos do ícone (?p=...) e botão voltar do celular fechando modal/menu no app instalado.
@@ -5287,32 +5339,34 @@ let html = `<div class="home-greeting-text">Olá${nm ? ", " + escapeHtml(nm) : "
 if (!demoMode && pwaCanInstall() && Date.now() > Number(localStorage.getItem(INSTALL_NUDGE_KEY) || 0)) html += stuCard("", `<div class="install-nudge"><img src="icons/icon-192.png" alt=""><div><div class="stu-row-title">Instale o Hi Teacher na sua tela inicial</div><div class="stu-muted">Abre em tela cheia, como um aplicativo.</div></div></div>
 <div class="song-acts"><button type="button" class="save" data-install>Como instalar</button><button type="button" class="btn-link-inline" data-install-later>Agora não</button></div>`);
 html += `<div class="stu-days">${stuDaySections(up)}</div>`;
-// Estudo da semana (8.6): lista no mesmo padrão das linhas de Configurações (ícone, título,
-// detalhe, valor e seta) em vez de subseções com títulos azuis e caixinhas de números.
+// Estudo da semana (8.8): um card só, sem linhas separando. Lição de casa com o desafio junto,
+// a matéria numa linha e o recado do professor (dica + vídeo) no fim.
 const row = (o) => `<${o.href ? `a href="${escapeHtml(o.href)}" target="_blank" rel="noopener"` : "div"} class="settings-row study-row${o.still ? " still" : ""}"${o.go ? ` data-go="${o.go}"` : ""}${o.attr || ""}${o.still || o.href ? "" : ` role="button" tabindex="0"`}><span class="settings-row-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-${o.icon}"/></svg></span><div class="settings-row-text"><div class="settings-row-title">${o.title}</div>${o.sub ? `<div class="settings-row-sub study-sub">${o.sub}</div>` : ""}${o.extra || ""}</div>${o.value ? `<span class="settings-row-value">${o.value}</span>` : ""}${o.still ? "" : `<span class="settings-row-chevron" aria-hidden="true">›</span>`}</${o.href ? "a" : "div"}>`;
-const study = [];
+const parts = [];
 const hw = stuLastHomework();
+const board = content.board || {};
+if (hw || board.challenge) {
+let b = "";
 if (hw) {
 const done = jMap(d, "hwDone")[hwKeyOf(hw)];
 const g = hwGoals(hw.homework);
 const today = new Date(); today.setHours(0,0,0,0);
 const todayMin = g.min ? practiceIn(d, today.getTime(), today.getTime() + 86400000).min : 0;
-study.push(row({ icon: "clipboard", title: "Lição de casa", go: "practice", sub: escapeHtml(hw.homework),
-extra: `<div class="study-meta">Da aula de ${escapeHtml(hw.date.slice(0,5))}${g.min ? ` · hoje ${todayMin} de ${g.min} min` : ""}</div>${g.min ? `<div class="hw-bar study-bar"><span style="width:${Math.min(100, Math.round(todayMin / g.min * 100))}%"></span></div>` : ""}`,
-value: done ? `<button type="button" class="status completed study-pill" data-hwundo title="Desfazer">Feita</button>` : `<button type="button" class="btn-edit-toggle study-pill" data-hwdone>Marcar feita</button>` }));
+b += `<div class="ws-head"><span class="ws-label">Para casa</span><span class="ws-meta">Da aula de ${escapeHtml(hw.date.slice(0,5))}</span></div>
+<div class="ws-text">${escapeHtml(hw.homework)}</div>
+${g.min ? `<div class="ws-meta ws-min">Hoje: ${todayMin} de ${g.min} min</div><div class="hw-bar study-bar"><span style="width:${Math.min(100, Math.round(todayMin / g.min * 100))}%"></span></div>` : ""}`;
+if (board.challenge) b += `<div class="ws-chal"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-target"/></svg><span><b>Desafio:</b> ${escapeHtml(board.challenge)}</span></div>`;
+b += `<div class="ws-acts">${done ? `<button type="button" class="status completed study-pill" data-hwundo title="Desfazer">Feita ✓</button>` : `<button type="button" class="btn-edit-toggle study-pill" data-hwdone>Marcar feita</button>`}<button type="button" class="btn-edit-toggle study-pill" data-hwpractice>Praticar</button>${board.challenge ? `<button type="button" class="btn-edit-toggle study-pill" data-challenge>Gravar o desafio</button>` : ""}</div>`;
+} else {
+b += `<div class="ws-head"><span class="ws-label">Desafio da semana</span></div><div class="ws-text">${escapeHtml(board.challenge)}</div><div class="ws-acts"><button type="button" class="btn-edit-toggle study-pill" data-challenge>Gravar o desafio</button></div>`;
+}
+parts.push(`<div class="ws-block">${b}</div>`);
 }
 const themes = Array.isArray(stuCur.view.themes) ? themesSorted() : [];
-if (themes.length) study.push(row({ icon: "file-text", title: "Matéria da semana", sub: escapeHtml(themes[0].topic), go: "material" }));
-const board = content.board || {};
-if (board.challenge) study.push(row({ icon: "target", title: "Desafio da semana", sub: escapeHtml(board.challenge), attr: " data-challenge", value: "Gravar" }));
-// "Do professor": a dica e o vídeo numa linha só (no máximo 4 linhas nesta seção).
+if (themes.length) parts.push(`<button type="button" class="ws-line" data-go="material"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-file-text"/></svg><span>Matéria: <b>${escapeHtml(themes[0].topic)}</b></span><span class="settings-row-chevron" aria-hidden="true">›</span></button>`);
 const vid = board.video && /^https?:\/\//i.test(board.video) ? board.video : "";
-if (board.tip || vid) study.push(row({ icon: "star", title: "Do professor", still: !!board.tip, href: !board.tip && vid ? vid : "", sub: board.tip ? escapeHtml(board.tip) : escapeHtml(board.videoTitle || "Assistir ao vídeo"),
-extra: board.tip && vid ? `<a class="study-link" href="${escapeHtml(vid)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5 18.5 12 8 18.5z"/></svg>${escapeHtml(board.videoTitle || "Assistir ao vídeo")}</a>` : "", value: !board.tip && vid ? "Assistir" : "" }));
-if (study.length) html += `<div class="settings-group-label">Estudo da semana</div><div class="settings-card study-list">${study.slice(0, 4).join("")}</div>`;
-// Prática da semana: uma linha só, que leva ao Progresso (os números completos ficam lá).
-const wk = practiceIn(d, weekStartOf(new Date()).getTime(), Date.now() + 1), streak = practiceStreak(d);
-html += `<button type="button" class="lr-line home-prac" data-go="progress"><span><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-clock"/></svg>${wk.n ? `${wk.days} dia${wk.days === 1 ? "" : "s"} de prática nesta semana · ${minText(wk.min)}${streak > 1 ? ` · ${streak} seguidos` : ""}` : "Nenhuma prática nesta semana ainda"}</span><span class="lr-cta">Progresso ›</span></button>`;
+if (board.tip || vid) parts.push(`<div class="ws-tip">${board.tip ? `<div class="ws-quote">${escapeHtml(board.tip)}</div><div class="ws-meta">${escapeHtml(stuCur.tp.display_name || "Do professor")}</div>` : ""}${vid ? `<a class="study-link" href="${escapeHtml(vid)}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5 18.5 12 8 18.5z"/></svg>${escapeHtml(board.videoTitle || "Assistir ao vídeo")}</a>` : ""}</div>`);
+if (parts.length) html += `<div class="settings-group-label">Estudo da semana</div><div class="settings-card ws-card">${parts.join("")}</div>`;
 // Marco de matérias (5, 10, 20, 30): aviso curto até a pessoa tocar.
 const tn = stuThemesCount(), mile = [30, 20, 10, 5].find(m => tn >= m);
 if (mile && !demoMode && localStorage.getItem(`jp_stu_mile_v1:${ptKey()}:${mile}`) !== "1") html += `<button type="button" class="lr-line home-mile" data-mile="${mile}"><span><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-star"/></svg>Você chegou a ${mile} matérias estudadas!</span><span class="lr-cta">Ver ›</span></button>`;
@@ -5371,7 +5425,7 @@ const p = r.payload || {}, det = r.type === "song_request" ? p.title : p.label;
 const what = `${labels[r.type] || "Pedido"}${det ? ` (${escapeHtml(det)})` : ""}`;
 out.push({ html: `${what}: ${r.status === "accepted" ? "confirmado pelo professor" : "não aceito"}${r.response ? ` · "${escapeHtml(r.response)}"` : ""}`, cls: r.status === "accepted" ? "ok" : "bad", go: { payment_notice: "money", change_data: "profile", song_request: "songs" }[r.type] || "lessons" });
 });
-return out;
+return stuMoneyLocked() ? out.filter(n => n.go !== "money") : out;
 }
 // ---------- Remarcar e marcar reposição em horário vago ----------
 function stuResched(){ const r = stuContent().resched || {}; return { on: !!r.on, minHours: Number(r.minHours) >= 0 ? Number(r.minHours) : 24, maxMonth: Number(r.maxMonth) > 0 ? Number(r.maxMonth) : 0 }; }
@@ -5465,9 +5519,14 @@ const pastRow = l => {
 let badge = null;
 if (isNoClass(l)) badge = { text: l.auto ? (l.offLabel || "Feriado") : cardReasonText(s, l), cls: l.auto || l.reason === "holiday" || l.reason === "rescheduled" ? "off" : "bad" };
 else if (l.makeupId) badge = { text: extraLabel(s, l.makeupId), cls: "info" };
-const scores = starsOk && isEvaluated(l) ? crit.filter(c => typeof l[c.key] === "number").map(c => `${escapeHtml(c.label)} <b>${"★".repeat(Math.round(l[c.key]))}</b>`).join(" · ") : "";
+let stars = "";
+if (starsOk && isEvaluated(l)) {
+const vals = crit.filter(c => typeof l[c.key] === "number");
+if (vals.length) { const avg = vals.reduce((a, c) => a + l[c.key], 0) / vals.length; stars = `<div class="hist-stars" title="${escapeHtml(vals.map(c => `${c.label}: ${l[c.key]}`).join(" · "))}">${starsHTML(avg)}<span>${vals.map(c => `${escapeHtml(c.label)} ${l[c.key]}`).join(" · ")}</span></div>`; }
+}
 const d = dateFromIso(isoFromBr(l.date));
-return `<div class="hist-lesson"><div class="hist-top"><span class="hist-date">${escapeHtml(l.date.slice(0,5))} · ${escapeHtml(WEEKDAY_FULL[d.getDay()])}</span>${badge ? `<span class="stu-status ${badge.cls}">${escapeHtml(badge.text)}</span>` : ""}</div>${lessonNotesHTML(l)}${scores ? `<div class="hist-stars">${scores}</div>` : ""}</div>`;
+const taught = String(l.taught || l.topic || "").trim(), home = String(l.homework || "").trim();
+return `<div class="hist-lesson${badge && badge.cls !== "info" ? " hist-off" : ""}"><div class="up-date"><b>${escapeHtml(l.date.slice(0,2))}</b><span>${escapeHtml(WEEKDAY_SHORT[d.getDay()].toLowerCase())}</span></div><div class="hist-body">${badge ? `<span class="stu-status ${badge.cls}">${escapeHtml(badge.text)}</span>` : ""}${taught ? `<div class="hist-taught">${escapeHtml(taught)}</div>` : ""}${home ? `<div class="hist-home"><span>Para casa:</span> ${escapeHtml(home)}</div>` : ""}${!badge && !taught && !home ? `<div class="hist-home">Aula dada</div>` : ""}${stars}</div></div>`;
 };
 const byMonth = new Map();
 past.forEach(l => { const k = isoFromBr(l.date).slice(0, 7); if (!byMonth.has(k)) byMonth.set(k, []); byMonth.get(k).push(l); });
@@ -5482,17 +5541,13 @@ if (pend.length) html += `<div class="settings-group-label">Reposições pendent
 const rq = stuRequestsFor("makeup_request").find(r => r.payload && r.payload.makeupId === m.id && r.status === "pending");
 return `<div class="settings-row study-row still"><span class="settings-row-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-calendar"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Repor a aula de ${escapeHtml(String(m.originDate || "").slice(0,5))}</div>${rq ? `<div class="settings-row-sub">Pedido para ${escapeHtml(slotLabel(rq.payload.toIso, rq.payload.toTime))} · aguardando o professor</div>` : !rules.on ? `<div class="settings-row-sub">Combine o dia com o professor</div>` : ""}<div class="stu-absent-form" data-mk-form="${escapeHtml(m.id)}"></div></div>${rq ? `<button type="button" class="btn-edit-toggle study-pill" data-cancel-req="${rq.id}">Cancelar pedido</button>` : rules.on ? `<button type="button" class="save study-pill" data-mkpick="${escapeHtml(m.id)}">Escolher horário</button>` : ""}</div>`;
 }).join("")}</div>`;
-// 2) Próximas aulas: 2 semanas; "Ver mais semanas" abre o resto.
+// 2) Próximas aulas (8.8): uma lista só, a próxima em destaque; "Ver mais aulas" abre o resto.
 const up = stuUpcoming(28);
-const wk0 = weekStartOf(new Date()).getTime();
-const weekName = n => n === 0 ? "Esta semana" : n === 1 ? "Semana que vem" : `Daqui a ${n} semanas`;
-const byWeek = new Map();
-up.forEach(x => { const n = Math.round((weekStartOf(x.date).getTime() - wk0) / (7 * 86400000)); if (!byWeek.has(n)) byWeek.set(n, []); byWeek.get(n).push(x); });
-const weeks = [...byWeek.keys()].sort((a, b) => a - b);
-const shown = stuMoreWeeks ? weeks : weeks.slice(0, 2);
-const row = x => { const b = stuUpBadge(x); return `<button type="button" class="stu-lrow" data-lp="${escapeHtml(x.key)}"><span class="stu-lrow-main">${escapeHtml(WEEKDAY_SHORT[x.date.getDay()].toLowerCase())}, ${pad2(x.date.getDate())}/${pad2(x.date.getMonth() + 1)} · ${escapeHtml(x.time)}</span>${b ? `<span class="stu-status ${b.cls}">${escapeHtml(b.text)}</span>` : ""}<span class="settings-row-chevron" aria-hidden="true">›</span></button>`; };
-html += up.length ? shown.map(n => `<div class="settings-group-label">${weekName(n)}</div><div class="settings-card lrow-card">${byWeek.get(n).map(row).join("")}</div>`).join("")
-+ (weeks.length > shown.length ? `<button type="button" class="btn-historico more-weeks" id="moreWeeks">Ver mais semanas</button>` : "")
+const shown = stuMoreWeeks ? up : up.slice(0, 5);
+const row = (x, i) => { const b = stuUpBadge(x); const first = i === 0;
+return `<button type="button" class="stu-lrow up-row${first ? " up-next" : ""}" data-lp="${escapeHtml(x.key)}"><span class="up-date"><b>${pad2(x.date.getDate())}</b><span>${escapeHtml(WEEKDAY_SHORT[x.date.getDay()].toLowerCase())}</span></span><span class="stu-lrow-main">${first ? `<span class="up-kicker">Próxima aula</span>` : ""}<span class="up-when">${first ? `${escapeHtml(WEEKDAY_FULL[x.date.getDay()])} · ` : ""}${escapeHtml(x.time)}</span></span>${b ? `<span class="stu-status ${b.cls}">${escapeHtml(b.text)}</span>` : ""}<span class="settings-row-chevron" aria-hidden="true">›</span></button>`; };
+html += up.length ? `<div class="settings-group-label">Próximas aulas</div><div class="settings-card lrow-card">${shown.map(row).join("")}</div>`
++ (up.length > shown.length ? `<button type="button" class="btn-historico more-weeks" id="moreWeeks">Ver mais aulas</button>` : "")
 : `<div class="settings-group-label">Próximas aulas</div>${stuCard("", `<div class="stu-empty">Nenhuma aula nas próximas 4 semanas.</div>`)}`;
 // 3) Agenda do celular, discreta, com as regras embaixo.
 html += `<div class="settings-card study-list ics-card"><div class="settings-row study-row" id="stuIcs" role="button" tabindex="0"><span class="settings-row-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-bell"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Colocar as aulas na agenda do celular</div><div class="settings-row-sub">Com lembrete 1 dia e 1 hora antes</div></div><span class="settings-row-chevron" aria-hidden="true">›</span></div></div>
@@ -5529,7 +5584,27 @@ if (r && r.status === "pending") return { text: "Aviso enviado", cls: "wait" };
 if (it.late) return { text: "Atrasado", cls: "bad" };
 return { text: `A pagar${it.due ? " · " + it.due : ""}`, cls: "info" };
 }
+// Financeiro só para maiores de 18 (8.8): quando o professor liga, aluno menor (ou sem data de
+// nascimento) só abre com a senha dos pais, que o professor define na ficha. Quem entrou como
+// responsável sempre vê. Destrancado vale até fechar o app.
+let stuMoneyOpen = "";
+function pinHash(uuid, pin){ return tbCyrb128(`hi-pin:${uuid}:${String(pin).trim()}`).join("."); }
+function stuMoneyLocked(){
+if (!stuCur || !stuContent().moneyAdultsOnly) return false;
+if (stuCur.link && stuCur.link.role === "guardian") return false;
+const age = ageYears(stuCur.s.birthDate);
+if (age !== null && age >= 18) return false;
+return stuMoneyOpen !== stuCur.uuid;
+}
+function stuMoneyLockHTML(){
+const has = !!(stuCur.view && stuCur.view.parentPin);
+return stuCard("", `<div class="money-lock"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-lock"/></svg>
+<div class="stu-row-title">Página dos responsáveis</div>
+<div class="stu-muted">${has ? "Peça para seu pai, mãe ou responsável digitar a senha." : "O professor ainda não criou a senha dos pais. Seu responsável pode pedir a ele."}</div>
+${has ? `<div class="pin-row"><input type="password" id="moneyPin" inputmode="numeric" autocomplete="off" maxlength="8" aria-label="Senha dos pais"><button type="button" class="save" id="moneyPinGo">Entrar</button></div><div class="field-error" id="moneyPinErr"></div>` : ""}</div>`);
+}
 function stuMoneyHTML(){
+if (stuMoneyLocked()) return stuMoneyLockHTML();
 const s = stuCur.s, pix = stuContent().pix || {};
 if (s.payTo === "school") return stuCard("Financeiro", `<div class="stu-empty">Pagamento direto com a escola.</div>`);
 if (s.payTo === "none") return stuCard("Financeiro", `<div class="stu-empty">Você tem bolsa: não há pagamentos.</div>`);
@@ -5652,6 +5727,10 @@ showImageModal(blob, `recibo-${stripAccents(it.label).toLowerCase().replace(/[^a
 });
 main.querySelectorAll("[data-go]").forEach(b => b.onclick = () => stuOpenPage(b.dataset.go));
 main.querySelectorAll("[data-pay]").forEach(b => b.onclick = () => stuOpenPayPanel(Number(b.dataset.pay)));
+const pinGo = main.querySelector("#moneyPinGo");
+if (pinGo) { const inp = main.querySelector("#moneyPin");
+const tryPin = () => { if (pinHash(stuCur.uuid, inp.value) === stuCur.view.parentPin) { stuMoneyOpen = stuCur.uuid; stuRender(); stuBellUpdate(); } else { main.querySelector("#moneyPinErr").textContent = "Senha errada."; inp.select(); } };
+pinGo.onclick = tryPin; inp.onkeydown = e => { if (e.key === "Enter") tryPin(); }; }
 main.querySelectorAll("[data-mile]").forEach(b => b.onclick = () => { _nativeSetItem.call(localStorage, `jp_stu_mile_v1:${ptKey()}:${b.dataset.mile}`, "1"); stuOpenPage("material"); });
 const hwd = main.querySelector("[data-hwdone]");
 if (hwd) hwd.onclick = e => { e.stopPropagation(); const hw = stuLastHomework(); if (hw && jSet("hwDone", hwKeyOf(hw), { at: new Date().toISOString() })) { kidReward("Lição feita!"); stuRender(); } };
@@ -6991,6 +7070,41 @@ if (ch) out.push({ what: "Desafio da semana", title: "Desafio da semana", sub: c
 jAlive(d, "songs").filter(x => x.status === "learning").slice(0, 4).forEach(x => out.push({ what: `Música: ${x.title}`, title: x.title, sub: x.artist || "Música que você está aprendendo", icon: "music" }));
 return out;
 }
+// "Outra coisa" (8.8): as últimas sugestões do professor (lições de casa anteriores e matérias)
+// viram atalhos; sem nenhuma, ficam as categorias de antes. "Outro" abre um campo que sugere
+// o que o aluno já praticou enquanto ele digita.
+function ptTeacherRecent(){
+const out = [], seen = new Set();
+const add = (what, label) => { const k = stripAccents(what).toLowerCase(); if (seen.has(k)) return; seen.add(k); out.push({ what, label }); };
+const hws = (stuCur.s.lessons || []).filter(l => l.homework && String(l.homework).trim()).sort((a, b) => parseBrDate(b.date) - parseBrDate(a.date)).slice(1);
+const themes = Array.isArray(stuCur.view.themes) ? themesSorted() : [];
+const hwList = hws.map(l => String(l.homework).trim()), thList = themes.map(t => t.topic).filter(Boolean);
+for (let i = 0; out.length < 6 && (i < hwList.length || i < thList.length); i++) {
+if (hwList[i]) add(hwList[i].length > 80 ? hwList[i].slice(0, 79) + "…" : hwList[i], hwList[i]);
+if (out.length < 6 && thList[i]) add(`Matéria: ${thList[i]}`, thList[i]);
+}
+return out;
+}
+function ptPastWhats(){
+const seen = new Set(), out = [];
+jAlive(journal(), "practice").slice().sort((a, b) => String(b.at).localeCompare(String(a.at))).forEach(p => { const w = String(p.what || "").trim(); const k = stripAccents(w).toLowerCase(); if (!w || seen.has(k)) return; seen.add(k); out.push({ w, at: p.at }); });
+return out;
+}
+// Lista de sugestões embaixo de um campo: mostra o que já foi praticado parecido com o que a pessoa digita.
+function ptAutocomplete(input, list, onPick){
+if (!input || !list) return;
+const norm = t => stripAccents(String(t)).toLowerCase();
+const draw = () => {
+const q = norm(input.value.trim());
+if (!q) { list.innerHTML = ""; return; }
+const all = ptPastWhats().filter(x => norm(x.w) !== q);
+const hits = [...all.filter(x => norm(x.w).startsWith(q)), ...all.filter(x => !norm(x.w).startsWith(q) && norm(x.w).includes(q))].slice(0, 5);
+list.innerHTML = hits.map(x => `<button type="button" class="ac-item" data-ac="${escapeHtml(x.w)}"><span>${escapeHtml(x.w)}</span><small>${escapeHtml(formatDateShort(String(x.at).slice(0, 10)).slice(0, 5))}</small></button>`).join("");
+list.querySelectorAll("[data-ac]").forEach(b => b.onclick = () => { input.value = b.dataset.ac; list.innerHTML = ""; if (onPick) onPick(b.dataset.ac); });
+};
+input.addEventListener("input", draw);
+input.setAttribute("autocomplete", "off");
+}
 function practiceHTML(){
 const d = journal(), st = ptState(), el = ptElapsed(st);
 let today;
@@ -7009,12 +7123,13 @@ const sug = ptSuggestions(), last = ptLastWhat();
 const def = (ptPrefWhat ? `Matéria: ${ptPrefWhat}` : "") || last || (sug.find(x => x.what) || {}).what || "Prática";
 today = `<div class="pt-clock" id="ptClock">00:00</div>
 <div class="actions pt-start"><button class="save" id="ptStart" data-what="${escapeHtml(def)}">Começar · ${escapeHtml(def.replace(/^Música: |^Matéria: /, ""))}</button></div>
-${sug.length ? `<div class="pt-label">O que praticar</div><div class="settings-card study-list pt-sug">${sug.map(x => `<div class="settings-row study-row" role="button" tabindex="0" ${x.train ? `data-hwtrain="${x.train}"` : `data-ptgo="${escapeHtml(x.what)}"`}><span class="settings-row-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-${x.icon}"/></svg></span><div class="settings-row-text"><div class="settings-row-title">${escapeHtml(x.title)}</div><div class="settings-row-sub study-sub">${escapeHtml(x.sub)}</div></div><span class="settings-row-value">${x.train ? "Abrir" : "Começar"}</span><span class="settings-row-chevron" aria-hidden="true">›</span></div>`).join("")}</div>` : ""}
-<details class="pt-other"><summary>Outra coisa</summary><div class="reason-chips">${PRACTICE_WHAT.filter(([l]) => l !== "Lição de casa").map(([l]) => `<button type="button" class="filter-chip" data-ptgo="${l}">${l}</button>`).join("")}</div></details>
+${sug.length ? `<div class="pt-label">O que praticar (sugestão do professor)</div><div class="settings-card study-list pt-sug">${sug.map(x => `<div class="settings-row study-row" role="button" tabindex="0" ${x.train ? `data-hwtrain="${x.train}"` : `data-ptgo="${escapeHtml(x.what)}"`}><span class="settings-row-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-${x.icon}"/></svg></span><div class="settings-row-text"><div class="settings-row-title">${escapeHtml(x.title)}</div><div class="settings-row-sub study-sub">${escapeHtml(x.sub)}</div></div><span class="settings-row-value">${x.train ? "Abrir" : "Começar"}</span><span class="settings-row-chevron" aria-hidden="true">›</span></div>`).join("")}</div>` : ""}
+<details class="pt-other"><summary>Outra coisa</summary><div class="reason-chips">${(() => { const rec = ptTeacherRecent(); return rec.length ? rec.map(x => `<button type="button" class="filter-chip" data-ptgo="${escapeHtml(x.what)}" title="${escapeHtml(x.label)}">${escapeHtml(x.label.length > 34 ? x.label.slice(0, 33) + "…" : x.label)}</button>`).join("") : PRACTICE_WHAT.filter(([l]) => l !== "Lição de casa" && l !== "Outro").map(([l]) => `<button type="button" class="filter-chip" data-ptgo="${l}">${l}</button>`).join(""); })()}<button type="button" class="filter-chip" id="ptOtherBtn">Outro…</button></div>
+<div class="pt-other-input" id="ptOtherBox" hidden><div class="field"><input type="text" id="ptOtherText" maxlength="120" placeholder="O que você vai praticar?" aria-label="O que você vai praticar"><div class="ac-list" id="ptOtherAc"></div></div><button type="button" class="save" id="ptOtherGo">Começar</button></div></details>
 <details class="pt-manual"><summary>Registrar sem cronômetro</summary>
 <div class="pt-manual-row"><div class="field"><label>Minutos</label><input type="number" min="1" max="600" id="ptManMin" inputmode="numeric" placeholder="20"></div>
 <div class="field"><label>Quando</label><select id="ptManDay"><option value="0">Hoje</option><option value="1">Ontem</option><option value="2">Anteontem</option></select></div></div>
-<div class="field"><label>O quê</label><input type="text" id="ptManWhat" maxlength="120" placeholder="Ex.: repertório" value="${escapeHtml(last)}"></div>
+<div class="field"><label>O quê</label><input type="text" id="ptManWhat" maxlength="120" placeholder="Ex.: repertório" value="${escapeHtml(last)}"><div class="ac-list" id="ptManAc"></div></div>
 <div class="actions"><button class="save" id="ptManSave">Registrar</button></div></details>`;
 }
 const wk = practiceIn(d, weekStartOf(new Date()).getTime(), Date.now() + 1), goal = weekGoalOf(d), streak = practiceStreak(d);
@@ -7043,6 +7158,11 @@ const start = what => { if (demoMode === "view") return stuToast("Só visualiza�
 main.querySelectorAll("[data-ptgo]").forEach(b => { b.onclick = () => start(b.dataset.ptgo); });
 main.querySelectorAll('.pt-sug [role="button"]').forEach(r => r.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); r.click(); } });
 go("#ptStart", e => start(e.currentTarget.dataset.what || "Prática"));
+go("#ptOtherBtn", () => { const box = main.querySelector("#ptOtherBox"); box.hidden = false; main.querySelector("#ptOtherText").focus(); });
+go("#ptOtherGo", () => { const v = main.querySelector("#ptOtherText").value.trim(); if (!v) { main.querySelector("#ptOtherText").focus(); return; } start(v); });
+const otherIn = main.querySelector("#ptOtherText");
+if (otherIn) { ptAutocomplete(otherIn, main.querySelector("#ptOtherAc")); otherIn.onkeydown = e => { if (e.key === "Enter") main.querySelector("#ptOtherGo").click(); }; }
+ptAutocomplete(main.querySelector("#ptManWhat"), main.querySelector("#ptManAc"));
 go("#ptPause", () => { const s = ptState(); ptSaveState({ ...s, acc: ptElapsed(s), running: false }); stuRender(); });
 go("#ptResume", () => { const s = ptState(); ptSaveState({ ...s, start: Date.now(), running: true }); ptTickStart(); stuRender(); });
 go("#ptDone", () => {
@@ -7758,6 +7878,7 @@ if (appSettings.showEvalsToStudents && scores && Object.keys(scores).length) { c
 if (s.value === undefined) info.monthlyValue = getDefaultValueFor(s);
 const themes = studentThemesPublic(s);
 if (themes.length) info.themes = themes;
+if (s.parentPin && stContent().moneyAdultsOnly) { try { info.parentPin = pinHash(studentUuidMap().of(s), s.parentPin); } catch(e) {} }
 if (Array.isArray(s.certificates) && s.certificates.length) info.certificates = s.certificates.filter(c => c && c.level).map(c => ({ level: c.level, date: c.date }));
 return info;
 }
@@ -8048,12 +8169,23 @@ const j = inbox.joins.find(x => x.user_id === l.user_id && x.student_id === u) |
 const who = l.role === "guardian" ? `${escapeHtml(firstName(j?.guardian_name || "Responsável"))} (responsável)` : escapeHtml(firstName(j?.student_name || s.name));
 return `<div class="sheet-pair wide"><dt>Acesso ao app</dt><dd>${who} tem acesso (desde ${formatDateShort(String(l.created_at).slice(0,10)).slice(0,5)}) <button type="button" class="btn-link-inline" data-unlink="${l.id}">Remover acesso</button></dd></div>`;
 }).join("");
-return `<section class="sheet-sec"><div class="sheet-sec-title">App do aluno</div><dl class="sheet-grid">${rows}</dl>
+const age = ageYears(s.birthDate);
+const pinRow = stContent().moneyAdultsOnly && !(age !== null && age >= 18) ? `<div class="sheet-pair wide"><dt>Senha dos pais (Financeiro)</dt><dd>${s.parentPin ? `<b>${escapeHtml(s.parentPin)}</b>` : "Ainda não criada"} <button type="button" class="btn-link-inline" data-parent-pin>${s.parentPin ? "Trocar" : "Criar senha"}</button></dd></div>` : "";
+return `<section class="sheet-sec"><div class="sheet-sec-title">App do aluno</div><dl class="sheet-grid">${rows}${pinRow}</dl>
 <div class="demo-actions"><button type="button" class="btn-historico" data-view-as>Ver como ${escapeHtml(firstName(s.name))}</button><button type="button" class="btn-historico" data-demo>Ver demonstração</button></div></section>`;
 }
 function bindAppAccess(body, s){
 const va = body.querySelector("[data-view-as]"); if (va) va.onclick = () => startViewAs(s);
 const dm = body.querySelector("[data-demo]"); if (dm) dm.onclick = startDemo;
+const pp = body.querySelector("[data-parent-pin]");
+if (pp) pp.onclick = () => {
+const v = prompt(`Senha dos pais de ${firstName(s.name)} para abrir o Financeiro (4 a 8 números). Deixe vazio para apagar.`, s.parentPin || "");
+if (v === null) return;
+const pin = v.replace(/\D/g, "");
+if (v.trim() && (pin.length < 4 || pin.length > 8)) { alert("Use de 4 a 8 números."); return; }
+if (pin) s.parentPin = pin; else delete s.parentPin;
+saveStudents(); teacherPublish(); refreshStudentSheet();
+};
 body.querySelectorAll("[data-unlink]").forEach(b => b.onclick = async () => {
 if (!confirm(`Remover o acesso ao app? A pessoa deixa de ver as aulas e o financeiro de ${s.name}. O cadastro do aluno não muda.`)) return;
 const { error } = await supabaseClient.from("student_links").delete().eq("id", b.dataset.unlink);
@@ -8185,6 +8317,7 @@ const ev = (Array.isArray(c.events) ? c.events : []).filter(e => e && e.date >= 
 if (ev.length) out.events = ev;
 if (c.reschedOn) { out.resched = { on: true, minHours: Number(c.minHours ?? 24), maxMonth: Number(c.maxMonth ?? 2) }; out.openSlots = computeOpenSlots(); }
 if (c.evalView === "chart") out.evalView = "chart";
+if (c.moneyAdultsOnly) out.moneyAdultsOnly = true;
 return out;
 }
 // Temas do Organizador ligados ao aluno (sem a nota de desempenho, que é só do professor).
@@ -8250,6 +8383,9 @@ ${events.length ? events.map(e => { const r = rsvps(e.id); return `<div class="j
 <div class="pt-manual-row"><div class="field"><label>Dia</label><select id="scSlotDay">${[1,2,3,4,5,6,0].map(d => `<option value="${d}">${WEEKDAY_NAMES[d]}</option>`).join("")}</select></div><div class="field"><label>Horário</label><input type="time" id="scSlotTime" value="14:00"></div></div>
 <div class="actions"><button class="cancel" id="scSlotAdd">Adicionar horário vago</button></div>
 <div class="field-hint">O aluno só vê os horários em que você não tem aula marcada, nas próximas 3 semanas, sem dizer de quem são as outras aulas. Você confirma cada pedido.</div>
+<div class="settings-group-label">Financeiro</div>
+<div class="toggle-field"><label>Financeiro só para alunos com 18 anos ou mais</label><label class="switch"><input type="checkbox" id="scMoneyAdult" ${c.moneyAdultsOnly ? "checked" : ""}><span class="switch-slider"></span></label></div>
+<div class="field-hint">Aluno menor (ou sem data de nascimento) só abre o Financeiro com a senha dos pais. Você cria a senha na ficha do aluno, em "App do aluno". Quem entra como responsável sempre vê.</div>
 <div class="settings-group-label">Avaliações</div>
 <div class="toggle-field"><label>Mostrar avaliações para os alunos</label><label class="switch"><input type="checkbox" id="scEvals" ${appSettings.showEvalsToStudents ? "checked" : ""}><span class="switch-slider"></span></label></div>
 <div class="field"><label>Como mostrar</label><select id="scEvalView"><option value="">Estrelas de cada aula e gráfico de evolução</option><option value="chart"${c.evalView === "chart" ? " selected" : ""}>Só o gráfico de evolução</option></select></div>
@@ -8298,6 +8434,7 @@ const keys = [...body.querySelectorAll("[data-sccrit]")].filter(x => x.checked).
 stContentSave({ evalCriteria: keys.length === crit.length ? undefined : keys });
 });
 on("#scThemes", e => stContentSave({ showThemes: e.target.checked || undefined }));
+on("#scMoneyAdult", e => stContentSave({ moneyAdultsOnly: e.target.checked || undefined }));
 on("#scThemeImgs", e => stContentSave({ themeImages: e.target.checked || undefined }));
 };
 draw();
