@@ -2716,7 +2716,7 @@ html.standalone .only-browser{display:none}
 <button type="button" class="sidebar-logout" id="stuLogoutNav"><svg viewBox="0 0 24 24"><use href="#icon-logout"/></svg><span id="stuLogoutLabel">Sair da conta</span></button>
 </div>
 </aside>
-<div class="demo-bar" id="demoBar" style="display:none"><span id="demoBarText"></span><button type="button" id="demoExit">Sair da demonstração</button></div>
+<div class="demo-bar" id="demoBar" style="display:none"><span id="demoBarText"></span><button type="button" id="demoFeatures" style="display:none">Liberar funções</button><button type="button" id="demoExit">Sair da demonstração</button></div>
 
 
 <div class="modal-bg" id="importModal">
@@ -3509,7 +3509,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.8";
+const APP_VERSION = "8.9";
 // ===================== App instalável (8.4) =====================
 // Service worker (sw.js), aviso de versão nova, faixa "Sem internet", botão "Instalar o app",
 // atalhos do ícone (?p=...) e botão voltar do celular fechando modal/menu no app instalado.
@@ -5149,11 +5149,16 @@ function stuToolSet(){
 const kind = stuCur ? instrumentKind(stuCur.s.instrument) : null;
 return new Set(kind ? TOOLS_BY_KIND[kind] : TOOL_PAGES);
 }
-function stuPageAllowed(page){ return !TOOL_PAGES.includes(page) || stuToolSet().has(page); }
+// Funções que o professor ainda não liberou pra este aluno (8.9): somem do menu e não abrem.
+const APP_FEATURES = ["practice", "material", "songs", "goals", "recordings", "progress", "money"];
+function stuOff(){ return new Set(stuCur && stuCur.view && Array.isArray(stuCur.view.off) ? stuCur.view.off : []); }
+function stuPageAllowed(page){ return !stuOff().has(page) && (!TOOL_PAGES.includes(page) || stuToolSet().has(page)); }
 // Mostra no menu só as ferramentas do instrumento e já deixa afinador e acordes no jeito dele.
 function stuApplyTools(){
 const set = stuToolSet();
-document.querySelectorAll("#stuSidebar [data-stu-page]").forEach(b => { if (TOOL_PAGES.includes(b.dataset.stuPage)) b.style.display = set.has(b.dataset.stuPage) ? "" : "none"; });
+const off = stuOff();
+document.querySelectorAll("#stuSidebar [data-stu-page]").forEach(b => { const p = b.dataset.stuPage; b.style.display = off.has(p) || (TOOL_PAGES.includes(p) && !set.has(p)) ? "none" : ""; });
+document.querySelectorAll("#stuSidebar .nav-group").forEach(g => { g.style.display = [...g.querySelectorAll("[data-stu-page]")].some(b => b.style.display !== "none") ? "" : "none"; });
 const n = stripAccents(String((stuCur && stuCur.s.instrument) || "")).toLowerCase(), kind = instrumentKind(n);
 if (stuCur && stuApplyTools.last !== stuCur.uuid) {
 stuApplyTools.last = stuCur.uuid;
@@ -5184,6 +5189,7 @@ document.getElementById("stuTimerChip").onclick = () => stuOpenPage("practice");
 document.getElementById("stuBell").onclick = stuOpenNotices;
 document.getElementById("stuLogoutNav").onclick = () => { if (demoMode) return demoExit(); if (confirm("Sair da conta?")) stuSignOut(); };
 document.getElementById("demoExit").onclick = () => demoExit();
+document.getElementById("demoFeatures").onclick = () => openAppFeatures();
 let stuRenderedTab = null;
 function stuRender(){
 if (!STU_PAGES[stuTab] || !stuPageAllowed(stuTab)) stuTab = "home";
@@ -7700,6 +7706,8 @@ studentMode = true;
 stu = stuObj;
 stuTab = "home";
 document.getElementById("demoBarText").textContent = label;
+document.getElementById("demoFeatures").style.display = kind === "view" ? "" : "none";
+document.getElementById("demoExit").textContent = kind === "view" ? "Sair" : "Sair da demonstração";
 document.getElementById("demoBar").style.display = "";
 document.body.classList.add("demo-on");
 document.getElementById("stuLogoutLabel").textContent = "Sair da demonstração";
@@ -7713,6 +7721,7 @@ document.body.classList.remove("kid-mode");
 const d = demoSaved;
 students = d.students; appSettings = d.appSettings; stu = d.stu; stuCur = d.stuCur; stuTab = d.stuTab;
 studentMode = d.studentMode; demoMode = null; demoSaved = null;
+if (appFeaturesDirty) { appFeaturesDirty = false; saveStudents(); teacherPublish(); }
 document.getElementById("demoBar").style.display = "none";
 document.body.classList.remove("demo-on", "student-mode");
 document.getElementById("stuLogoutLabel").textContent = "Sair da conta";
@@ -7816,6 +7825,7 @@ if (s2.value === undefined && view.monthlyValue !== undefined) s2.value = view.m
 let requests = [];
 try { const r = await supabaseClient.from("student_requests").select("*").eq("student_id", u).order("created_at", { ascending: false }); if (!r.error) requests = r.data || []; } catch(e) {}
 const link = (inbox.links || []).find(l => l.student_id === u) || { id: "view", role: "student" };
+viewAsRef = s;
 demoEnter("view", { links: [link], joins: [], requests, at: new Date().toISOString(), students: [{ s: s2, uuid: u, row: {}, link, tp: tpPayload(), view, journalView: journalForStudent(s) || { v: 1 } }] }, `Vendo como ${firstName(s.name)} (só leitura)`);
 }
 // ===================== App do aluno: lado do professor (8.1) =====================
@@ -7878,6 +7888,7 @@ if (appSettings.showEvalsToStudents && scores && Object.keys(scores).length) { c
 if (s.value === undefined) info.monthlyValue = getDefaultValueFor(s);
 const themes = studentThemesPublic(s);
 if (themes.length) info.themes = themes;
+if (Array.isArray(s.appOff) && s.appOff.length) info.off = s.appOff.filter(p => APP_FEATURES.includes(p) || TOOL_PAGES.includes(p));
 if (s.parentPin && stContent().moneyAdultsOnly) { try { info.parentPin = pinHash(studentUuidMap().of(s), s.parentPin); } catch(e) {} }
 if (Array.isArray(s.certificates) && s.certificates.length) info.certificates = s.certificates.filter(c => c && c.level).map(c => ({ level: c.level, date: c.date }));
 return info;
@@ -8158,12 +8169,40 @@ const j = inbox.joins.find(x => x.id === wl.joinRequestId);
 if (j) await linkJoinToStudent(j, obj);
 }
 
+// ---------- Liberar funções do app do aluno (8.9) ----------
+// No "Ver como", o professor liga e desliga as páginas do app desse aluno e vê na hora.
+// Novo aluno começa com tudo liberado (como antes). Grava no aluno ao sair do "Ver como".
+let appFeaturesDirty = false, viewAsRef = null;
+function openAppFeatures(){
+if (demoMode !== "view" || !stuCur || !demoSaved) return;
+const real = viewAsRef;
+if (!real) return;
+const tools = [...stuToolSet()];
+const groups = [["Estudo", ["practice", "material", "songs", "goals", "recordings", "progress"]], ["Ferramentas", TOOL_PAGES.filter(p => tools.includes(p))], ["Pagamentos", ["money"]]];
+const body = document.createElement("div");
+const draw = () => {
+const off = new Set(real.appOff || []);
+body.innerHTML = groups.map(([g, list]) => `<div class="settings-group-label">${g}</div>${list.map(p => `<div class="toggle-field"><label>${escapeHtml(STU_PAGES[p])}</label><label class="switch"><input type="checkbox" data-feat="${p}" ${off.has(p) ? "" : "checked"}><span class="switch-slider"></span></label></div>`).join("")}`).join("")
++ `<div class="field-hint">Início, Aulas e Perfil ficam sempre liberados. O aluno vê a mudança na próxima vez que o app atualizar.</div>`;
+body.querySelectorAll("[data-feat]").forEach(cb => cb.onchange = () => {
+const set = new Set(real.appOff || []);
+if (cb.checked) set.delete(cb.dataset.feat); else set.add(cb.dataset.feat);
+if (set.size) real.appOff = [...set]; else delete real.appOff;
+stuCur.view = { ...stuCur.view, off: real.appOff ? real.appOff.slice() : undefined };
+appFeaturesDirty = true;
+stuApplyTools(); stuRender();
+});
+};
+draw();
+openQuickModal(`Funções de ${firstName(real.name)}`, "Desligue o que o aluno ainda não vai usar e libere conforme ele aprende.", body, null, "Pronto");
+}
+function appFeaturesLabel(s){ const n = (s.appOff || []).length; return n ? `${n} função${n === 1 ? "" : "ões"} ainda não liberada${n === 1 ? "" : "s"}` : "Todas as funções liberadas"; }
 // ---------- Ficha: acesso ao app ----------
 function appAccessHTML(s){
 if (!inbox.loaded) return "";
 const u = studentUuidMap().of(s);
 const links = inbox.links.filter(l => l.student_id === u);
-if (!links.length) return "";
+if (!links.length && !studentAppOn()) return "";
 const rows = links.map(l => {
 const j = inbox.joins.find(x => x.user_id === l.user_id && x.student_id === u) || inbox.joins.find(x => x.user_id === l.user_id && x.status === "approved");
 const who = l.role === "guardian" ? `${escapeHtml(firstName(j?.guardian_name || "Responsável"))} (responsável)` : escapeHtml(firstName(j?.student_name || s.name));
@@ -8171,8 +8210,8 @@ return `<div class="sheet-pair wide"><dt>Acesso ao app</dt><dd>${who} tem acesso
 }).join("");
 const age = ageYears(s.birthDate);
 const pinRow = stContent().moneyAdultsOnly && !(age !== null && age >= 18) ? `<div class="sheet-pair wide"><dt>Senha dos pais (Financeiro)</dt><dd>${s.parentPin ? `<b>${escapeHtml(s.parentPin)}</b>` : "Ainda não criada"} <button type="button" class="btn-link-inline" data-parent-pin>${s.parentPin ? "Trocar" : "Criar senha"}</button></dd></div>` : "";
-return `<section class="sheet-sec"><div class="sheet-sec-title">App do aluno</div><dl class="sheet-grid">${rows}${pinRow}</dl>
-<div class="demo-actions"><button type="button" class="btn-historico" data-view-as>Ver como ${escapeHtml(firstName(s.name))}</button><button type="button" class="btn-historico" data-demo>Ver demonstração</button></div></section>`;
+return `<section class="sheet-sec"><div class="sheet-sec-title">App do aluno</div><dl class="sheet-grid">${rows || `<div class="sheet-pair wide"><dt>Acesso ao app</dt><dd>Ainda não entrou no app</dd></div>`}<div class="sheet-pair wide"><dt>Funções</dt><dd>${appFeaturesLabel(s)}</dd></div>${pinRow}</dl>
+<div class="demo-actions"><button type="button" class="btn-historico" data-view-as>Ver o app de ${escapeHtml(firstName(s.name))} e liberar funções</button><button type="button" class="btn-historico" data-demo>Ver demonstração</button></div></section>`;
 }
 function bindAppAccess(body, s){
 const va = body.querySelector("[data-view-as]"); if (va) va.onclick = () => startViewAs(s);
