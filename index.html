@@ -1835,7 +1835,24 @@ html.standalone .only-browser{display:none}
 .stu-card-note{font-size:0.8125rem;margin:0.5rem 0.25rem 0}
 .stu-next-acts{margin:0.625rem 0.25rem 0}
 .stu-online-mini{text-decoration:none;padding:0.4375rem 0.875rem;font-size:0.8125rem}
+.lp-status{margin-left:auto}
+.lp-remind{margin-top:0.625rem}
+#lessonPanelModal .stu-status{margin-top:0.625rem}
+#lessonPanelModal .lp-actions{margin-top:0.75rem}
+#lessonPanelModal .qa-btns{display:flex;flex-wrap:wrap;gap:0.5rem}
 .stu-week-sub{margin-top:0}
+.study-list{margin-bottom:1.5rem}
+.study-row{text-decoration:none;color:inherit;align-items:flex-start}
+.study-row .settings-row-icon,.study-row .settings-row-chevron{margin-top:0.0625rem}
+.study-row .settings-row-value,.study-row .settings-row-chevron{align-self:center}
+.study-rsvp{display:flex;gap:0.5rem;margin-top:0.5rem}
+.study-row.still{cursor:default}
+.study-row.still:hover{background:transparent}
+.study-row:focus-visible{outline:0.125rem solid var(--accent);outline-offset:-0.125rem}
+.study-sub{color:var(--text-2);font-size:0.8125rem;line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:break-word}
+.study-meta{font-size:0.6875rem;color:var(--muted);margin-top:0.3125rem;font-variant-numeric:tabular-nums}
+.study-bar{margin-top:0.4375rem;height:0.3125rem;max-width:12rem}
+.study-pill{font:inherit;font-size:0.6875rem;font-weight:700;cursor:pointer;padding:0.3125rem 0.625rem}
 </style>
 </head>
 <body>
@@ -3326,7 +3343,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.5";
+const APP_VERSION = "8.6";
 // ===================== App instalável (8.4) =====================
 // Service worker (sw.js), aviso de versão nova, faixa "Sem internet", botão "Instalar o app",
 // atalhos do ícone (?p=...) e botão voltar do celular fechando modal/menu no app instalado.
@@ -4938,8 +4955,50 @@ function stuCard(title, inner, extraCls){ return `${title ? `<div class="setting
 const STU_PAGES = { home: "Início", lessons: "Aulas", money: "Financeiro", practice: "Praticar", songs: "Minhas músicas", goals: "Metas", recordings: "Gravações", progress: "Progresso", material: "Matéria",
 metronome: "Metrônomo", tuner: "Afinador", chords: "Acordes e escalas", ear: "Treino de ouvido", reading: "Leitura de partitura", drums: "Bateria", voice: "Canto", player: "Tocar junto", backing: "Bases", profile: "Perfil" };
 // Troca de página do modo aluno: mesma animação e mesma lógica de menu do openPage do professor.
+// Ferramentas por instrumento (8.6): o aluno só vê o que faz parte do aprendizado dele.
+// Instrumento que o app não reconhece (ou vazio) mostra todas.
+const TOOL_PAGES = ["metronome", "tuner", "chords", "ear", "reading", "drums", "voice", "player", "backing"];
+function instrumentKind(name){
+const n = stripAccents(String(name || "")).toLowerCase();
+if (!n.trim()) return null;
+if (/bateria|percuss|cajon|pandeiro|tamborim|surdo|drum/.test(n)) return "drums";
+if (/canto|voz|vocal|coral|tecnica vocal/.test(n)) return "voice";
+if (/teclado|piano|orgao|sintetizador|acordeon|sanfona|keyboard/.test(n)) return "keys";
+if (/baixo|contrabaixo|bass/.test(n)) return "bass";
+if (/violino|viola de arco|violoncelo|cello/.test(n)) return "bowed";
+if (/violao|guitarra|ukulele|cavaquinho|viola|bandolim|banjo|harpa/.test(n)) return "strings";
+if (/flauta|saxofone|sax|clarinete|trompete|trombone|oboe|fagote|trompa|gaita|escaleta/.test(n)) return "winds";
+return null;
+}
+const TOOLS_BY_KIND = {
+drums: ["metronome", "drums", "ear", "player"],
+voice: ["metronome", "voice", "ear", "reading", "player", "backing"],
+keys: ["metronome", "chords", "ear", "reading", "player", "backing"],
+bass: ["metronome", "tuner", "chords", "ear", "reading", "player", "backing"],
+bowed: ["metronome", "tuner", "chords", "ear", "reading", "player", "backing"],
+strings: ["metronome", "tuner", "chords", "ear", "reading", "player", "backing"],
+winds: ["metronome", "tuner", "chords", "ear", "reading", "player", "backing"]
+};
+function stuToolSet(){
+const kind = stuCur ? instrumentKind(stuCur.s.instrument) : null;
+return new Set(kind ? TOOLS_BY_KIND[kind] : TOOL_PAGES);
+}
+function stuPageAllowed(page){ return !TOOL_PAGES.includes(page) || stuToolSet().has(page); }
+// Mostra no menu só as ferramentas do instrumento e já deixa afinador e acordes no jeito dele.
+function stuApplyTools(){
+const set = stuToolSet();
+document.querySelectorAll("#stuSidebar [data-stu-page]").forEach(b => { if (TOOL_PAGES.includes(b.dataset.stuPage)) b.style.display = set.has(b.dataset.stuPage) ? "" : "none"; });
+const n = stripAccents(String((stuCur && stuCur.s.instrument) || "")).toLowerCase(), kind = instrumentKind(n);
+if (stuCur && stuApplyTools.last !== stuCur.uuid) {
+stuApplyTools.last = stuCur.uuid;
+const tuning = /ukulele/.test(n) ? "ukulele" : /cavaquinho/.test(n) ? "cavaquinho" : /bandolim/.test(n) ? "mandolin" : /violino/.test(n) ? "violin" : kind === "bass" ? "bass" : kind === "winds" ? "chromatic" : "guitar";
+tuner.mode = tuning;
+chordTool.view = kind === "keys" ? "keys" : kind === "bass" ? "bass" : /ukulele/.test(n) ? "ukulele" : /cavaquinho/.test(n) ? "cavaquinho" : kind === "winds" ? "keys" : "guitar";
+if (kind === "bass") chordTool.mode = "scale";
+}
+}
 function stuOpenPage(page){
-if (!STU_PAGES[page]) page = "home";
+if (!STU_PAGES[page] || !stuPageAllowed(page)) page = "home";
 stuTab = page;
 if (!demoMode) _nativeSetItem.call(localStorage, "jp_stu_active_page", page);
 document.querySelectorAll("#stuSidebar [data-stu-page]").forEach(b => b.classList.toggle("active", b.dataset.stuPage === page));
@@ -4961,7 +5020,8 @@ document.getElementById("stuLogoutNav").onclick = () => { if (demoMode) return d
 document.getElementById("demoExit").onclick = () => demoExit();
 let stuRenderedTab = null;
 function stuRender(){
-if (!STU_PAGES[stuTab]) stuTab = "home";
+if (!STU_PAGES[stuTab] || !stuPageAllowed(stuTab)) stuTab = "home";
+stuApplyTools();
 // Mudou de página: desliga os sons e o microfone (o cronômetro de estudo continua).
 if (stuRenderedTab !== stuTab) { toolsStopAll(); playerPause(); readingStopTimer(); if (recorder.mr) recStop(true); }
 stuRenderedTab = stuTab;
@@ -4975,6 +5035,8 @@ main.innerHTML = r();
 stuBind(main);
 ptTick();
 stuBellUpdate();
+if (stuLp) stuRenderLessonPanel();
+main.querySelectorAll("[data-lp]").forEach(c => { c.onclick = e => { if (e.target.closest("a,button")) return; stuOpenLessonPanel(c.dataset.lp); }; c.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); stuOpenLessonPanel(c.dataset.lp); } }; });
 }
 function stuGreetName(){
 if (stuCur.link.role === "guardian") return firstName(stuCur.s.guardianName || "") || "";
@@ -5035,36 +5097,66 @@ else phrase = pick([`${minText(wk.min)} de prática nesta semana. Bom ritmo!`, "
 if (now.getDate() === 1) phrase += " Começou um mês novo: bom momento pra rever suas metas.";
 return phrase;
 }
-function stuDaySections(up){
-const s = stuCur.s, tp = stuCur.tp, content = stuContent(), now = new Date();
-const byDay = new Map();
-up.forEach(x => { if (!byDay.has(x.iso)) byDay.set(x.iso, []); byDay.get(x.iso).push(x); });
-const days = [...byDay.keys()].sort().slice(0, 3);
-if (!days.length) return `<div class="empty">Nenhuma aula marcada nas próximas semanas.</div>`;
-const firstReal = up.find(x => !x.off && !(x.record && isNoClass(x.record)));
-const teacherAvatar = `<div class="avatar-cluster"><div class="avatar-span2"><div class="avatar-small"${tp.photo ? ` style="background-image:url(${escapeHtml(tp.photo)});background-size:cover;color:transparent"` : ""}>${escapeHtml(initials(tp.display_name || "P"))}</div></div></div>`;
-return days.map((iso, i) => {
-const date = dateFromIso(iso), offset = Math.round((date - new Date().setHours(0,0,0,0)) / 86400000);
-const suffix = offset === 0 ? " (hoje)" : offset === 1 ? " (amanhã)" : ` (daqui a ${offset} dias)`;
-const cards = byDay.get(iso).map(x => {
+// Início (8.6): só a próxima aula, no mesmo card do professor. Lembrete e botões aparecem no
+// card só no dia da aula; tocar no card abre o painel da aula (como o painel do professor).
+function stuLessonCardInfo(x){
+const s = stuCur.s, now = new Date();
+const offset = Math.round((x.date - new Date().setHours(0,0,0,0)) / 86400000);
 const off = x.off || (x.record && isNoClass(x.record));
 const st = stuLessonStatus(x);
 const start = lessonStart(x.date, x.time), end = lessonEnd(x.date, x.time, s);
 let status = "Em breve", cls = "upcoming";
 if (off) { cls = "off"; status = x.off ? (x.off.kind === "break" ? "Férias" : "Feriado") : cardReasonText(s, x.record); }
-else if (st.cls === "wait") { cls = "upcoming"; status = "Falta avisada"; }
+else if (st.cls === "wait") status = "Falta avisada";
 else if (offset === 0 && now >= end) { cls = "completed"; status = "Dada"; }
 else if (offset === 0 && now >= start) { cls = "ongoing"; status = "Andamento"; }
-const meta = [`com ${tp.display_name || "o professor"}`, x.kind === "extra" ? extraLabel(s, x.makeupId).toLowerCase() : "", stuIsGroup() ? "grupo" : "", x.off ? x.off.label : ""].filter(Boolean).map(escapeHtml).join(" · ");
-const isNext = firstReal && x.key === firstReal.key;
+return { offset, off, st, status, cls };
+}
+function stuTeacherAvatar(){
+const tp = stuCur.tp;
+return `<div class="avatar-small"${tp.photo ? ` style="background-image:url(${escapeHtml(tp.photo)});background-size:cover;background-position:center;color:transparent"` : ""}>${escapeHtml(initials(tp.display_name || "P"))}</div>`;
+}
+function stuDaySections(up){
+const s = stuCur.s, tp = stuCur.tp, content = stuContent();
+const x = up.find(y => !y.off && !(y.record && isNoClass(y.record)));
+if (!x) return `<div class="empty">Nenhuma aula marcada nas próximas semanas.</div>`;
+const { offset, off, st, status, cls } = stuLessonCardInfo(x);
+const suffix = offset === 0 ? " (hoje)" : offset === 1 ? " (amanhã)" : ` (daqui a ${offset} dias)`;
+const meta = [`com ${tp.display_name || "o professor"}`, x.kind === "extra" ? extraLabel(s, x.makeupId).toLowerCase() : "", stuIsGroup() ? "grupo" : ""].filter(Boolean).map(escapeHtml).join(" · ");
 const link = stuLinkURL(s);
-const acts = isNext && !off ? `${content.reminder ? `<div class="stu-remind stu-card-note">Lembrete: ${escapeHtml(content.reminder)}</div>` : ""}
-<div class="song-acts stu-next-acts">${link && offset === 0 ? `<a class="save stu-online-mini" href="${escapeHtml(link)}" target="_blank" rel="noopener">Entrar na aula online</a>` : ""}${st.canAbsent ? `<button type="button" class="btn-edit-toggle" data-absent="${escapeHtml(x.key)}">Vou faltar</button>` : ""}<button type="button" class="btn-link-inline" data-go="lessons">Ver aulas</button></div>
+const acts = offset === 0 && !off ? `${content.reminder ? `<div class="stu-remind stu-card-note">Lembrete: ${escapeHtml(content.reminder)}</div>` : ""}
+<div class="song-acts stu-next-acts">${link ? `<a class="save stu-online-mini" href="${escapeHtml(link)}" target="_blank" rel="noopener">Entrar na aula online</a>` : ""}${st.canAbsent ? `<button type="button" class="btn-edit-toggle" data-absent="${escapeHtml(x.key)}">Vou faltar</button>` : ""}</div>
 <div class="stu-absent-form" data-absent-form="${escapeHtml(x.key)}"></div>` : "";
-return `<div class="card${off ? " is-off" : ""}"><div class="time">${escapeHtml(x.time)}</div>${teacherAvatar}<div class="info"><div class="name">${escapeHtml(s.instrument ? `Aula de ${s.instrument}` : "Aula")}</div><div class="instrument">${meta}${stuPlaceHTML(s) && !off ? ` · ${stuPlaceHTML(s)}` : ""}</div></div><div class="status ${cls}">${escapeHtml(status)}</div></div>${acts}`;
-}).join("");
-return `<section class="day-section${i === 0 ? " focused" : ""}"><div class="day-head">${DAY_NAMES[date.getDay()]}, ${date.getDate()} de ${MONTH_FULL[date.getMonth()]}${suffix}</div>${cards}</section>`;
-}).join("");
+return `<section class="day-section focused"><div class="day-head">${DAY_NAMES[x.date.getDay()]}, ${x.date.getDate()} de ${MONTH_FULL[x.date.getMonth()]}${suffix}</div>
+<div class="card card-tappable" data-lp="${escapeHtml(x.key)}" role="button" tabindex="0" aria-label="Abrir a aula"><div class="time">${escapeHtml(x.time)}</div><div class="avatar-cluster"><div class="avatar-span2">${stuTeacherAvatar()}</div></div><div class="info"><div class="name">${escapeHtml(s.instrument ? `Aula de ${s.instrument}` : "Aula")}</div><div class="instrument">${meta}${stuPlaceHTML(s) ? ` · ${stuPlaceHTML(s)}` : ""}</div></div><div class="status ${cls}">${escapeHtml(status)}</div></div>${acts}</section>`;
+}
+// Painel da aula do aluno: usa o mesmo modal do painel do professor (#lessonPanelModal).
+let stuLp = null;
+function stuOpenLessonPanel(key){ stuLp = key; stuRenderLessonPanel(); }
+function stuRenderLessonPanel(){
+if (!stuLp || !studentMode || !stuCur) return;
+const x = stuUpcoming(28).find(y => y.key === stuLp);
+if (!x) { closeLessonPanel(); return; }
+const s = stuCur.s, tp = stuCur.tp, content = stuContent();
+const { offset, off, st, status, cls } = stuLessonCardInfo(x);
+document.getElementById("lpTitle").textContent = offset === 0 ? "Aula de hoje" : offset === 1 ? "Aula de amanhã" : `Aula de ${WEEKDAY_FULL[x.date.getDay()]}, ${pad2(x.date.getDate())}/${pad2(x.date.getMonth() + 1)}`;
+document.getElementById("lpSub").textContent = [x.time, s.instrument, `${getStudentDuration(s)} min`, stuIsGroup() ? "aula em grupo" : ""].filter(Boolean).join(" · ");
+const rr = stuReschedReq(x.key), can = st.canAbsent && !rr && stuCanReschedule(x) === null;
+const link = stuLinkURL(s);
+const body = document.getElementById("lpBody");
+body.innerHTML = `<div class="lp-student">
+<div class="lp-student-head">${stuTeacherAvatar()}<div class="lp-student-name">${escapeHtml(tp.display_name || "Professor")}${stuPlaceHTML(s) ? `<div class="lp-full-name">${stuPlaceHTML(s)}</div>` : ""}</div><div class="status ${cls} lp-status">${escapeHtml(status)}</div></div>
+${lastLessonHTML(s, x.iso)}
+${content.reminder && !off ? `<div class="lp-last lp-remind"><div class="lp-last-title">Lembrete</div><div class="lesson-note">${escapeHtml(content.reminder)}</div></div>` : ""}
+${rr ? `<div class="stu-status wait">Pedido pra remarcar para ${escapeHtml(slotLabel(rr.payload.toIso, rr.payload.toTime))} — aguardando o professor</div>` : st.text && st.cls ? `<div class="stu-status ${st.cls}">${escapeHtml(st.text)}</div>` : ""}
+<div class="lp-actions"><div class="qa-btns">${link && !off ? `<a class="save stu-online-mini" href="${escapeHtml(link)}" target="_blank" rel="noopener">Entrar na aula online</a>` : ""}${st.req ? `<button type="button" class="btn-edit-toggle" data-cancel-req="${st.req.id}">Cancelar aviso</button>` : rr ? `<button type="button" class="btn-edit-toggle" data-cancel-req="${rr.id}">Cancelar pedido</button>` : st.canAbsent ? `${can ? `<button type="button" class="btn-edit-toggle" data-resched="${escapeHtml(x.key)}">Remarcar</button>` : ""}<button type="button" class="btn-edit-toggle" data-absent="${escapeHtml(x.key)}">Vou faltar</button>` : ""}</div></div>
+<div class="stu-absent-form" data-absent-form="${escapeHtml(x.key)}"></div>
+</div>`;
+document.getElementById("lpFooter").innerHTML = `<button type="button" class="btn-historico" style="width:100%" data-go="lessons">Ver todas as aulas</button>`;
+const panel = document.getElementById("lessonPanelModal");
+stuBind(panel);
+panel.querySelectorAll("[data-go]").forEach(b => b.onclick = () => { closeLessonPanel(); stuOpenPage(b.dataset.go); });
+panel.classList.add("show");
 }
 function stuHomeHTML(){
 const s = stuCur.s, content = stuContent(), d = journal();
@@ -5076,7 +5168,9 @@ let html = `<div class="home-greeting-text">Olá${nm ? ", " + escapeHtml(nm) : "
 if (!demoMode && pwaCanInstall() && Date.now() > Number(localStorage.getItem(INSTALL_NUDGE_KEY) || 0)) html += stuCard("", `<div class="install-nudge"><img src="icons/icon-192.png" alt=""><div><div class="stu-row-title">Instale o Hi Teacher na sua tela inicial</div><div class="stu-muted">Abre em tela cheia, como um aplicativo.</div></div></div>
 <div class="song-acts"><button type="button" class="save" data-install>Como instalar</button><button type="button" class="btn-link-inline" data-install-later>Agora não</button></div>`);
 html += `<div class="stu-days">${stuDaySections(up)}</div>`;
-// Estudo da semana: o que estudar (lição, matéria) e o que o professor deixou (mural), juntos.
+// Estudo da semana (8.6): lista no mesmo padrão das linhas de Configurações (ícone, título,
+// detalhe, valor e seta) em vez de subseções com títulos azuis e caixinhas de números.
+const row = (o) => `<${o.href ? `a href="${escapeHtml(o.href)}" target="_blank" rel="noopener"` : "div"} class="settings-row study-row${o.still ? " still" : ""}"${o.go ? ` data-go="${o.go}"` : ""}${o.attr || ""}${o.still || o.href ? "" : ` role="button" tabindex="0"`}><span class="settings-row-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-${o.icon}"/></svg></span><div class="settings-row-text"><div class="settings-row-title">${o.title}</div>${o.sub ? `<div class="settings-row-sub study-sub">${o.sub}</div>` : ""}${o.extra || ""}</div>${o.value ? `<span class="settings-row-value">${o.value}</span>` : ""}${o.still ? "" : `<span class="settings-row-chevron" aria-hidden="true">›</span>`}</${o.href ? "a" : "div"}>`;
 const study = [];
 const hw = stuLastHomework();
 if (hw) {
@@ -5084,23 +5178,24 @@ const done = jMap(d, "hwDone")[hwKeyOf(hw)];
 const g = hwGoals(hw.homework);
 const today = new Date(); today.setHours(0,0,0,0);
 const todayMin = g.min ? practiceIn(d, today.getTime(), today.getTime() + 86400000).min : 0;
-study.push(stuSub("Lição de casa", `<div class="stu-hw">${escapeHtml(hw.homework)}</div><div class="stu-muted">Da aula de ${escapeHtml(hw.date.slice(0,5))}</div>
-${g.min ? `<div class="hw-goal"><div class="hw-bar"><span style="width:${Math.min(100, Math.round(todayMin / g.min * 100))}%"></span></div><div class="stu-muted">Hoje: ${todayMin} de ${g.min} min</div></div>` : ""}
-<div class="song-acts">${done ? `<span class="stu-status ok">Feito em ${formatDateShort(isoOf(new Date(done.at))).slice(0,5)}</span><button type="button" class="btn-link-inline" data-hwundo>Desfazer</button>` : `<button type="button" class="save" data-hwdone>Feito ✓</button>`}
-${g.from && g.to ? `<button type="button" class="btn-edit-toggle" data-hwtrain="${g.from}|${g.to}">Metrônomo ${g.from} → ${g.to}</button>` : ""}</div>`));
+study.push(row({ icon: "clipboard", title: "Lição de casa", go: "practice", sub: escapeHtml(hw.homework),
+extra: `<div class="study-meta">Da aula de ${escapeHtml(hw.date.slice(0,5))}${g.min ? ` · hoje ${todayMin} de ${g.min} min` : ""}</div>${g.min ? `<div class="hw-bar study-bar"><span style="width:${Math.min(100, Math.round(todayMin / g.min * 100))}%"></span></div>` : ""}`,
+value: done ? `<button type="button" class="status completed study-pill" data-hwundo title="Desfazer">Feita</button>` : `<button type="button" class="btn-edit-toggle study-pill" data-hwdone>Marcar feita</button>` }));
+if (g.from && g.to) study.push(row({ icon: "music", title: `Treinar de ${g.from} a ${g.to} BPM`, sub: "Metrônomo aumentando sozinho", attr: ` data-hwtrain="${g.from}|${g.to}"` }));
 }
 const themes = Array.isArray(stuCur.view.themes) ? themesSorted() : [];
-if (themes.length) { const t = themes[0]; study.push(stuSub("Matéria da semana", `<button type="button" class="mat-line" data-go="material"><span class="stu-row-title">${escapeHtml(t.topic)}</span>${(t.images || []).length ? `<img src="${escapeHtml(t.images[0])}" alt="" loading="lazy">` : ""}<span class="lr-cta">Ver</span></button>`)); }
+if (themes.length) study.push(row({ icon: "file-text", title: "Matéria da semana", sub: escapeHtml(themes[0].topic), go: "material" }));
 const board = content.board || {};
-if (board.challenge) study.push(stuSub("Desafio da semana", `<div class="stu-hw">${escapeHtml(board.challenge)}</div><div class="song-acts"><button type="button" class="btn-edit-toggle" data-challenge>Gravar o desafio</button></div>`));
-if (board.tip) study.push(stuSub("Dica do professor", `<div class="stu-hw">${escapeHtml(board.tip)}</div>`));
-if (board.video && /^https?:\/\//i.test(board.video)) study.push(stuSub("Vídeo recomendado", `<a class="stu-link" href="${escapeHtml(board.video)}" target="_blank" rel="noopener">${escapeHtml(board.videoTitle || "Assistir")}</a>`));
+if (board.challenge) study.push(row({ icon: "target", title: "Desafio da semana", sub: escapeHtml(board.challenge), attr: " data-challenge", value: "Gravar" }));
+if (board.tip) study.push(row({ icon: "star", title: "Dica do professor", sub: escapeHtml(board.tip), still: true }));
+if (board.video && /^https?:\/\//i.test(board.video)) study.push(row({ icon: "camera", title: "Vídeo recomendado", sub: escapeHtml(board.videoTitle || board.video.replace(/^https?:\/\/(www\.)?/i, "").slice(0, 40)), href: board.video, value: "Assistir" }));
 const wk = practiceIn(d, weekStartOf(new Date()).getTime(), Date.now() + 1), streak = practiceStreak(d);
-study.push(stuSub("Sua prática", `<div class="stat-row"><div><b>${wk.days}</b><span>dia${wk.days === 1 ? "" : "s"} praticando</span></div><div><b>${minText(wk.min)}</b><span>praticados</span></div><div><b>${streak}</b><span>seguidos</span></div></div>
-<div class="actions"><button class="save" ${hw ? "data-hwpractice" : `data-go="practice"`}>Praticar agora</button></div>`));
-html += stuCard("Estudo da semana", study.join(""));
+study.push(row({ icon: "clock", title: "Sua prática", sub: wk.n ? `${wk.days} dia${wk.days === 1 ? "" : "s"} nesta semana · ${minText(wk.min)}${streak > 1 ? ` · ${streak} dias seguidos` : ""}` : "Nenhuma prática nesta semana ainda", go: "practice", value: "Praticar" }));
+html += `<div class="settings-group-label">Estudo da semana</div><div class="settings-card study-list">${study.join("")}</div>`;
 const ev = stuNextEvents()[0];
-if (ev) html += stuCard("Próximo evento", stuEventHTML(ev));
+if (ev) { const r = jMap(d, "rsvp")[ev.id]; html += `<div class="settings-group-label">Próximo evento</div><div class="settings-card study-list">${row({ icon: "calendar", title: escapeHtml(ev.name), still: true,
+sub: escapeHtml([stuWhen(dateFromIso(ev.date), ev.time || "").replace(/ às $/, ""), ev.place, ev.notes].filter(Boolean).join(" · ")),
+extra: `${ev.order ? `<div class="study-meta">Ordem: ${escapeHtml(ev.order)}</div>` : ""}<div class="study-rsvp"><button type="button" class="${r && r.v === "yes" ? "status completed" : "btn-edit-toggle"} study-pill" data-rsvp="${ev.id}|yes">Vou</button><button type="button" class="${r && r.v === "no" ? "status off" : "btn-edit-toggle"} study-pill" data-rsvp="${ev.id}|no">Não vou</button></div>` })}</div>`; }
 return html;
 }
 // Sino do cabeçalho: os avisos (antes no Início), com o número no selo.
@@ -5403,11 +5498,12 @@ showImageModal(blob, `recibo-${stripAccents(it.label).toLowerCase().replace(/[^a
 });
 main.querySelectorAll("[data-go]").forEach(b => b.onclick = () => stuOpenPage(b.dataset.go));
 const hwd = main.querySelector("[data-hwdone]");
-if (hwd) hwd.onclick = () => { const hw = stuLastHomework(); if (hw && jSet("hwDone", hwKeyOf(hw), { at: new Date().toISOString() })) { kidReward("Lição feita!"); stuRender(); } };
+if (hwd) hwd.onclick = e => { e.stopPropagation(); const hw = stuLastHomework(); if (hw && jSet("hwDone", hwKeyOf(hw), { at: new Date().toISOString() })) { kidReward("Lição feita!"); stuRender(); } };
 const hwu = main.querySelector("[data-hwundo]");
-if (hwu) hwu.onclick = () => { const hw = stuLastHomework(); if (hw) { jSet("hwDone", hwKeyOf(hw), null); stuRender(); } };
+if (hwu) hwu.onclick = e => { e.stopPropagation(); const hw = stuLastHomework(); if (hw) { jSet("hwDone", hwKeyOf(hw), null); stuRender(); } };
 const hwp = main.querySelector("[data-hwpractice]");
 if (hwp) hwp.onclick = () => { const st = ptState(); if (!st && demoMode !== "view") { ptSave({ start: Date.now(), acc: 0, running: true, what: "Lição de casa", detail: "" }); ptTickStart(); } stuOpenPage("practice"); };
+main.querySelectorAll('.study-row[role="button"]').forEach(r => r.onkeydown = e => { if ((e.key === "Enter" || e.key === " ") && e.target === r) { e.preventDefault(); r.click(); } });
 const hwt = main.querySelector("[data-hwtrain]");
 if (hwt) hwt.onclick = () => { const [a, z] = hwt.dataset.hwtrain.split("|").map(Number); metroTrain(a, z); };
 const ch = main.querySelector("[data-challenge]");
@@ -10017,6 +10113,7 @@ if (lessonPanel) document.getElementById("lessonPanelModal").classList.add("show
 function closeLessonPanel(){
 document.getElementById("lessonPanelModal").classList.remove("show");
 lessonPanel = null;
+if (typeof stuLp !== "undefined") stuLp = null;
 }
 document.getElementById("lpClose").onclick = closeLessonPanel;
 function refreshLessonPanel(){
