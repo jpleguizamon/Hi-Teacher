@@ -1351,8 +1351,8 @@ body.demo-on header,body.net-off header,body.demo-on .settings-topbar,body.net-o
 .stu-notice.warn{color:var(--orange)}
 .stu-notice.bad{color:var(--danger)}
 .stu-notice.ok{color:var(--green)}
-.stu-row{display:flex;align-items:center;gap:0.625rem;padding:0.625rem 0;border-top:0.0625rem solid var(--hairline)}
-.stu-row.col{flex-direction:column;align-items:stretch;gap:0.25rem}
+body.student-mode .stu-row{display:flex;align-items:center;gap:0.625rem;padding:0.625rem 0;border-top:0.0625rem solid var(--hairline)}
+body.student-mode .stu-row.col{flex-direction:column;align-items:stretch;gap:0.25rem}
 .stu-card > .stu-row:first-child,.stu-sub-title + .stu-row,.stu-sub-title + .stu-absent-form + .stu-row{border-top:none;padding-top:0}
 .stu-row-main{flex:1;min-width:0}
 .stu-row-title{font-size:0.875rem;font-weight:700;color:var(--text)}
@@ -1365,7 +1365,7 @@ body.demo-on header,body.net-off header,body.demo-on .settings-topbar,body.net-o
 .stu-absent-form:not(:empty){padding:0.5rem 0 0.75rem}
 .stu-evals{display:flex;flex-wrap:wrap;gap:0.25rem 0.875rem;font-size:0.75rem;color:var(--text-2)}
 .stu-evals b{color:var(--star);font-weight:400;letter-spacing:.05em}
-.stu-link{color:var(--accent)}
+body.student-mode .stu-link{color:var(--accent)}
 .stu-teacher{display:flex;align-items:center;gap:0.75rem}
 .stu-teacher-photo{width:2.75rem;height:2.75rem;border-radius:50%;background-size:cover;background-position:center;flex:none;border:0.0625rem solid var(--glass-border)}
 .stu-sub-list{margin-top:0.625rem}
@@ -1465,8 +1465,8 @@ label.btn-historico.file-pick{display:block;text-align:center;margin:0 0 0.5rem}
 .set-songs li::marker{color:var(--muted)}
 .set-acts{display:flex;flex-wrap:wrap;align-items:center;gap:0.5rem;margin-top:0.375rem}
 .set-acts select{background:var(--glass-field);color:var(--text);border:0.0625rem solid var(--glass-border);border-radius:var(--radius-pill);padding:0.375rem 0.625rem;font:inherit;font-size:0.75rem;max-width:12rem}
-.goal-row{gap:0.5rem}
-.goal-check{flex:1;display:flex;align-items:flex-start;gap:0.5rem;min-width:0;cursor:pointer}
+.stu-row.goal-row{gap:0.5rem}
+label.goal-check{flex:1;width:auto;height:auto;border:none;border-radius:0;display:flex;align-items:flex-start;gap:0.5rem;min-width:0;cursor:pointer;box-shadow:none}
 .goal-check input{width:1.125rem;height:1.125rem;margin-top:0.125rem;accent-color:var(--accent);flex:none}
 .goal-txt{font-size:0.875rem;color:var(--text);line-height:1.4}
 .goal-txt.done{text-decoration:line-through;color:var(--muted)}
@@ -2047,6 +2047,21 @@ body.pdf-open{overflow:hidden}
 .sl-list{max-height:45vh;overflow:auto;margin-bottom:0.75rem}
 .sl-item{display:flex;align-items:center;gap:0.5rem}
 .sl-item span{flex:1;min-width:0;overflow-wrap:anywhere}
+.agenda-add-range{display:flex;flex-direction:column;gap:0.25rem;margin-top:0.5rem}
+.agenda-add-range label{font-size:0.75rem;color:var(--muted);font-weight:650}
+.agenda-add-range input{color-scheme:dark;background:var(--glass-field);border:0.0625rem solid rgba(148,163,184,.18);color:var(--text);border-radius:var(--radius-sm);padding:0.75rem 0.875rem;font:inherit;outline:none;min-width:0}
+.agenda-add-range input:focus{border-color:var(--accent);box-shadow:0 0 0 0.1875rem rgba(47,211,242,.18)}
+.tuner-alt{margin-top:0.875rem;padding-top:0.875rem;border-top:0.0625rem solid var(--hairline)}
+.tuner-alt-label{font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:0.5rem}
+.flats-row{display:flex;align-items:center;justify-content:space-between;gap:0.5rem;margin-top:0.75rem;padding:0.625rem 0.75rem;border:0.0625rem dashed var(--glass-border);border-radius:var(--radius-sm);font-size:0.8125rem;color:var(--text-2);cursor:pointer;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.flats-row .stu-status{margin:0}
+.filter-chip.locked,.chord-shape.locked{opacity:.45;filter:grayscale(1)}
+.chord-head{display:flex;align-items:center;justify-content:space-between;gap:0.5rem;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.chord-head .stu-status{margin:0}
+.chord-head.locked .chord-title{opacity:.5}
+.chord-shapes{display:flex;flex-wrap:wrap;gap:0.75rem;justify-content:center}
+.chord-shape{display:flex;flex-direction:column;align-items:center;gap:0.25rem;padding:0.5rem;border:0.0625rem solid var(--glass-border);border-radius:var(--radius-sm);background:transparent;color:var(--text-2);font:inherit;font-size:0.6875rem;cursor:pointer;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;max-width:9rem;text-align:center}
+.chord-shape:hover{border-color:var(--accent)}
 </style>
 </head>
 <body>
@@ -2719,7 +2734,18 @@ body.pdf-open{overflow:hidden}
 <button class="nav-item" data-stu-page="songs">Músicas</button>
 <button class="nav-item" data-stu-page="goals">Metas</button>
 <button class="nav-item" data-stu-page="recordings">Gravações</button>
-<button class="nav-item" data-stu-page="progress">Progresso</button>
+</div>
+</div>
+<div class="nav-group collapsed">
+<button class="nav-group-title" onclick="toggleNavGroup(this)">
+<span class="nav-item-row"><svg class="nav-icon" viewBox="0 0 24 24"><use href="#icon-trending-up"/></svg>Progresso</span>
+<span class="chevron">▾</span>
+</button>
+<div class="nav-sub">
+<button class="nav-item" data-stu-page="progress">Minha prática</button>
+<button class="nav-item" data-stu-page="achievements">Conquistas</button>
+<button class="nav-item" data-stu-page="evolution">Nível e evolução</button>
+<button class="nav-item" data-stu-page="pthistory">Histórico de prática</button>
 </div>
 </div>
 <div class="nav-group collapsed">
@@ -3381,6 +3407,7 @@ body.pdf-open{overflow:hidden}
 <div class="row">
 <input type="text" id="agendaAddTitle" placeholder="Nome do evento">
 </div>
+<div class="row agenda-add-range"><label for="agendaAddEnd">Até (para eventos de vários dias)</label><input type="date" id="agendaAddEnd"></div>
 <button type="button" class="save" id="agendaAddBtn" style="width:100%">Adicionar</button>
 </div>
 <div class="actions"><button class="cancel" id="holidayInfoCloseBtn" style="flex:none;width:100%">Fechar</button></div>
@@ -3538,7 +3565,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.12";
+const APP_VERSION = "8.13";
 // ===================== App instalável (8.4) =====================
 // Service worker (sw.js), aviso de versão nova, faixa "Sem internet", botão "Instalar o app",
 // atalhos do ícone (?p=...) e botão voltar do celular fechando modal/menu no app instalado.
@@ -5147,7 +5174,7 @@ await startStudentMode(true);
 // ---------- Telas ----------
 // Título de seção igual ao do professor (caixa alta pequena) + card de vidro.
 function stuCard(title, inner, extraCls){ return `${title ? `<div class="settings-group-label">${title}</div>` : ""}<section class="stu-card${extraCls ? " " + extraCls : ""}">${inner}</section>`; }
-const STU_PAGES = { home: "Início", lessons: "Aulas", money: "Financeiro", practice: "Praticar", songs: "Músicas", goals: "Metas", recordings: "Gravações", progress: "Progresso", material: "Matérias",
+const STU_PAGES = { home: "Início", lessons: "Aulas", money: "Financeiro", practice: "Praticar", songs: "Músicas", goals: "Metas", recordings: "Gravações", progress: "Minha prática", achievements: "Conquistas", evolution: "Nível e evolução", pthistory: "Histórico de prática", material: "Matérias",
 metronome: "Metrônomo", tuner: "Afinador", chords: "Acordes e escalas", ear: "Treino de ouvido", reading: "Leitura de partitura", drums: "Bateria", voice: "Canto", player: "Tocar junto", backing: "Bases", profile: "Perfil" };
 // Troca de página do modo aluno: mesma animação e mesma lógica de menu do openPage do professor.
 // Ferramentas por instrumento (8.6): o aluno só vê o que faz parte do aprendizado dele.
@@ -5179,12 +5206,15 @@ const kind = stuCur ? instrumentKind(stuCur.s.instrument) : null;
 return new Set(kind ? TOOLS_BY_KIND[kind] : TOOL_PAGES);
 }
 // Funções que o professor ainda não liberou pra este aluno (8.9): somem do menu e não abrem.
-const APP_FEATURES = ["practice", "material", "songs", "goals", "recordings", "progress", "money"];
+const APP_FEATURES = ["practice", "material", "songs", "goals", "recordings", "progress", "achievements", "evolution", "pthistory", "money"];
+const PROGRESS_PAGES = ["progress", "achievements", "evolution", "pthistory"];
 // Ferramentas (8.11) começam desligadas: só aparecem as que o professor liberou (view.on).
 // Na demonstração aparece tudo.
 function stuOff(){
 const v = (stuCur && stuCur.view) || {};
 const off = new Set((Array.isArray(v.off) ? v.off : []).filter(p => !TOOL_PAGES.includes(p)));
+// "Minha prática" desligada desliga o grupo Progresso inteiro (era uma página só até a 8.12).
+if (off.has("progress")) PROGRESS_PAGES.forEach(p => off.add(p));
 if (demoMode !== "demo") { const on = new Set(Array.isArray(v.on) ? v.on : []); TOOL_PAGES.forEach(p => { if (!on.has(p)) off.add(p); }); }
 return off;
 }
@@ -5242,11 +5272,12 @@ document.body.classList.toggle("kid-mode", stuKidMode());
 document.getElementById("stuPageTitle").textContent = STU_PAGES[stuTab];
 document.querySelectorAll("#stuSidebar [data-stu-page]").forEach(b => b.classList.toggle("active", b.dataset.stuPage === stuTab));
 const main = document.getElementById("stuMain");
-const r = { home: stuHomeHTML, lessons: stuLessonsHTML, money: stuMoneyHTML, practice: practiceHTML, songs: songsHTML, goals: goalsHTML, recordings: recordingsHTML, progress: progressHTML, material: materialHTML,
+const r = { home: stuHomeHTML, lessons: stuLessonsHTML, money: stuMoneyHTML, practice: practiceHTML, songs: songsHTML, goals: goalsHTML, recordings: recordingsHTML, progress: progressHTML, achievements: achievementsHTML, evolution: evolutionHTML, pthistory: ptHistoryHTML, material: materialHTML,
 metronome: metroHTML, tuner: tunerHTML, chords: chordsHTML, ear: earHTML, reading: readingHTML, drums: drumsHTML, voice: voiceHTML, player: playerHTML, backing: backingHTML, profile: stuProfileHTML }[stuTab];
 // Título da página com a linha embaixo, igual ao app do professor (8.12). O primeiro rótulo
 // some quando repete o nome da página (ex.: "Afinador" logo abaixo do título "Afinador").
 let pageHtml = r();
+if (TOOL_PAGES.includes(stuTab) || stuTab === "practice") { try { const set = soundInst(); soundPreload(set); if (stuTab === "backing") soundPreload("bass"); if (stuTab === "metronome" || stuTab === "practice") { sampleLoad("click", 84); sampleLoad("click", 76); } } catch(e) {} }
 if (stuTab !== "home") {
 const label = STU_PAGES[stuTab], m = pageHtml.match(/^\s*<div class="settings-group-label">([^<]*)<\/div>/);
 if (m && stripAccents(m[1]).toLowerCase().trim() === stripAccents(label).toLowerCase()) pageHtml = pageHtml.slice(m[0].length);
@@ -5834,7 +5865,7 @@ if (lo) lo.onclick = () => { if (confirm("Sair da conta?")) stuSignOut(); };
 const tb = main.querySelector("#stuTeacherBtn");
 if (tb) tb.onclick = () => switchRole("teacher");
 const binders = { metronome: toolsBind, tuner: toolsBind, chords: chordsBind, ear: earBind, reading: readingBind, drums: drumsBind, voice: voiceBind, player: playerBind, backing: backingBind,
-practice: practiceBind, songs: songsBind, lessons: lessonsBind, goals: goalsBind, recordings: recordingsBind, progress: progressBind, material: materialBind };
+practice: practiceBind, songs: songsBind, lessons: lessonsBind, goals: goalsBind, recordings: recordingsBind, progress: progressBind, achievements: progressBind, evolution: progressBind, pthistory: progressBind, material: materialBind };
 if (binders[stuTab]) binders[stuTab](main);
 // "Ver como aluno": botões de enviar desligados.
 if (demoMode === "view" && ["practice", "goals", "recordings"].includes(stuTab)) main.querySelectorAll("button:not([data-go]),input,select,textarea").forEach(el => { el.disabled = true; });
@@ -5853,6 +5884,15 @@ const METRO_SUBS = [[1, "♩ Tempo"], [2, "Colcheias"], [3, "Tercinas"], [4, "Se
 function metroDefaultAccents(n){ return Array.from({ length: n }, (_, i) => i === 0 || (n === 6 && i === 3) ? 2 : 1); }
 function metroClick(time, kind){
 const ctx = getAudioCtx();
+const accent0 = kind === true || kind === "accent", sub0 = kind === "sub";
+const wb = sampleBufs[`click/${accent0 ? 84 : 76}`];
+if (wb instanceof AudioBuffer) {
+const src = ctx.createBufferSource(), g = ctx.createGain();
+src.buffer = wb; g.gain.value = accent0 ? 1 : sub0 ? 0.3 : 0.7;
+src.connect(g).connect(ctx.destination); src.start(time); src.stop(time + 0.3);
+return;
+}
+sampleLoad("click", 84); sampleLoad("click", 76);
 const osc = ctx.createOscillator(), gain = ctx.createGain();
 const accent = kind === true || kind === "accent", sub = kind === "sub";
 osc.frequency.value = accent ? 1600 : sub ? 760 : 1000;
@@ -5938,6 +5978,8 @@ bass5: { label: "Baixo 5 cordas", notes: ["B0","E1","A1","D2","G2"] },
 violin: { label: "Violino", notes: ["G3","D4","A4","E5"] },
 mandolin: { label: "Bandolim", notes: ["G3","D4","A4","E5"] }
 };
+const TUNER_GROUPS = [["chromatic", "Cromático", ["chromatic"]], ["guitar", "Violão / guitarra", ["guitar", "guitarDropD", "guitarHalf", "guitarOpenG"]], ["ukulele", "Ukulele", ["ukulele", "ukuleleBari"]], ["cavaquinho", "Cavaquinho", ["cavaquinho"]], ["bass", "Baixo", ["bass", "bass5"]], ["violin", "Violino", ["violin"]], ["mandolin", "Bandolim", ["mandolin"]]];
+const TUNING_SHORT = { guitar: "Padrão", guitarDropD: "Drop D", guitarHalf: "Meio tom abaixo", guitarOpenG: "Sol aberto", ukulele: "Padrão", ukuleleBari: "Barítono", bass: "4 cordas", bass5: "5 cordas" };
 const NOTE_NAMES = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
 const NOTE_PT = { C:"Dó", "C#":"Dó#", D:"Ré", "D#":"Ré#", E:"Mi", F:"Fá", "F#":"Fá#", G:"Sol", "G#":"Sol#", A:"Lá", "A#":"Lá#", B:"Si", Db:"Réb", Eb:"Mib", Gb:"Solb", Ab:"Láb", Bb:"Sib" };
 function noteToMidi(n){ const m = /^([A-G]#?)(-?\d)$/.exec(n); return NOTE_NAMES.indexOf(m[1]) + (Number(m[2]) + 1) * 12; }
@@ -6045,11 +6087,15 @@ function tunerHTML(opts){
 const voice = opts && opts.voice;
 if (voice) tuner.mode = "voice";
 else if (tuner.mode === "voice") tuner.mode = "guitar";
-const chips = voice ? `<div class="field"><label>Nota alvo</label><select id="voiceTarget"><option value="">Livre (mostra a nota que você canta)</option>${Array.from({ length: 29 }, (_, i) => 43 + i).map(m => `<option value="${m}"${tuner.voiceTarget === m ? " selected" : ""}>${NOTE_PT[midiToName(m).replace(/-?\d$/, "")]} (${midiToName(m)})</option>`).join("")}</select></div>
-<button type="button" class="btn-edit-toggle" id="voicePlayTarget"${tuner.voiceTarget ? "" : " style=\"display:none\""}>Ouvir a nota alvo</button>`
-: `<div class="reason-chips">${Object.entries(TUNINGS).filter(([k]) => k !== "voice").map(([k, t]) => `<button type="button" class="filter-chip${tuner.mode === k ? " selected" : ""}" data-tuning="${k}">${t.label}</button>`).join("")}</div>
-<div class="tuner-strings">${TUNINGS[tuner.mode].notes.map(n => `<button type="button" data-string="${noteToMidi(n)}" title="Ouvir">${NOTE_PT[n.replace(/-?\d$/, "")]}</button>`).join("")}</div>`;
-return stuCard(voice ? "Afinação da voz" : "Afinador", `${chips}
+const chips = !voice ? "" : `<div class="field"><label>Nota alvo</label><select id="voiceTarget"><option value="">Livre (mostra a nota que você canta)</option>${Array.from({ length: 29 }, (_, i) => 43 + i).map(m => `<option value="${m}"${tuner.voiceTarget === m ? " selected" : ""}>${NOTE_PT[midiToName(m).replace(/-?\d$/, "")]} (${midiToName(m)})</option>`).join("")}</select></div>
+<button type="button" class="btn-edit-toggle" id="voicePlayTarget"${tuner.voiceTarget ? "" : " style=\"display:none\""}>Ouvir a nota alvo</button>`;
+// Afinador (8.13): primeiro card só com os instrumentos; as afinações variadas aparecem
+// embaixo do instrumento escolhido. O medidor fica num card separado.
+const grp = TUNER_GROUPS.find(g => g[2].includes(tuner.mode)) || TUNER_GROUPS[1];
+const pick = voice ? "" : stuCard("Instrumento", `<div class="reason-chips">${TUNER_GROUPS.map(([k, l, list]) => `<button type="button" class="filter-chip${grp[0] === k ? " selected" : ""}" data-tuning="${list[0]}">${l}</button>`).join("")}</div>
+${grp[2].length > 1 ? `<div class="tuner-alt"><div class="tuner-alt-label">Afinações variadas</div><div class="reason-chips">${grp[2].map(k => `<button type="button" class="filter-chip${tuner.mode === k ? " selected" : ""}" data-tuning="${k}">${TUNING_SHORT[k] || TUNINGS[k].label}</button>`).join("")}</div></div>` : ""}`);
+const strings = voice || !TUNINGS[tuner.mode].notes.length ? "" : `<div class="tuner-strings">${TUNINGS[tuner.mode].notes.map(n => `<button type="button" data-string="${noteToMidi(n)}" title="Ouvir">${escapeHtml(notePtLabel(n.replace(/-?\d$/, "")))}</button>`).join("")}</div>`;
+return pick + stuCard(voice ? "Afinação da voz" : "", `${chips}${strings}
 <div class="tuner-note" id="tunerNote">—</div><div class="stu-muted" id="tunerFreq"></div>
 <div class="tuner-scale"><span class="tuner-center"></span><span class="tuner-needle" id="tunerNeedle"></span></div>
 <div class="tuner-status" id="tunerStatus">${voice ? "Mostra se a sua voz está acima ou abaixo da nota. Usa o microfone." : "O afinador usa o microfone do aparelho. Toque no nome da corda pra ouvir a nota."}</div>
@@ -6098,8 +6144,48 @@ play.onclick = () => { if (tuner.voiceTarget) synthNote(tuner.voiceTarget, getAu
 
 // ---------- Sons sintetizados (funcionam sem internet) ----------
 function midiFreq(m){ return 440 * Math.pow(2, (m - 69) / 12); }
-// Nota tipo piano elétrico: ataque rápido e queda suave.
+// Sons gravados (8.13): violão, piano e baixo de verdade (pasta sounds/). Cada ferramenta usa
+// o instrumento do aluno. Enquanto o som não carregou (ou sem internet na 1ª vez) toca o
+// sintetizado de antes. Bipes de aviso (opts.type "sine" sem instrumento) continuam sintetizados.
+const SAMPLE_SETS = { guitar: [39, 90], piano: [21, 108], bass: [27, 69] };
+const sampleBufs = {};
+function soundInst(){
+const kind = stuCur ? instrumentKind(stuCur.s.instrument) : null;
+return kind === "bass" ? "bass" : ["strings", "bowed"].includes(kind) ? "guitar" : "piano";
+}
+function sampleNearest(set, midi){ const [lo, hi] = SAMPLE_SETS[set]; let m = Math.round(midi / 3) * 3; while (m % 12 !== 0 && m % 12 !== 3 && m % 12 !== 6 && m % 12 !== 9) m += 3; return Math.max(lo, Math.min(hi, m)); }
+function sampleLoad(set, m){
+const k = `${set}/${m}`;
+if (sampleBufs[k]) return sampleBufs[k];
+sampleBufs[k] = fetch(`sounds/${k}.mp3`).then(r => { if (!r.ok) throw new Error("som"); return r.arrayBuffer(); })
+.then(b => new Promise((res, rej) => getAudioCtx().decodeAudioData(b, res, rej)))
+.then(buf => { sampleBufs[k] = buf; return buf; })
+.catch(() => { delete sampleBufs[k]; return null; });
+return sampleBufs[k];
+}
+function soundPreload(set){ const [lo, hi] = SAMPLE_SETS[set]; for (let m = lo; m <= hi; m++) if ([0, 3, 6, 9].includes(m % 12)) sampleLoad(set, m); }
 function synthNote(midi, time, dur, opts = {}){
+if (!(opts.type === "sine" && !opts.inst)) {
+const set = opts.inst || soundInst(), m = sampleNearest(set, midi), buf = sampleBufs[`${set}/${m}`];
+if (buf instanceof AudioBuffer) {
+const ctx = getAudioCtx(), vol = Math.min(1, (opts.vol ?? 0.2) * 2.6);
+const src = ctx.createBufferSource(), g = ctx.createGain();
+src.buffer = buf; src.playbackRate.value = Math.pow(2, (midi - m) / 12);
+g.gain.setValueAtTime(vol, time);
+g.gain.setValueAtTime(vol, time + Math.max(0.05, dur - 0.05));
+g.gain.exponentialRampToValueAtTime(0.0001, time + dur + 0.25);
+let out = ctx.destination;
+if (opts.pan && ctx.createStereoPanner) { const p = ctx.createStereoPanner(); p.pan.value = opts.pan; p.connect(out); out = p; }
+src.connect(g).connect(out);
+src.start(time); src.stop(time + dur + 0.3);
+return;
+}
+sampleLoad(set, m);
+}
+synthNoteOsc(midi, time, dur, opts);
+}
+// Nota tipo piano elétrico: ataque rápido e queda suave (o som de antes, sem internet).
+function synthNoteOsc(midi, time, dur, opts = {}){
 const ctx = getAudioCtx(), vol = opts.vol ?? 0.2;
 const g = ctx.createGain();
 g.gain.setValueAtTime(0.0001, time);
@@ -6174,7 +6260,12 @@ if (was && cb) try { cb(); } catch(e) {}
 // Tudo sintetizado no aparelho: funciona sem internet.
 const PC_SHARP = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
 const PC_FLAT = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
-const KEY_ROOTS = [["C",0],["C#",1],["D",2],["Eb",3],["E",4],["F",5],["F#",6],["G",7],["Ab",8],["A",9],["Bb",10],["B",11]];
+// Só sustenidos (8.13): C, C#, D, D#... O bemol equivalente aparece entre parênteses só depois
+// que o professor libera (view.flats), pra não confundir no começo.
+const KEY_ROOTS = [["C",0],["C#",1],["D",2],["D#",3],["E",4],["F",5],["F#",6],["G",7],["G#",8],["A",9],["A#",10],["B",11]];
+function stuFlatsOn(){ return demoMode === "view" ? !!(viewAsRef && viewAsRef.flatsOn) : !!(stuCur && stuCur.view && stuCur.view.flats); }
+function noteLabel(n){ const pc = PC_SHARP.indexOf(n); return pc >= 0 && n.includes("#") && stuFlatsOn() ? `${n} (${PC_FLAT[pc]})` : n; }
+function notePtLabel(n){ const pc = PC_SHARP.indexOf(n); return pc >= 0 && n.includes("#") && stuFlatsOn() ? `${NOTE_PT[n]} (${NOTE_PT[PC_FLAT[pc]]})` : (NOTE_PT[n] || n); }
 function pcName(pc, flats){ return (flats ? PC_FLAT : PC_SHARP)[((pc % 12) + 12) % 12]; }
 function rootUsesFlats(name){ return /b$/.test(name) || name === "F"; }
 function ptName(n){ return NOTE_PT[n] || n; }
@@ -6192,30 +6283,39 @@ Dsus4: [-1,-1,0,2,3,3], Esus4: [0,2,2,2,0,0], Asus4: [-1,0,2,2,3,0]
 // Formas móveis (pestana): tônica na 6ª corda (forma de Mi) e na 5ª corda (forma de Lá).
 const E_SHAPES = { "": [0,2,2,1,0,0], m: [0,2,2,0,0,0], "7": [0,2,0,1,0,0], m7: [0,2,0,0,0,0], "7M": [0,-1,1,1,0,-1], sus4: [0,2,2,2,0,0] };
 const A_SHAPES = { "": [-1,0,2,2,2,0], m: [-1,0,2,2,1,0], "7": [-1,0,2,0,2,0], m7: [-1,0,2,0,1,0], "7M": [-1,0,2,1,2,0], sus4: [-1,0,2,2,3,0], dim: [-1,0,1,2,1,-1], aug: [-1,0,3,2,2,-1] };
+// Formas básicas no violão (8.13): cada desenho aberto (forma de Dó, Lá, Sol, Mi e Ré) vira
+// uma forma móvel; as cordas soltas viram pestana quando a forma sobe no braço.
+const SHAPE_BASE = {
+"": [["C",[-1,3,2,0,1,0],0],["A",[-1,0,2,2,2,0],9],["G",[3,2,0,0,0,3],7],["E",[0,2,2,1,0,0],4],["D",[-1,-1,0,2,3,2],2]],
+m: [["A",[-1,0,2,2,1,0],9],["E",[0,2,2,0,0,0],4],["D",[-1,-1,0,2,3,1],2]],
+"7": [["C",[-1,3,2,3,1,0],0],["A",[-1,0,2,0,2,0],9],["G",[3,2,0,0,0,1],7],["E",[0,2,0,1,0,0],4],["D",[-1,-1,0,2,1,2],2]],
+m7: [["A",[-1,0,2,0,1,0],9],["E",[0,2,0,0,0,0],4],["D",[-1,-1,0,2,1,1],2]],
+"7M": [["C",[-1,3,2,0,0,0],0],["A",[-1,0,2,1,2,0],9],["G",[3,2,0,0,0,2],7],["E",[0,-1,1,1,0,-1],4],["D",[-1,-1,0,2,2,2],2]],
+sus4: [["A",[-1,0,2,2,3,0],9],["E",[0,2,2,2,0,0],4],["D",[-1,-1,0,2,3,3],2]],
+dim: [["A",[-1,0,1,2,1,-1],9]],
+aug: [["A",[-1,0,3,2,2,-1],9],["E",[0,3,2,1,1,0],4]]
+};
+const SHAPE_PT = { C: "Dó", A: "Lá", G: "Sol", E: "Mi", D: "Ré" };
+const GUITAR_OPEN = [40, 45, 50, 55, 59, 64];
 function guitarShapes(rootName, pc, suffix){
-const out = [];
-const open = OPEN_CHORDS[rootName + suffix];
-if (open) out.push({ frets: open, barre: 0 });
-[[E_SHAPES, 4], [A_SHAPES, 9]].forEach(([table, base]) => {
-const shape = table[suffix];
-if (!shape) return;
-const r = (pc - base + 12) % 12;
+return (SHAPE_BASE[suffix] || []).map(([letter, shape, ref]) => {
+const r = (pc - ref + 12) % 12;
 const frets = shape.map(o => o < 0 ? -1 : o + r);
 const played = frets.map((f, i) => ({ f, i, o: shape[i] })).filter(x => x.f >= 0);
 const zeros = played.filter(x => x.o === 0);
-const barre = r > 0 && zeros.length >= 2 && played.slice(played.indexOf(zeros[0]), played.indexOf(zeros[zeros.length - 1]) + 1).every(x => x.f >= 0) ? r : 0;
-out.push({ frets, barre, from: zeros.length ? zeros[0].i : 0, to: zeros.length ? zeros[zeros.length - 1].i : 0 });
-});
-const seen = new Set();
-return out.filter(x => { const k = x.frets.join(","); if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 3);
+const barre = r > 0 && zeros.length >= 2 ? r : 0;
+return { id: letter, letter, pos: r, frets, barre, from: zeros.length ? zeros[0].i : 0, to: zeros.length ? zeros[zeros.length - 1].i : 0,
+label: r === 0 ? `Aberto · forma de ${SHAPE_PT[letter]}` : `Forma de ${SHAPE_PT[letter]} · casa ${r}` };
+}).sort((a, b) => a.pos - b.pos);
 }
+function shapeMidis(sh){ return sh.frets.map((f, i) => f < 0 ? null : GUITAR_OPEN[i] + f).filter(x => x !== null); }
 function chordDiagramSVG(sh){
 const fretted = sh.frets.filter(f => f > 0);
 const max = Math.max(0, ...fretted), min = fretted.length ? Math.min(...fretted) : 1;
 const start = max > 4 ? min : 1;
 const W = 120, H = 150, x0 = 22, y0 = 28, sw = 16, fh = 22;
 let s = `<svg class="chord-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Diagrama do acorde">`;
-s += start === 1 ? `<rect x="${x0 - 1}" y="${y0 - 4}" width="${sw * 5 + 2}" height="4" class="cd-nut"/>` : `<text x="${x0 - 8}" y="${y0 + fh * 0.65}" class="cd-fretno" text-anchor="end">${start}ª</text>`;
+s += start === 1 ? `<rect x="${x0 - 1}" y="${y0 - 4}" width="${sw * 5 + 2}" height="4" class="cd-nut"/>` : `<text x="${x0 - 5}" y="${y0 + fh * 0.65}" class="cd-fretno" text-anchor="end">${start}ª</text>`;
 for (let i = 0; i <= 5; i++) s += `<line x1="${x0}" y1="${y0 + i * fh}" x2="${x0 + sw * 5}" y2="${y0 + i * fh}" class="cd-line"/>`;
 for (let i = 0; i < 6; i++) s += `<line x1="${x0 + i * sw}" y1="${y0}" x2="${x0 + i * sw}" y2="${y0 + fh * 5}" class="cd-line"/>`;
 if (sh.barre) s += `<rect x="${x0 + sh.from * sw - 6}" y="${y0 + (sh.barre - start + 0.5) * fh - 6}" width="${(sh.to - sh.from) * sw + 12}" height="12" rx="6" class="cd-dot"/>`;
@@ -6267,43 +6367,113 @@ s += `<circle cx="${x}" cy="${y}" r="9" class="fb-dot${pc === rootPc ? " root" :
 });
 return s + `</svg>`;
 }
-const chordTool = { mode: "chord", root: "C", type: "", scale: "maior", view: "guitar" };
-const FRET_VIEWS = [["guitar", "Violão/guitarra"], ["bass", "Baixo"], ["ukulele", "Ukulele"], ["cavaquinho", "Cavaquinho"]];
+const chordTool = { mode: "chord", root: "C", type: "", scale: "maior", view: "guitar", sel: null, scaleSel: null };
+// Liberação aos poucos (8.13): o professor libera acordes ("c:Am"), formas ("f:Am@A") e escalas
+// ("s:pentam") no "Ver como", segurando o dedo. Na demonstração está tudo liberado.
+function chordKeyOf(root, type){ return root + type; }
+function chordParse(k){ const m = /^([A-G]#?)(.*)$/.exec(k); return m ? { root: m[1], type: m[2] } : null; }
+function chordsOn(){ if (demoMode === "demo") return null; const v = demoMode === "view" ? (viewAsRef && viewAsRef.chordsOn) : (stuCur && stuCur.view && stuCur.view.chords); return new Set(Array.isArray(v) ? v : []); }
+function chordFree(key){ const on = chordsOn(); return !on || on.has(key); }
+function chordSortKey(k){ const p = chordParse(k); return p ? KEY_ROOTS.findIndex(r => r[0] === p.root) * 20 + CHORD_TYPES.findIndex(c => c[0] === p.type) : 999; }
 function chordsHTML(){
-const t = chordTool, pc = KEY_ROOTS.find(r => r[0] === t.root)[1], flats = rootUsesFlats(t.root);
-const isChord = t.mode === "chord";
+const t = chordTool, on = chordsOn(), view = demoMode === "view", isChord = t.mode === "chord", isGuitar = t.view === "guitar";
+const myChords = on ? [...on].filter(k => k.startsWith("c:")).map(k => k.slice(2)).filter(k => { const p = chordParse(k); return p && CHORD_TYPES.some(c => c[0] === p.type); }).sort((a, b) => chordSortKey(a) - chordSortKey(b)) : null;
+const myScales = on ? SCALE_TYPES.filter(([k]) => on.has("s:" + k)) : SCALE_TYPES;
+// O aluno escolhe entre os liberados; professor (Ver como) e demonstração veem tudo.
+const full = !on || view;
+if (isChord && !full) { if (!myChords.includes(t.sel)) t.sel = myChords[0] || null; if (t.sel) { const p = chordParse(t.sel); t.root = p.root; t.type = p.type; } }
+if (!isChord && !full) { if (!myScales.some(x => x[0] === t.scale)) t.scale = (myScales[0] || [])[0]; }
+let html = stuCard("", `<div class="reason-chips"><button type="button" class="filter-chip${isChord ? " selected" : ""}" data-cmode="chord">Acordes</button><button type="button" class="filter-chip${!isChord ? " selected" : ""}" data-cmode="scale">Escalas</button></div>
+${view ? `<div class="flats-row" id="flatsHold" role="button" tabindex="0"><span>Bemol entre parênteses (ex.: C# (Db))</span><span class="stu-status ${stuFlatsOn() ? "ok" : "off"}">${stuFlatsOn() ? "Liberado" : "Não liberado"}</span></div>` : ""}
+${isChord ? (full ? `<div class="field"><label>Tom</label><div class="reason-chips key-chips">${KEY_ROOTS.map(([n]) => `<button type="button" class="filter-chip${t.root === n ? " selected" : ""}" data-croot="${n}">${escapeHtml(noteLabel(n))}</button>`).join("")}</div></div>
+<div class="field"><label>Tipo de acorde</label><div class="reason-chips">${CHORD_TYPES.map(([k, l]) => `<button type="button" class="filter-chip${t.type === k ? " selected" : ""}${on && !on.has("c:" + chordKeyOf(t.root, k)) ? " locked" : ""}" data-ctype="${k}">${l}</button>`).join("")}</div></div>`
+: myChords.length ? `<div class="field"><label>Seus acordes</label><div class="reason-chips">${myChords.map(k => `<button type="button" class="filter-chip${t.sel === k ? " selected" : ""}" data-csel="${escapeHtml(k)}">${escapeHtml(k)}</button>`).join("")}</div></div>` : "")
+: `${full || myScales.length ? `<div class="field"><label>Tom</label><div class="reason-chips key-chips">${KEY_ROOTS.map(([n]) => `<button type="button" class="filter-chip${t.root === n ? " selected" : ""}" data-croot="${n}">${escapeHtml(noteLabel(n))}</button>`).join("")}</div></div>
+<div class="field"><label>Escala</label><div class="reason-chips">${(full ? SCALE_TYPES : myScales).map(([k, l]) => `<button type="button" class="filter-chip${t.scale === k ? " selected" : ""}${on && !on.has("s:" + k) ? " locked" : ""}" data-cscale="${k}">${l}</button>`).join("")}</div></div>` : ""}`}`);
+if (isChord && !full && !myChords.length) return html + stuCard("", `<div class="stu-empty">O professor vai liberar os acordes conforme as aulas. Cada acorde novo aparece aqui.</div>`);
+if (!isChord && !full && !myScales.length) return html + stuCard("", `<div class="stu-empty">O professor vai liberar as escalas conforme as aulas.</div>`);
+const pc = KEY_ROOTS.find(r => r[0] === t.root)[1];
 const def = isChord ? CHORD_TYPES.find(c => c[0] === t.type) : SCALE_TYPES.find(c => c[0] === t.scale);
-const pcs = def[2].map(i => pc + i);
-const names = pcs.map(p => pcName(p, flats));
-const title = isChord ? `${t.root}${t.type}` : `${t.root} ${def[1].toLowerCase()}`;
+const pcs = def[2].map(i => pc + i), names = pcs.map(p => pcName(p, false));
+const key = isChord ? chordKeyOf(t.root, t.type) : t.scale;
+const locked = on && !on.has((isChord ? "c:" : "s:") + key);
+const title = isChord ? key : `${noteLabel(t.root)} ${def[1].toLowerCase()}`;
 let draw = "";
-if (t.view === "keys") draw = `<div class="kb-wrap">${keyboardSVG(pcs, pc, flats)}</div>`;
-else if (isChord && t.view === "guitar") {
-const shapes = guitarShapes(t.root, pc, t.type);
-draw = shapes.length ? `<div class="chord-shapes">${shapes.map(chordDiagramSVG).join("")}</div>` : `<div class="stu-empty">Sem desenho pronto pra esse acorde. Veja as notas no braço abaixo.</div>`;
-draw += `<div class="fb-wrap">${fretboardSVG("guitar", pcs, pc, flats)}</div>`;
-} else draw = `<div class="fb-wrap">${fretboardSVG(t.view, pcs, pc, flats)}</div>`;
-return stuCard("Acordes e escalas", `<div class="reason-chips"><button type="button" class="filter-chip${isChord ? " selected" : ""}" data-cmode="chord">Acordes</button><button type="button" class="filter-chip${!isChord ? " selected" : ""}" data-cmode="scale">Escalas</button></div>
-<div class="field"><label>Tom</label><div class="reason-chips key-chips">${KEY_ROOTS.map(([n]) => `<button type="button" class="filter-chip${t.root === n ? " selected" : ""}" data-croot="${n}">${n}</button>`).join("")}</div></div>
-<div class="field"><label>${isChord ? "Tipo de acorde" : "Escala"}</label><select id="chordType">${(isChord ? CHORD_TYPES : SCALE_TYPES).map(([k, l]) => `<option value="${k}"${(isChord ? t.type : t.scale) === k ? " selected" : ""}>${l}</option>`).join("")}</select></div>
-<div class="field"><label>Ver no</label><div class="reason-chips">${[...(isChord ? [["guitar", "Violão/guitarra"], ["keys", "Teclado"]] : [["keys", "Teclado"], ...FRET_VIEWS]), ...(isChord ? FRET_VIEWS.slice(1) : [])].map(([k, l]) => `<button type="button" class="filter-chip${t.view === k ? " selected" : ""}" data-cview="${k}">${l}</button>`).join("")}</div></div>`)
-+ stuCard("", `<div class="chord-title">${escapeHtml(title)}</div>
-<div class="chord-notes">${names.map(n => `<span>${escapeHtml(n)}<small>${escapeHtml(ptName(n))}</small></span>`).join("")}</div>
+if (t.view === "keys") draw = `<div class="kb-wrap">${keyboardSVG(pcs, pc, false)}</div>`;
+else if (isChord && isGuitar) {
+const all = guitarShapes(t.root, pc, t.type), mine = full ? all : all.filter(sh => on.has(`f:${key}@${sh.id}`));
+const shapes = mine.length ? mine : all.slice(0, 1);
+draw = shapes.length ? `<div class="chord-shapes">${shapes.map(sh => { const lk = on && !on.has(`f:${key}@${sh.id}`) && view; return `<button type="button" class="chord-shape${lk ? " locked" : ""}" data-shape="${sh.id}" aria-label="Ouvir: ${escapeHtml(sh.label)}">${chordDiagramSVG(sh)}<span>${escapeHtml(sh.label)}</span></button>`; }).join("")}</div>` : "";
+draw += `<div class="fb-wrap">${fretboardSVG("guitar", pcs, pc, false)}</div>`;
+} else draw = `<div class="fb-wrap">${fretboardSVG(t.view === "guitar" ? "guitar" : t.view, pcs, pc, false)}</div>`;
+html += stuCard("", `<div class="chord-head${locked && view ? " locked" : ""}" id="chordHold"${view ? ` role="button" tabindex="0"` : ""}><div class="chord-title">${escapeHtml(title)}</div>${view ? `<span class="stu-status ${locked ? "off" : "ok"}">${locked ? "Não liberado" : "Liberado"}</span>` : ""}</div>
+${view ? `<div class="rules-small">Segure o dedo no nome${isChord && isGuitar ? " ou numa forma" : ""} para liberar ou tirar.</div>` : ""}
+<div class="chord-notes">${names.map(n => `<span>${escapeHtml(noteLabel(n))}<small>${escapeHtml(notePtLabel(n))}</small></span>`).join("")}</div>
 ${draw}
 <div class="actions"><button class="save" id="chordPlay">Ouvir</button></div>`);
+return html;
+}
+// Segurar o dedo (Ver como) libera ou tira acorde, forma, escala ou o bemol entre parênteses.
+function holdBind(el, fn){
+if (!el) return;
+let t = null, fired = false;
+const cancel = () => { clearTimeout(t); t = null; };
+el.addEventListener("pointerdown", e => { if (e.pointerType === "mouse" && e.button !== 0) return; fired = false; cancel(); t = setTimeout(() => { fired = true; t = null; if (navigator.vibrate) navigator.vibrate(15); fn(); }, 550); });
+["pointerup", "pointerleave", "pointercancel"].forEach(ev => el.addEventListener(ev, cancel));
+el.addEventListener("contextmenu", e => { e.preventDefault(); cancel(); if (!fired) fn(); fired = true; });
+el.addEventListener("click", e => { if (fired) { e.stopImmediatePropagation(); e.preventDefault(); fired = false; } }, true);
+}
+function chordRelease(items, label){
+if (demoMode !== "view" || !viewAsRef) return;
+const real = viewAsRef, set = new Set(real.chordsOn || []), isOn = set.has(items[0]), who = firstName(real.name);
+const body = document.createElement("div");
+body.innerHTML = `<div class="stu-muted">${isOn ? `${escapeHtml(label)} some do app de ${escapeHtml(who)} até você liberar de novo.` : `${escapeHtml(who)} passa a ver ${escapeHtml(label)}.`}</div>`;
+openQuickModal(isOn ? `Tirar ${label}?` : `Liberar ${label}?`, "", body, () => {
+items.forEach(k => { if (isOn) set.delete(k); else set.add(k); });
+// Tirar um acorde tira as formas dele também.
+if (isOn && items[0].startsWith("c:")) [...set].forEach(k => { if (k.startsWith(`f:${items[0].slice(2)}@`)) set.delete(k); });
+if (set.size) real.chordsOn = [...set]; else delete real.chordsOn;
+stuCur.view = { ...stuCur.view, chords: real.chordsOn ? real.chordsOn.slice() : undefined };
+appFeaturesDirty = true;
+closeQuickModal(); stuRender();
+stuToast(isOn ? `${label}: tirado.` : `${label}: liberado para ${who}.`);
+}, "Cancelar", isOn ? "Tirar" : "Liberar");
 }
 function chordsBind(main){
 const t = chordTool;
-main.querySelectorAll("[data-cmode]").forEach(b => b.onclick = () => { t.mode = b.dataset.cmode; if (t.mode === "scale" && t.view === "guitar") t.view = "keys"; stuRender(); });
+main.querySelectorAll("[data-cmode]").forEach(b => b.onclick = () => { t.mode = b.dataset.cmode; stuRender(); });
 main.querySelectorAll("[data-croot]").forEach(b => b.onclick = () => { t.root = b.dataset.croot; stuRender(); });
-main.querySelectorAll("[data-cview]").forEach(b => b.onclick = () => { t.view = b.dataset.cview; stuRender(); });
-main.querySelector("#chordType").onchange = e => { if (t.mode === "chord") t.type = e.target.value; else t.scale = e.target.value; stuRender(); };
-main.querySelector("#chordPlay").onclick = () => {
-const pc = KEY_ROOTS.find(r => r[0] === t.root)[1], ctx = getAudioCtx(), now = ctx.currentTime + 0.05;
+main.querySelectorAll("[data-ctype]").forEach(b => b.onclick = () => { t.type = b.dataset.ctype; stuRender(); });
+main.querySelectorAll("[data-csel]").forEach(b => b.onclick = () => { t.sel = b.dataset.csel; stuRender(); });
+main.querySelectorAll("[data-cscale]").forEach(b => b.onclick = () => { t.scale = b.dataset.cscale; stuRender(); });
+const pc = KEY_ROOTS.find(r => r[0] === t.root)[1], key = chordKeyOf(t.root, t.type);
+const playShape = id => { const sh = guitarShapes(t.root, pc, t.type).find(x => x.id === id); if (!sh) return; toolsStopAudio(); synthChord(shapeMidis(sh), getAudioCtx().currentTime + 0.05, 2.4, { strum: 0.035, vol: 0.3 }); };
+main.querySelectorAll("[data-shape]").forEach(b => b.onclick = () => playShape(b.dataset.shape));
+const play = main.querySelector("#chordPlay");
+if (play) play.onclick = () => {
+const ctx = getAudioCtx(), now = ctx.currentTime + 0.05;
 toolsStopAudio();
-if (t.mode === "chord") { const iv = CHORD_TYPES.find(c => c[0] === t.type)[2]; synthChord(iv.map(i => 48 + pc + i).concat([60 + pc]), now, 2.2, { strum: 0.04, vol: 0.28 }); }
-else { const iv = SCALE_TYPES.find(c => c[0] === t.scale)[2].concat([12]); iv.forEach((i, k) => synthNote(60 + pc + i, now + k * 0.32, 0.4, { vol: 0.22 })); }
+if (t.mode === "chord") {
+const first = main.querySelector("[data-shape]");
+if (first) return playShape(first.dataset.shape);
+const iv = CHORD_TYPES.find(c => c[0] === t.type)[2]; synthChord(iv.map(i => 48 + pc + i).concat([60 + pc]), now, 2.2, { strum: 0.04, vol: 0.28 });
+} else { const iv = SCALE_TYPES.find(c => c[0] === t.scale)[2].concat([12]); const base = t.view === "bass" ? 36 : t.view === "keys" ? 60 : 48; iv.forEach((i, k) => synthNote(base + pc + i, now + k * 0.36, 0.5, { vol: 0.24 })); }
 };
+if (demoMode !== "view") return;
+const ct = CHORD_TYPES.find(c => c[0] === t.type), st = SCALE_TYPES.find(c => c[0] === t.scale);
+holdBind(main.querySelector("#chordHold"), () => t.mode === "chord" ? chordRelease([`c:${key}`, ...(t.view === "guitar" ? [`f:${key}@${guitarShapes(t.root, pc, t.type)[0].id}`] : [])], `o acorde ${key}`) : chordRelease([`s:${t.scale}`], `a escala ${st[1].toLowerCase()}`));
+main.querySelectorAll("[data-shape]").forEach(b => holdBind(b, () => { const sh = guitarShapes(t.root, pc, t.type).find(x => x.id === b.dataset.shape); chordRelease([`f:${key}@${sh.id}`], `"${sh.label}" de ${key}`); }));
+holdBind(main.querySelector("#flatsHold"), () => {
+const real = viewAsRef, on = !!real.flatsOn, who = firstName(real.name);
+const body = document.createElement("div");
+body.innerHTML = `<div class="stu-muted">${on ? `Volta a mostrar só os sustenidos (C#).` : `As notas com sustenido passam a mostrar o bemol igual entre parênteses: C# (Db), D# (Eb)…`}</div>`;
+openQuickModal(on ? "Esconder os bemóis?" : `Liberar os bemóis para ${who}?`, "", body, () => {
+if (on) delete real.flatsOn; else real.flatsOn = true;
+stuCur.view = { ...stuCur.view, flats: !!real.flatsOn };
+appFeaturesDirty = true; closeQuickModal(); stuRender();
+}, "Cancelar", on ? "Esconder" : "Liberar");
+});
+void ct;
 }
 
 // ---------- Treino de ouvido ----------
@@ -6696,11 +6866,11 @@ const PROGRESSIONS = [
 { id: "minor", name: "i–VII–VI–VII (menor)", chords: [[0, "m"], [10, ""], [8, ""], [10, ""]] }
 ];
 const backing = { key: "C", prog: "pop", style: "pop", bpm: 90 };
-function backingChordName(k, off, suffix){ const pc = (KEY_ROOTS.find(r => r[0] === k)[1] + off) % 12; return pcName(pc, rootUsesFlats(k)) + suffix; }
+function backingChordName(k, off, suffix){ const pc = (KEY_ROOTS.find(r => r[0] === k)[1] + off) % 12; return pcName(pc, false) + suffix; }
 function backingHTML(){
 const b = backing, pr = PROGRESSIONS.find(x => x.id === b.prog), playing = seq.on && seq.owner === "backing";
 return stuCard("Bases pra improvisar", `<div class="field"><label>Progressão</label><div class="reason-chips">${PROGRESSIONS.map(x => `<button type="button" class="filter-chip${x.id === b.prog ? " selected" : ""}" data-prog="${x.id}">${x.name}</button>`).join("")}</div></div>
-<div class="field"><label>Tom</label><div class="reason-chips key-chips">${KEY_ROOTS.map(([n]) => `<button type="button" class="filter-chip${b.key === n ? " selected" : ""}" data-bkey="${n}">${n}</button>`).join("")}</div></div>
+<div class="field"><label>Tom</label><div class="reason-chips key-chips">${KEY_ROOTS.map(([n]) => `<button type="button" class="filter-chip${b.key === n ? " selected" : ""}" data-bkey="${n}">${escapeHtml(noteLabel(n))}</button>`).join("")}</div></div>
 <div class="field"><label>Estilo</label><div class="reason-chips">${[["pop", "Pop"], ["ballad", "Balada"]].map(([k, l]) => `<button type="button" class="filter-chip${b.style === k ? " selected" : ""}" data-bstyle="${k}">${l}</button>`).join("")}</div></div>
 <div class="bpm-row"><label>Andamento <b id="bkBpmTxt">${b.bpm}</b> BPM</label><input type="range" min="50" max="180" value="${b.bpm}" id="bkBpm" class="metro-range"></div>`)
 + stuCard("", `<div class="bk-now"><div class="bk-cur" id="bkCur">${escapeHtml(backingChordName(b.key, pr.chords[0][0], pr.chords[0][1]))}</div><div class="bk-next" id="bkNext">${playing ? "" : "Aperte tocar e improvise por cima"}</div></div>
@@ -6728,7 +6898,7 @@ const bassPc = (rootPc + off) % 12, dur = 60 / b.bpm;
 if (sub === 0) {
 if (b.style === "pop") { synthChord(voicing(off, suffix), t, dur * 0.85, { vol: 0.13 }); }
 else if (inBar === 0) synthChord(voicing(off, suffix), t, dur * 3.9, { vol: 0.14, sustain: 0.8, attack: 0.08 });
-if (inBar === 0 || inBar === 2) synthNote(36 + bassPc + (bassPc > 7 ? -12 : 0) + 12, t, dur * 1.8, { vol: 0.32, type: "sine", sustain: 0.6 });
+if (inBar === 0 || inBar === 2) synthNote(36 + bassPc + (bassPc > 7 ? -12 : 0), t, dur * 1.8, { vol: 0.32, sustain: 0.6, inst: "bass" });
 if (inBar === 0 || (b.style === "pop" && inBar === 2)) drumHit("kick", t, 0.9);
 if (inBar === 1 || inBar === 3) drumHit(b.style === "ballad" ? "rim" : "snare", t, b.style === "ballad" ? 1.4 : 0.8);
 }
@@ -7002,7 +7172,7 @@ const el = document.createElement("div");
 el.className = "undo-toast ach-toast";
 el.innerHTML = `${achIcon(a, true)}<span class="undo-toast-msg">Nova conquista: ${escapeHtml(a.name)}</span><button type="button" class="undo-toast-btn">Ver</button>`;
 getToastStack().appendChild(el);
-el.querySelector("button").onclick = () => { el.remove(); stuOpenPage("progress"); };
+el.querySelector("button").onclick = () => { el.remove(); stuOpenPage("achievements"); };
 setTimeout(() => el.remove(), 7000);
 kidReward("Nova conquista!");
 }, i * 400));
@@ -7328,8 +7498,8 @@ const c = songCanOf(x.id), ok = c && (c.status === "can" || c.status === "master
 const el = document.createElement("div");
 el.className = "pdf-view";
 el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", x.t);
-el.innerHTML = `<div class="pdf-bar"><button type="button" class="pdf-x" aria-label="Fechar">✕</button><div class="pdf-title"><b>${escapeHtml(x.t)}</b>${x.a ? `<span>${escapeHtml(x.a)}</span>` : ""}</div><a class="btn-edit-toggle" href="${escapeHtml(x.u)}" target="_blank" rel="noopener">Abrir no Drive</a></div>
-<div class="pdf-frame">${src && demoMode !== "demo" ? `<iframe src="${escapeHtml(src)}" title="${escapeHtml(x.t)}" allow="autoplay"></iframe>` : `<div class="stu-empty">${demoMode === "demo" ? "Na demonstração a cifra não abre. No app de verdade, o PDF aparece aqui." : "Toque em \"Abrir no Drive\" para ver a cifra."}</div>`}</div>
+el.innerHTML = `<div class="pdf-bar"><button type="button" class="pdf-x" aria-label="Fechar">✕</button><div class="pdf-title"><b>${escapeHtml(x.t)}</b>${x.a ? `<span>${escapeHtml(x.a)}</span>` : ""}</div></div>
+<div class="pdf-frame">${src && demoMode !== "demo" ? `<iframe src="${escapeHtml(src)}" title="${escapeHtml(x.t)}" allow="autoplay"></iframe>` : `<div class="stu-empty">${demoMode === "demo" ? "Na demonstração a cifra não abre. No app de verdade, o PDF aparece aqui." : "Não consegui abrir esta cifra. Avise o professor."}</div>`}</div>
 <div class="pdf-foot"><button type="button" class="btn-edit-toggle" data-spractice>Praticar esta música</button><button type="button" class="${ok ? "status completed" : "btn-edit-toggle"}" data-scan>${ok ? "Consigo tocar ✓" : "Já consigo tocar"}</button></div>`;
 document.body.appendChild(el);
 document.body.classList.add("pdf-open");
@@ -7550,37 +7720,44 @@ stuRender();
 });
 }
 const FEEL_LABEL = { stuck: "Travei", ok: "Mais ou menos", good: "Consegui" };
+// Progresso (8.13): um grupo no menu com quatro páginas.
 function progressHTML(){
-const d = journal(), s = stuCur.s, now = Date.now();
+const d = journal(), now = Date.now();
 const streak = practiceStreak(d), total = totalPracticeMin(d);
 const mStart = new Date(); mStart.setDate(1); mStart.setHours(0,0,0,0);
 const month = practiceIn(d, mStart.getTime(), now + 1), wk = practiceIn(d, weekStartOf(new Date()).getTime(), now + 1);
-const ach = achievementsOf(d, s, stuThemesCount()), got = ach.filter(a => a.got);
-const view = stuCur.view || {};
+return stuCard("Esta semana e este mês", `<div class="stat-row"><div><b>${wk.days}</b><span>dia${wk.days === 1 ? "" : "s"} nesta semana</span></div><div><b>${streak}</b><span>dia${streak === 1 ? "" : "s"} seguidos</span></div><div><b>${minText(month.min)}</b><span>neste mês</span></div></div>
+<div class="stu-muted prog-total">${minText(total)} de prática no total</div>`)
++ stuCard("Minutos por semana", weeklyBarsSVG(d));
+}
+function achievementsHTML(){
+const d = journal(), ach = achievementsOf(d, stuCur.s, stuThemesCount()), got = ach.filter(a => a.got);
+const next = ach.filter(a => !a.got && !a.mark).sort((a, b) => b.progress - a.progress || a.goal - b.goal)[0];
+const nextHtml = next ? `<div class="ach-next"><div class="ach-next-top">${achIcon(next, false)}<div><div class="ach-next-name">${got.length ? "Próxima" : "Sua primeira conquista está perto"}: ${escapeHtml(next.name)}</div><div class="stu-muted">Faltam ${escapeHtml(next.leftText)}</div></div></div><div class="hw-bar ach-bar"><span style="width:${Math.round(next.progress * 100)}%"></span></div></div>` : "";
+const gotHtml = got.length ? `<div class="ach-got">${got.slice().sort((a, b) => String(b.at || "").localeCompare(String(a.at || ""))).map(a => `<div class="ach-chip">${achIcon(a, true)}<div><b>${escapeHtml(a.name)}</b>${a.at ? `<small>${formatDateShort(isoOf(new Date(a.at))).slice(0,5)}</small>` : ""}</div></div>`).join("")}</div>` : `<div class="stu-empty">Nenhuma ainda. A primeira está logo ali.</div>`;
+return (nextHtml ? stuCard("Próxima conquista", nextHtml) : "") + stuCard(`Suas conquistas · ${got.length} de ${ach.length}`, gotHtml + `<button type="button" class="btn-historico ach-all" id="achAll">Ver todas</button>`);
+}
+function evolutionHTML(){
+const s = stuCur.s, view = stuCur.view || {};
 const certs = Array.isArray(view.certificates) ? view.certificates : [];
 const evalOk = !!stuCur.tp.show_evaluations && evalChartSVG(s);
-let html = stuCard("Sua prática", `<div class="stat-row"><div><b>${wk.days}</b><span>dia${wk.days === 1 ? "" : "s"} nesta semana</span></div><div><b>${streak}</b><span>dia${streak === 1 ? "" : "s"} seguidos</span></div><div><b>${minText(month.min)}</b><span>neste mês</span></div></div>
-<div class="stu-muted prog-total">${minText(total)} de prática no total</div>
-<div class="prog-sub">Minutos por semana</div>${weeklyBarsSVG(d)}`);
-// Conquistas: só as ganhas + a próxima com barra; a lista completa num modal.
-const next = ach.filter(a => !a.got && !a.mark).sort((a, b) => b.progress - a.progress || a.goal - b.goal)[0];
-const gotHtml = got.length ? `<div class="ach-got">${got.slice().sort((a, b) => String(b.at || "").localeCompare(String(a.at || ""))).map(a => `<div class="ach-chip">${achIcon(a, true)}<div><b>${escapeHtml(a.name)}</b>${a.at ? `<small>${formatDateShort(isoOf(new Date(a.at))).slice(0,5)}</small>` : ""}</div></div>`).join("")}</div>` : "";
-const nextHtml = next ? `<div class="ach-next"><div class="ach-next-top">${achIcon(next, false)}<div><div class="ach-next-name">${got.length ? "Próxima" : "Sua primeira conquista está perto"}: ${escapeHtml(next.name)}</div><div class="stu-muted">Faltam ${escapeHtml(next.leftText)}</div></div></div><div class="hw-bar ach-bar"><span style="width:${Math.round(next.progress * 100)}%"></span></div></div>` : "";
-html += stuCard("Conquistas", gotHtml + nextHtml + `<button type="button" class="btn-historico ach-all" id="achAll">Ver todas (${got.length} de ${ach.length})</button>`);
+let html = "";
 if (s.level || certs.length) html += stuCard("Nível", `${s.level ? `<div class="level-big">${escapeHtml(s.level)}</div>` : ""}${s.instrument ? `<div class="stu-muted">${escapeHtml(s.instrument)}</div>` : ""}
 ${certs.length ? `<div class="prog-sub">Certificados</div>${certs.slice().sort((a, b) => String(b.date).localeCompare(String(a.date))).map((c, i) => `<button type="button" class="stu-lrow" data-cert="${i}"><span class="stu-lrow-main">${escapeHtml(c.level)}</span><span class="stu-lrow-side">${formatDateShort(c.date)}</span><span class="settings-row-chevron" aria-hidden="true">›</span></button>`).join("")}` : ""}`);
 if (evalOk) html += stuCard("Evolução nas avaliações", evalOk);
-// Histórico de prática: as práticas com o "Como foi?" e as anotações do diário.
-const practices = jAlive(d, "practice").sort((a, b) => Date.parse(b.at) - Date.parse(a.at)).slice(0, 30);
-const notes = jAlive(d, "diary").filter(n => !n.practiceId).sort((a, b) => Date.parse(b.at) - Date.parse(a.at)).slice(0, 20);
-html += stuCard("Histórico de prática", practices.length || notes.length ? practices.map(p => `<div class="hist-row"><div class="hist-main"><div class="stu-row-title">${escapeHtml(p.what || "Prática")}</div><div class="stu-muted">${formatDateShort(isoOf(new Date(p.at))).slice(0,5)} · ${minText(p.min)}${p.feel ? ` · ${FEEL_LABEL[p.feel] || ""}` : ""}</div>${p.note ? `<div class="hist-note">${escapeHtml(p.note)}</div>` : ""}</div><button type="button" class="del-btn" data-ptdel="${p.id}" aria-label="Apagar esta prática">${DEL_ICON}</button></div>`).join("")
-+ (notes.length ? `<div class="prog-sub">Anotações antigas do diário</div>${notes.map(n => `<div class="hist-row"><div class="hist-main"><div class="hist-note">${escapeHtml(n.text)}</div><div class="stu-muted">${formatDateShort(isoOf(new Date(n.at))).slice(0,5)}</div></div><button type="button" class="del-btn" data-diarydel="${n.id}" aria-label="Apagar esta anotação">${DEL_ICON}</button></div>`).join("")}` : "")
-: `<div class="stu-empty">Nenhuma prática registrada ainda. Comece em Praticar.</div>`);
 const cur = currentMonthKey(), prev = addMonths(cur, -1);
 html += stuCard("Relatório do mês", `<div class="stu-muted">Uma imagem com o seu mês na música, pronta pra guardar ou postar.</div>
 <div class="field"><label>Mês</label><select id="repMonth"><option value="${cur}">${monthLongLabel(cur)}</option><option value="${prev}">${monthLongLabel(prev)}</option></select></div>
 <div class="actions"><button class="save" id="repGo">Gerar imagem</button></div>`);
 return html;
+}
+function ptHistoryHTML(){
+const d = journal();
+const practices = jAlive(d, "practice").sort((a, b) => Date.parse(b.at) - Date.parse(a.at)).slice(0, 60);
+const notes = jAlive(d, "diary").filter(n => !n.practiceId).sort((a, b) => Date.parse(b.at) - Date.parse(a.at)).slice(0, 20);
+if (!practices.length && !notes.length) return stuCard("", `<div class="stu-empty">Nenhuma prática registrada ainda. Comece em Praticar.</div>`);
+return (practices.length ? stuCard("Práticas", practices.map(p => `<div class="hist-row"><div class="hist-main"><div class="stu-row-title">${escapeHtml(p.what || "Prática")}</div><div class="stu-muted">${formatDateShort(isoOf(new Date(p.at))).slice(0,5)} · ${minText(p.min)}${p.feel ? ` · ${FEEL_LABEL[p.feel] || ""}` : ""}</div>${p.note ? `<div class="hist-note">${escapeHtml(p.note)}</div>` : ""}</div><button type="button" class="del-btn" data-ptdel="${p.id}" aria-label="Apagar esta prática">${DEL_ICON}</button></div>`).join("")) : "")
++ (notes.length ? stuCard("Anotações antigas do diário", notes.map(n => `<div class="hist-row"><div class="hist-main"><div class="hist-note">${escapeHtml(n.text)}</div><div class="stu-muted">${formatDateShort(isoOf(new Date(n.at))).slice(0,5)}</div></div><button type="button" class="del-btn" data-diarydel="${n.id}" aria-label="Apagar esta anotação">${DEL_ICON}</button></div>`).join("")) : "");
 }
 function openAchievements(){
 const d = journal(), ach = achievementsOf(d, stuCur.s, stuThemesCount());
@@ -7603,7 +7780,7 @@ const canvas = await drawCertificate(stuCur.s, c, stuCur.tp.full_name || stuCur.
 const blob = await new Promise(r => canvas.toBlob(r, "image/png"));
 showImageModal(blob, `certificado-${stripAccents(c.level).toLowerCase().replace(/[^a-z0-9]+/g, "-")}.png`, "Certificado", `Certificado de ${c.level} – ${stuCur.s.name}`);
 });
-main.querySelector("#repGo").onclick = async () => {
+const rg = main.querySelector("#repGo"); if (rg) rg.onclick = async () => {
 const key = main.querySelector("#repMonth").value;
 const canvas = await drawStudentMonthReport(stuCur.s, journal(), key);
 const blob = await new Promise(r => canvas.toBlob(r, "image/png"));
@@ -7920,6 +8097,8 @@ if (Array.isArray(s.appOff) && s.appOff.length) { const off = s.appOff.filter(p 
 const lib = songLib(), rel = Array.isArray(s.songsOn) ? s.songsOn : [];
 const songs = rel.map(r => { const x = lib.find(y => y.id === r.id); return x ? { id: x.id, t: x.title, ...(x.artist ? { a: x.artist } : {}), u: x.url, d: r.at || "" } : null; }).filter(Boolean);
 if (songs.length) info.songs = songs;
+if (Array.isArray(s.chordsOn) && s.chordsOn.length) info.chords = s.chordsOn.slice();
+if (s.flatsOn) info.flats = true;
 if (Array.isArray(s.appOn) && s.appOn.length) info.on = s.appOn.filter(p => TOOL_PAGES.includes(p));
 if (s.parentPin && stContent().moneyAdultsOnly) { try { info.parentPin = pinHash(studentUuidMap().of(s), s.parentPin); } catch(e) {} }
 if (Array.isArray(s.certificates) && s.certificates.length) info.certificates = s.certificates.filter(c => c && c.level).map(c => ({ level: c.level, date: c.date }));
@@ -8221,7 +8400,7 @@ b.addEventListener("click", e => { if (fired) { e.stopImmediatePropagation(); e.
 }
 function askAppFeature(p){
 if (demoMode !== "view" || !stuCur || !viewAsRef) return;
-const real = viewAsRef, tool = TOOL_PAGES.includes(p), isOff = tool ? !(real.appOn || []).includes(p) : (real.appOff || []).includes(p), name = STU_PAGES[p], who = firstName(real.name);
+const real = viewAsRef, tool = TOOL_PAGES.includes(p), isOff = tool ? !(real.appOn || []).includes(p) : (real.appOff || []).includes(p), name = p === "progress" ? "Progresso (o grupo todo)" : STU_PAGES[p], who = firstName(real.name);
 const body = document.createElement("div");
 body.innerHTML = `<div class="stu-muted">${isOff ? `${escapeHtml(who)} passa a ver <b>${escapeHtml(name)}</b> no app.` : `<b>${escapeHtml(name)}</b> some do app de ${escapeHtml(who)} até você liberar de novo. Nada do que ele já fez se perde.`}</div>`;
 openQuickModal(isOff ? `Liberar ${name}?` : `Desativar ${name}?`, "", body, () => {
@@ -10215,8 +10394,10 @@ return list;
 // nome no calendário (feriados nacionais/estaduais já são calculados automaticamente).
 let agendaEvents = JSON.parse(localStorage.getItem("jp_agenda_events_v1")||"null")||[];
 function saveAgendaEvents(){ localStorage.setItem("jp_agenda_events_v1", JSON.stringify(agendaEvents)); }
+// Evento de vários dias (8.13): "date" é o primeiro dia e "end" o último (sem "end" = um dia só).
+function eventCovers(e, dateStr){ return e.date === dateStr || (e.end && e.date <= dateStr && dateStr <= e.end); }
 function getAgendaEventsForDate(dateStr){
-return agendaEvents.filter(e => e.date === dateStr);
+return agendaEvents.filter(e => eventCovers(e, dateStr));
 }
 
 let agendaViewYear = new Date().getFullYear();
@@ -10254,7 +10435,11 @@ if (month === 11) holidays = holidays.concat(getNationalHolidaysForYear(year+1))
 const holidayMap = {};
 holidays.forEach(h => { (holidayMap[h.date] = holidayMap[h.date]||[]).push(h); });
 const eventMap = {};
-agendaEvents.forEach(e => { (eventMap[e.date] = eventMap[e.date]||[]).push(e); });
+agendaEvents.forEach(e => {
+if (!e.end || e.end <= e.date) { (eventMap[e.date] = eventMap[e.date]||[]).push(e); return; }
+const d = dateFromIso(e.date), last = dateFromIso(e.end);
+for (let n = 0; d <= last && n < 370; n++, d.setDate(d.getDate() + 1)) { const k = isoOf(d); (eventMap[k] = eventMap[k]||[]).push(e); }
+});
 
 const firstOfMonth = new Date(year, month, 1);
 const daysInMonth = new Date(year, month+1, 0).getDate();
@@ -10301,6 +10486,7 @@ fab.style.display = (year === now.getFullYear() && month === now.getMonth()) ? "
 
 function openAgendaDayModal(dateStr){
 agendaModalDate = dateStr;
+const endIn = document.getElementById("agendaAddEnd"); if (endIn) { endIn.min = dateStr; if (endIn.value && endIn.value < dateStr) endIn.value = ""; }
 const [y,m,d] = dateStr.split('-').map(Number);
 const cellDate = new Date(y, m-1, d);
 document.getElementById("holidayInfoTitle").textContent = agendaWeekdayNamesFull[cellDate.getDay()];
@@ -10332,7 +10518,7 @@ const breakItems = (appSettings.breaks || []).filter(b => b.start <= dateStr && 
 const st = b.studentId ? students.find(x => x.id === b.studentId) : null;
 return { type:"break", name: b.label || "Férias/recesso", who: st ? `só ${st.name}` : "todos os alunos", range: `${formatDateShort(b.start)} a ${formatDateShort(b.end)}` };
 });
-const dayList = [...breakItems, ...getNationalHolidaysForYear(y).filter(h => h.date === dateStr), ...getAgendaEventsForDate(dateStr)];
+const dayList = [...breakItems, ...getNationalHolidaysForYear(y).filter(h => h.date === dateStr), ...getAgendaEventsForDate(dateStr).map(e => e.end && e.end > e.date ? { ...e, range: `${formatDateShort(e.date)} a ${formatDateShort(e.end)}` } : e)];
 document.getElementById("holidayInfoList").innerHTML = dayList.length ? dayList.map(item => `
 <div class="holiday-info-item">
 <div><div class="holiday-info-name">${escapeHtml(item.type==='event' ? item.title : item.name)}</div><div class="holiday-info-type"><span class="agenda-dot agenda-tag--${item.type}"></span>${agendaTagInfo[item.type].label}${item.who ? " · " + escapeHtml(item.who) : ""}</div>${item.range ? `<div class="holiday-info-type">${item.range}</div>` : ""}</div>
@@ -10341,6 +10527,8 @@ ${item.type==='event' ? `<button type="button" class="btn-delete" style="margin:
 
 document.querySelectorAll('#holidayInfoList [data-del-id]').forEach(btn => {
 btn.onclick = () => {
+const ev = agendaEvents.find(e => e.id === btn.dataset.delId);
+if (ev && ev.end && ev.end > ev.date && !confirm(`Remover "${ev.title}" de todos os dias (${formatDateShort(ev.date)} a ${formatDateShort(ev.end)})?`)) return;
 agendaEvents = agendaEvents.filter(e => e.id !== btn.dataset.delId);
 saveAgendaEvents();
 renderAgenda();
@@ -12856,7 +13044,10 @@ document.getElementById("holidayInfoCloseBtn").onclick = () => document.getEleme
 document.getElementById("agendaAddBtn").onclick = () => {
 const title = document.getElementById("agendaAddTitle").value.trim();
 if (!title) { alert("Dê um nome pro evento."); return; }
-agendaEvents.push({ id:String(Date.now()), date:agendaModalDate, type:"event", title });
+const endEl = document.getElementById("agendaAddEnd"), end = endEl.value;
+if (end && end < agendaModalDate) { alert("A data final não pode ser antes do primeiro dia."); return; }
+agendaEvents.push({ id:String(Date.now()), date:agendaModalDate, type:"event", title, ...(end && end > agendaModalDate ? { end } : {}) });
+document.getElementById("agendaAddTitle").value = ""; endEl.value = "";
 saveAgendaEvents();
 renderAgenda();
 openAgendaDayModal(agendaModalDate);
@@ -13805,6 +13996,7 @@ studentsPerformance:"Desempenho", planner:"Organização de Aulas", settings:"Co
 
 document.querySelector("header").style.display = (page==="settings"||page==="tests") ? "none" : "";
 document.getElementById("settingsTopbar").style.display = (page==="settings") ? "flex" : "none";
+if (page === "settings") { try { settingsFolderOpen(null); } catch(e) {} }
 document.getElementById("testsTopbar").style.display = (page==="tests") ? "flex" : "none";
 
 document.querySelectorAll("#sidebar .nav button.nav-item").forEach(b => {
@@ -13846,7 +14038,52 @@ b.onclick = () => openPage(b.dataset.page);
 });
 
 document.getElementById("settingsNavBtn").onclick = () => openPage("settings");
-document.getElementById("settingsBackBtn").onclick = () => openPage("home");
+document.getElementById("settingsBackBtn").onclick = () => { if (settingsFolderCur) settingsFolderOpen(null); else openPage("home"); };
+// Configurações em pastas (8.13): a tela inicial mostra o perfil e as pastas; cada pasta abre
+// as linhas de antes (os mesmos elementos, movidos pra dentro dela, então tudo continua igual).
+const SETTINGS_FOLDERS = [
+{ id: "aulas", icon: "calendar", title: "Aulas e agenda", sub: "Instrumentos, duração, dias, reposição, férias, cidade", rows: ["rowInstrumentos", "rowDuracao", "rowDiasUteis", "rowMakeupDeadline", "rowFerias", "rowLocalizacao"] },
+{ id: "valores", icon: "dollar", title: "Valores e metas", sub: "Valores padrões, meta de crescimento, gráficos", rows: ["rowValoresPadrao", "rowGrowthGoal", "rowChartsStart"] },
+{ id: "aval", icon: "star", title: "Avaliações e níveis", sub: "Níveis, critérios e frequência", rows: ["rowNiveis", "rowCriterios", "rowEvalFreq"] },
+{ id: "msg", icon: "message", title: "Mensagens e lembretes", sub: "Mensagens prontas e avisos", rows: ["rowMensagens", "rowLembrete", "rowLessonReminder", "rowAvalPendente"] },
+{ id: "aluno", icon: "user", title: "App do aluno", sub: "Chave para alunos e conteúdo", rows: ["rowStudentKey", "rowStudentContent"] },
+{ id: "dados", icon: "save", title: "Dados e backup", sub: "Exportar, importar, restaurar", rows: ["rowExportarDados", "rowBackupReminder", "rowRestoreSnapshot", "rowImportarDados", "rowApagarDados"] },
+{ id: "conta", icon: "logout", title: "Conta", sub: "Nuvem, entrar como aluno, sair", rows: ["rowCloudSync", "rowStudentMode", "rowSairConta"] },
+{ id: "sobre", icon: "info", title: "Sobre o app", sub: "Idioma, instalar, feedback, termos, versão", rows: ["rowIdioma", "rowInstallApp", "rowFeedback", "rowTermos", "valVersao"] }
+];
+let settingsFolderCur = null;
+(function settingsFoldersBuild(){
+const page = document.getElementById("settingsPage");
+if (!page || page.querySelector("#settingsFolders")) return;
+const oldCards = [...page.querySelectorAll(":scope > .settings-card, :scope > .settings-group-label")];
+const list = document.createElement("div");
+list.id = "settingsFolders";
+list.innerHTML = `<div class="settings-card">${SETTINGS_FOLDERS.map(f => `<div class="settings-row" data-sfolder="${f.id}" role="button" tabindex="0"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-${f.icon}"/></svg></span><div class="settings-row-text"><div class="settings-row-title">${f.title}</div><div class="settings-row-sub">${f.sub}</div></div><span class="settings-row-chevron">›</span></div>`).join("")}</div>`;
+page.appendChild(list);
+SETTINGS_FOLDERS.forEach(f => {
+const box = document.createElement("div");
+box.className = "settings-folder"; box.dataset.folder = f.id; box.style.display = "none";
+const card = document.createElement("div"); card.className = "settings-card";
+f.rows.forEach(id => { let el = document.getElementById(id); if (el && !el.classList.contains("settings-row")) el = el.closest(".settings-row"); if (el) card.appendChild(el); });
+box.appendChild(card);
+page.appendChild(box);
+});
+// O que sobrou nos cartões antigos (ex.: o campo de importar arquivo) vai junto da pasta Dados.
+oldCards.forEach(c => { if (c.classList.contains("settings-card")) [...c.children].forEach(ch => page.querySelector('[data-folder="dados"] .settings-card').appendChild(ch)); c.remove(); });
+list.querySelectorAll("[data-sfolder]").forEach(r => { r.onclick = () => settingsFolderOpen(r.dataset.sfolder); r.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); r.click(); } }; });
+
+page.querySelectorAll(".settings-folder").forEach(b => b.style.display = "none");
+})();
+function settingsFolderOpen(id){
+const page = document.getElementById("settingsPage");
+settingsFolderCur = id || null;
+const f = SETTINGS_FOLDERS.find(x => x.id === id);
+document.getElementById("settingsFolders").style.display = f ? "none" : "";
+document.getElementById("settingsProfileCard").style.display = f ? "none" : "";
+page.querySelectorAll(".settings-folder").forEach(b => b.style.display = f && b.dataset.folder === id ? "" : "none");
+document.querySelector("#settingsTopbar .settings-topbar-title").textContent = f ? f.title : "Configurações";
+window.scrollTo(0, 0);
+}
 document.getElementById("testsBackBtn").onclick = () => openPage("home");
 
 const valSelect = document.getElementById("fValueSelect");
