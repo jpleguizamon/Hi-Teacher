@@ -3511,7 +3511,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.10";
+const APP_VERSION = "8.11";
 // ===================== App instalável (8.4) =====================
 // Service worker (sw.js), aviso de versão nova, faixa "Sem internet", botão "Instalar o app",
 // atalhos do ícone (?p=...) e botão voltar do celular fechando modal/menu no app instalado.
@@ -5153,7 +5153,15 @@ return new Set(kind ? TOOLS_BY_KIND[kind] : TOOL_PAGES);
 }
 // Funções que o professor ainda não liberou pra este aluno (8.9): somem do menu e não abrem.
 const APP_FEATURES = ["practice", "material", "songs", "goals", "recordings", "progress", "money"];
-function stuOff(){ return new Set(stuCur && stuCur.view && Array.isArray(stuCur.view.off) ? stuCur.view.off : []); }
+// Ferramentas (8.11) começam desligadas: só aparecem as que o professor liberou (view.on).
+// Na demonstração aparece tudo.
+function stuOff(){
+const v = (stuCur && stuCur.view) || {};
+const off = new Set((Array.isArray(v.off) ? v.off : []).filter(p => !TOOL_PAGES.includes(p)));
+if (demoMode !== "demo") { const on = new Set(Array.isArray(v.on) ? v.on : []); TOOL_PAGES.forEach(p => { if (!on.has(p)) off.add(p); }); }
+return off;
+}
+function stuToolGate(p){ if (stuPageAllowed(p)) return true; stuToast(`${STU_PAGES[p]}: o professor ainda não liberou.`); return false; }
 function stuPageAllowed(page){ return !stuOff().has(page) && (!TOOL_PAGES.includes(page) || stuToolSet().has(page)); }
 // Mostra no menu só as ferramentas do instrumento e já deixa afinador e acordes no jeito dele.
 function stuApplyTools(){
@@ -5873,6 +5881,7 @@ el.textContent = `Próximo aumento em ${left} compasso${left === 1 ? "" : "s"} (
 }
 // Treino de BPM a partir da lição de casa ("60 → 80 bpm").
 function metroTrain(from, to){
+if (!stuToolGate("metronome")) return;
 metroStop();
 metro.bpm = Math.max(30, Math.min(240, from));
 metro.prog = { on: true, step: Math.max(1, Math.round((to - from) / 8)) || 2, every: 4, target: Math.max(30, Math.min(240, to)) };
@@ -6635,6 +6644,7 @@ main.querySelector("#plBack").onclick = () => { m.currentTime = Math.max(0, m.cu
 main.querySelector("#plClear").onclick = () => { p.a = null; p.b = null; p.loop = false; main.querySelector("#plLoop").checked = false; ab(); };
 }
 function playerOpen(url, name, video){
+if (!stuToolGate("player")) return;
 if (player.url && player.url !== url && player.own) URL.revokeObjectURL(player.url);
 Object.assign(player, { url, name, video, a: null, b: null, loop: false, own: true });
 if (stuTab === "player") stuRender(); else stuOpenPage("player");
@@ -7076,7 +7086,7 @@ const hw = stuLastHomework();
 if (hw) {
 const g = hwGoals(hw.homework);
 out.push({ what: "Lição de casa", title: "Lição de casa", sub: hw.homework, icon: "clipboard" });
-if (g.from && g.to) out.push({ train: `${g.from}|${g.to}`, title: `Treinar de ${g.from} a ${g.to} BPM`, sub: "Metrônomo aumentando sozinho", icon: "music" });
+if (g.from && g.to && stuPageAllowed("metronome")) out.push({ train: `${g.from}|${g.to}`, title: `Treinar de ${g.from} a ${g.to} BPM`, sub: "Metrônomo aumentando sozinho", icon: "music" });
 }
 const ch = (stuContent().board || {}).challenge;
 if (ch) out.push({ what: "Desafio da semana", title: "Desafio da semana", sub: ch, icon: "target" });
@@ -7895,7 +7905,8 @@ if (appSettings.showEvalsToStudents && scores && Object.keys(scores).length) { c
 if (s.value === undefined) info.monthlyValue = getDefaultValueFor(s);
 const themes = studentThemesPublic(s);
 if (themes.length) info.themes = themes;
-if (Array.isArray(s.appOff) && s.appOff.length) info.off = s.appOff.filter(p => APP_FEATURES.includes(p) || TOOL_PAGES.includes(p));
+if (Array.isArray(s.appOff) && s.appOff.length) { const off = s.appOff.filter(p => APP_FEATURES.includes(p)); if (off.length) info.off = off; }
+if (Array.isArray(s.appOn) && s.appOn.length) info.on = s.appOn.filter(p => TOOL_PAGES.includes(p));
 if (s.parentPin && stContent().moneyAdultsOnly) { try { info.parentPin = pinHash(studentUuidMap().of(s), s.parentPin); } catch(e) {} }
 if (Array.isArray(s.certificates) && s.certificates.length) info.certificates = s.certificates.filter(c => c && c.level).map(c => ({ level: c.level, date: c.date }));
 return info;
@@ -8196,21 +8207,31 @@ b.addEventListener("click", e => { if (fired) { e.stopImmediatePropagation(); e.
 }
 function askAppFeature(p){
 if (demoMode !== "view" || !stuCur || !viewAsRef) return;
-const real = viewAsRef, isOff = (real.appOff || []).includes(p), name = STU_PAGES[p], who = firstName(real.name);
+const real = viewAsRef, tool = TOOL_PAGES.includes(p), isOff = tool ? !(real.appOn || []).includes(p) : (real.appOff || []).includes(p), name = STU_PAGES[p], who = firstName(real.name);
 const body = document.createElement("div");
 body.innerHTML = `<div class="stu-muted">${isOff ? `${escapeHtml(who)} passa a ver <b>${escapeHtml(name)}</b> no app.` : `<b>${escapeHtml(name)}</b> some do app de ${escapeHtml(who)} até você liberar de novo. Nada do que ele já fez se perde.`}</div>`;
 openQuickModal(isOff ? `Liberar ${name}?` : `Desativar ${name}?`, "", body, () => {
+if (tool) {
+const on = new Set(real.appOn || []);
+if (isOff) on.add(p); else on.delete(p);
+if (on.size) real.appOn = [...on]; else delete real.appOn;
+} else {
 const set = new Set(real.appOff || []);
 if (isOff) set.delete(p); else set.add(p);
 if (set.size) real.appOff = [...set]; else delete real.appOff;
-stuCur.view = { ...stuCur.view, off: real.appOff ? real.appOff.slice() : undefined };
+}
+stuCur.view = { ...stuCur.view, off: real.appOff ? real.appOff.slice() : undefined, on: real.appOn ? real.appOn.slice() : undefined };
 appFeaturesDirty = true;
 closeQuickModal();
 stuApplyTools(); stuRender();
 stuToast(isOff ? `${name} liberada para ${who}.` : `${name} desativada para ${who}.`);
 }, "Cancelar", isOff ? "Liberar" : "Desativar");
 }
-function appFeaturesLabel(s){ const n = (s.appOff || []).length; return n ? `${n} função${n === 1 ? "" : "ões"} ainda não liberada${n === 1 ? "" : "s"}` : "Todas as funções liberadas"; }
+function appFeaturesLabel(s){
+const kind = instrumentKind(s.instrument), tools = kind ? TOOLS_BY_KIND[kind] : TOOL_PAGES;
+const on = (s.appOn || []).filter(p => tools.includes(p)).length, off = (s.appOff || []).filter(p => APP_FEATURES.includes(p)).length;
+return `${off ? `${off} função${off === 1 ? "" : "ões"} de estudo desativada${off === 1 ? "" : "s"}` : "Estudo todo liberado"} · ${on ? `ferramentas liberadas: ${on} de ${tools.length}` : "nenhuma ferramenta liberada ainda"}`;
+}
 // ---------- Ficha: acesso ao app ----------
 function appAccessHTML(s){
 if (!inbox.loaded) return "";
