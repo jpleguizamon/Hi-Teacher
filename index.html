@@ -2020,6 +2020,33 @@ html.standalone .only-browser{display:none}
 .money-lock input{max-width:9rem;text-align:center;letter-spacing:.3em;font-variant-numeric:tabular-nums}
 #stuSidebar .nav-item.feat-off{opacity:.42;filter:grayscale(1)}
 #stuSidebar [data-stu-page]{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.stu-title-bar{margin-top:0}
+.song-top{display:flex;gap:0.5rem;align-items:center;margin-bottom:1rem}
+.song-search{flex:1;min-width:0;position:relative;margin:0!important}
+.song-top .actions{flex:none;margin:0}
+.song-top .actions button{padding:0.75rem 1rem}
+.song-search svg{position:absolute;left:0.75rem;top:50%;width:1rem;height:1rem;transform:translateY(-50%);fill:none;stroke:var(--muted);stroke-width:2;stroke-linecap:round;pointer-events:none}
+.song-search input{width:100%;padding-left:2.25rem}
+.song-top .save{white-space:nowrap}
+.song-row .settings-row-icon{flex:none}
+.stu-lrow.still{cursor:default}
+.stu-lrow[hidden]{display:none}
+body.pdf-open{overflow:hidden}
+.pdf-view{position:fixed;inset:0;z-index:120;display:flex;flex-direction:column;background:var(--bg,#05060B);padding:var(--sat,0) 0 var(--sab,0)}
+.pdf-bar{display:flex;align-items:center;gap:0.625rem;padding:0.625rem 0.75rem;border-bottom:0.0625rem solid var(--glass-border)}
+.pdf-x{flex:none;width:2.5rem;height:2.5rem;border:none;border-radius:var(--radius-sm);background:transparent;color:var(--text);font-size:1.125rem;cursor:pointer}
+.pdf-title{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}
+.pdf-title b{font-size:0.9375rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pdf-title span{font-size:0.75rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pdf-bar .btn-edit-toggle{flex:none;text-decoration:none}
+.pdf-frame{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;background:#111}
+.pdf-frame iframe{width:100%;height:100%;border:0;background:#fff}
+.pdf-frame .stu-empty{padding:1.5rem;text-align:center}
+.pdf-foot{display:flex;gap:0.5rem;justify-content:flex-end;padding:0.625rem 0.75rem;border-top:0.0625rem solid var(--glass-border)}
+.pdf-foot button{min-height:2.5rem}
+.sl-list{max-height:45vh;overflow:auto;margin-bottom:0.75rem}
+.sl-item{display:flex;align-items:center;gap:0.5rem}
+.sl-item span{flex:1;min-width:0;overflow-wrap:anywhere}
 </style>
 </head>
 <body>
@@ -2689,7 +2716,7 @@ html.standalone .only-browser{display:none}
 <div class="nav-sub">
 <button class="nav-item" data-stu-page="practice">Praticar</button>
 <button class="nav-item" data-stu-page="material">Matérias</button>
-<button class="nav-item" data-stu-page="songs">Minhas músicas</button>
+<button class="nav-item" data-stu-page="songs">Músicas</button>
 <button class="nav-item" data-stu-page="goals">Metas</button>
 <button class="nav-item" data-stu-page="recordings">Gravações</button>
 <button class="nav-item" data-stu-page="progress">Progresso</button>
@@ -3511,7 +3538,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.11";
+const APP_VERSION = "8.12";
 // ===================== App instalável (8.4) =====================
 // Service worker (sw.js), aviso de versão nova, faixa "Sem internet", botão "Instalar o app",
 // atalhos do ícone (?p=...) e botão voltar do celular fechando modal/menu no app instalado.
@@ -5120,7 +5147,7 @@ await startStudentMode(true);
 // ---------- Telas ----------
 // Título de seção igual ao do professor (caixa alta pequena) + card de vidro.
 function stuCard(title, inner, extraCls){ return `${title ? `<div class="settings-group-label">${title}</div>` : ""}<section class="stu-card${extraCls ? " " + extraCls : ""}">${inner}</section>`; }
-const STU_PAGES = { home: "Início", lessons: "Aulas", money: "Financeiro", practice: "Praticar", songs: "Minhas músicas", goals: "Metas", recordings: "Gravações", progress: "Progresso", material: "Matérias",
+const STU_PAGES = { home: "Início", lessons: "Aulas", money: "Financeiro", practice: "Praticar", songs: "Músicas", goals: "Metas", recordings: "Gravações", progress: "Progresso", material: "Matérias",
 metronome: "Metrônomo", tuner: "Afinador", chords: "Acordes e escalas", ear: "Treino de ouvido", reading: "Leitura de partitura", drums: "Bateria", voice: "Canto", player: "Tocar junto", backing: "Bases", profile: "Perfil" };
 // Troca de página do modo aluno: mesma animação e mesma lógica de menu do openPage do professor.
 // Ferramentas por instrumento (8.6): o aluno só vê o que faz parte do aprendizado dele.
@@ -5217,7 +5244,15 @@ document.querySelectorAll("#stuSidebar [data-stu-page]").forEach(b => b.classLis
 const main = document.getElementById("stuMain");
 const r = { home: stuHomeHTML, lessons: stuLessonsHTML, money: stuMoneyHTML, practice: practiceHTML, songs: songsHTML, goals: goalsHTML, recordings: recordingsHTML, progress: progressHTML, material: materialHTML,
 metronome: metroHTML, tuner: tunerHTML, chords: chordsHTML, ear: earHTML, reading: readingHTML, drums: drumsHTML, voice: voiceHTML, player: playerHTML, backing: backingHTML, profile: stuProfileHTML }[stuTab];
-main.innerHTML = r();
+// Título da página com a linha embaixo, igual ao app do professor (8.12). O primeiro rótulo
+// some quando repete o nome da página (ex.: "Afinador" logo abaixo do título "Afinador").
+let pageHtml = r();
+if (stuTab !== "home") {
+const label = STU_PAGES[stuTab], m = pageHtml.match(/^\s*<div class="settings-group-label">([^<]*)<\/div>/);
+if (m && stripAccents(m[1]).toLowerCase().trim() === stripAccents(label).toLowerCase()) pageHtml = pageHtml.slice(m[0].length);
+pageHtml = `<div class="page-title-bar stu-title-bar"><h2 class="page-title-text">${escapeHtml(label)}</h2></div>` + pageHtml;
+}
+main.innerHTML = pageHtml;
 stuBind(main);
 ptTick();
 stuBellUpdate();
@@ -5802,7 +5837,7 @@ const binders = { metronome: toolsBind, tuner: toolsBind, chords: chordsBind, ea
 practice: practiceBind, songs: songsBind, lessons: lessonsBind, goals: goalsBind, recordings: recordingsBind, progress: progressBind, material: materialBind };
 if (binders[stuTab]) binders[stuTab](main);
 // "Ver como aluno": botões de enviar desligados.
-if (demoMode === "view" && ["practice", "songs", "goals", "recordings"].includes(stuTab)) main.querySelectorAll("button:not([data-go]),input,select,textarea").forEach(el => { el.disabled = true; });
+if (demoMode === "view" && ["practice", "goals", "recordings"].includes(stuTab)) main.querySelectorAll("button:not([data-go]),input,select,textarea").forEach(el => { el.disabled = true; });
 if (demoMode === "view") main.querySelectorAll("[data-mark]").forEach(b => { b.disabled = true; b.onclick = null; });
 if (demoMode === "view") main.querySelectorAll("[data-absent],[data-paid],[data-cancel-req],#stuChangeBtn,[data-resched],[data-mkpick],[data-hwdone],[data-hwundo],[data-rsvp],#songAsk,[data-sreq]").forEach(b => { b.disabled = true; b.textContent = "Só visualização"; b.onclick = null; });
 }
@@ -6873,9 +6908,9 @@ const ACHIEVEMENTS = [
 { id: "h50", icon: "gem", name: "50 horas de prática", desc: "Somar 50 horas praticando", goal: 3000, cur: c => c.min, unit: "min" },
 { id: "s7", icon: "calendar", name: "Uma semana seguida", desc: "7 dias de sequência", goal: 7, cur: c => c.bestStreak, unit: ["dia", "dias"] },
 { id: "s30", icon: "medal", name: "Um mês seguido", desc: "30 dias de sequência", goal: 30, cur: c => c.bestStreak, unit: ["dia", "dias"] },
-{ id: "song1", icon: "play", name: "Primeira música completa", desc: "Marcar uma música como \"Consigo tocar\"", goal: 1, cur: c => c.songsCan, unit: ["música", "músicas"] },
+{ id: "song1", icon: "play", name: "Primeira música completa", desc: "Marcar uma cifra como \"Já consigo tocar\"", goal: 1, cur: c => c.songsCan, unit: ["música", "músicas"] },
 { id: "song5", icon: "list", name: "Repertório de 5", desc: "5 músicas que consegue tocar", goal: 5, cur: c => c.songsCan, unit: ["música", "músicas"] },
-{ id: "master", icon: "crown", name: "Domina uma música", desc: "Marcar uma música como \"Domino\"", goal: 1, cur: c => c.songsMaster, unit: ["música", "músicas"] },
+{ id: "master", icon: "crown", name: "Repertório de 10", desc: "10 músicas que consegue tocar", goal: 10, cur: c => c.songsCan, unit: ["música", "músicas"] },
 { id: "hw5", icon: "check", name: "Lição em dia", desc: "Fazer 5 lições de casa", goal: 5, cur: c => c.hw, unit: ["lição", "lições"] },
 { id: "diary", icon: "book", name: "Diário de bordo", desc: "10 anotações sobre a prática", goal: 10, cur: c => c.diary, unit: ["anotação", "anotações"] },
 { id: "goal", icon: "target", name: "Meta cumprida", desc: "Cumprir uma meta", goal: 1, cur: c => c.goalsDone, unit: ["meta", "metas"] },
@@ -7090,7 +7125,7 @@ if (g.from && g.to && stuPageAllowed("metronome")) out.push({ train: `${g.from}|
 }
 const ch = (stuContent().board || {}).challenge;
 if (ch) out.push({ what: "Desafio da semana", title: "Desafio da semana", sub: ch, icon: "target" });
-jAlive(d, "songs").filter(x => x.status === "learning").slice(0, 4).forEach(x => out.push({ what: `Música: ${x.title}`, title: x.title, sub: x.artist || "Música que você está aprendendo", icon: "music" }));
+if (stuPageAllowed("songs")) { const can = new Set(jAlive(d, "songs").filter(x => x.libId && (x.status === "can" || x.status === "master")).map(x => x.libId)); stuSongs().filter(x => !can.has(x.id)).slice(0, 3).forEach(x => out.push({ what: `Música: ${x.t}`, title: x.t, sub: x.a || "Cifra liberada pelo professor", icon: "music" })); }
 return out;
 }
 // "Outra coisa" (8.8): as últimas sugestões do professor (lições de casa anteriores e matérias)
@@ -7270,98 +7305,73 @@ setTimeout(() => URL.revokeObjectURL(a.href), 60000);
 }
 
 // ---------- Minhas músicas e setlists ----------
-const songsUi = { filter: "all", open: null };
-function songReq(song){ return (stu && stu.requests || []).find(r => r.type === "song_request" && r.payload && r.payload.songId === song.id && r.status !== "cancelled"); }
+// Músicas (8.12): as cifras (PDF no Google Drive) que o professor libera conforme ensina.
+// O aluno busca, abre o PDF e marca "Já consigo tocar"; "Pedir música" manda o pedido ao professor.
+// As anotações antigas de "Minhas músicas" e as setlists continuam guardadas (o professor ainda vê).
+function stuSongs(){ const v = (stuCur && stuCur.view) || {}; return (Array.isArray(v.songs) ? v.songs : []).filter(x => x && x.t && x.u).slice().sort((a, b) => String(b.d || "").localeCompare(String(a.d || "")) || String(a.t).localeCompare(String(b.t))); }
+function driveFileId(u){ const m = String(u || "").match(/\/file\/d\/([\w-]{10,})/) || String(u || "").match(/[?&]id=([\w-]{10,})/); return m ? m[1] : ""; }
+function songCanOf(libId){ return jAlive(journal(), "songs").find(x => x.libId === libId); }
 function songsHTML(){
-const d = journal(), all = jAlive(d, "songs").sort((a, b) => SONG_STATUS.findIndex(x => x[0] === a.status) - SONG_STATUS.findIndex(x => x[0] === b.status) || String(a.title).localeCompare(String(b.title)));
-const list = songsUi.filter === "all" ? all : all.filter(x => x.status === songsUi.filter);
-const sets = jAlive(d, "setlists").sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
-const reqOk = !!(stu && stu.students);
-let html = stuCard("Minhas músicas", `<div class="song-add"><div class="field"><label>Música</label><input type="text" id="songTitle" maxlength="80" placeholder="Nome da música"></div>
-<div class="field"><label>Artista ou observação (opcional)</label><input type="text" id="songArtist" maxlength="80"></div>
-<div class="field"><label>Link da cifra ou do vídeo (opcional)</label><input type="url" id="songLink" maxlength="300" placeholder="https://"></div>
-<div class="actions"><button class="cancel" id="songAsk">Pedir ao professor</button><button class="save" id="songAdd">Adicionar</button></div></div>
-<div class="reason-chips">${[["all", "Todas"], ...SONG_STATUS].map(([k, l]) => `<button type="button" class="filter-chip${songsUi.filter === k ? " selected" : ""}" data-sfilter="${k}">${l}${k === "all" ? ` (${all.length})` : ` (${all.filter(x => x.status === k).length})`}</button>`).join("")}</div>
-${list.length ? list.map(x => {
-const r = songReq(x);
-const rtxt = r ? (r.status === "pending" ? `<span class="stu-status wait">Pedido enviado ao professor</span>` : r.status === "accepted" ? `<span class="stu-status ok">Professor aprovou${r.response ? `: ${escapeHtml(r.response)}` : ""}</span>` : `<span class="stu-status bad">Professor não aprovou${r.response ? `: ${escapeHtml(r.response)}` : ""}</span>`) : "";
-return `<div class="song-item"><div class="song-head"><div class="stu-row-main"><div class="stu-row-title">${escapeHtml(x.title)}</div>${x.artist ? `<div class="stu-muted">${escapeHtml(x.artist)}</div>` : ""}${rtxt}</div>
-<select class="song-status" data-sstatus="${x.id}" aria-label="Situação">${SONG_STATUS.map(([k, l]) => `<option value="${k}"${x.status === k ? " selected" : ""}>${l}</option>`).join("")}</select></div>
-<div class="song-acts">${x.link && /^https?:\/\//i.test(x.link) ? `<a class="btn-edit-toggle" href="${escapeHtml(x.link)}" target="_blank" rel="noopener">Abrir link</a>` : ""}<button type="button" class="btn-edit-toggle" data-sfiles="${x.id}">Arquivos</button>${!r && x.status === "want" && reqOk ? `<button type="button" class="btn-edit-toggle" data-sreq="${x.id}">Pedir ao professor</button>` : ""}<button type="button" class="del-btn" data-sdel="${x.id}" aria-label="Apagar a música">${DEL_ICON}</button></div>
-<div class="song-files" data-sfilesbox="${x.id}"></div></div>`;
-}).join("") : `<div class="stu-empty">${all.length ? "Nenhuma música nesta situação." : "Anote as músicas que você quer aprender e acompanhe o progresso de cada uma."}</div>`}`);
-html += stuCard("Setlists", `<div class="stu-muted">Listas de músicas pra apresentações e recitais.</div>
-<div class="pt-manual-row"><div class="field"><label>Nome</label><input type="text" id="setName" maxlength="60" placeholder="Ex.: Recital de dezembro"></div><div class="field"><label>Data (opcional)</label><input type="date" id="setDate"></div></div>
-<div class="actions"><button class="save" id="setAdd">Criar setlist</button></div>
-${sets.map(sl => {
-const ids = (sl.songIds || []).filter(id => all.some(x => x.id === id));
-const add = all.filter(x => !ids.includes(x.id));
-return `<div class="set-item"><div class="stu-row-title">${escapeHtml(sl.name)}${sl.date ? ` <span class="stu-muted">· ${formatDateShort(sl.date).slice(0,5)}</span>` : ""}</div>
-${ids.length ? `<ol class="set-songs">${ids.map((id, i) => `<li><span>${escapeHtml(all.find(x => x.id === id).title)}</span><button type="button" class="list-edit-btn" data-setup="${sl.id}|${i}" ${i === 0 ? "disabled" : ""} aria-label="Subir">↑</button><button type="button" class="list-edit-btn" data-setdown="${sl.id}|${i}" ${i === ids.length - 1 ? "disabled" : ""} aria-label="Descer">↓</button><button type="button" class="list-edit-btn danger" data-setrm="${sl.id}|${i}" aria-label="Tirar">✕</button></li>`).join("")}</ol>` : `<div class="stu-muted">Nenhuma música ainda.</div>`}
-<div class="set-acts">${add.length ? `<select data-setaddsong="${sl.id}"><option value="">+ Adicionar música</option>${add.map(x => `<option value="${x.id}">${escapeHtml(x.title)}</option>`).join("")}</select>` : ""}<button type="button" class="btn-edit-toggle" data-setshare="${sl.id}">Compartilhar</button><button type="button" class="del-btn" data-setdel="${sl.id}" aria-label="Apagar a setlist">${DEL_ICON}</button></div></div>`;
-}).join("")}`);
+const list = stuSongs();
+const reqs = (stu && stu.requests || []).filter(r => r.type === "song_request" && r.student_id === stuCur.uuid && r.status === "pending");
+const row = x => { const c = songCanOf(x.id), ok = c && (c.status === "can" || c.status === "master");
+return `<button type="button" class="stu-lrow song-row" data-song="${escapeHtml(x.id)}" data-q="${escapeHtml(stripAccents(`${x.t} ${x.a || ""}`).toLowerCase())}"><span class="settings-row-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-music"/></svg></span><span class="stu-lrow-main">${escapeHtml(x.t)}<small>${escapeHtml([x.a, x.d ? `liberada em ${formatDateShort(x.d).slice(0,5)}` : ""].filter(Boolean).join(" · "))}</small></span>${ok ? `<span class="stu-status ok">Consigo tocar</span>` : ""}<span class="settings-row-chevron" aria-hidden="true">›</span></button>`; };
+let html = `<div class="song-top"><div class="song-search field"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg><input type="search" id="songSearch" placeholder="Buscar música" aria-label="Buscar música" autocomplete="off"></div><div class="actions"><button type="button" class="save" id="songAsk">Pedir música</button></div></div>`;
+if (reqs.length) html += `<div class="settings-group-label">Pedidos</div><div class="settings-card lrow-card">${reqs.map(r => `<div class="stu-lrow still"><span class="stu-lrow-main">${escapeHtml((r.payload || {}).title || "Música")}${(r.payload || {}).artist ? `<small>${escapeHtml(r.payload.artist)}</small>` : ""}</span><span class="stu-status wait">Aguardando o professor</span></div>`).join("")}</div>`;
+html += list.length ? `<div class="settings-group-label">Suas cifras · ${list.length}</div><div class="settings-card lrow-card" id="songList">${list.map(row).join("")}</div><div class="stu-empty" id="songNone" hidden>Nenhuma música com esse nome.</div>`
+: stuCard("", `<div class="stu-empty">Quando o professor liberar uma cifra na aula, ela aparece aqui pra você abrir em casa.</div>`);
 return html;
 }
-async function songFilesRender(box, songId){
-const files = (await idbAll("files")).filter(f => f.songId === songId).sort((a, b) => b.at - a.at);
-box.innerHTML = `${files.map(f => `<div class="file-row"><button type="button" class="btn-link-inline" data-fopen="${f.id}">${escapeHtml(f.name)}</button><button type="button" class="del-btn" data-fdel="${f.id}" aria-label="Apagar o arquivo">${DEL_ICON}</button></div>`).join("") || `<div class="stu-muted">Nenhum arquivo. Guarde aqui a cifra ou a partitura (PDF ou foto). Fica só neste aparelho.</div>`}
-<label class="btn-edit-toggle file-pick">Anexar arquivo<input type="file" accept="application/pdf,image/*" hidden></label>`;
-box.querySelector("input[type=file]").onchange = async e => {
-const f = e.target.files && e.target.files[0];
-if (!f) return;
-if (f.size > 25 * 1024 * 1024) { alert("Arquivo grande demais (máximo 25 MB)."); return; }
-if (await idbPut("files", { id: jId(), songId, name: f.name, mime: f.type, blob: f, at: Date.now() })) songFilesRender(box, songId);
+function openSongViewer(x){
+const id = driveFileId(x.u), src = id ? `https://drive.google.com/file/d/${id}/preview` : "";
+const c = songCanOf(x.id), ok = c && (c.status === "can" || c.status === "master");
+const el = document.createElement("div");
+el.className = "pdf-view";
+el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", x.t);
+el.innerHTML = `<div class="pdf-bar"><button type="button" class="pdf-x" aria-label="Fechar">✕</button><div class="pdf-title"><b>${escapeHtml(x.t)}</b>${x.a ? `<span>${escapeHtml(x.a)}</span>` : ""}</div><a class="btn-edit-toggle" href="${escapeHtml(x.u)}" target="_blank" rel="noopener">Abrir no Drive</a></div>
+<div class="pdf-frame">${src && demoMode !== "demo" ? `<iframe src="${escapeHtml(src)}" title="${escapeHtml(x.t)}" allow="autoplay"></iframe>` : `<div class="stu-empty">${demoMode === "demo" ? "Na demonstração a cifra não abre. No app de verdade, o PDF aparece aqui." : "Toque em \"Abrir no Drive\" para ver a cifra."}</div>`}</div>
+<div class="pdf-foot"><button type="button" class="btn-edit-toggle" data-spractice>Praticar esta música</button><button type="button" class="${ok ? "status completed" : "btn-edit-toggle"}" data-scan>${ok ? "Consigo tocar ✓" : "Já consigo tocar"}</button></div>`;
+document.body.appendChild(el);
+document.body.classList.add("pdf-open");
+const close = () => { el.remove(); document.body.classList.remove("pdf-open"); document.removeEventListener("keydown", esc); };
+const esc = e => { if (e.key === "Escape") close(); };
+document.addEventListener("keydown", esc);
+el.querySelector(".pdf-x").onclick = close;
+el.querySelector("[data-spractice]").onclick = () => { close(); ptPrefWhat = null; ptSetLastWhat(`Música: ${x.t}`); if (demoMode !== "view" && !ptState()) { ptSaveState({ start: Date.now(), acc: 0, running: true, what: `Música: ${x.t}`, detail: "" }); ptTickStart(); } stuOpenPage("practice"); };
+el.querySelector("[data-scan]").onclick = () => {
+if (demoMode === "view") { stuToast("Só visualização."); return; }
+const cur = songCanOf(x.id), now = new Date().toISOString();
+if (cur && (cur.status === "can" || cur.status === "master")) jEdit("songs", cur.id, { status: "learning" });
+else { if (cur) jEdit("songs", cur.id, { status: "can", doneAt: cur.doneAt || now }); else jAdd("songs", { title: x.t, artist: x.a || "", libId: x.id, status: "can", at: now, doneAt: now }); kidReward("Consegue tocar!"); }
+close(); stuRender();
 };
-box.querySelectorAll("[data-fopen]").forEach(b => b.onclick = () => { const f = files.find(x => x.id === b.dataset.fopen); if (f) window.open(URL.createObjectURL(f.blob), "_blank"); });
-box.querySelectorAll("[data-fdel]").forEach(b => b.onclick = async () => {
-const f = files.find(x => x.id === b.dataset.fdel); if (!f) return;
-await idbDel("files", f.id); songFilesRender(box, songId);
-showUndoToast("Arquivo apagado", async () => { const { owner, ...rest } = f; await idbPut("files", rest); if (box.isConnected) songFilesRender(box, songId); });
-});
+el.querySelector(".pdf-x").focus();
 }
-async function songRequest(song, note){
-if (!song) return;
-const ok = await stuSendRequest("song_request", { songId: song.id, title: song.title, artist: song.artist || "", note: note || "" });
-if (ok) stuToast("Pedido enviado ao professor.");
+function openSongAsk(){
+const body = document.createElement("div");
+body.innerHTML = `<div class="field"><label>Música</label><input type="text" id="askTitle" maxlength="80" placeholder="Nome da música"></div>
+<div class="field"><label>Artista (opcional)</label><input type="text" id="askArtist" maxlength="80"></div>
+<div class="field"><label>Recado (opcional)</label><input type="text" id="askNote" maxlength="140" placeholder="Ex.: quero tocar no aniversário"></div>`;
+openQuickModal("Pedir música", "O professor recebe o pedido e libera a cifra quando for a hora.", body, async () => {
+const title = body.querySelector("#askTitle").value.trim();
+if (!title) { body.querySelector("#askTitle").focus(); return; }
+closeQuickModal();
+if (await stuSendRequest("song_request", { title, artist: body.querySelector("#askArtist").value.trim(), note: body.querySelector("#askNote").value.trim() })) { stuToast("Pedido enviado ao professor."); stuRender(); }
+}, "Cancelar", "Enviar pedido");
+setTimeout(() => body.querySelector("#askTitle").focus(), 50);
 }
 function songsBind(main){
-const d = () => journal();
-main.querySelectorAll("[data-sfilter]").forEach(b => b.onclick = () => { songsUi.filter = b.dataset.sfilter; stuRender(); });
-const read = () => ({ title: main.querySelector("#songTitle").value.trim(), artist: main.querySelector("#songArtist").value.trim(), link: main.querySelector("#songLink").value.trim() });
-main.querySelector("#songAdd").onclick = () => { const s = read(); if (!s.title) { alert("Escreva o nome da música."); return; } jAdd("songs", { ...s, status: "want", at: new Date().toISOString() }); stuRender(); };
-main.querySelector("#songAsk").onclick = async () => {
-const s = read(); if (!s.title) { alert("Escreva o nome da música que você quer aprender."); return; }
-const id = jAdd("songs", { ...s, status: "want", at: new Date().toISOString() });
-stuRender();
-await songRequest(jAlive(d(), "songs").find(x => x.id === id));
+const list = stuSongs();
+main.querySelectorAll("[data-song]").forEach(b => b.onclick = () => { const x = list.find(y => y.id === b.dataset.song); if (x) openSongViewer(x); });
+const ask = main.querySelector("#songAsk"); if (ask) ask.onclick = openSongAsk;
+const q = main.querySelector("#songSearch");
+if (q) q.oninput = () => {
+const t = stripAccents(q.value.trim()).toLowerCase();
+let n = 0;
+main.querySelectorAll("[data-song]").forEach(b => { const hit = !t || b.dataset.q.includes(t); b.hidden = !hit; if (hit) n++; });
+const none = main.querySelector("#songNone"); if (none) none.hidden = n > 0;
 };
-main.querySelectorAll("[data-sstatus]").forEach(sel => sel.onchange = () => {
-const song = jAlive(d(), "songs").find(x => x.id === sel.dataset.sstatus);
-const patch = { status: sel.value };
-if ((sel.value === "can" || sel.value === "master") && !(song && song.doneAt)) patch.doneAt = new Date().toISOString();
-jEdit("songs", sel.dataset.sstatus, patch);
-if (sel.value === "can" || sel.value === "master") kidReward(sel.value === "master" ? "Domina a música!" : "Consegue tocar!");
-stuRender();
-});
-main.querySelectorAll("[data-sreq]").forEach(b => b.onclick = () => { b.disabled = true; songRequest(jAlive(d(), "songs").find(x => x.id === b.dataset.sreq)); });
-main.querySelectorAll("[data-sdel]").forEach(b => b.onclick = () => jDelUndo("songs", b.dataset.sdel));
-main.querySelectorAll("[data-sfiles]").forEach(b => b.onclick = () => { const box = main.querySelector(`[data-sfilesbox="${b.dataset.sfiles}"]`); if (box.innerHTML) { box.innerHTML = ""; return; } songFilesRender(box, b.dataset.sfiles); });
-main.querySelector("#setAdd").onclick = () => { const name = main.querySelector("#setName").value.trim(); if (!name) { alert("Dê um nome pra setlist."); return; } jAdd("setlists", { name, date: main.querySelector("#setDate").value || "", songIds: [] }); stuRender(); };
-const setOf = id => jAlive(d(), "setlists").find(x => x.id === id);
-const move = (attr, fn) => main.querySelectorAll(`[${attr}]`).forEach(b => b.onclick = () => { const [id, i] = b.getAttribute(attr).split("|"); const sl = setOf(id); if (!sl) return; const ids = (sl.songIds || []).filter(x => jAlive(d(), "songs").some(s => s.id === x)); fn(ids, Number(i)); jEdit("setlists", id, { songIds: ids }); stuRender(); });
-move("data-setup", (ids, i) => { [ids[i - 1], ids[i]] = [ids[i], ids[i - 1]]; });
-move("data-setdown", (ids, i) => { [ids[i + 1], ids[i]] = [ids[i], ids[i + 1]]; });
-move("data-setrm", (ids, i) => { ids.splice(i, 1); });
-main.querySelectorAll("[data-setaddsong]").forEach(sel => sel.onchange = () => { if (!sel.value) return; const sl = setOf(sel.dataset.setaddsong); jEdit("setlists", sl.id, { songIds: [...(sl.songIds || []), sel.value] }); stuRender(); });
-main.querySelectorAll("[data-setdel]").forEach(b => b.onclick = () => jDelUndo("setlists", b.dataset.setdel));
-main.querySelectorAll("[data-setshare]").forEach(b => b.onclick = async () => {
-const sl = setOf(b.dataset.setshare), songs = jAlive(d(), "songs");
-const text = `${sl.name}${sl.date ? ` (${formatDateShort(sl.date)})` : ""}\n${(sl.songIds || []).map(id => songs.find(s => s.id === id)).filter(Boolean).map((s, i) => `${i + 1}. ${s.title}${s.artist ? " – " + s.artist : ""}`).join("\n")}`;
-if (navigator.share) { try { await navigator.share({ text }); return; } catch(e) { if (e && e.name === "AbortError") return; } }
-if (await copyText(text)) stuToast("Setlist copiada.");
-});
 }
-
 // ---------- Metas do aluno ----------
 function goalsHTML(){
 const d = journal(), goals = jAlive(d, "goals");
@@ -7796,7 +7806,8 @@ const plans = (typeof lessonPlans !== "undefined" ? lessonPlans : []).slice(0, 2
 const demoTopics = ["Ritmo de balada", "Acordes maiores", "Escala de Dó", "Leitura de cifra", "Troca de acordes", "Dedilhado básico"];
 const themes = (plans.length ? plans.map(p => ({ id: String(p.id), topic: p.topic, images: getPlanImages(p).slice(0, 2) })) : []).concat(demoTopics.slice(0, 6 - plans.length).map((topic, i) => ({ id: "th" + i, topic, images: [] })))
 .map((t, i) => ({ ...t, date: brOf(past[Math.max(0, past.length - 1 - i)] || past[0]), rating: [4, 5, 2, 4, 3, 1][i % 6] }));
-const view = { group: false, themes, ...(s.level ? { certificates: [{ level: s.level, date: isoOf(day(-20)) }] } : {}) };
+const songs = [["Asa Branca", "Luiz Gonzaga", -3], ["Wonderwall", "Oasis", -10], ["Garota de Ipanema", "Tom Jobim", -24], ["Trem-bala", "Ana Vilela", -40]].map(([t, a, n], i) => ({ id: "dc" + i, t, a, u: "https://drive.google.com/file/d/demo" + i + "xxxxxxxx/view", d: isoOf(day(n)) }));
+const view = { group: false, themes, songs, ...(s.level ? { certificates: [{ level: s.level, date: isoOf(day(-20)) }] } : {}) };
 return { links: [], joins: [], requests: [], at: new Date().toISOString(), students: [{ s, uuid: "demo", row: {}, link: { id: "demo", role: "student" }, tp, view }] };
 }
 // O que o professor configurou em "Conteúdo para os alunos"; o que faltar ganha um exemplo.
@@ -7906,6 +7917,9 @@ if (s.value === undefined) info.monthlyValue = getDefaultValueFor(s);
 const themes = studentThemesPublic(s);
 if (themes.length) info.themes = themes;
 if (Array.isArray(s.appOff) && s.appOff.length) { const off = s.appOff.filter(p => APP_FEATURES.includes(p)); if (off.length) info.off = off; }
+const lib = songLib(), rel = Array.isArray(s.songsOn) ? s.songsOn : [];
+const songs = rel.map(r => { const x = lib.find(y => y.id === r.id); return x ? { id: x.id, t: x.title, ...(x.artist ? { a: x.artist } : {}), u: x.url, d: r.at || "" } : null; }).filter(Boolean);
+if (songs.length) info.songs = songs;
 if (Array.isArray(s.appOn) && s.appOn.length) info.on = s.appOn.filter(p => TOOL_PAGES.includes(p));
 if (s.parentPin && stContent().moneyAdultsOnly) { try { info.parentPin = pinHash(studentUuidMap().of(s), s.parentPin); } catch(e) {} }
 if (Array.isArray(s.certificates) && s.certificates.length) info.certificates = s.certificates.filter(c => c && c.level).map(c => ({ level: c.level, date: c.date }));
@@ -8232,6 +8246,67 @@ const kind = instrumentKind(s.instrument), tools = kind ? TOOLS_BY_KIND[kind] : 
 const on = (s.appOn || []).filter(p => tools.includes(p)).length, off = (s.appOff || []).filter(p => APP_FEATURES.includes(p)).length;
 return `${off ? `${off} função${off === 1 ? "" : "ões"} de estudo desativada${off === 1 ? "" : "s"}` : "Estudo todo liberado"} · ${on ? `ferramentas liberadas: ${on} de ${tools.length}` : "nenhuma ferramenta liberada ainda"}`;
 }
+// ---------- Cifras (8.12) ----------
+// Biblioteca do professor (nome + link do PDF no Google Drive) e as cifras liberadas pra cada
+// aluno (s.songsOn, só o professor lê). O aluno recebe só as dele, pelo student_view.
+function songLib(){ return Array.isArray(appSettings.songLib) ? appSettings.songLib : []; }
+function songLibSave(list){ appSettings.songLib = list.length ? list : undefined; saveAppSettings(); }
+function songLibAdd(title, url, artist){
+const list = songLib().slice();
+const hit = list.find(x => x.url === url);
+if (hit) return hit;
+const x = { id: "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), title, url, ...(artist ? { artist } : {}) };
+list.push(x); songLibSave(list); return x;
+}
+function songRelease(s, id, on){
+const cur = Array.isArray(s.songsOn) ? s.songsOn.filter(r => r.id !== id) : [];
+if (on) cur.push({ id, at: isoOf(new Date()) });
+if (cur.length) s.songsOn = cur; else delete s.songsOn;
+saveStudents(); teacherPublish();
+}
+// Linhas coladas: o link do PDF e, antes dele, o nome da música ("Asa Branca - https://drive...").
+function songLinesParse(text){
+return String(text || "").split(/\n+/).map(l => { const m = l.match(/https?:\/\/\S+/); if (!m) return null; const title = l.replace(m[0], "").replace(/[\s\-–—:;|,]+$/, "").replace(/^[\s\-–—:;|,]+/, "").trim(); return { url: m[0], title }; }).filter(Boolean);
+}
+function openSongRelease(s){
+const body = document.createElement("div");
+let q = "";
+const draw = () => {
+const on = new Set((s.songsOn || []).map(r => r.id));
+const t = stripAccents(q).toLowerCase();
+const lib = songLib().slice().sort((a, b) => (on.has(b.id) - on.has(a.id)) || a.title.localeCompare(b.title)).filter(x => !t || stripAccents(`${x.title} ${x.artist || ""}`).toLowerCase().includes(t));
+body.querySelector("#slList").innerHTML = lib.length ? lib.map(x => `<label class="join-diff sl-item"><input type="checkbox" data-slon="${x.id}" ${on.has(x.id) ? "checked" : ""}> <span><b>${escapeHtml(x.title)}</b>${x.artist ? ` · ${escapeHtml(x.artist)}` : ""}</span><button type="button" class="list-edit-btn danger" data-sldel="${x.id}" aria-label="Tirar da biblioteca">✕</button></label>`).join("")
+: `<div class="field-hint">${songLib().length ? "Nenhuma cifra com esse nome." : "Sua biblioteca está vazia. Cole abaixo os links dos PDFs do Drive."}</div>`;
+body.querySelectorAll("[data-slon]").forEach(cb => cb.onchange = () => { songRelease(s, cb.dataset.slon, cb.checked); refreshStudentSheet(); });
+body.querySelectorAll("[data-sldel]").forEach(b => b.onclick = e => {
+e.preventDefault();
+const x = songLib().find(y => y.id === b.dataset.sldel);
+if (!x || !confirm(`Tirar "${x.title}" da sua biblioteca? Some do app de todos os alunos que têm essa cifra.`)) return;
+songLibSave(songLib().filter(y => y.id !== x.id));
+students.forEach(st => { if (Array.isArray(st.songsOn) && st.songsOn.some(r => r.id === x.id)) { st.songsOn = st.songsOn.filter(r => r.id !== x.id); if (!st.songsOn.length) delete st.songsOn; } });
+saveStudents(); teacherPublish(); draw(); refreshStudentSheet();
+});
+};
+body.innerHTML = `<div class="field"><input type="search" id="slSearch" placeholder="Buscar na biblioteca" aria-label="Buscar na biblioteca" autocomplete="off"></div>
+<div id="slList" class="sl-list"></div>
+<details class="sc-add"><summary>+ Adicionar cifras à biblioteca</summary>
+<div class="field"><label>Nome da música e link do PDF no Drive (uma por linha)</label><textarea id="slPaste" rows="4" placeholder="Asa Branca - https://drive.google.com/file/d/..."></textarea></div>
+<div class="field-hint">No Drive: botão direito no PDF → Compartilhar → "Qualquer pessoa com o link" → Copiar link. As novas já ficam liberadas para ${escapeHtml(firstName(s.name))}.</div>
+<div class="actions"><button class="save" id="slAdd">Adicionar</button></div></details>`;
+body.querySelector("#slSearch").oninput = e => { q = e.target.value.trim(); draw(); };
+body.querySelector("#slAdd").onclick = () => {
+const items = songLinesParse(body.querySelector("#slPaste").value);
+if (!items.length) { alert("Cole pelo menos um link (começando com https://)."); return; }
+const noName = items.filter(x => !x.title);
+if (noName.length) { alert("Escreva o nome da música antes de cada link."); return; }
+items.forEach(x => { const lib = songLibAdd(x.title, x.url); if (!(s.songsOn || []).some(r => r.id === lib.id)) songRelease(s, lib.id, true); });
+body.querySelector("#slPaste").value = "";
+body.querySelector(".sc-add").open = false;
+draw(); refreshStudentSheet();
+};
+draw();
+openQuickModal(`Músicas de ${firstName(s.name)}`, "Marque as cifras que o aluno já pode abrir no app.", body, null, "Pronto");
+}
 // ---------- Ficha: acesso ao app ----------
 function appAccessHTML(s){
 if (!inbox.loaded) return "";
@@ -8245,12 +8320,13 @@ return `<div class="sheet-pair wide"><dt>Acesso ao app</dt><dd>${who} tem acesso
 }).join("");
 const age = ageYears(s.birthDate);
 const pinRow = stContent().moneyAdultsOnly && !(age !== null && age >= 18) ? `<div class="sheet-pair wide"><dt>Senha dos pais (Financeiro)</dt><dd>${s.parentPin ? `<b>${escapeHtml(s.parentPin)}</b>` : "Ainda não criada"} <button type="button" class="btn-link-inline" data-parent-pin>${s.parentPin ? "Trocar" : "Criar senha"}</button></dd></div>` : "";
-return `<section class="sheet-sec"><div class="sheet-sec-title">App do aluno</div><dl class="sheet-grid">${rows || `<div class="sheet-pair wide"><dt>Acesso ao app</dt><dd>Ainda não entrou no app</dd></div>`}<div class="sheet-pair wide"><dt>Funções</dt><dd>${appFeaturesLabel(s)}</dd></div>${pinRow}</dl>
+return `<section class="sheet-sec"><div class="sheet-sec-title">App do aluno</div><dl class="sheet-grid">${rows || `<div class="sheet-pair wide"><dt>Acesso ao app</dt><dd>Ainda não entrou no app</dd></div>`}<div class="sheet-pair wide"><dt>Funções</dt><dd>${appFeaturesLabel(s)}</dd></div><div class="sheet-pair wide"><dt>Músicas liberadas</dt><dd>${(s.songsOn || []).filter(r => songLib().some(x => x.id === r.id)).length || "Nenhuma"} <button type="button" class="btn-link-inline" data-song-release>Liberar músicas</button></dd></div>${pinRow}</dl>
 <div class="demo-actions"><button type="button" class="btn-historico" data-view-as>Ver o app de ${escapeHtml(firstName(s.name))}</button><button type="button" class="btn-historico" data-demo>Ver demonstração</button></div></section>`;
 }
 function bindAppAccess(body, s){
 const va = body.querySelector("[data-view-as]"); if (va) va.onclick = () => startViewAs(s);
 const dm = body.querySelector("[data-demo]"); if (dm) dm.onclick = startDemo;
+const sr = body.querySelector("[data-song-release]"); if (sr) sr.onclick = () => openSongRelease(s);
 const pp = body.querySelector("[data-parent-pin]");
 if (pp) pp.onclick = () => {
 const v = prompt(`Senha dos pais de ${firstName(s.name)} para abrir o Financeiro (4 a 8 números). Deixe vazio para apagar.`, s.parentPin || "");
@@ -8572,12 +8648,19 @@ function approveSongRequest(r, s){
 const p = r.payload || {};
 const body = document.createElement("div");
 body.innerHTML = `<div class="field"><label>Encaixar num tema (opcional)</label><select id="songTheme"><option value="">Não encaixar agora</option><option value="new">Criar o tema "${escapeHtml(p.title || "")}"</option>${lessonPlans.map(pl => `<option value="${escapeHtml(String(pl.id))}">${escapeHtml(pl.topic)}</option>`).join("")}</select></div>
+<div class="field"><label>Liberar a cifra (opcional)</label><select id="songLib"><option value="">Não liberar agora</option><option value="new">Nova cifra (colar o link do Drive)</option>${songLib().slice().sort((a, b) => a.title.localeCompare(b.title)).map(x => `<option value="${x.id}">${escapeHtml(x.title)}</option>`).join("")}</select></div>
+<div class="field" id="songLibNew" hidden><input type="url" id="songLibUrl" placeholder="https://drive.google.com/file/d/..." aria-label="Link do PDF no Drive"></div>
 <div class="field"><label>Resposta pro aluno (opcional)</label><input type="text" id="songResp" maxlength="140" placeholder="Ex.: vamos começar na próxima aula"></div>`;
+body.querySelector("#songLib").onchange = e => { body.querySelector("#songLibNew").hidden = e.target.value !== "new"; };
 openQuickModal(`Música · ${sn(s)}`, `${p.title || ""}${p.artist ? " – " + p.artist : ""}${p.note ? ` (${p.note})` : ""}`, body, async () => {
 const v = body.querySelector("#songTheme").value;
+if (body.querySelector("#songLib").value === "new" && !/^https?:\/\//i.test(body.querySelector("#songLibUrl").value.trim())) { alert("Cole o link do PDF (começando com https://)."); return; }
 let themeId = null;
 if (v === "new") { const t = { id: Date.now(), topic: `${p.title || "Música"}${p.artist ? ` (${p.artist})` : ""}`, imgUrls: [] }; lessonPlans.unshift(t); localStorage.setItem("jp_lesson_plans_v5", JSON.stringify(lessonPlans)); themeId = t.id; }
 else if (v) { const pl = lessonPlans.find(x => String(x.id) === v); if (pl) themeId = pl.id; }
+const libSel = body.querySelector("#songLib").value;
+if (libSel === "new") { const u = body.querySelector("#songLibUrl").value.trim(); songRelease(s, songLibAdd(`${p.title || "Música"}`, u, p.artist || "").id, true); }
+else if (libSel && !(s.songsOn || []).some(r => r.id === libSel)) songRelease(s, libSel, true);
 if (themeId !== null) { s.themes = Array.isArray(s.themes) ? s.themes : []; if (!s.themes.some(t => t.themeId === themeId)) s.themes.push({ themeId, rating: null, date: todayBr() }); saveStudents(); }
 closeQuickModal();
 await answerRequest(r, "accepted", body.querySelector("#songResp").value.trim() || "Aprovado!");
