@@ -6,9 +6,12 @@
 //  - Bibliotecas do CDN (supabase-js, SheetJS, JSZip, Tesseract): guardadas na primeira vez que
 //    carregam (nada é baixado antes: o Tesseract só entra se o professor usar o OCR).
 //  - Nunca passa pelo cache: Supabase (*.supabase.co), métodos diferentes de GET e respostas de erro.
+//  - Notificações (8.14): mostra o que a função send-push mandou e, ao tocar, abre (ou traz pra
+//    frente) o app já na página certa (?p=inicio | aulas | avisos | financeiro).
 const VERSION = new URL(self.location.href).searchParams.get("v") || "dev";
-const CACHE = `hi-teacher-${VERSION}`;
-const CORE = ["./", "./index.html", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/icon-maskable-512.png", "./icons/apple-touch-icon.png", "./icons/favicon-32.png"];
+const SW_REV = "8.14";   // sobe junto com o APP_VERSION quando o próprio service worker muda
+const CACHE = `hi-teacher-${SW_REV}-${VERSION}`;
+const CORE = ["./", "./index.html", "./privacidade.html", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/icon-maskable-512.png", "./icons/apple-touch-icon.png", "./icons/favicon-32.png"];
 const LIB_HOSTS = /(^|\.)(cdn\.jsdelivr\.net|cdn\.sheetjs\.com|unpkg\.com|tessdata\.projectnaptha\.com)$/;
 
 self.addEventListener("install", e => {
@@ -65,4 +68,34 @@ self.addEventListener("fetch", e => {
     return;
   }
   if (LIB_HOSTS.test(url.hostname)) e.respondWith(lib(req));
+});
+
+// ---------- Notificações (push) ----------
+self.addEventListener("push", e => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch (x) { d = { body: e.data ? e.data.text() : "" }; }
+  e.waitUntil(self.registration.showNotification(d.title || "Hi Teacher", {
+    body: d.body || "",
+    icon: "icons/icon-192.png",
+    tag: d.tag || undefined,
+    data: { url: d.url || "./" }
+  }));
+});
+// Abre (ou traz pra frente) o app na página do aviso. Com o app já aberto, só pede pra ele trocar de página.
+async function openFromNotification(rawUrl){
+  const url = new URL(rawUrl || "./", self.registration.scope).href;
+  const p = new URL(url).searchParams.get("p");
+  const all = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+  const open = all.find(c => c.url.startsWith(self.registration.scope));
+  if (open) {
+    try { await open.focus(); } catch (x) {}
+    if (p) open.postMessage({ type: "open-page", p });
+    return "focused";
+  }
+  await self.clients.openWindow(url);
+  return "opened";
+}
+self.addEventListener("notificationclick", e => {
+  e.notification.close();
+  e.waitUntil(openFromNotification(e.notification.data && e.notification.data.url));
 });

@@ -2062,6 +2062,69 @@ body.pdf-open{overflow:hidden}
 .chord-shapes{display:flex;flex-wrap:wrap;gap:0.75rem;justify-content:center}
 .chord-shape{display:flex;flex-direction:column;align-items:center;gap:0.25rem;padding:0.5rem;border:0.0625rem solid var(--glass-border);border-radius:var(--radius-sm);background:transparent;color:var(--text-2);font:inherit;font-size:0.6875rem;cursor:pointer;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;max-width:9rem;text-align:center}
 .chord-shape:hover{border-color:var(--accent)}
+/* 8.14: privacidade, notificações, avisos e primeiros passos */
+.consent-check{display:flex;align-items:flex-start;gap:0.5rem;margin:0.75rem 0 0;font-size:0.8125rem;line-height:1.45;color:var(--text-2);cursor:pointer}
+.consent-check input{width:1.125rem;height:1.125rem;flex:none;margin-top:0.125rem;accent-color:var(--accent)}
+.consent-check a{color:var(--accent)}
+.consent-ok{color:var(--green,#4ade80)}
+.terms-text{line-height:1.55}
+.terms-link{display:block;text-align:center;margin-top:0.875rem;text-decoration:none}
+.priv-list{margin:0 0 1.5rem}
+.danger-row .settings-row-title{color:#f87171}
+.del-explain p{font-size:0.8125rem;line-height:1.55;color:var(--text-2);margin:0 0 0.625rem}
+.del-explain b{color:var(--text)}
+.push-state{font-size:0.875rem;color:var(--text-2);margin-bottom:0.75rem}
+.push-state b{color:var(--muted)}
+.push-state b.ok{color:var(--green,#4ade80)}
+.push-hint{font-size:0.8125rem;line-height:1.5;color:var(--text-2);padding:0.625rem 0.75rem;border:0.0625rem solid var(--glass-border);border-radius:var(--radius-sm);margin-bottom:0.75rem}
+.push-btn{width:100%;padding:0.75rem;border-radius:var(--radius-pill);font-weight:700}
+.push-acts{display:flex;flex-wrap:wrap;gap:0.5rem}
+.push-acts > *{flex:1 1 12rem;padding:0.625rem 0.875rem;border-radius:var(--radius-pill);font-weight:700}
+.push-invite .action-toast-msg{font-size:0.8125rem}
+.ann-card{margin:0 0 1.25rem;padding:1rem;border-radius:var(--radius-lg);border:0.0625rem solid var(--accent-line);background:var(--glass-fill);box-shadow:var(--glow-sm)}
+.ann-kicker{display:flex;align-items:center;gap:0.375rem;font-size:0.6875rem;font-weight:750;text-transform:uppercase;letter-spacing:.06em;color:var(--accent)}
+.ann-kicker svg{width:0.875rem;height:0.875rem;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ann-title{font-size:1rem;font-weight:750;margin-top:0.375rem;overflow-wrap:break-word}
+.ann-body{font-size:0.875rem;line-height:1.55;color:var(--text-2);margin-top:0.25rem;white-space:pre-line;overflow-wrap:break-word}
+.ann-foot{display:flex;align-items:center;justify-content:space-between;gap:0.5rem;margin-top:0.75rem}
+.ann-foot .study-pill{min-height:2.25rem;padding:0.375rem 1rem}
+.ann-hist{margin-bottom:1rem}
+.ann-new-btn{padding:0.5rem 1rem;border-radius:var(--radius-pill);font-weight:700}
+.ann-list{padding:0}
+.ann-row{display:flex;gap:0.75rem;align-items:flex-start;padding:0.875rem 1rem;border-bottom:0.0625rem solid var(--hairline)}
+.ann-row:last-child{border-bottom:none}
+.ann-row-main{flex:1;min-width:0}
+.ann-row-title{font-size:0.9375rem;font-weight:700;overflow-wrap:break-word}
+.ann-row-body{font-size:0.8125rem;color:var(--text-2);line-height:1.5;margin-top:0.25rem;white-space:pre-line;overflow-wrap:break-word;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.ann-row-meta{font-size:0.75rem;color:var(--muted);margin-top:0.375rem}
+.ann-pick{max-height:14rem;overflow:auto;border:0.0625rem solid var(--glass-border);border-radius:var(--radius-sm);padding:0.25rem 0.625rem;margin-bottom:0.5rem}
+.empty-teach{display:flex;flex-direction:column;gap:0.375rem;padding:1.125rem 1rem;border:0.0625rem dashed var(--glass-border);border-radius:var(--radius-lg);color:var(--text-2);font-size:0.875rem;line-height:1.5;margin-bottom:1rem}
+.empty-teach b{color:var(--text);font-size:0.9375rem}
+.empty-teach .btn-historico,.empty-teach .save{align-self:flex-start;padding:0.625rem 1rem;border-radius:var(--radius-pill);font-weight:700}
+.empty-teach.slim{padding:0.75rem 0.875rem;font-size:0.8125rem}
+.empty-acts{display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.375rem}
+.chart-empty-hint{flex-basis:100%;font-size:0.8125rem;line-height:1.5;color:var(--text-2);padding:0.5rem 0.625rem;border-radius:var(--radius-sm);background:rgba(47,211,242,.06);margin-top:0.5rem}
+.onb-card{margin:0 0 1.25rem;padding:1rem;border-radius:var(--radius-lg);border:0.0625rem solid var(--accent-line);background:var(--glass-fill);box-shadow:var(--edge-light)}
+.onb-card.onb-done{color:var(--text-2);font-size:0.9375rem}
+.onb-card.onb-done b{color:var(--green,#4ade80)}
+.onb-head{display:flex;align-items:flex-start;justify-content:space-between;gap:0.5rem}
+.onb-title{font-size:1rem;font-weight:750}
+.onb-count{font-size:0.75rem;color:var(--muted);margin-top:0.125rem}
+.onb-bar{margin:0.625rem 0 0.375rem}
+.onb-list{display:flex;flex-direction:column}
+.onb-item{display:flex;align-items:center;gap:0.75rem;width:100%;padding:0.625rem 0;border:none;border-bottom:0.0625rem solid var(--hairline);background:transparent;color:var(--text);font:inherit;text-align:left;cursor:pointer}
+.onb-item:last-child{border-bottom:none}
+.onb-check{flex:none;width:1.375rem;height:1.375rem;border-radius:50%;border:0.125rem solid var(--accent);display:grid;place-items:center;font-size:0.75rem;font-weight:800;color:var(--accent-ink,#05060B)}
+.onb-item.ok .onb-check{background:var(--accent)}
+.onb-item.ok .onb-text b{color:var(--muted);text-decoration:line-through}
+.onb-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:0.125rem}
+.onb-text b{font-size:0.875rem;font-weight:700}
+.onb-text small{font-size:0.75rem;color:var(--muted);line-height:1.4}
+.onb-alt{margin-top:0.5rem}
+.sidebar-legal{display:block;margin-top:0.25rem;padding:0.25rem 0.75rem;font-size:0.6875rem;color:var(--muted);text-decoration:none}
+.sidebar-legal:hover{color:var(--accent)}
+.entry-legal{display:block;text-align:center;margin-top:0.75rem;font-size:0.75rem;color:var(--muted)}
+#annWho{margin:-0.25rem 0 0.875rem;font-size:0.75rem}
 </style>
 </head>
 <body>
@@ -2212,6 +2275,7 @@ body.pdf-open{overflow:hidden}
 <div class="home-message-status" id="homeMessageStatus"></div>
 <div class="home-message-phrase" id="homeMessagePhrase"></div>
 </div>
+<div id="onboardingBox"></div>
 <div id="lessonReminderBox"></div>
 <div id="attentionBox"></div>
 <div id="backupBox"></div>
@@ -2334,6 +2398,7 @@ body.pdf-open{overflow:hidden}
 <div class="chart-card">
 <div class="chart-header">
 <div class="chart-period-badge" id="chartPerfPeriodText">JAN - DEZ (2026)</div>
+<div class="chart-empty-hint" id="perfNoData" style="display:none">O gráfico aparece depois das primeiras avaliações: no Início, toque numa aula que já aconteceu e avalie o aluno.</div>
 <div class="chart-hint">Deslize ◄ ► no gráfico<br>para mudar o ano</div>
 </div>
 <div class="line-chart-wrapper" id="chartPerfWrapper">
@@ -2362,6 +2427,7 @@ body.pdf-open{overflow:hidden}
 <div class="chart-card">
 <div class="chart-header">
 <div class="chart-period-badge" id="chartPeriodText">JAN - DEZ (2026)</div>
+<div class="chart-empty-hint" id="finNoData" style="display:none">O gráfico se monta com as mensalidades pagas de cada mês. Marque os pagamentos no Início ou toque num mês do gráfico para preencher o valor.</div>
 <div class="chart-hint">Deslize ◄ ► no gráfico<br>para mudar o ano</div>
 </div>
 <div class="line-chart-wrapper" id="chartWrapper">
@@ -2391,6 +2457,7 @@ body.pdf-open{overflow:hidden}
 <div class="chart-card">
 <div class="chart-header">
 <div class="chart-period-badge" id="chartStudentsPeriodText">JAN - DEZ (2026)</div>
+<div class="chart-empty-hint" id="qtyNoData" style="display:none">O gráfico mostra quantos alunos ativos você teve em cada mês. Ele começa a encher conforme os meses passam (ou toque num mês para preencher).</div>
 <div class="chart-hint">Deslize ◄ ► no gráfico<br>para mudar o ano</div>
 </div>
 <div class="line-chart-wrapper" id="chartStudentsWrapper">
@@ -2424,6 +2491,7 @@ body.pdf-open{overflow:hidden}
 <div class="page-title-bar" style="margin-top:0">
 <h2 class="page-title-text">Agenda<button type="button" class="help-icon" data-help="Veja seus dias de aula no calendário, junto com feriados nacionais e da sua cidade (configure em Configurações → Localização).">!</button></h2>
 </div>
+<div id="agendaEmptyHint"></div>
 <div class="agenda-quick"><button type="button" class="btn-historico" id="btnFreeSlots">Horários livres</button><button type="button" class="btn-historico" id="btnWaitlist">Lista de espera</button></div>
 <div class="agenda-toolbar">
 <button type="button" class="agenda-nav-btn" id="agendaPrevBtn">‹</button>
@@ -2433,6 +2501,11 @@ body.pdf-open{overflow:hidden}
 <div class="agenda-weekdays" id="agendaWeekdays"></div>
 <div class="agenda-grid" id="agendaGrid"></div>
 <button type="button" class="agenda-today-fab" id="agendaTodayBtn" style="display:none">Hoje</button>
+</main>
+
+<main id="announcementsPage" style="display:none">
+<div class="page-title-bar" style="margin-top:0"><h2 class="page-title-text">Avisos para os alunos<button type="button" class="help-icon" data-help="Recados que aparecem no Início do app do aluno (e como notificação no celular, se ele ativou). Mande para todos, por instrumento, por turma ou para alunos escolhidos.">!</button></h2><button type="button" class="save ann-new-btn" id="annNewBtn">Novo aviso</button></div>
+<div id="annList"></div>
 </main>
 
 <main id="goalsPage" style="display:none">
@@ -2633,6 +2706,9 @@ body.pdf-open{overflow:hidden}
 <div class="settings-card">
 <div class="settings-row" id="rowCloudSync"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-upload"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Salvar na nuvem</div><div class="settings-row-sub" id="valCloudStatus">Conectando…</div></div><span class="settings-row-value" id="valCloudAction">Sincronizar</span></div>
 <div class="settings-row" id="rowStudentMode"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-user"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Entrar como aluno/responsável</div><div class="settings-row-sub">Pra quem também é aluno ou responsável por um aluno</div></div><span class="settings-row-chevron">›</span></div>
+<div class="settings-row" id="rowPushTeacher"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-bell"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Notificações no celular</div><div class="settings-row-sub" id="valPushTeacher">Avisos dos alunos mesmo com o app fechado</div></div><span class="settings-row-chevron">›</span></div>
+<div class="settings-row" id="rowOnboarding"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-target"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Primeiros passos</div><div class="settings-row-sub">Mostrar de novo o passo a passo no Início</div></div><span class="settings-row-chevron">›</span></div>
+<div class="settings-row" id="rowDeleteAccount"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-trash"/></svg></span><div class="settings-row-text"><div class="settings-row-title" style="color:#f87171">Excluir minha conta e todos os dados</div><div class="settings-row-sub">Antes, o app baixa o backup</div></div><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowSairConta"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-logout"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Sair da conta</div><div class="settings-row-sub" id="valContaEmail"></div></div></div>
 </div>
 </main>
@@ -2658,6 +2734,7 @@ body.pdf-open{overflow:hidden}
 <button class="nav-item" data-page="students">Meus Alunos<span class="nav-badge" id="navStudentsBadge" style="display:none"></span></button>
 <button class="nav-item" data-page="evaluation">Avaliação</button>
 <button class="nav-item" data-page="studentsPerformance">Desempenho</button>
+<button class="nav-item" data-page="announcements">Avisos</button>
 </div>
 </div>
 
@@ -2696,6 +2773,7 @@ body.pdf-open{overflow:hidden}
 <span>Configurações</span>
 </button>
 <button type="button" class="sidebar-logout" id="btnLogout"><svg viewBox="0 0 24 24"><use href="#icon-logout"/></svg><span>Sair da conta</span></button>
+<a class="sidebar-legal" href="privacidade.html" target="_blank" rel="noopener">Privacidade</a>
 </div>
 </aside>
 <!-- Modo aluno (8.2): mesma casca do professor (cabeçalho de vidro, menu-drawer no celular,
@@ -2769,6 +2847,7 @@ body.pdf-open{overflow:hidden}
 <div class="sidebar-footer">
 <button class="settings-btn" id="stuProfileNav" data-stu-page="profile"><svg viewBox="0 0 24 24"><use href="#icon-user"/></svg><span>Perfil</span></button>
 <button type="button" class="sidebar-logout" id="stuLogoutNav"><svg viewBox="0 0 24 24"><use href="#icon-logout"/></svg><span id="stuLogoutLabel">Sair da conta</span></button>
+<a class="sidebar-legal" href="privacidade.html" target="_blank" rel="noopener">Privacidade</a>
 </div>
 </aside>
 <div class="demo-bar" id="demoBar" style="display:none"><span id="demoBarText"></span><button type="button" id="demoExit">Sair da demonstração</button></div>
@@ -3486,7 +3565,9 @@ body.pdf-open{overflow:hidden}
 <p><strong style="color:#cbd5e1">Onde seus dados ficam:</strong> se você está logado numa conta, os dados de alunos, aulas e avaliações ficam salvos neste dispositivo e também sincronizados na nuvem, vinculados ao seu login — assim você consegue acessar de outros aparelhos entrando com o mesmo email. Sem login, tudo fica só no armazenamento local deste dispositivo.</p>
 <p><strong style="color:#cbd5e1">Backup:</strong> mesmo com a sincronização, recomendamos usar "Exportar dados" em Configurações → Dados de tempos em tempos, como backup extra.</p>
 <p><strong style="color:#cbd5e1">Feedback:</strong> o que você escreve em "Enviar feedback" é enviado por e-mail pra quem desenvolve o app e também fica salvo neste dispositivo.</p>
-<p>Este texto é um resumo simples e será substituído pelos termos definitivos.</p>
+<p><strong style="color:#cbd5e1">App do aluno:</strong> quando você cria a chave para alunos, alunos e responsáveis podem pedir para entrar. <b>Você decide quem entra</b> e responde pelos dados dos seus alunos dentro do app (inclusive de menores de idade, que só entram com a autorização do responsável). Cada aluno vê só o que é dele; anotações e notas que você não liberar ficam só com você.</p>
+<p><strong style="color:#cbd5e1">Excluir:</strong> Configurações → Conta → "Excluir minha conta e todos os dados" apaga tudo da nuvem (antes, o app baixa o backup). Alunos podem excluir a conta deles pelo Perfil e pedir que você apague os registros que guarda.</p>
+<p>Detalhes na <a href="privacidade.html" target="_blank" rel="noopener" style="color:var(--accent)">Política de Privacidade</a> (a mesma que os alunos leem).</p>
 </div>
 </div>
 </div>
@@ -3565,7 +3646,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.13";
+const APP_VERSION = "8.14";
 // ===================== App instalável (8.4) =====================
 // Service worker (sw.js), aviso de versão nova, faixa "Sem internet", botão "Instalar o app",
 // atalhos do ícone (?p=...) e botão voltar do celular fechando modal/menu no app instalado.
@@ -3584,9 +3665,8 @@ if (pwaStandalone()) document.documentElement.classList.add("standalone");
 try {
 const q = new URLSearchParams(location.search), p = q.get("p");
 if (!p) return;
-const map = { inicio: ["home", "home"], agenda: ["agenda", "lessons"], aulas: ["agenda", "lessons"] }[p];
-// (roda antes da troca do setItem, então é o setItem normal do navegador)
-if (map) { localStorage.setItem("jp_active_page", map[0]); localStorage.setItem("jp_stu_active_page", map[1]); }
+const map = { inicio: ["home", "home"], agenda: ["agenda", "lessons"], aulas: ["agenda", "lessons"], avisos: ["announcements", "home"], financeiro: ["home", "money"] }[p];
+if (map) { sessionStorage.setItem("jp_active_page", map[0]); sessionStorage.setItem("jp_stu_active_page", map[1]); }
 q.delete("p");
 history.replaceState(history.state, "", location.pathname + (q.toString() ? "?" + q : "") + location.hash);
 } catch(e) {}
@@ -4313,6 +4393,8 @@ if (error) throw error;
 tds.forEach(k => sent.push([k, queue[k].at]));
 }
 } catch(e) { failure = e; }
+// Notificação pros alunos (8.14): aula cancelada/remarcada ou reposição marcada que subiu agora.
+try { pushAfterFlush(sent.map(([k, at]) => ({ t: queue[k].t, row: queue[k].op === "up" ? queue[k].row : null, at })).filter(x => x.row)); } catch(e) {}
 // Tira da fila o que foi aceito (se não mudou de novo enquanto enviava).
 const q = tbQueue();
 sent.forEach(([k, at]) => { if (q[k] && q[k].at === at) delete q[k]; });
@@ -4720,7 +4802,11 @@ const STU_PICK_KEY = "jp_student_pick_v1";
 let studentMode = false;
 let stu = null;          // { links, students:[{s, uuid, row, link, tp, view}], requests, joins }
 let stuCur = null;       // item selecionado de stu.students
-let stuTab = localStorage.getItem("jp_stu_active_page") || "home"; // página do modo aluno (separada da do professor)
+// Página aberta (8.14): só vale enquanto a aba/app continua aberto (sessionStorage). Abrir o app
+// de novo começa no Início.
+function sessGet(k){ try { return sessionStorage.getItem(k); } catch(e) { return null; } }
+function sessSet(k, v){ try { sessionStorage.setItem(k, v); } catch(e) {} }
+let stuTab = sessGet("jp_stu_active_page") || "home"; // página do modo aluno (separada da do professor)
 let stuPollTimer = null;
 let stuStarting = null;
 const PARTICLES = new Set(["da","de","do","das","dos","e","di","du"]);
@@ -4825,7 +4911,7 @@ function stuEntryKind(){
 const el = stuEntryHTML(`<div class="entry-big">
 <button type="button" class="entry-btn" data-kind="student"><b>Sou aluno</b><span>Eu faço as aulas</span></button>
 <button type="button" class="entry-btn" data-kind="guardian"><b>Sou responsável por um aluno</b><span>Pai, mãe ou responsável</span></button>
-</div><button type="button" class="auth-toggle" data-back>Voltar</button>`, "Entrar como aluno");
+</div><button type="button" class="auth-toggle" data-back>Voltar</button><a class="entry-legal" href="privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a>`, "Entrar como aluno");
 el.querySelectorAll("[data-kind]").forEach(b => b.onclick = () => { writeEntry({ kind: b.dataset.kind }); if (authCurrentUser) stuEntryCode(); else stuEntryAuth(); });
 const back = el.querySelector("[data-back]");
 if (authCurrentUser) back.textContent = "Sair da conta";
@@ -4899,6 +4985,8 @@ ${guardian ? `<div class="stu-form-sec">Seus dados</div>
 ${guardian ? "" : `<div id="sfMinor" style="display:none"><div class="stu-form-sec">Menor de 18 anos: dados do responsável</div>
 <div class="field"><label>Nome do responsável</label><input type="text" id="sfGuardianName"></div>
 <div class="field"><label>Telefone do responsável</label><input type="tel" id="sfGuardianPhone"></div></div>`}
+<label class="consent-check"><input type="checkbox" id="sfConsent"> <span>Li e concordo com os Termos e a <a href="privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a></span></label>
+<label class="consent-check" id="sfGuardianConsentRow"${guardian ? "" : ` style="display:none"`}><input type="checkbox" id="sfGuardianConsent"> <span>Sou o responsável legal e autorizo o uso dos dados deste aluno</span></label>
 <div class="auth-error" id="sfError"></div>
 <div class="actions"><button class="save" id="sfSend" style="width:100%">Enviar para ${escapeHtml(e.teacherName || "o professor")}</button></div>
 <button type="button" class="auth-toggle" id="sfOtherKey">Usar outra chave</button>
@@ -4907,7 +4995,7 @@ ${guardian ? "" : `<div id="sfMinor" style="display:none"><div class="stu-form-s
 const sel = el.querySelector("select#sfInstrument");
 if (sel) sel.onchange = () => { el.querySelector("#sfInstrumentOther").style.display = sel.value ? "none" : ""; };
 const birth = el.querySelector("#sfBirth"), minor = el.querySelector("#sfMinor");
-if (minor) birth.onchange = () => { const a = ageYears(birth.value); minor.style.display = a !== null && a < 18 ? "" : "none"; };
+if (minor) birth.onchange = () => { const a = ageYears(birth.value); const m = a !== null && a < 18; minor.style.display = m ? "" : "none"; el.querySelector("#sfGuardianConsentRow").style.display = m ? "" : "none"; };
 el.querySelector("#sfOtherKey").onclick = () => { writeEntry({ code: "", teacherName: null }); stuEntryCode(); };
 el.querySelector("#sfLogout").onclick = stuSignOut;
 el.querySelector("#sfSend").onclick = async () => {
@@ -4927,9 +5015,20 @@ if (guardian && (!row.guardian_name || !row.guardian_phone)) { err.textContent =
 if (!guardian && !row.student_phone) { err.textContent = "Preencha seu telefone."; return; }
 if (!row.student_birth_date) { err.textContent = "Preencha a data de nascimento."; return; }
 if (!guardian && age !== null && age < 18 && (!row.guardian_name || !row.guardian_phone)) { err.textContent = "Menor de 18 anos: preencha nome e telefone do responsável."; return; }
+// Consentimento (8.14): obrigatório; menor de 18 ou pedido do responsável também precisa da autorização.
+const needGuardian = guardian || (age !== null && age < 18);
+if (!el.querySelector("#sfConsent").checked) { err.textContent = "Marque que leu e concorda com os Termos e a Política de Privacidade."; return; }
+if (needGuardian && !el.querySelector("#sfGuardianConsent").checked) { err.textContent = "Marque a autorização do responsável legal."; return; }
 const btn = el.querySelector("#sfSend"); btn.disabled = true; err.textContent = "";
-const { error } = await supabaseClient.rpc("hi_create_join_request", { p_code: e.code, p_role: row.role, p_student_name: row.student_name, p_student_phone: row.student_phone, p_student_birth_date: row.student_birth_date, p_instrument: row.instrument, p_guardian_name: row.guardian_name, p_guardian_phone: row.guardian_phone });
+const args = { p_code: e.code, p_role: row.role, p_student_name: row.student_name, p_student_phone: row.student_phone, p_student_birth_date: row.student_birth_date, p_instrument: row.instrument, p_guardian_name: row.guardian_name, p_guardian_phone: row.guardian_phone };
+let { data: jid, error } = await supabaseClient.rpc("hi_create_join_request_v2", { ...args, p_consent_version: CONSENT_VERSION, p_guardian_consent: needGuardian });
+// Banco ainda sem o SQL da 8.14: manda pelo caminho antigo (o consentimento fica marcado no aparelho).
+if (error && /hi_create_join_request_v2|PGRST202|Could not find the function/i.test(`${error.code} ${error.message}`)) {
+({ data: jid, error } = await supabaseClient.rpc("hi_create_join_request", args));
+if (!error) termsMarkLocal();
+}
 btn.disabled = false;
+if (!error && jid) pushNotify("join", jid);
 if (error) {
 const m = error.message || "";
 err.textContent = /pendente para este professor/i.test(m) ? "Você já tem um pedido esperando resposta desse professor."
@@ -4980,7 +5079,7 @@ function stuStartPoll(){
 stuStopPoll();
 stuPollTimer = setInterval(() => { if (document.visibilityState === "visible") startStudentMode(true); }, 30000);
 }
-document.addEventListener("visibilitychange", () => { if (studentMode && !demoMode && document.visibilityState === "visible") startStudentMode(true); });
+document.addEventListener("visibilitychange", () => { if (studentMode && !demoMode && document.visibilityState === "visible" && Date.now() - stuLastFetch > 60000) startStudentMode(true); });
 
 // ---------- Dados do aluno ----------
 async function stuFetch(){
@@ -4999,8 +5098,8 @@ q(supabaseClient.from("student_view").select("*").in("student_id", ids)),
 q(supabaseClient.from("student_requests").select("*").eq("author_user_id", uid).order("created_at", { ascending: false }))
 ]);
 const tIds = [...new Set(students.map(s => s.teacher_id))];
-const [tps, journals] = await Promise.all([tIds.length ? q(supabaseClient.from("teacher_public").select("*").in("teacher_id", tIds)) : [], journalFetch(ids)]);
-rows = { students, lessons, makeups, payments, views, tps, requests, journals };
+const [tps, journals, anns] = await Promise.all([tIds.length ? q(supabaseClient.from("teacher_public").select("*").in("teacher_id", tIds)) : [], journalFetch(ids), stuFetchAnnouncements(ids)]);
+rows = { students, lessons, makeups, payments, views, tps, requests, journals, anns };
 }
 return { at: new Date().toISOString(), userId: uid, links, joins, ...rows };
 }
@@ -5018,7 +5117,7 @@ const sc = view.scores || {};
 const s = JSON.parse(tbCompose(m).jp_students_v5)[0];
 if (s.value === undefined && view.monthlyValue !== undefined && view.monthlyValue !== null) s.value = view.monthlyValue;
 const tp = raw.tps.find(t => t.teacher_id === row.teacher_id) || {};
-return { s, uuid: row.id, row, link, tp, view };
+return { s, uuid: row.id, row, link, tp, view, anns: (raw.anns || []).filter(a => a.student_id === row.id) };
 }).filter(Boolean);
 return { links: raw.links, joins: raw.joins, requests: raw.requests, students: list, at: raw.at };
 }
@@ -5041,10 +5140,26 @@ if (stuStarting) return stuStarting;
 stuStarting = startStudentModeNow(refresh).finally(() => { stuStarting = null; });
 return stuStarting;
 }
+// Abrir rápido (8.14): com a cópia do aparelho o app aparece na hora e atualiza por baixo.
+// Voltar pro app (outra aba, tela apagada) só busca de novo se passou mais de 1 minuto.
+let stuLastFetch = 0;
 async function startStudentModeNow(refresh){
 studentMode = true;
+if (!refresh && !stu) {
+let c = null;
+try { c = JSON.parse(localStorage.getItem(STU_CACHE_KEY) || "null"); } catch(x) {}
+if (c && c.userId === authCurrentUser.id && stuBuild(c).students.length) {
+stu = stuBuild(c);
+stuStopPoll(); hideAuthGate();
+document.getElementById("onboardingGate").classList.add("hidden");
+const pick = localStorage.getItem(STU_PICK_KEY);
+stuShowShell(stu.students.find(x => x.link.id === pick) || stu.students[0]);
+setTimeout(() => startStudentMode(true), 30);
+return;
+}
+}
 let raw = null;
-try { raw = await stuFetch(); journalAbsorb(raw.journals); delete raw.journals; _nativeSetItem.call(localStorage, STU_CACHE_KEY, JSON.stringify(raw)); }
+try { raw = await stuFetch(); stuLastFetch = Date.now(); journalAbsorb(raw.journals); delete raw.journals; _nativeSetItem.call(localStorage, STU_CACHE_KEY, JSON.stringify(raw)); }
 catch(e) {
 console.warn("Modo aluno: sem conexão, usando a cópia do aparelho.", e);
 try { const c = JSON.parse(localStorage.getItem(STU_CACHE_KEY) || "null"); if (c && c.userId === authCurrentUser.id) raw = c; } catch(x) {}
@@ -5065,6 +5180,7 @@ hideAuthGate();
 document.getElementById("onboardingGate").classList.add("hidden");
 const pick = localStorage.getItem(STU_PICK_KEY);
 stuShowShell(stu.students.find(x => x.link.id === pick) || stu.students[0]);
+setTimeout(stuTermsCheck, 400);
 }
 // Mostra a casca do modo aluno já no aluno escolhido (também usado pela demonstração).
 function stuShowShell(item){
@@ -5154,7 +5270,9 @@ showCloudWarning("Demonstração: nada foi enviado.");
 stuRender();
 return true;
 }
-const { error } = await supabaseClient.from("student_requests").insert({ student_id: stuCur.uuid, author_user_id: authCurrentUser.id, type, payload });
+const { data: ins, error } = await supabaseClient.from("student_requests").insert({ student_id: stuCur.uuid, author_user_id: authCurrentUser.id, type, payload }).select("id");
+if (!error && ins && ins[0] && type !== "song_request") pushNotify("request", ins[0].id);
+if (!error && (type === "absence" || type === "reschedule")) setTimeout(() => pushInvite(stuCur && stuCur.link && stuCur.link.role === "guardian" ? "guardian" : "student"), 1500);
 if (error) {
 const m = error.message || "";
 // Pedido novo (8.3) com o banco ainda sem o SQL da 8.3: a regra do tipo recusa.
@@ -5239,7 +5357,7 @@ if (kind === "bass") chordTool.mode = "scale";
 function stuOpenPage(page){
 if (!STU_PAGES[page] || !stuPageAllowed(page)) page = "home";
 stuTab = page;
-if (!demoMode) _nativeSetItem.call(localStorage, "jp_stu_active_page", page);
+if (!demoMode) sessSet("jp_stu_active_page", page);
 document.querySelectorAll("#stuSidebar [data-stu-page]").forEach(b => b.classList.toggle("active", b.dataset.stuPage === page));
 document.querySelectorAll("#stuSidebar .nav-group").forEach(g => g.classList.toggle("collapsed", !g.querySelector(`[data-stu-page="${page}"]`)));
 closeStuMenu();
@@ -5424,6 +5542,8 @@ let html = `<div class="home-greeting-text">Olá${nm ? ", " + escapeHtml(nm) : "
 // Convite pra instalar (8.4): até a pessoa instalar ou tocar em "Agora não" (volta depois de 30 dias).
 if (!demoMode && pwaCanInstall() && Date.now() > Number(localStorage.getItem(INSTALL_NUDGE_KEY) || 0)) html += stuCard("", `<div class="install-nudge"><img src="icons/icon-192.png" alt=""><div><div class="stu-row-title">Instale o Hi Teacher na sua tela inicial</div><div class="stu-muted">Abre em tela cheia, como um aplicativo.</div></div></div>
 <div class="song-acts"><button type="button" class="save" data-install>Como instalar</button><button type="button" class="btn-link-inline" data-install-later>Agora não</button></div>`);
+// Aviso do professor (8.14): no topo, até a pessoa tocar em "Entendi".
+html += stuAnnCardsHTML();
 html += `<div class="stu-days">${stuDaySections(up)}</div>`;
 // Estudo da semana (8.8): um card só, sem linhas separando. Lição de casa com o desafio junto,
 // a matéria numa linha e o recado do professor (dica + vídeo) no fim.
@@ -5511,6 +5631,7 @@ const p = r.payload || {}, det = r.type === "song_request" ? p.title : p.label;
 const what = `${labels[r.type] || "Pedido"}${det ? ` (${escapeHtml(det)})` : ""}`;
 out.push({ html: `${what}: ${r.status === "accepted" ? "confirmado pelo professor" : "não aceito"}${r.response ? ` · "${escapeHtml(r.response)}"` : ""}`, cls: r.status === "accepted" ? "ok" : "bad", go: { payment_notice: "money", change_data: "profile", song_request: "songs" }[r.type] || "lessons" });
 });
+stuAnns().filter(a => !a.read_at).forEach(a => out.unshift({ html: `Aviso do professor: ${escapeHtml(a.title)}`, cls: "warn", go: "home" }));
 return stuMoneyLocked() ? out.filter(n => n.go !== "money") : out;
 }
 // ---------- Remarcar e marcar reposição em horário vago ----------
@@ -5618,7 +5739,7 @@ const byMonth = new Map();
 past.forEach(l => { const k = isoFromBr(l.date).slice(0, 7); if (!byMonth.has(k)) byMonth.set(k, []); byMonth.get(k).push(l); });
 const monthName = k => { const [y, m] = k.split("-").map(Number); const t = MONTH_FULL[m - 1]; return `${t[0].toUpperCase()}${t.slice(1)}${y !== new Date().getFullYear() ? " de " + y : ""}`; };
 const keys = [...byMonth.keys()], openKey = keys.includes(currentMonthKey()) ? currentMonthKey() : keys[0];
-return tabs + (past.length ? keys.map(k => `<details class="settings-card month-group"${k === openKey ? " open" : ""}><summary class="month-sum"><span>${monthName(k)}</span><span class="stu-muted">${byMonth.get(k).filter(l => !isNoClass(l)).length} aula${byMonth.get(k).filter(l => !isNoClass(l)).length === 1 ? "" : "s"}</span><span class="settings-row-chevron" aria-hidden="true">›</span></summary><div class="month-body">${byMonth.get(k).map(pastRow).join("")}</div></details>`).join("") : stuCard("", `<div class="stu-empty">Ainda não há aulas no histórico.</div>`));
+return tabs + stuAnnHistoryHTML() + (past.length ? keys.map(k => `<details class="settings-card month-group"${k === openKey ? " open" : ""}><summary class="month-sum"><span>${monthName(k)}</span><span class="stu-muted">${byMonth.get(k).filter(l => !isNoClass(l)).length} aula${byMonth.get(k).filter(l => !isNoClass(l)).length === 1 ? "" : "s"}</span><span class="settings-row-chevron" aria-hidden="true">›</span></summary><div class="month-body">${byMonth.get(k).map(pastRow).join("")}</div></details>`).join("") : stuCard("", `<div class="stu-empty">Ainda não há aulas no histórico.</div>`));
 }
 let html = tabs;
 // 1) Reposições pendentes no topo.
@@ -5741,6 +5862,7 @@ ${changes.length ? `<div class="stu-sub-list">${changes.map(r => `<div class="st
 + (content.rules ? stuCard("Regras e combinados", `<div class="stu-hw">${escapeHtml(content.rules)}</div>`) : "")
 + stuCard("Preferências", `<div class="toggle-field"><label>Modo criança (botões maiores e figurinhas)</label><label class="switch"><input type="checkbox" id="stuKid" ${stuKidMode() ? "checked" : ""}><span class="switch-slider"></span></label></div>
 ${pwaCanInstall() ? `<button type="button" class="btn-historico" id="stuInstall" style="width:100%;margin-top:0.75rem">Instalar o app</button>` : ""}`)
++ stuPrivacyCardHTML()
 + (!demoMode && isTeacherToo(authCurrentUser.id) ? `<button type="button" class="btn-historico stu-logout" id="stuTeacherBtn">Voltar para o modo professor</button>` : "")
 + (demoMode ? "" : `<button type="button" class="cancel stu-logout" id="stuLogoutBtn">Sair da conta</button>`);
 }
@@ -5813,6 +5935,8 @@ showImageModal(blob, `recibo-${stripAccents(it.label).toLowerCase().replace(/[^a
 });
 main.querySelectorAll("[data-go]").forEach(b => b.onclick = () => stuOpenPage(b.dataset.go));
 main.querySelectorAll("[data-pay]").forEach(b => b.onclick = () => stuOpenPayPanel(Number(b.dataset.pay)));
+main.querySelectorAll("[data-ann-ok]").forEach(b => b.onclick = () => stuAnnRead(b.dataset.annOk));
+if (main.querySelector("#stuExport")) stuPrivacyBind(main);
 const pinGo = main.querySelector("#moneyPinGo");
 if (pinGo) { const inp = main.querySelector("#moneyPin");
 const tryPin = () => { if (pinHash(stuCur.uuid, inp.value) === stuCur.view.parentPin) { stuMoneyOpen = stuCur.uuid; stuRender(); stuBellUpdate(); } else { main.querySelector("#moneyPinErr").textContent = "Senha errada."; inp.select(); } };
@@ -7985,7 +8109,9 @@ const themes = (plans.length ? plans.map(p => ({ id: String(p.id), topic: p.topi
 .map((t, i) => ({ ...t, date: brOf(past[Math.max(0, past.length - 1 - i)] || past[0]), rating: [4, 5, 2, 4, 3, 1][i % 6] }));
 const songs = [["Asa Branca", "Luiz Gonzaga", -3], ["Wonderwall", "Oasis", -10], ["Garota de Ipanema", "Tom Jobim", -24], ["Trem-bala", "Ana Vilela", -40]].map(([t, a, n], i) => ({ id: "dc" + i, t, a, u: "https://drive.google.com/file/d/demo" + i + "xxxxxxxx/view", d: isoOf(day(n)) }));
 const view = { group: false, themes, songs, ...(s.level ? { certificates: [{ level: s.level, date: isoOf(day(-20)) }] } : {}) };
-return { links: [], joins: [], requests: [], at: new Date().toISOString(), students: [{ s, uuid: "demo", row: {}, link: { id: "demo", role: "student" }, tp, view }] };
+const anns = [{ tid: "demoann1", id: "demoann1", student_id: "demo", read_at: null, title: "Recital de fim de ano", body: "Os ensaios gerais vão ser aos sábados às 10h, no estúdio. Traga a pasta com as músicas.", created_at: new Date(Date.now() - 86400000).toISOString(), expires_at: null },
+{ tid: "demoann2", id: "demoann2", student_id: "demo", read_at: new Date(Date.now() - 6 * 86400000).toISOString(), title: "Feriado", body: "Não teremos aula na segunda, dia 12.", created_at: new Date(Date.now() - 7 * 86400000).toISOString(), expires_at: null }];
+return { links: [], joins: [], requests: [], at: new Date().toISOString(), students: [{ s, uuid: "demo", row: {}, link: { id: "demo", role: "student" }, tp, view, anns }] };
 }
 // O que o professor configurou em "Conteúdo para os alunos"; o que faltar ganha um exemplo.
 function demoContent(fut){
@@ -8004,7 +8130,7 @@ openSlots: real.openSlots && real.openSlots.length ? real.openSlots : slots,
 ...(real.evalView ? { evalView: real.evalView } : {})
 };
 }
-function startDemo(){ demoEnter("demo", demoStudent(), "Modo demonstração"); }
+function startDemo(){ try { onbMark("demo"); } catch(e) {} demoEnter("demo", demoStudent(), "Modo demonstração"); }
 // "Ver como": o mesmo que o aluno recebe (linhas públicas do aluno, teacher_public e
 // student_view), montado com os dados deste aparelho. Nada de student_private/lesson_private.
 async function startViewAs(s){
@@ -8031,7 +8157,9 @@ try { const r = await supabaseClient.from("student_requests").select("*").eq("st
 const link = (inbox.links || []).find(l => l.student_id === u) || { id: "view", role: "student" };
 viewAsRef = s;
 setTimeout(() => stuToast("No menu, segure o dedo numa função para liberar ou desativar."), 400);
-demoEnter("view", { links: [link], joins: [], requests, at: new Date().toISOString(), students: [{ s: s2, uuid: u, row: {}, link, tp: tpPayload(), view, journalView: journalForStudent(s) || { v: 1 } }] }, `Vendo como ${firstName(s.name)} (só leitura)`);
+let anns = [];
+try { anns = await stuFetchAnnouncements([u]); } catch(e) {}
+demoEnter("view", { links: [link], joins: [], requests, at: new Date().toISOString(), students: [{ s: s2, uuid: u, row: {}, link, tp: tpPayload(), view, journalView: journalForStudent(s) || { v: 1 }, anns }] }, `Vendo como ${firstName(s.name)} (só leitura)`);
 }
 // ===================== App do aluno: lado do professor (8.1) =====================
 // Chave para alunos, pedidos de entrada, recados dos alunos, acesso ao app na ficha e o que
@@ -8149,12 +8277,13 @@ supabaseClient.from("student_links").select("*").neq("user_id", uid)
 ]);
 if (j.error || r.error || l.error) throw (j.error || r.error || l.error);
 const map = studentUuidMap();
-inbox = { joins: j.data || [], requests: (r.data || []).filter(x => map.student(x.student_id)), links: (l.data || []).filter(x => map.student(x.student_id)), loaded: true, journals: inbox.journals || [] };
+inbox = { joins: j.data || [], requests: (r.data || []).filter(x => map.student(x.student_id)), links: (l.data || []).filter(x => map.student(x.student_id)), loaded: true, loadedAt: Date.now(), journals: inbox.journals || [] };
 // Caderno dos alunos (8.3): sem o SQL da 8.3 a tabela não existe e fica vazio.
 try { const jr = await supabaseClient.from("student_journal").select("student_id,user_id,data,updated_at").eq("teacher_id", uid); if (!jr.error) inbox.journals = (jr.data || []).filter(x => map.student(x.student_id)); } catch(e) {}
 } catch(e) { console.warn("Não consegui buscar os pedidos dos alunos:", e); }
 renderStudentInbox();
 teacherPublish();
+try { pushLatePayments(); } catch(e) {}
 }
 function inboxStart(){
 clearInterval(inboxTimer);
@@ -8162,7 +8291,7 @@ if (!studentAppOn()) return;
 inboxLoad();
 inboxTimer = setInterval(() => { if (document.visibilityState === "visible") inboxLoad(); }, 60000);
 }
-document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && studentAppOn()) inboxLoad(); });
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && studentAppOn() && Date.now() - (inbox.loadedAt || 0) > 60000) inboxLoad(); });
 function pendingJoins(){ return inbox.joins.filter(j => j.status === "pending"); }
 function renderStudentInbox(){
 const joins = pendingJoins(), reqs = inbox.requests;
@@ -8194,6 +8323,7 @@ return `${name} vai faltar na aula de ${d ? WEEKDAY_SHORT[d.getDay()].toLowerCas
 if (r.type === "payment_notice") return `${name} diz que pagou ${p.kind === "month" && p.key ? monthLabel(p.key).replace("/", " de ") : (p.label || "").toLowerCase()}`;
 if (r.type === "song_request") return `${name} quer aprender: ${p.title || ""}${p.artist ? " – " + p.artist : ""}${p.note ? ` (${p.note})` : ""}`;
 if (r.type === "reschedule") return `${name} pediu pra remarcar a aula de ${slotText(p.iso, p.time)} para ${slotText(p.toIso, p.toTime)}${p.reason ? ` (${p.reason})` : ""}`;
+if (r.type === "delete_data") return `${name} pediu para você apagar os dados que guarda sobre ele (aulas, pagamentos e anotações). Se decidir apagar: abra a ficha → Excluir aluno.`;
 if (r.type === "makeup_request") return `${name} quer marcar a reposição da aula de ${String(p.originDate || "").slice(0,5)} para ${slotText(p.toIso, p.toTime)}${p.reason ? ` (${p.reason})` : ""}`;
 const ch = Object.keys(p.changes || {}).map(k => `${((p.labels || {})[k] || k).toLowerCase()} → ${p.changes[k]}`);
 return `${name} pediu para alterar: ${ch.join("; ")}${p.note ? `${ch.length ? " · " : ""}${p.note}` : ""}`;
@@ -8205,11 +8335,13 @@ if (r.type === "payment_notice") return b("paid", "Marcar como pago", "save") + 
 if (r.type === "song_request") return b("song", "Aprovar", "save") + b("reject", "Recusar", "btn-link-inline");
 if (r.type === "reschedule") return b("move", "Aceitar", "save") + b("reject", "Recusar", "btn-link-inline");
 if (r.type === "makeup_request") return b("mkok", "Aceitar", "save") + b("reject", "Recusar", "btn-link-inline");
+if (r.type === "delete_data") return b("sheet", "Abrir a ficha") + b("deleted", "Feito, apaguei", "save") + b("reject", "Recusar", "btn-link-inline");
 return (Object.keys((r.payload || {}).changes || {}).length ? b("apply", "Aplicar", "save") : b("apply", "Feito", "save")) + b("reject", "Recusar", "btn-link-inline");
 }
 async function answerRequest(r, status, response){
 const { error } = await supabaseClient.from("student_requests").update({ status, response: response || null, answered_at: new Date().toISOString() }).eq("id", r.id);
 if (error) { alert("Não consegui responder agora (sem internet?). Tente de novo."); return false; }
+pushNotify("answer", r.id);
 inbox.requests = inbox.requests.filter(x => x.id !== r.id);
 renderStudentInbox();
 return true;
@@ -8224,7 +8356,9 @@ const resp = act === "notpaid" ? (prompt("Resposta pro aluno (opcional):", "Aind
 if (resp === null) return;
 return answerRequest(r, "rejected", resp.trim() || (act === "notpaid" ? "Ainda não recebi" : ""));
 }
+if (r.type === "delete_data" && act === "deleted") return answerRequest(r, "accepted", "Dados apagados pelo professor.");
 if (!s) { alert("Esse aluno não está mais no seu cadastro."); return; }
+if (act === "sheet") { openStudentSheet(s.id); return; }
 if (r.type === "song_request") return approveSongRequest(r, s);
 if (r.type === "makeup_request") return acceptMakeupRequest(r, s);
 if (r.type === "absence" || r.type === "reschedule") {
@@ -8272,6 +8406,7 @@ body.innerHTML = joins.length ? joins.map(j => `<div class="join-item">
 <div class="join-name">${escapeHtml(j.student_name || "")}</div>
 <div class="join-sub">${j.role === "guardian" ? `Responsável: ${escapeHtml(j.guardian_name || "")}` : "Aluno"}${j.instrument ? " · " + escapeHtml(j.instrument) : ""}${j.student_birth_date ? " · " + ageFrom(j.student_birth_date) : ""}</div>
 <div class="join-sub">${escapeHtml(j.role === "guardian" ? (j.guardian_phone || "") : (j.student_phone || ""))}${j.role !== "guardian" && j.guardian_name ? ` · resp.: ${escapeHtml(j.guardian_name)}${j.guardian_phone ? " " + escapeHtml(j.guardian_phone) : ""}` : ""} · pediu ${sinceText(j.created_at)}</div>
+${j.consent_at ? `<div class="join-sub consent-ok">Consentimento dado em ${formatDateShort(String(j.consent_at).slice(0, 10)).slice(0, 5)}${j.guardian_consent ? " · autorização do responsável" : ""}</div>` : ""}
 <div class="join-acts"><button type="button" class="save" data-j="${j.id}" data-a="accept">Aceitar</button><button type="button" class="btn-edit-toggle" data-j="${j.id}" data-a="wait">Lista de espera</button><button type="button" class="btn-link-inline" data-j="${j.id}" data-a="reject">Recusar</button></div>
 </div>`).join("") : `<div class="field-hint" style="margin:0">Nenhum pedido esperando.</div>`;
 body.querySelectorAll("[data-j]").forEach(b => b.onclick = () => {
@@ -8318,6 +8453,7 @@ const { error } = await supabaseClient.from("student_links").upsert({ student_id
 if (error) { alert("Não consegui liberar o acesso agora. Tente de novo."); return false; }
 const ok = await setJoinStatus(j, { status: "approved", student_id: u });
 await inboxLoad();
+if (ok) setTimeout(() => pushInvite("teacher"), 1200);
 return ok;
 }
 function acceptJoin(j, body, back){
@@ -8495,7 +8631,8 @@ if (!links.length && !studentAppOn()) return "";
 const rows = links.map(l => {
 const j = inbox.joins.find(x => x.user_id === l.user_id && x.student_id === u) || inbox.joins.find(x => x.user_id === l.user_id && x.status === "approved");
 const who = l.role === "guardian" ? `${escapeHtml(firstName(j?.guardian_name || "Responsável"))} (responsável)` : escapeHtml(firstName(j?.student_name || s.name));
-return `<div class="sheet-pair wide"><dt>Acesso ao app</dt><dd>${who} tem acesso (desde ${formatDateShort(String(l.created_at).slice(0,10)).slice(0,5)}) <button type="button" class="btn-link-inline" data-unlink="${l.id}">Remover acesso</button></dd></div>`;
+const consent = l.consent_at || (j && j.consent_at);
+return `<div class="sheet-pair wide"><dt>Acesso ao app</dt><dd>${who} tem acesso (desde ${formatDateShort(String(l.created_at).slice(0,10)).slice(0,5)})${consent ? ` · consentimento dado em ${formatDateShort(String(consent).slice(0,10)).slice(0,5)}` : ""} <button type="button" class="btn-link-inline" data-unlink="${l.id}">Remover acesso</button></dd></div>`;
 }).join("");
 const age = ageYears(s.birthDate);
 const pinRow = stContent().moneyAdultsOnly && !(age !== null && age >= 18) ? `<div class="sheet-pair wide"><dt>Senha dos pais (Financeiro)</dt><dd>${s.parentPin ? `<b>${escapeHtml(s.parentPin)}</b>` : "Ainda não criada"} <button type="button" class="btn-link-inline" data-parent-pin>${s.parentPin ? "Trocar" : "Criar senha"}</button></dd></div>` : "";
@@ -8919,6 +9056,8 @@ const groupPrice = Number(document.getElementById("onbPriceGroup").value);
 if (groupPrice > 0) { appSettings.defaultValues.groupFlat = groupPrice; appSettings.defaultValues.groupDifferentiate = false; }
 }
 appSettings.onboarded = true;
+// Professor novo: o card "Primeiros passos" aparece no Início (8.14).
+if (!appSettings.onb) appSettings.onb = {};
 saveAppSettings();
 document.getElementById("onboardingGate").classList.add("hidden");
 renderHome();
@@ -10422,6 +10561,8 @@ return (appSettings.breaks || []).filter(b => !b.studentId && b.start <= iso && 
 
 function renderAgenda(){
 const year = agendaViewYear, month = agendaViewMonth;
+const eh = document.getElementById("agendaEmptyHint");
+if (eh) eh.innerHTML = students.some(s => s.active !== false) ? "" : `<div class="empty-teach slim"><b>Ainda sem aulas na agenda.</b><span>As aulas aparecem aqui quando você cadastra alunos com dia e horário. Feriados e os seus eventos já aparecem.</span></div>`;
 document.getElementById("agendaMonthLabel").textContent = `${agendaMonthNamesFull[month]} ${year}`;
 
 const weekdayNames = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
@@ -10966,7 +11107,10 @@ const phase = lessonPhase(date, time);
 const undoable = group.filter(x => isUndoable(x.record));
 footer.innerHTML = (open.length > 1
 ? `<button type="button" class="btn-delete lp-cancel">${phase === "before" ? "Cancelar aula da turma" : "Não teve aula (turma)"}</button>`
-: "") + (undoable.length > 1 ? `<button type="button" class="btn-link-muted lp-undo">Desfazer (turma)</button>` : "");
+: "") + (undoable.length > 1 ? `<button type="button" class="btn-link-muted lp-undo">Desfazer (turma)</button>` : "")
++ (group.length > 1 && studentAppOn() ? `<button type="button" class="btn-historico lp-announce">Avisar a turma</button>` : "");
+const abtn = footer.querySelector(".lp-announce");
+if (abtn) abtn.onclick = () => { const wd = date.getDay(); closeLessonPanel(); openAnnouncementForm({ ids: group.map(x => x.student.id), groupKey: `${wd}|${time}`, label: `turma de ${WEEKDAY_SHORT[wd]} ${time}` }); };
 const cbtn = footer.querySelector(".lp-cancel");
 if (cbtn) cbtn.onclick = () => openWhatHappened(open.map(x => ({ ...lessonTarget(x, date), extraFuture: false })));
 const ubtn = footer.querySelector(".lp-undo");
@@ -11275,6 +11419,7 @@ ${href ? `<a class="wa-btn wa-mini" href="${href}" target="_blank" rel="noopener
 }
 
 function renderHome(){
+try { renderOnboarding(); } catch(e) {}
 renderStudentInbox();
 renderBirthdays();
 renderAttention();
@@ -11401,7 +11546,15 @@ box.appendChild(section);
 offset++;
 }
 
-if(daysFound === 0) box.innerHTML="<div class='empty'>Nenhuma próxima aula agendada.</div>";
+if(daysFound === 0) {
+// Estado vazio que ensina (8.14).
+if (!students.length && onbState() && !onbState().hidden) box.innerHTML = "";
+else if (!students.length) {
+box.innerHTML = `<div class="empty-teach"><b>Cadastre o primeiro aluno para ver sua agenda aqui.</b><span>Com os alunos cadastrados, as próximas aulas, reposições e mensalidades aparecem no Início.</span><div class="empty-acts"><button type="button" class="save" data-empty-add>Cadastrar aluno</button><button type="button" class="btn-historico" data-empty-import>Importar planilha</button></div></div>`;
+box.querySelector("[data-empty-add]").onclick = () => { openPage("students"); openEdit(); };
+box.querySelector("[data-empty-import]").onclick = () => { openPage("students"); document.getElementById("btnImportSpreadsheet").click(); };
+} else box.innerHTML = `<div class="empty-teach"><b>Nenhuma aula nos próximos 30 dias.</b><span>Confira os dias e horários na ficha de cada aluno.</span></div>`;
+}
 renderMakeups();
 renderPendingPayments();
 }
@@ -12766,7 +12919,12 @@ if (!dayVal.length) appendGroup("Sem dia fixo", activeList.filter(s => s.lessonF
 activeList.forEach(s=>boxActive.appendChild(createSquare(s,false)));
 }
 lastStudentLists = { active: activeList, inactive: inactiveList };
-if (activeList.length === 0) boxActive.innerHTML = `<div class="empty" style="grid-column:1/-1">${students.some(s => s.active !== false) ? "Nenhum aluno com esses filtros." : "Nenhum aluno ativo ainda. Toque no + pra cadastrar."}</div>`;
+if (activeList.length === 0) {
+boxActive.innerHTML = students.some(s => s.active !== false) ? `<div class="empty" style="grid-column:1/-1">Nenhum aluno com esses filtros.</div>`
+: `<div class="empty-teach" style="grid-column:1/-1"><b>Nenhum aluno ainda.</b><span>Cadastre um por um ou traga todos de uma vez de uma planilha (Excel, Google Planilhas ou CSV).</span><div class="empty-acts"><button type="button" class="save" data-empty-add>Cadastrar aluno</button><button type="button" class="btn-historico" data-empty-import>Importar planilha</button></div></div>`;
+const ea = boxActive.querySelector("[data-empty-add]"); if (ea) ea.onclick = () => openEdit();
+const ei = boxActive.querySelector("[data-empty-import]"); if (ei) ei.onclick = () => document.getElementById("btnImportSpreadsheet").click();
+}
 
 if(inactiveList.length===0) boxInactive.innerHTML="<div style='color:#94a3b8;font-size:13px;padding:10px 0'>Nenhum inativo.</div>";
 else inactiveList.forEach(s=>boxInactive.appendChild(createSquare(s,true)));
@@ -13204,6 +13362,8 @@ Object.keys(earningsData).forEach(y => {
 earningsData[y].forEach((m, idx) => { if (m.value > maxGain) { maxGain = m.value; maxYear = Number(y); maxMonthIdx = idx; maxMonthName = m.month; }});});
 
 document.getElementById("kpiMaxGain").textContent = maxGain > 0 ? `R$ ${maxGain}` : 'R$ 0';
+{ const nd = document.getElementById("finNoData"); if (nd) nd.style.display = maxGain > 0 ? "none" : ""; }
+{ const nd = document.getElementById("qtyNoData"); if (nd) nd.style.display = Object.values(studentCountsData).some(arr => (arr || []).some(m => m.value > 0)) ? "none" : ""; }
 if (maxGain > 0) {
 const diff = (today.getFullYear() - maxYear) * 12 + (today.getMonth() - maxMonthIdx);
 document.getElementById("kpiMaxSub").textContent = diff === 0 ? `Recorde este mês!` : `Em ${maxMonthName}/${maxYear} (há ${diff} ${diff === 1 ? 'mês' : 'meses'}).`;
@@ -13700,6 +13860,7 @@ let maxVal = 0; let maxYear = selectedYear; let maxMonthIdx = -1; let maxMonthNa
 getPerfStarSeries(y).forEach((m,idx)=>{ if(m.value > maxVal){ maxVal = m.value; maxYear = y; maxMonthIdx = idx; maxMonthName = m.month; } });
 });
 document.getElementById("kpiPerfMax").textContent = maxVal>0 ? `${maxVal} ★` : "-";
+{ const nd = document.getElementById("perfNoData"); if (nd) nd.style.display = maxVal > 0 ? "none" : ""; }
 document.getElementById("kpiPerfMaxSub").textContent = maxVal>0 ? `Em ${maxMonthName}/${maxYear}.` : "Sem avaliações ainda.";
 
 const validVals = currentList.filter(e=>e.value>0);
@@ -13973,7 +14134,7 @@ if(opening){ document.getElementById("perfStudentSearch").value=""; renderPerfSe
 });
 document.getElementById("perfStudentSearch")?.addEventListener("input", renderPerfSearchList);
 
-let currentPage = localStorage.getItem("jp_active_page") || "home";
+let currentPage = sessGet("jp_active_page") || "home";
 
 function toggleNavGroup(btn) {
 const group = btn.closest(".nav-group");
@@ -13983,15 +14144,15 @@ group.classList.toggle("collapsed");
 function openPage(page){
 if (bulkSel && page !== "students") cancelBulk();
 currentPage = page;
-localStorage.setItem("jp_active_page", page);
-["homePage","agendaPage","goalsPage","studentsPage","evaluationPage","evolutionFinancialPage","evolutionQuantitativePage","studentsPerformancePage","plannerPage","settingsPage","testsPage"].forEach(id => {
+sessSet("jp_active_page", page);
+["homePage","agendaPage","goalsPage","studentsPage","announcementsPage","evaluationPage","evolutionFinancialPage","evolutionQuantitativePage","studentsPerformancePage","plannerPage","settingsPage","testsPage"].forEach(id => {
 document.getElementById(id).style.display = (id.replace("Page","")===page) ? "block" : "none"
 });
 
 document.getElementById("dateLabel").textContent = {
 home:"Início", agenda:"Agenda", goals:"Metas", students:"Alunos", evaluation:"Avaliação",
 evolutionFinancial:"Evolução Financeira", evolutionQuantitative:"Evolução Quantitativa",
-studentsPerformance:"Desempenho", planner:"Organização de Aulas", settings:"Configurações", tests:"Testes"
+studentsPerformance:"Desempenho", planner:"Organização de Aulas", settings:"Configurações", tests:"Testes", announcements:"Avisos"
 }[page] || "Início";
 
 document.querySelector("header").style.display = (page==="settings"||page==="tests") ? "none" : "";
@@ -14020,6 +14181,7 @@ else if(page==="students") renderStudents();
 else if(page==="evaluation") { renderEvaluation(); renderPerformance(); }
 else if(page.startsWith("evolution")) renderEvolution();
 else if(page==="studentsPerformance") renderStudentsPerformance();
+else if(page==="announcements") renderAnnouncementsPage();
 else if(page==="planner") renderPlanner();
 else if(page==="settings" && typeof renderSettingsSummary==="function") renderSettingsSummary();
 }
@@ -14045,11 +14207,11 @@ const SETTINGS_FOLDERS = [
 { id: "aulas", icon: "calendar", title: "Aulas e agenda", sub: "Instrumentos, duração, dias, reposição, férias, cidade", rows: ["rowInstrumentos", "rowDuracao", "rowDiasUteis", "rowMakeupDeadline", "rowFerias", "rowLocalizacao"] },
 { id: "valores", icon: "dollar", title: "Valores e metas", sub: "Valores padrões, meta de crescimento, gráficos", rows: ["rowValoresPadrao", "rowGrowthGoal", "rowChartsStart"] },
 { id: "aval", icon: "star", title: "Avaliações e níveis", sub: "Níveis, critérios e frequência", rows: ["rowNiveis", "rowCriterios", "rowEvalFreq"] },
-{ id: "msg", icon: "message", title: "Mensagens e lembretes", sub: "Mensagens prontas e avisos", rows: ["rowMensagens", "rowLembrete", "rowLessonReminder", "rowAvalPendente"] },
+{ id: "msg", icon: "message", title: "Mensagens e lembretes", sub: "Mensagens prontas, avisos e notificações no celular", rows: ["rowMensagens", "rowPushTeacher", "rowLembrete", "rowLessonReminder", "rowAvalPendente"] },
 { id: "aluno", icon: "user", title: "App do aluno", sub: "Chave para alunos e conteúdo", rows: ["rowStudentKey", "rowStudentContent"] },
 { id: "dados", icon: "save", title: "Dados e backup", sub: "Exportar, importar, restaurar", rows: ["rowExportarDados", "rowBackupReminder", "rowRestoreSnapshot", "rowImportarDados", "rowApagarDados"] },
-{ id: "conta", icon: "logout", title: "Conta", sub: "Nuvem, entrar como aluno, sair", rows: ["rowCloudSync", "rowStudentMode", "rowSairConta"] },
-{ id: "sobre", icon: "info", title: "Sobre o app", sub: "Idioma, instalar, feedback, termos, versão", rows: ["rowIdioma", "rowInstallApp", "rowFeedback", "rowTermos", "valVersao"] }
+{ id: "conta", icon: "logout", title: "Conta", sub: "Nuvem, entrar como aluno, sair, excluir conta", rows: ["rowCloudSync", "rowStudentMode", "rowSairConta", "rowDeleteAccount"] },
+{ id: "sobre", icon: "info", title: "Sobre o app", sub: "Primeiros passos, instalar, feedback, termos, versão", rows: ["rowOnboarding", "rowIdioma", "rowInstallApp", "rowFeedback", "rowTermos", "valVersao"] }
 ];
 let settingsFolderCur = null;
 (function settingsFoldersBuild(){
@@ -16278,6 +16440,486 @@ if (authCurrentUser) { try { await pushCloudData(); } catch(e) {} }
 alert("Dados apagados. O app vai recarregar agora.");
 location.reload();
 };
+
+// ===================== 8.14: privacidade (LGPD), notificações, avisos e primeiros passos =====================
+// Versão dos Termos/Política (privacidade.html). Mudou o texto de forma importante: sobe aqui
+// e quem já tinha acesso vê "Atualizamos os termos" uma vez.
+var CONSENT_VERSION = "2026-10";
+var TERMS_LOCAL_KEY = "jp_terms_ok_v1";
+function termsLocalOk(){ try { return (JSON.parse(localStorage.getItem(TERMS_LOCAL_KEY) || "{}") || {})[authCurrentUser && authCurrentUser.id] === CONSENT_VERSION; } catch(e) { return false; } }
+function termsMarkLocal(){ try { const o = JSON.parse(localStorage.getItem(TERMS_LOCAL_KEY) || "{}") || {}; if (authCurrentUser) o[authCurrentUser.id] = CONSENT_VERSION; _nativeSetItem.call(localStorage, TERMS_LOCAL_KEY, JSON.stringify(o)); } catch(e) {} }
+function isMissingFnError(error){ return !!error && /PGRST202|42883|Could not find the function|does not exist/i.test(`${error.code} ${error.message}`); }
+function downloadJson(obj, name){
+const blob = new Blob([JSON.stringify(obj, null, 2)], { type: "application/json" });
+const url = URL.createObjectURL(blob), a = document.createElement("a");
+a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+// Confirmação em duas etapas: a pessoa digita EXCLUIR.
+function confirmTyped(title, info, onOk){
+const body = document.createElement("div");
+body.innerHTML = `<div class="field"><label>Para confirmar, digite EXCLUIR</label><input type="text" id="typedConfirm" autocomplete="off" autocapitalize="characters" aria-label="Digite EXCLUIR"></div><div class="auth-error" id="typedErr"></div>`;
+openQuickModal(title, info, body, async () => {
+const v = body.querySelector("#typedConfirm").value.trim().toUpperCase();
+if (v !== "EXCLUIR") { body.querySelector("#typedErr").textContent = "Digite EXCLUIR (em letras maiúsculas) para confirmar."; return; }
+const btn = document.getElementById("quickLessonSave"); btn.disabled = true; btn.textContent = "Excluindo…";
+try { await onOk(body); } finally { btn.disabled = false; btn.textContent = "Excluir de vez"; }
+}, "Cancelar", "Excluir de vez");
+setTimeout(() => body.querySelector("#typedConfirm").focus(), 50);
+}
+
+// ---------- Aluno: termos atualizados ----------
+var termsAsked = false;
+function stuTermsCheck(){
+if (demoMode || termsAsked || !stu || !authCurrentUser || termsLocalOk()) return;
+if (!(stu.links || []).some(l => l.consent_version !== CONSENT_VERSION)) return;
+termsAsked = true;
+const body = document.createElement("div");
+body.innerHTML = `<div class="stu-muted terms-text">Explicamos de um jeito simples quais dados o app guarda (cadastro, aulas, pagamentos, o que você anota), quem vê (só o seu professor e quem está ligado ao aluno), onde ficam e como baixar ou excluir os seus dados. Gravações de áudio e vídeo continuam só no seu aparelho e as notificações são opcionais.</div>
+<a class="btn-historico terms-link" href="privacidade.html" target="_blank" rel="noopener">Ler a Política de Privacidade</a>`;
+openQuickModal("Atualizamos os termos", "Para continuar usando o app, confirme que leu e concorda.", body, async () => {
+const { error } = await supabaseClient.rpc("hi_accept_terms", { p_version: CONSENT_VERSION });
+termsMarkLocal();
+if (!error) (stu.links || []).forEach(l => { l.consent_version = CONSENT_VERSION; l.consent_at = new Date().toISOString(); });
+closeQuickModal();
+stuToast("Obrigado!");
+}, "Ler depois", "Concordo");
+}
+
+// ---------- Aluno: privacidade no Perfil ----------
+function stuPrivacyCardHTML(){
+return `<div class="settings-group-label">Notificações e privacidade</div><div class="settings-card study-list priv-list">
+<div class="settings-row study-row" id="stuPushRow" role="button" tabindex="0"><span class="settings-row-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-bell"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Notificações neste aparelho</div><div class="settings-row-sub" id="stuPushState">Avisos de aulas, respostas e recados do professor</div></div><span class="settings-row-chevron" aria-hidden="true">›</span></div>
+<div class="settings-row study-row" id="stuExport" role="button" tabindex="0"><span class="settings-row-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-download"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Baixar meus dados</div><div class="settings-row-sub">Cadastro, aulas, pagamentos, diário, músicas e metas</div></div><span class="settings-row-chevron" aria-hidden="true">›</span></div>
+<a class="settings-row study-row" href="privacidade.html" target="_blank" rel="noopener"><span class="settings-row-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-file-text"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Política de Privacidade</div><div class="settings-row-sub">Quais dados o app guarda e quem vê</div></div><span class="settings-row-chevron" aria-hidden="true">›</span></a>
+<div class="settings-row study-row" id="stuAskDelete" role="button" tabindex="0"><span class="settings-row-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-message"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Pedir ao professor para apagar os meus dados</div><div class="settings-row-sub">Os registros de aulas e pagamentos que ficam com ele</div></div><span class="settings-row-chevron" aria-hidden="true">›</span></div>
+<div class="settings-row study-row danger-row" id="stuDeleteAcct" role="button" tabindex="0"><span class="settings-row-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-trash"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Excluir minha conta</div><div class="settings-row-sub">Apaga o seu login e o que você criou no app</div></div><span class="settings-row-chevron" aria-hidden="true">›</span></div>
+</div>`;
+}
+function stuPrivacyBind(main){
+const on = (id, fn) => { const el = main.querySelector(id); if (!el) return; el.onclick = fn; if (el.getAttribute("role") === "button") el.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fn(); } }; };
+on("#stuPushRow", () => pushOpenSettings(stuCur.link && stuCur.link.role === "guardian" ? "guardian" : "student"));
+pushStateText().then(t => { const el = main.querySelector("#stuPushState"); if (el && t) el.textContent = t; }).catch(() => {});
+on("#stuExport", stuExportData);
+on("#stuAskDelete", async () => {
+if (demoMode === "view") return stuToast("Só visualização.");
+if ((stu.requests || []).some(r => r.type === "delete_data" && r.status === "pending" && r.student_id === stuCur.uuid)) { alert("Você já pediu. O professor ainda vai responder."); return; }
+if (!confirm(`Pedir ao ${stuCur.tp.display_name || "professor"} para apagar os registros que ele guarda sobre ${firstName(stuCur.s.name)} (aulas, pagamentos, anotações)? Ele recebe o pedido e responde pelo app.`)) return;
+if (await stuSendRequest("delete_data", { label: "Apagar meus dados" })) stuToast("Pedido enviado ao professor.");
+});
+on("#stuDeleteAcct", stuDeleteAccount);
+}
+async function stuExportData(){
+const s = stuCur.s, d = journal();
+const omit = new Set(["lessons", "makeups", "charges", "paidMonths", "paidMonth", "paidDates"]);
+const cadastro = {};
+Object.keys(s).forEach(k => { if (!omit.has(k)) cadastro[k] = s[k]; });
+const out = {
+app: "Hi Teacher", exportado_em: new Date().toISOString(),
+professor: stuCur.tp.display_name || "",
+cadastro,
+aulas: getStudentTimeline(s).map(l => ({ data: l.date, situacao: isNoClass(l) ? "sem aula" : "aula", motivo: isNoClass(l) ? (l.reason || "") : "", estudado: l.taught || "", para_casa: l.homework || "" })),
+reposicoes: s.makeups || [],
+pagamentos: (typeof stuPayItems === "function" ? stuPayItems() : []).map(it => ({ item: it.label, valor: it.value, pago: !!it.paid, pago_em: it.paidDate || "" })),
+pratica: jAlive(d, "practice"), diario: jAlive(d, "diary"), musicas: jAlive(d, "songs"), setlists: jAlive(d, "setlists"), metas: jAlive(d, "goals"),
+recados_e_pedidos: (stu.requests || []).filter(r => r.student_id === stuCur.uuid).map(r => ({ tipo: r.type, enviado_em: r.created_at, situacao: r.status, resposta: r.response || "" })),
+avisos_do_professor: (stuCur.anns || []).map(a => ({ titulo: a.title, mensagem: a.body, data: a.created_at }))
+};
+downloadJson(out, `meus-dados-hi-teacher-${isoOf(new Date())}.json`);
+stuToast("Arquivo baixado.");
+}
+function stuDeleteAccount(){
+if (demoMode) return stuToast(demoMode === "view" ? "Só visualização." : "Na demonstração não dá para excluir.");
+const body = document.createElement("div");
+body.innerHTML = `<div class="del-explain">
+<p><b>O que é apagado na hora:</b> o seu login e tudo o que você criou no app: diário, práticas, músicas, metas, recados, pedidos, avisos ligados, as notificações deste e de outros aparelhos e as gravações guardadas neste aparelho.</p>
+<p><b>O que continua com o professor:</b> os registros que ele guarda sobre as aulas e os pagamentos. O cadastro do aluno fica marcado como "sem acesso ao app". Se quiser, peça também para ele apagar (no Perfil, "Pedir ao professor para apagar os meus dados").</p>
+<p>Não dá para desfazer. Para voltar a usar, será preciso criar uma conta nova e pedir para entrar de novo.</p></div>`;
+openQuickModal("Excluir minha conta", "", body, () => {
+closeQuickModal();
+confirmTyped("Excluir minha conta", "Última etapa.", async () => {
+const { data, error } = await supabaseClient.rpc("hi_delete_my_student_account", { p_reason: "app" });
+if (error) { alert(isMissingFnError(error) ? "Ainda não dá para excluir pelo app: o professor precisa atualizar o app (passo do Supabase da versão 8.14). Peça para ele." : /fetch|network/i.test(error.message || "") ? "Sem conexão. Tente de novo quando tiver internet." : "Não foi possível excluir agora. Tente de novo."); return; }
+if (!data || !data.ok) { alert((data && data.error) || "Não foi possível excluir agora."); return; }
+await stuWipeDevice();
+closeQuickModal();
+alert("Conta excluída. Obrigado por ter usado o Hi Teacher.");
+try { await supabaseClient.auth.signOut(); } catch(e) {}
+location.reload();
+});
+}, "Cancelar", "Continuar");
+}
+// Apaga deste aparelho o que é do aluno (cópia dos dados, caderno, cronômetro e gravações).
+async function stuWipeDevice(){
+[STU_CACHE_KEY, STU_PICK_KEY, JOURNAL_KEY, TIMER_KEY, LASTWHAT_KEY, TERMS_LOCAL_KEY, "jp_entry_v1"].forEach(k => { try { localStorage.removeItem(k); } catch(e) {} });
+try { await pushDisable(true); } catch(e) {}
+try { if (window.indexedDB) indexedDB.deleteDatabase(REC_DB); } catch(e) {}
+}
+
+// ---------- Professor: excluir conta ----------
+function teacherDeleteAccount(){
+if (!authCurrentUser) {
+alert("Você não está logado numa conta: os dados ficam só neste aparelho. Para apagar tudo, use Configurações → Dados e backup → Apagar todos os dados.");
+return;
+}
+const linked = studentAppOn() && inbox.loaded ? new Set(inbox.links.map(l => l.student_id)).size : 0;
+const body = document.createElement("div");
+body.innerHTML = `<div class="del-explain">
+<p><b>É apagado de vez:</b> o seu login e todos os dados da conta na nuvem: alunos, aulas, reposições, pagamentos, avaliações, anotações, configurações, a chave para alunos, os pedidos e recados, os avisos e as notificações.</p>
+${linked ? `<p><b>${linked} aluno${linked === 1 ? "" : "s"} com acesso ao app ${linked === 1 ? "perde" : "perdem"} o acesso.</b></p>` : ""}
+<p><b>Antes, baixe o backup</b> (arquivo com todos os seus dados). Com ele dá para recomeçar em outra conta.</p>
+<button type="button" class="btn-historico" id="delBackup" style="width:100%">Baixar o backup</button>
+<div class="stu-muted" id="delBackupOk" style="margin-top:0.5rem"></div></div>`;
+let gotBackup = false;
+body.querySelector("#delBackup").onclick = async () => { await doBackup(false); gotBackup = true; body.querySelector("#delBackupOk").textContent = "Backup baixado. Guarde o arquivo num lugar seguro."; };
+openQuickModal("Excluir minha conta e todos os dados", "", body, () => {
+if (!gotBackup) { alert("Baixe o backup antes de continuar."); return; }
+closeQuickModal();
+confirmTyped("Excluir minha conta e todos os dados", "Não dá para desfazer.", async () => {
+const { data, error } = await supabaseClient.rpc("hi_delete_my_teacher_account", { p_reason: "app" });
+if (error) { alert(isMissingFnError(error) ? "Falta rodar o SQL da versão 8.14 no Supabase (veja o HI-TEACHER.md)." : /fetch|network/i.test(error.message || "") ? "Sem conexão. Tente de novo." : "Não foi possível excluir agora. Tente de novo."); return; }
+if (!data || !data.ok) { alert((data && data.error) || "Não foi possível excluir agora."); return; }
+try { await pushDisable(true); } catch(e) {}
+// Nada deste aparelho pode voltar pra nuvem: limpa tudo antes de sair.
+try { Object.keys(localStorage).filter(k => /^jp_/.test(k)).forEach(k => localStorage.removeItem(k)); } catch(e) {}
+try { sessionStorage.clear(); } catch(e) {}
+closeQuickModal();
+alert("Conta excluída.");
+try { await supabaseClient.auth.signOut(); } catch(e) {}
+location.reload();
+});
+}, "Cancelar", "Continuar");
+}
+
+// ---------- Notificações no celular (push) ----------
+var PUSH_FN = "send-push";
+var PUSH_INVITE_KEY = "jp_push_invite_v1";
+var pushKeyCache = null;
+function pushSupported(){ return "serviceWorker" in navigator && "PushManager" in window && "Notification" in window; }
+function pushNeedsInstall(){ return pwaIsIOS() && !pwaStandalone(); }
+function pushReg(){ return Promise.race([navigator.serviceWorker.ready, new Promise((_, rej) => setTimeout(() => rej(new Error("sem service worker")), 4000))]); }
+async function pushSub(){ if (!pushSupported()) return null; try { return await (await pushReg()).pushManager.getSubscription(); } catch(e) { return null; } }
+async function pushState(){
+if (pushNeedsInstall()) return "install";
+if (!pushSupported()) return "unsupported";
+if (Notification.permission === "denied") return "denied";
+return (await pushSub()) ? "on" : "off";
+}
+async function pushStateText(){
+const st = await pushState();
+return { on: "Ligadas neste aparelho", off: "Desligadas neste aparelho", denied: "Bloqueadas no navegador", install: "Instale o app para receber", unsupported: "Este navegador não recebe notificações" }[st];
+}
+function b64urlToBytes(s){ const p = "=".repeat((4 - s.length % 4) % 4), b = atob((s + p).replace(/-/g, "+").replace(/_/g, "/")); return Uint8Array.from(b, c => c.charCodeAt(0)); }
+async function pushPublicKey(){
+if (pushKeyCache) return pushKeyCache;
+const { data, error } = await supabaseClient.functions.invoke(PUSH_FN, { method: "GET" });
+if (error || !data || !data.publicKey) throw new Error("Notificações ainda não configuradas no servidor.");
+return (pushKeyCache = data.publicKey);
+}
+async function pushEnable(role){
+if (!authCurrentUser) throw new Error("Entre na sua conta para ativar.");
+const perm = Notification.permission === "granted" ? "granted" : await Notification.requestPermission();
+if (perm !== "granted") throw Object.assign(new Error("denied"), { denied: true });
+const key = await pushPublicKey();
+const reg = await pushReg();
+let sub = await reg.pushManager.getSubscription();
+if (sub && sub.options && sub.options.applicationServerKey) {
+const cur = new Uint8Array(sub.options.applicationServerKey), want = b64urlToBytes(key);
+if (cur.length !== want.length || cur.some((x, i) => x !== want[i])) { await sub.unsubscribe(); sub = null; }
+}
+if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64urlToBytes(key) });
+const j = sub.toJSON();
+const label = `${/iphone|ipad/i.test(navigator.userAgent) ? "iPhone" : /android/i.test(navigator.userAgent) ? "Android" : "Computador"}${pwaStandalone() ? " (app)" : ""}`;
+const { error } = await supabaseClient.rpc("hi_push_subscribe", { p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_role: role, p_label: label });
+if (error) { await sub.unsubscribe().catch(() => {}); throw new Error(isMissingFnError(error) ? "Falta rodar o SQL da versão 8.14 no Supabase." : "Não consegui registrar este aparelho. Tente de novo."); }
+}
+async function pushDisable(quiet){
+const sub = await pushSub();
+if (!sub) return;
+const endpoint = sub.endpoint;
+await sub.unsubscribe().catch(() => {});
+if (authCurrentUser) { try { await supabaseClient.from("push_subscriptions").delete().eq("endpoint", endpoint); } catch(e) { if (!quiet) throw e; } }
+}
+// Dispara um evento pra função de envio (ela confere tudo e calcula quem recebe). Silencioso.
+function pushNotify(type, id){
+if (!authCurrentUser || demoMode || !supabaseClient) return;
+try { supabaseClient.functions.invoke(PUSH_FN, { body: { type, id: String(id || "") } }).catch(() => {}); } catch(e) {}
+}
+var PUSH_TYPES = {
+teacher: [["absence", "Aluno avisou que vai faltar"], ["payment", "Aluno avisou que pagou"], ["join", "Pedido de entrada novo"], ["change", "Pedido de alteração de dados"], ["resched", "Pedido de remarcação ou reposição"]],
+student: [["lesson", "Aula cancelada, remarcada ou reposição marcada"], ["answer", "Resposta do professor a um recado"], ["announcement", "Aviso do professor"], ["late", "Mensalidade em atraso (no máximo 1 por semana)"]]
+};
+async function pushPrefsLoad(){ try { const { data } = await supabaseClient.from("notify_prefs").select("prefs").eq("user_id", authCurrentUser.id).maybeSingle(); return (data && data.prefs) || {}; } catch(e) { return {}; } }
+async function pushPrefsSave(prefs){ const { error } = await supabaseClient.from("notify_prefs").upsert({ user_id: authCurrentUser.id, prefs }, { onConflict: "user_id" }); if (error) stuToastOr("Não consegui salvar a preferência."); }
+function stuToastOr(msg){ if (studentMode) stuToast(msg); else showCloudWarning(msg); }
+async function pushOpenSettings(role){
+if (demoMode) { stuToastOr(demoMode === "view" ? "Só visualização." : "Na demonstração as notificações ficam desligadas."); return; }
+const student = role !== "teacher";
+const body = document.createElement("div");
+body.innerHTML = `<div class="stu-muted">Carregando…</div>`;
+openQuickModal("Notificações no celular", "Avisos mesmo com o app fechado. O texto não mostra valores, notas nem motivos.", body, null, "Fechar");
+const draw = async () => {
+const st = await pushState(), prefs = authCurrentUser ? await pushPrefsLoad() : {};
+const quiet = prefs.quiet === undefined ? student : prefs.quiet === true;
+const stateLine = { on: "ligadas", off: "desligadas", denied: "bloqueadas", install: "desligadas", unsupported: "indisponíveis" }[st];
+body.innerHTML = `<div class="push-state"><span>Notificações neste aparelho:</span> <b class="${st === "on" ? "ok" : ""}">${stateLine}</b></div>
+${st === "install" ? `<div class="push-hint">No iPhone, as notificações só funcionam com o app instalado na tela de início (iOS 16.4 ou mais novo).</div><button type="button" class="save push-btn" id="pushInstall">Como instalar o app</button>`
+: st === "unsupported" ? `<div class="push-hint">Este navegador não recebe notificações. No Android use o Chrome; no computador, Chrome, Edge ou Firefox.</div>`
+: st === "denied" ? `<div class="push-hint">As notificações foram bloqueadas neste navegador. Para liberar: toque no cadeado (ou nos três pontinhos) ao lado do endereço → Permissões / Configurações do site → Notificações → Permitir. Depois volte aqui.</div><button type="button" class="btn-historico push-btn" id="pushRetry">Já liberei</button>`
+: st === "on" ? `<div class="push-acts"><button type="button" class="btn-historico" id="pushTest">Enviar notificação de teste</button><button type="button" class="cancel" id="pushOff">Desligar neste aparelho</button></div>`
+: `<button type="button" class="save push-btn" id="pushOn">Ativar notificações</button>`}
+<div class="settings-group-label" style="margin-top:1rem">O que avisar</div>
+${PUSH_TYPES[student ? "student" : "teacher"].map(([k, l]) => `<div class="toggle-field"><label>${l}</label><label class="switch"><input type="checkbox" data-pp="${k}" ${prefs[k] === false ? "" : "checked"}><span class="switch-slider"></span></label></div>`).join("")}
+<div class="toggle-field"><label>Não enviar das 22h às 7h (o aviso continua no app)</label><label class="switch"><input type="checkbox" id="ppQuiet" ${quiet ? "checked" : ""}><span class="switch-slider"></span></label></div>
+<div class="auth-error" id="pushErr"></div>`;
+const err = body.querySelector("#pushErr");
+const go = (id, fn) => { const b = body.querySelector(id); if (b) b.onclick = async () => { b.disabled = true; err.textContent = ""; try { await fn(); } catch(e) { err.textContent = e.denied ? "Permissão negada. Veja acima como liberar." : (e.message || "Não deu certo. Tente de novo."); } b.disabled = false; draw(); }; };
+go("#pushOn", () => pushEnable(role));
+go("#pushOff", () => pushDisable());
+go("#pushRetry", async () => {});
+go("#pushTest", async () => { const { data, error } = await supabaseClient.functions.invoke(PUSH_FN, { body: { type: "test", id: "" } }); if (error || !data || !data.sent) throw new Error("O teste não saiu. Confira se a função send-push e as chaves estão configuradas no Supabase."); stuToastOr("Teste enviado. Deve chegar em alguns segundos."); });
+const inst = body.querySelector("#pushInstall"); if (inst) inst.onclick = () => { closeQuickModal(); pwaInstall(); };
+body.querySelectorAll("[data-pp]").forEach(cb => cb.onchange = async () => { const p = await pushPrefsLoad(); p[cb.dataset.pp] = cb.checked; await pushPrefsSave(p); });
+body.querySelector("#ppQuiet").onchange = async e => { const p = await pushPrefsLoad(); p.quiet = e.target.checked; await pushPrefsSave(p); };
+};
+draw();
+}
+// Convite discreto, uma vez, depois de uma ação em que faz sentido (nunca ao abrir o app).
+async function pushInvite(role){
+if (demoMode || !authCurrentUser || !pushSupported()) return;
+try { if (localStorage.getItem(PUSH_INVITE_KEY)) return; } catch(e) { return; }
+if ((await pushState()) !== "off") return;
+_nativeSetItem.call(localStorage, PUSH_INVITE_KEY, new Date().toISOString());
+const el = document.createElement("div");
+el.className = "action-toast push-invite";
+el.innerHTML = `<span class="action-toast-msg">${role === "teacher" ? "Quer saber na hora quando um aluno avisar falta ou pagamento?" : "Quer receber os avisos do professor no celular?"}</span><button type="button" class="wa-btn" data-yes>Ativar</button><button type="button" class="action-toast-close" aria-label="Agora não">✕</button>`;
+el.querySelector("[data-yes]").onclick = () => { el.remove(); pushOpenSettings(role); };
+el.querySelector(".action-toast-close").onclick = () => el.remove();
+getToastStack().appendChild(el);
+setTimeout(() => el.remove(), 15000);
+}
+// Tocar numa notificação com o app aberto: o service worker pede pra abrir a página certa.
+if ("serviceWorker" in navigator) navigator.serviceWorker.addEventListener("message", e => {
+const m = e.data || {};
+if (m.type !== "open-page" || !m.p) return;
+const map = { inicio: ["home", "home"], agenda: ["agenda", "lessons"], aulas: ["agenda", "lessons"], avisos: ["announcements", "home"], financeiro: ["home", "money"] }[m.p];
+if (!map) return;
+try { if (studentMode && !demoMode) { startStudentMode(true); stuOpenPage(map[1]); } else if (!studentMode) openPage(map[0]); } catch(x) {}
+});
+
+// Professor: aula cancelada/remarcada ou reposição marcada que acabou de subir pra nuvem →
+// avisa os alunos com acesso (a função confere e não repete).
+function pushAfterFlush(sentRows){
+if (!studentAppOn() || !inbox.loaded) return;
+const linked = new Set(inbox.links.map(l => l.student_id));
+const today = isoOf(new Date()), recent = Date.now() - 15 * 60000;
+const toIso = v => { const t = String(v || ""); return /^\d{2}\/\d{2}\/\d{4}$/.test(t) ? isoFromBr(t) : t.slice(0, 10); };
+let n = 0;
+sentRows.forEach(({ t, row, at }) => {
+if (n >= 10 || !row || !linked.has(row.student_id) || Date.parse(at) < recent) return;
+if (t === "lessons" && row.status === "noclass" && ["teacher_cancel", "rescheduled", "holiday"].includes(row.reason) && toIso(row.date) >= today) { n++; pushNotify("lesson", row.id); }
+if (t === "makeups" && row.status === "scheduled" && row.date && toIso(row.date) >= today) { n++; pushNotify("makeup", row.id); }
+});
+}
+// Mensalidade em atraso: uma vez por dia o app do professor pede o aviso (a função limita a 1 por semana).
+function pushLatePayments(){
+if (!studentAppOn() || !inbox.loaded) return;
+const k = "jp_push_late_day_v1", today = isoOf(new Date());
+try { if (localStorage.getItem(k) === today) return; _nativeSetItem.call(localStorage, k, today); } catch(e) { return; }
+const map = studentUuidMap(), linked = new Set(inbox.links.map(l => l.student_id));
+students.filter(s => s.active !== false && paysMe(s) && billingMode(s) === "monthly").forEach(s => {
+const u = map.of(s);
+if (linked.has(u) && unpaidMonths(s).some(key => isPastDue(s, key))) pushNotify("late", u);
+});
+}
+
+// ---------- Avisos para os alunos ----------
+// Aluno: avisos que valem (o servidor só devolve os dele). Sem o SQL da 8.14: lista vazia.
+async function stuFetchAnnouncements(ids){
+try {
+const { data, error } = await supabaseClient.from("announcement_targets").select("id,student_id,read_at,announcement_id,announcements(id,title,body,created_at,expires_at)").in("student_id", ids);
+if (error) return [];
+return (data || []).filter(t => t.announcements).map(t => ({ tid: t.id, student_id: t.student_id, read_at: t.read_at, id: t.announcements.id, title: t.announcements.title, body: t.announcements.body, created_at: t.announcements.created_at, expires_at: t.announcements.expires_at }));
+} catch(e) { return []; }
+}
+function stuAnns(){ return ((stuCur && stuCur.anns) || []).filter(a => !a.expires_at || Date.parse(a.expires_at) > Date.now()).sort((a, b) => String(b.created_at).localeCompare(String(a.created_at))); }
+function stuAnnCardsHTML(){
+const list = stuAnns().filter(a => !a.read_at).slice(0, 2);
+return list.map(a => `<div class="ann-card"><div class="ann-kicker"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-bell"/></svg>Aviso do professor</div><div class="ann-title">${escapeHtml(a.title)}</div><div class="ann-body">${escapeHtml(a.body)}</div><div class="ann-foot"><span class="stu-muted">${formatDateShort(String(a.created_at).slice(0, 10)).slice(0, 5)}</span><button type="button" class="btn-edit-toggle study-pill" data-ann-ok="${escapeHtml(a.tid)}">Entendi</button></div></div>`).join("");
+}
+async function stuAnnRead(tid){
+const a = ((stuCur && stuCur.anns) || []).find(x => x.tid === tid);
+if (!a) return;
+if (demoMode === "view") { stuToast("Só visualização."); return; }
+a.read_at = new Date().toISOString();
+stuRender();
+if (demoMode) return;
+try { await supabaseClient.from("announcement_targets").update({ read_at: a.read_at }).eq("id", tid); } catch(e) {}
+try { const c = JSON.parse(localStorage.getItem(STU_CACHE_KEY) || "null"); if (c && Array.isArray(c.anns)) { const x = c.anns.find(y => y.tid === tid); if (x) { x.read_at = a.read_at; _nativeSetItem.call(localStorage, STU_CACHE_KEY, JSON.stringify(c)); } } } catch(e) {}
+}
+function stuAnnHistoryHTML(){
+const list = stuAnns();
+if (!list.length) return "";
+return `<details class="settings-card month-group ann-hist"><summary class="month-sum"><span>Avisos do professor</span><span class="stu-muted">${list.length}</span><span class="settings-row-chevron" aria-hidden="true">›</span></summary><div class="month-body">${list.map(a => `<div class="hist-lesson"><div class="hist-body"><div class="hist-taught">${escapeHtml(a.title)}</div><div class="hist-home">${escapeHtml(a.body)}</div><div class="stu-muted" style="margin-top:0.25rem">${formatDateShort(String(a.created_at).slice(0, 10))}</div></div></div>`).join("")}</div></details>`;
+}
+
+// Professor: página "Avisos".
+var annCache = null;
+function studentGroupsForAnn(){
+const groups = new Map();
+students.filter(s => s.active !== false && s.lessonFrequency !== "single").forEach(s => studentDays(s).forEach(d => {
+const t = getStudentTimeFor(s, d), k = `${d}|${t}`;
+if (!groups.has(k)) groups.set(k, { key: k, label: `${WEEKDAY_SHORT[d]} ${t}`, day: d, time: t, list: [] });
+groups.get(k).list.push(s);
+}));
+return [...groups.values()].sort((a, b) => ((a.day + 6) % 7) - ((b.day + 6) % 7) || a.time.localeCompare(b.time));
+}
+async function renderAnnouncementsPage(){
+const box = document.getElementById("annList");
+if (!box) return;
+if (!studentAppOn()) {
+box.innerHTML = `<div class="empty-teach"><b>Os avisos chegam no app dos alunos.</b><span>Para usar, crie a chave para alunos e compartilhe com eles.</span><button type="button" class="btn-historico" data-open-key>Criar a chave para alunos</button></div>`;
+box.querySelector("[data-open-key]").onclick = openStudentKey;
+document.getElementById("annNewBtn").style.display = "none";
+return;
+}
+document.getElementById("annNewBtn").style.display = "";
+if (!annCache) box.innerHTML = `<div class="stu-muted">Carregando…</div>`;
+const { data, error } = await supabaseClient.from("announcements").select("id,title,body,created_at,expires_at,audience,push,announcement_targets(student_id,read_at)").eq("teacher_id", authCurrentUser.id).order("created_at", { ascending: false }).limit(100);
+if (error) {
+box.innerHTML = `<div class="empty-teach"><b>Avisos ainda não disponíveis.</b><span>${tbIsMissingTableError(error) ? "Falta rodar o SQL da versão 8.14 no Supabase (veja o HI-TEACHER.md)." : "Sem conexão agora. Tente de novo daqui a pouco."}</span></div>`;
+return;
+}
+annCache = data || [];
+if (!annCache.length) { box.innerHTML = `<div class="empty-teach"><b>Nenhum aviso enviado ainda.</b><span>Mande um recado para todos, para um instrumento, para uma turma ou para alunos escolhidos. Ele aparece no Início do app do aluno.</span></div>`; return; }
+const now = Date.now();
+box.innerHTML = `<div class="settings-card ann-list">${annCache.map(a => {
+const tg = a.announcement_targets || [], seen = tg.filter(t => t.read_at).length, exp = a.expires_at && Date.parse(a.expires_at) <= now;
+return `<div class="ann-row"><div class="ann-row-main"><div class="ann-row-title">${escapeHtml(a.title)}${exp ? ` <span class="status off">Vencido</span>` : ""}</div><div class="ann-row-body">${escapeHtml(a.body)}</div><div class="ann-row-meta">${formatDateShort(a.created_at.slice(0, 10))} · ${escapeHtml(a.audience || `${tg.length} aluno${tg.length === 1 ? "" : "s"}`)} · ${seen} de ${tg.length} viram${a.expires_at && !exp ? ` · até ${formatDateShort(a.expires_at.slice(0, 10)).slice(0, 5)}` : ""}</div></div><button type="button" class="del-btn" data-ann-del="${a.id}" aria-label="Apagar o aviso">${DEL_ICON}</button></div>`;
+}).join("")}</div>`;
+box.querySelectorAll("[data-ann-del]").forEach(b => b.onclick = async () => {
+if (!confirm("Apagar este aviso? Ele some do app dos alunos. (Não dá para editar um aviso enviado: apague e mande outro.)")) return;
+const { error: e2 } = await supabaseClient.from("announcements").delete().eq("id", b.dataset.annDel);
+if (e2) { alert("Não consegui apagar agora. Tente de novo."); return; }
+renderAnnouncementsPage();
+});
+}
+function openAnnouncementForm(preset){
+if (!studentAppOn()) { alert("Os avisos chegam no app dos alunos. Crie a chave para alunos em Configurações → App do aluno."); return; }
+const active = students.filter(s => s.active !== false).sort((a, b) => a.name.localeCompare(b.name));
+const insts = [...new Set(active.map(s => s.instrument).filter(Boolean))].sort();
+const groups = studentGroupsForAnn();
+const linked = new Set(inbox.links.map(l => l.student_id)), map = studentUuidMap();
+let mode = preset && preset.ids ? "pick" : "all";
+const picked = new Set(preset && preset.ids ? preset.ids : []);
+const body = document.createElement("div");
+body.innerHTML = `<div class="field"><label>Título</label><input type="text" id="annTitle" maxlength="120" placeholder="Ex.: Recital no sábado"></div>
+<div class="field"><label>Mensagem <span class="stu-muted" id="annCount">0/500</span></label><textarea id="annBody" rows="4" maxlength="500" placeholder="Escreva o recado para os alunos"></textarea></div>
+<div class="field"><label>Para quem</label><div class="reason-chips" id="annModes">${[["all", "Todos"], ["inst", "Por instrumento"], ["group", "Por turma"], ["pick", "Escolher alunos"]].map(([k, l]) => `<button type="button" class="filter-chip" data-amode="${k}">${l}</button>`).join("")}</div></div>
+<div id="annTarget"></div>
+<div class="stu-muted" id="annWho"></div>
+<div class="field"><label>Válido até (opcional)</label><input type="date" id="annUntil"></div>
+<div class="toggle-field"><label>Enviar notificação no celular</label><label class="switch"><input type="checkbox" id="annPush" checked><span class="switch-slider"></span></label></div>
+<div class="auth-error" id="annErr"></div>`;
+const targetEl = body.querySelector("#annTarget");
+const chosen = () => {
+if (mode === "all") return active;
+if (mode === "inst") { const v = (body.querySelector("#annInst") || {}).value; return active.filter(s => s.instrument === v); }
+if (mode === "group") { const v = (body.querySelector("#annGroup") || {}).value; const g = groups.find(x => x.key === v); return g ? g.list : []; }
+return active.filter(s => picked.has(s.id));
+};
+const audience = () => mode === "all" ? "Todos" : mode === "inst" ? (body.querySelector("#annInst") || {}).value || "" : mode === "group" ? `Turma ${(groups.find(x => x.key === (body.querySelector("#annGroup") || {}).value) || {}).label || ""}` : preset && preset.label ? preset.label.replace(/^turma de/, "Turma") : `${chosen().length} aluno${chosen().length === 1 ? "" : "s"}`;
+const who = () => { const list = chosen(), n = list.filter(s => linked.has(map.of(s))).length; body.querySelector("#annWho").textContent = list.length ? `${list.length} aluno${list.length === 1 ? "" : "s"} · ${n} ${n === 1 ? "usa" : "usam"} o app agora (os outros veem quando entrarem, se o aviso ainda valer).` : "Ninguém escolhido ainda."; };
+const drawTarget = () => {
+body.querySelectorAll("[data-amode]").forEach(b => b.classList.toggle("selected", b.dataset.amode === mode));
+targetEl.innerHTML = mode === "inst" ? `<div class="field"><select id="annInst" aria-label="Instrumento">${insts.map(i => `<option>${escapeHtml(i)}</option>`).join("")}</select></div>`
+: mode === "group" ? `<div class="field"><select id="annGroup" aria-label="Turma">${groups.map(g => `<option value="${g.key}"${preset && preset.groupKey === g.key ? " selected" : ""}>${escapeHtml(g.label)} · ${g.list.length} aluno${g.list.length === 1 ? "" : "s"}</option>`).join("")}</select></div>`
+: mode === "pick" ? `<div class="field"><input type="search" id="annSearch" placeholder="Buscar aluno" aria-label="Buscar aluno"></div><div class="ann-pick">${active.map(s => `<label class="join-diff"><input type="checkbox" data-apick="${escapeHtml(String(s.id))}" ${picked.has(s.id) ? "checked" : ""}> ${escapeHtml(s.name)}${s.instrument ? ` <span class="stu-muted">· ${escapeHtml(s.instrument)}</span>` : ""}</label>`).join("")}</div>` : "";
+targetEl.querySelectorAll("select").forEach(x => x.onchange = who);
+targetEl.querySelectorAll("[data-apick]").forEach(cb => cb.onchange = () => { const s = active.find(x => String(x.id) === cb.dataset.apick); if (s) { if (cb.checked) picked.add(s.id); else picked.delete(s.id); } who(); });
+const q = targetEl.querySelector("#annSearch");
+if (q) q.oninput = () => { const t = stripAccents(q.value.trim()).toLowerCase(); targetEl.querySelectorAll(".ann-pick label").forEach(l => { l.style.display = !t || stripAccents(l.textContent).toLowerCase().includes(t) ? "" : "none"; }); };
+who();
+};
+body.querySelectorAll("[data-amode]").forEach(b => b.onclick = () => { mode = b.dataset.amode; drawTarget(); });
+const ta = body.querySelector("#annBody");
+ta.oninput = () => { body.querySelector("#annCount").textContent = `${ta.value.length}/500`; };
+if (preset && preset.groupKey && groups.some(g => g.key === preset.groupKey)) mode = "group";
+drawTarget();
+openQuickModal(preset && preset.label ? `Avisar a ${preset.label}` : "Novo aviso", "O aviso aparece no Início do app do aluno até ele tocar em \"Entendi\". Depois de enviado não dá para editar, só apagar.", body, async () => {
+const err = body.querySelector("#annErr"), title = body.querySelector("#annTitle").value.trim(), text = ta.value.trim();
+const list = chosen(), until = body.querySelector("#annUntil").value;
+if (!title) { err.textContent = "Escreva o título."; return; }
+if (!text) { err.textContent = "Escreva a mensagem."; return; }
+if (!list.length) { err.textContent = "Escolha para quem enviar."; return; }
+if (until && until < isoOf(new Date())) { err.textContent = "A data de validade já passou."; return; }
+const push = body.querySelector("#annPush").checked;
+const btn = document.getElementById("quickLessonSave"); btn.disabled = true;
+const { data: a, error } = await supabaseClient.from("announcements").insert({ teacher_id: authCurrentUser.id, title, body: text, expires_at: until ? new Date(`${until}T23:59:59`).toISOString() : null, audience: audience(), push }).select("id").single();
+if (error || !a) { btn.disabled = false; err.textContent = error && tbIsMissingTableError(error) ? "Falta rodar o SQL da versão 8.14 no Supabase." : "Não consegui enviar agora. Tente de novo."; return; }
+const { error: e2 } = await supabaseClient.from("announcement_targets").insert(list.map(s => ({ announcement_id: a.id, student_id: map.of(s) })));
+btn.disabled = false;
+if (e2) { await supabaseClient.from("announcements").delete().eq("id", a.id); err.textContent = "Não consegui enviar para esses alunos. Confira se todos estão salvos na nuvem e tente de novo."; return; }
+if (push) pushNotify("announcement", a.id);
+closeQuickModal();
+showCloudWarning(`Aviso enviado para ${list.length} aluno${list.length === 1 ? "" : "s"}.`);
+// Também no WhatsApp, um por aluno (como nos outros avisos).
+const msg = `*${title}*\n${text}`;
+list.forEach(s => { const r = messageRecipient(s); addWaRow(s, `Aviso para ${sn(s)}`, r ? `${whatsappLink(r.phone)}?text=${encodeURIComponent(msg)}` : null, "Enviar também no WhatsApp"); });
+annCache = null;
+if (currentPage === "announcements") renderAnnouncementsPage();
+}, "Cancelar", "Enviar aviso");
+}
+
+document.getElementById("annNewBtn").onclick = () => openAnnouncementForm();
+document.getElementById("rowPushTeacher").onclick = () => { if (!authCurrentUser) { alert("Entre na sua conta (Configurações → Conta → Salvar na nuvem) para receber notificações."); return; } pushOpenSettings("teacher"); };
+document.getElementById("rowDeleteAccount").onclick = teacherDeleteAccount;
+document.getElementById("rowOnboarding").onclick = () => { appSettings.onb = { ...(onbState() || {}), hidden: false, finished: false }; saveAppSettings(); openPage("home"); window.scrollTo(0, 0); };
+// Primeiros passos que se marcam ao abrir a tela certa.
+["rowValoresPadrao", "rowDuracao"].forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener("click", () => onbMark("values")); });
+{ const el = document.getElementById("rowDiasUteis"); if (el) el.addEventListener("click", () => onbMark("days")); }
+window.addEventListener("appinstalled", () => onbMark("install"));
+// ---------- Primeiros passos (professor novo) ----------
+var ONB_ITEMS = [
+{ k: "student", t: "Cadastrar o primeiro aluno", d: "Com os alunos cadastrados, a agenda e as cobranças se montam sozinhas.", done: o => students.length > 0 },
+{ k: "values", t: "Conferir valores e duração padrão", d: "O valor da mensalidade e o tempo de aula que o app usa pra cada aluno novo.", done: o => !!o.values },
+{ k: "days", t: "Definir seus dias de trabalho", d: "Os dias em que você dá aula; o resto fica livre na agenda.", done: o => !!o.days },
+{ k: "key", t: "Compartilhar a chave com os alunos", d: "Com a chave, aluno e responsável pedem pra entrar no app deles.", done: o => !!appSettings.studentCode },
+{ k: "demo", t: "Ver como o aluno enxerga o app", d: "Uma demonstração com um aluno fictício, sem mexer nos seus dados.", done: o => !!o.demo },
+{ k: "install", t: "Instalar o app no celular", d: "Abre em tela cheia, com ícone na tela de início.", done: o => !!o.install || pwaStandalone() }
+];
+function onbState(){ return appSettings.onb && typeof appSettings.onb === "object" ? appSettings.onb : null; }
+function onbMark(k){ const o = onbState(); if (!o || o[k]) return; o[k] = true; saveAppSettings(); if (currentPage === "home") renderOnboarding(); }
+var onbCelebrate = 0;
+function renderOnboarding(){
+const box = document.getElementById("onboardingBox");
+if (!box || !ONB_ITEMS) return;
+const o = onbState();
+if (!o || o.hidden || studentMode) { box.innerHTML = ""; return; }
+const done = ONB_ITEMS.filter(x => x.done(o)).length;
+if (done === ONB_ITEMS.length) {
+if (!o.finished) { o.finished = true; saveAppSettings(); onbCelebrate = Date.now(); }
+box.innerHTML = Date.now() - onbCelebrate < 6000 ? `<div class="onb-card onb-done"><b>Tudo pronto!</b> Seu app está configurado.</div>` : "";
+if (box.innerHTML) setTimeout(() => { if (Date.now() - onbCelebrate >= 6000) renderOnboarding(); }, 6100);
+return;
+}
+const pct = Math.round(done / ONB_ITEMS.length * 100);
+box.innerHTML = `<div class="onb-card"><div class="onb-head"><div><div class="onb-title">Primeiros passos</div><div class="onb-count">${done} de ${ONB_ITEMS.length}</div></div><button type="button" class="btn-link-inline" id="onbHide">Esconder</button></div>
+<div class="hw-bar onb-bar"><span style="width:${pct}%"></span></div>
+<div class="onb-list">${ONB_ITEMS.map(x => { const ok = x.done(o); return `<button type="button" class="onb-item${ok ? " ok" : ""}" data-onb="${x.k}"><span class="onb-check" aria-hidden="true">${ok ? "✓" : ""}</span><span class="onb-text"><b>${x.t}</b><small>${x.d}</small></span>${ok ? "" : `<span class="settings-row-chevron" aria-hidden="true">›</span>`}</button>`; }).join("")}</div>
+${students.length ? "" : `<button type="button" class="btn-link-inline onb-alt" id="onbImport">Ou importe uma planilha de alunos</button>`}</div>`;
+box.querySelector("#onbHide").onclick = () => { o.hidden = true; saveAppSettings(); renderOnboarding(); showCloudWarning("Escondido. Para ver de novo: Configurações → Sobre o app → Primeiros passos."); };
+const imp = box.querySelector("#onbImport"); if (imp) imp.onclick = () => { openPage("students"); document.getElementById("btnImportSpreadsheet").click(); };
+box.querySelectorAll("[data-onb]").forEach(b => b.onclick = () => onbGo(b.dataset.onb));
+}
+function onbGo(k){
+if (k === "student") { openPage("students"); openEdit(); return; }
+if (k === "values") { onbMark("values"); openPage("settings"); settingsFolderOpen("valores"); document.getElementById("rowValoresPadrao").click(); return; }
+if (k === "days") { onbMark("days"); openPage("settings"); settingsFolderOpen("aulas"); document.getElementById("rowDiasUteis").click(); return; }
+if (k === "key") { openStudentKey(); return; }
+if (k === "demo") { startDemo(); return; }
+if (k === "install") { onbMark("install"); pwaInstall(); }
+}
 
 // ===================== Ícones de ajuda (ⓘ) =====================
 // Balãozinho que explica a função ao lado de títulos e opções, ao tocar no ícone "!".
