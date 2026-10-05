@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "io.github.jpleguizamon.hiteacher",
+      "sha256_cert_fingerprints": [
+        "EA:FF:21:1D:42:4E:3D:64:ED:21:57:6B:0D:E5:8E:A3:82:3B:15:41:38:EC:B8:3F:9D:A4:30:56:D6:F1:70:DA"
+      ]
+    }
+  }
+]

@@ -9,7 +9,7 @@
 //  - Notificações (8.14): mostra o que a função send-push mandou e, ao tocar, abre (ou traz pra
 //    frente) o app já na página certa (?p=inicio | aulas | avisos | financeiro).
 const VERSION = new URL(self.location.href).searchParams.get("v") || "dev";
-const SW_REV = "8.14";   // sobe junto com o APP_VERSION quando o próprio service worker muda
+const SW_REV = "8.15";   // sobe junto com o APP_VERSION quando o próprio service worker muda
 const CACHE = `hi-teacher-${SW_REV}-${VERSION}`;
 const CORE = ["./", "./index.html", "./privacidade.html", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/icon-maskable-512.png", "./icons/apple-touch-icon.png", "./icons/favicon-32.png"];
 const LIB_HOSTS = /(^|\.)(cdn\.jsdelivr\.net|cdn\.sheetjs\.com|unpkg\.com|tessdata\.projectnaptha\.com)$/;

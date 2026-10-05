@@ -300,6 +300,18 @@ Decididas para o app servir a qualquer professor de música. Regra geral: **dado
 - SheetJS (xlsx), JSZip e Tesseract.js via CDN, usados na importação de planilhas de alunos (inclusive com OCR de imagem).
 - Ícones em sprite SVG inline (`<defs>` no topo do `<body>`), sem biblioteca de ícones externa.
 
+## App Android (APK) — 8.15
+
+O app continua sendo o mesmo site; o APK é só uma "casca" oficial em volta dele (padrão **Trusted Web Activity**, gerado com o `bubblewrap`). Serve para resolver uma coisa que o navegador não deixa mudar: **instalado pela tela inicial, a notificação sempre mostra `jpleguizamon.github.io`**. Pelo APK, a notificação sai limpa, como a de qualquer app.
+
+- **Pasta `android/`**: `twa-manifest.json` (a receita), `build.sh` (gera o APK), `assetlinks.json` (o par da assinatura) e `.gitignore`. Tudo o que o bubblewrap gera (pasta `app/`, gradle, APK) fica fora do repositório; é só rodar `android/build.sh` para refazer.
+- **Nome interno do app**: `io.github.jpleguizamon.hiteacher`. Nunca muda — se mudar, o celular entende como outro app.
+- **Chave de assinatura** (`hi-teacher.keystore` + senha): fica **fora do repositório**, com o dono. O repositório é público; publicar a chave deixaria qualquer um fazer um app falso que o celular aceita como o verdadeiro. Perder a chave significa não poder mais atualizar o app instalado nos celulares (os alunos teriam de desinstalar e instalar de novo).
+- **Ligação entre o app e o site** (obrigatória): o Android só confia no APK — e só entrega as notificações sem endereço — se achar o arquivo `assetlinks.json` em **`https://jpleguizamon.github.io/.well-known/assetlinks.json`**, ou seja, na **raiz do domínio**, não dentro de `/Hi-Teacher/`. Isso exige um segundo repositório, chamado exatamente `jpleguizamon.github.io`, com o arquivo em `.well-known/assetlinks.json` e o GitHub Pages ligado. Sem isso o app abre com uma barra de endereço em cima, igual navegador. O conteúdo a publicar é o `android/assetlinks.json` deste repositório.
+- **Atualizar o app**: ao subir o `APP_VERSION`, subir também `appVersionName` e `appVersionCode` no `twa-manifest.json` (o `appVersionCode` tem de ser sempre maior que o anterior) e gerar o APK de novo com a mesma chave. O conteúdo do app em si atualiza sozinho, porque é o site; o APK só precisa ser refeito quando mudar ícone, nome, cor ou versão.
+- **iPhone**: continua sem APK (a Apple não permite instalar fora da App Store). Quem usa iPhone segue instalando pelo Safari → Compartilhar → "Adicionar à Tela de Início", e nesses aparelhos a notificação continua mostrando o endereço.
+- **Notificações (8.15)**: cada tipo de evento agora tem seu próprio título ("Novo recado", "Aula cancelada", "Aula remarcada", "Reposição marcada", "Resposta do professor", "Pedido de entrada", "Aviso de <professor>", "Mensalidade em atraso", "Notificações ativas"), em vez de todas dizerem "Hi Teacher". O `sw.js` também passou a mandar um `badge`, o ícone pequeno que o Android mostra na barra de status.
+
 ## O que ainda falta / próximos passos
 
 - **App do aluno — ideias ainda não feitas (lista de set/2026)**: gravação enviada pelo próprio app com comentário do professor marcado no tempo (hoje vai pelo compartilhar do celular); cifras e partituras anexadas pelo professor (precisa de armazenamento de arquivos no Supabase); cadastro já completo pelo convite (hoje o link só preenche a chave); lembrete de aula por notificação do celular (hoje é pela agenda .ics); mural da turma e avisos por turma; ranking de prática; modo escola (vários professores); relatório automático mensal para os pais (hoje o professor gera o "Resumo do mês"); toques de IA (feedback da gravação, plano da semana a partir do resumo da aula, assistente de teoria).
