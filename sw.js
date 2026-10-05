@@ -77,8 +77,10 @@ self.addEventListener("push", e => {
   e.waitUntil(self.registration.showNotification(d.title || "Hi Teacher", {
     body: d.body || "",
     icon: "icons/icon-192.png",
+    badge: "icons/icon-192.png",
     tag: d.tag || undefined,
-    data: { url: d.url || "./" }
+    data: { url: d.url || "./" },
+    requireInteraction: false
   }));
 });
 // Abre (ou traz pra frente) o app na página do aviso. Com o app já aberto, só pede pra ele trocar de página.

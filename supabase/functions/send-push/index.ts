@@ -64,7 +64,7 @@ export async function plan(db: DB, uid: string, type: string, id: string): Promi
   const notFound = { error: "Registro não encontrado", status: 404 };
   const denied = { error: "Sem permissão para este evento", status: 403 };
   if (type === "test") {
-    return { recipients: [{ user_id: uid }], title: "Hi Teacher", body: "Notificações ligadas neste aparelho.", url: "./", pref: "test" };
+    return { recipients: [{ user_id: uid }], title: "Notificações ativas", body: "Teste enviado com sucesso.", url: "./", pref: "test" };
   }
   if (type === "request" || type === "answer") {
     const { data: r } = await db.from("student_requests").select("id, student_id, author_user_id, type, payload, status").eq("id", id).maybeSingle();
@@ -74,7 +74,7 @@ export async function plan(db: DB, uid: string, type: string, id: string): Promi
     if (type === "answer") {
       if (s.teacher_id !== uid) return denied;
       if (!["accepted", "rejected"].includes(r.status)) return { error: "Recado ainda sem resposta", status: 409 };
-      return { recipients: [{ user_id: r.author_user_id, student: true }], title: "Hi Teacher", body: "O professor respondeu ao seu recado.", url: "./?p=inicio", pref: "answer", dedupe: `answer:${r.id}` };
+      return { recipients: [{ user_id: r.author_user_id, student: true }], title: "Resposta do professor", body: "O professor respondeu ao seu recado.", url: "./?p=inicio", pref: "answer", dedupe: `answer:${r.id}` };
     }
     if (r.author_user_id !== uid) return denied;
     const n = firstName(s.name), p = r.payload ?? {};
@@ -88,14 +88,14 @@ export async function plan(db: DB, uid: string, type: string, id: string): Promi
     };
     const t = texts[r.type];
     if (!t) return { error: "Este tipo de recado não gera notificação", status: 422 };
-    return { recipients: [{ user_id: s.teacher_id }], title: "Hi Teacher", body: t[0], url: "./?p=inicio", pref: t[1], dedupe: `request:${r.id}` };
+    return { recipients: [{ user_id: s.teacher_id }], title: "Novo recado", body: t[0], url: "./?p=inicio", pref: t[1], dedupe: `request:${r.id}` };
   }
   if (type === "join") {
     const { data: j } = await db.from("join_requests").select("id, user_id, teacher_id, student_name, status").eq("id", id).maybeSingle();
     if (!j) return notFound;
     if (j.user_id !== uid) return denied;
     if (j.status !== "pending") return { error: "Pedido não está pendente", status: 409 };
-    return { recipients: [{ user_id: j.teacher_id }], title: "Hi Teacher", body: `Novo pedido de entrada: ${firstName(j.student_name)}`, url: "./?p=inicio", pref: "join", dedupe: `join:${j.id}` };
+    return { recipients: [{ user_id: j.teacher_id }], title: "Pedido de entrada", body: `${firstName(j.student_name)} quer entrar`, url: "./?p=inicio", pref: "join", dedupe: `join:${j.id}` };
   }
   if (type === "lesson") {
     const { data: l } = await db.from("lessons").select("id, student_id, teacher_id, date, status, reason, deleted").eq("id", id).maybeSingle();
@@ -103,14 +103,15 @@ export async function plan(db: DB, uid: string, type: string, id: string): Promi
     if (l.teacher_id !== uid) return denied;
     if (l.status !== "noclass") return { error: "Aula sem mudança para avisar", status: 422 };
     const verb = l.reason === "rescheduled" ? "foi remarcada" : "foi cancelada";
-    return { recipients: await linkedUsers(db, [l.student_id]), title: "Hi Teacher", body: `Sua aula de ${ddmm(l.date)} ${verb}`, url: "./?p=aulas", pref: "lesson", dedupe: `lesson:${l.id}:${l.status}:${l.reason ?? ""}` };
+    const title = l.reason === "rescheduled" ? "Aula remarcada" : "Aula cancelada";
+    return { recipients: await linkedUsers(db, [l.student_id]), title, body: `Sua aula de ${ddmm(l.date)} ${verb}`, url: "./?p=aulas", pref: "lesson", dedupe: `lesson:${l.id}:${l.status}:${l.reason ?? ""}` };
   }
   if (type === "makeup") {
     const { data: m } = await db.from("makeups").select("id, student_id, teacher_id, date, time, status, deleted").eq("id", id).maybeSingle();
     if (!m || m.deleted) return notFound;
     if (m.teacher_id !== uid) return denied;
     if (!m.date) return { error: "Reposição sem data", status: 422 };
-    return { recipients: await linkedUsers(db, [m.student_id]), title: "Hi Teacher", body: `Reposição marcada para ${ddmm(m.date)}${m.time ? ` às ${m.time}` : ""}`, url: "./?p=aulas", pref: "lesson", dedupe: `makeup:${m.id}:${m.date}:${m.time ?? ""}` };
+    return { recipients: await linkedUsers(db, [m.student_id]), title: "Reposição marcada", body: `${ddmm(m.date)}${m.time ? ` às ${m.time}` : ""}`, url: "./?p=aulas", pref: "lesson", dedupe: `makeup:${m.id}:${m.date}:${m.time ?? ""}` };
   }
   if (type === "announcement") {
     const { data: a } = await db.from("announcements").select("id, teacher_id, push").eq("id", id).maybeSingle();
@@ -119,13 +120,13 @@ export async function plan(db: DB, uid: string, type: string, id: string): Promi
     if (!a.push) return { error: "Aviso sem notificação", status: 422 };
     const { data: t } = await db.from("announcement_targets").select("student_id").eq("announcement_id", a.id);
     const name = await teacherName(db, uid);
-    return { recipients: await linkedUsers(db, (t ?? []).map((x: { student_id: string }) => x.student_id)), title: "Hi Teacher", body: `Novo aviso do ${name}`, url: "./?p=avisos", pref: "announcement", dedupe: `announcement:${a.id}` };
+    return { recipients: await linkedUsers(db, (t ?? []).map((x: { student_id: string }) => x.student_id)), title: `Aviso de ${name}`, body: "Novo aviso do seu professor", url: "./?p=avisos", pref: "announcement", dedupe: `announcement:${a.id}` };
   }
   if (type === "late") {
     const { data: s } = await db.from("students").select("id, teacher_id, deleted").eq("id", id).maybeSingle();
     if (!s || s.deleted) return notFound;
     if (s.teacher_id !== uid) return denied;
-    return { recipients: await linkedUsers(db, [s.id]), title: "Hi Teacher", body: "Há uma mensalidade em atraso. Confira em Financeiro.", url: "./?p=financeiro", pref: "late", dedupe: `late:${s.id}`, weekly: true };
+    return { recipients: await linkedUsers(db, [s.id]), title: "Mensalidade em atraso", body: "Confira o financeiro", url: "./?p=financeiro", pref: "late", dedupe: `late:${s.id}`, weekly: true };
   }
   return { error: "Tipo de evento desconhecido", status: 400 };
 }
