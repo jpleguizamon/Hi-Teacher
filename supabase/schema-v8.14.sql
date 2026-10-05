@@ -374,4 +374,17 @@ revoke update on public.announcements, public.announcement_targets from authenti
 grant select, insert, delete on public.announcements, public.announcement_targets to authenticated;
 grant update (read_at) on public.announcement_targets to authenticated;
 
+-- ---------------------------------------------------------------------
+-- 6. Permissão para a função de envio (send-push)
+-- ---------------------------------------------------------------------
+-- A função usa a chave de serviço (service_role) e precisa ler quem é o autor e quem recebe.
+-- Nos projetos novos do Supabase essa permissão não vem sozinha.
+grant usage on schema public to service_role;
+grant select on public.students, public.student_links, public.student_requests, public.join_requests,
+  public.lessons, public.makeups, public.teacher_public, public.announcements,
+  public.announcement_targets to service_role;
+grant select, insert, update, delete on public.push_subscriptions, public.push_log to service_role;
+grant select on public.notify_prefs to service_role;
+grant usage, select on sequence public.push_log_id_seq to service_role;
+
 notify pgrst, 'reload schema';
