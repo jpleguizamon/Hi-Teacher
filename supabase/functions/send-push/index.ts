@@ -177,9 +177,12 @@ export async function handle(req: Request, deps: { db: DB; send: (sub: any, payl
   }
 
   const recipients = await filterByPrefs(db, p.recipients, p.pref, spHour(now));
-  let sent = 0, removed = 0;
+  let sent = 0, removed = 0, devices = 0, dbError = "";
+  const failures: { code: number; msg: string }[] = [];
   if (recipients.length) {
-    const { data: subs } = await db.from("push_subscriptions").select("id, endpoint, p256dh, auth").in("user_id", recipients.map((r) => r.user_id)).eq("active", true);
+    const { data: subs, error: subsErr } = await db.from("push_subscriptions").select("id, endpoint, p256dh, auth").in("user_id", recipients.map((r) => r.user_id)).eq("active", true);
+    if (subsErr) { dbError = String(subsErr.message ?? subsErr).slice(0, 200); console.error("push_subscriptions", dbError); }
+    devices = (subs ?? []).length;
     const payload = JSON.stringify({ title: p.title, body: p.body, url: p.url, tag: p.dedupe ?? type });
     for (const s of subs ?? []) {
       try {
@@ -189,12 +192,16 @@ export async function handle(req: Request, deps: { db: DB; send: (sub: any, payl
       } catch (e) {
         const code = (e as { statusCode?: number }).statusCode ?? 0;
         if (code === 404 || code === 410) { await db.from("push_subscriptions").delete().eq("id", s.id); removed++; }
-        else console.error("push falhou", code, String((e as Error).message ?? e).slice(0, 200));
+        const msg = String((e as { body?: string }).body ?? (e as Error).message ?? e).slice(0, 200);
+        failures.push({ code, msg });
+        if (code !== 404 && code !== 410) console.error("push falhou", code, msg);
       }
     }
   }
   if (p.dedupe && type !== "test") await db.from("push_log").insert({ sender: uid, kind: "sent", ref: p.dedupe, sent, created_at: now.toISOString() });
   if (logRow) await db.from("push_log").update({ sent }).eq("id", logRow.id);
+  // No teste, devolve o diagnóstico pro app explicar o que deu errado.
+  if (type === "test") return json(200, { ok: true, sent, removed, devices, failures, dbError, vapid: !!(VAPID_PUBLIC && VAPID_PRIVATE) });
   return json(200, { ok: true, sent, removed });
 }
 

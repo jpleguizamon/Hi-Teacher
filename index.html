@@ -3646,7 +3646,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.14";
+const APP_VERSION = "8.14.1";
 // ===================== App instalável (8.4) =====================
 // Service worker (sw.js), aviso de versão nova, faixa "Sem internet", botão "Instalar o app",
 // atalhos do ícone (?p=...) e botão voltar do celular fechando modal/menu no app instalado.
@@ -16677,7 +16677,20 @@ const go = (id, fn) => { const b = body.querySelector(id); if (b) b.onclick = as
 go("#pushOn", () => pushEnable(role));
 go("#pushOff", () => pushDisable());
 go("#pushRetry", async () => {});
-go("#pushTest", async () => { const { data, error } = await supabaseClient.functions.invoke(PUSH_FN, { body: { type: "test", id: "" } }); if (error || !data || !data.sent) throw new Error("O teste não saiu. Confira se a função send-push e as chaves estão configuradas no Supabase."); stuToastOr("Teste enviado. Deve chegar em alguns segundos."); });
+go("#pushTest", async () => {
+const { data, error } = await supabaseClient.functions.invoke(PUSH_FN, { body: { type: "test", id: "" } });
+if (error || !data) throw new Error("A função send-push não respondeu. Confira se ela está publicada no Supabase.");
+if (data.sent) { stuToastOr("Teste enviado. Deve chegar em alguns segundos."); return; }
+// Diagnóstico (8.14.1): diz o que falhou.
+const f = (data.failures || [])[0] || {};
+const msg = data.vapid === false ? "Faltam as chaves VAPID nos segredos da função (Edge Functions → Secrets)."
+: data.dbError ? `A função não conseguiu ler o banco: ${data.dbError}`
+: data.removed ? "Este aparelho não estava mais válido e foi removido. Toque em \"Ativar notificações\" de novo."
+: !data.devices ? "Este aparelho não ficou registrado. Toque em \"Desligar neste aparelho\" e depois em \"Ativar notificações\"."
+: f.code === 401 || f.code === 403 ? "O serviço de notificações recusou as chaves: a VAPID_PRIVATE_KEY não combina com a VAPID_PUBLIC_KEY. Confira os segredos no Supabase (sem espaços), depois toque em Desligar e Ativar de novo."
+: `O serviço de notificações respondeu erro ${f.code || "?"}${f.msg ? ` (${f.msg})` : ""}.`;
+throw new Error(msg);
+});
 const inst = body.querySelector("#pushInstall"); if (inst) inst.onclick = () => { closeQuickModal(); pwaInstall(); };
 body.querySelectorAll("[data-pp]").forEach(cb => cb.onchange = async () => { const p = await pushPrefsLoad(); p[cb.dataset.pp] = cb.checked; await pushPrefsSave(p); });
 body.querySelector("#ppQuiet").onchange = async e => { const p = await pushPrefsLoad(); p.quiet = e.target.checked; await pushPrefsSave(p); };
