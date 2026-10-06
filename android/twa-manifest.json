@@ -1,0 +1,47 @@
+{
+  "packageId": "io.github.jpleguizamon.hiteacher",
+  "host": "jpleguizamon.github.io",
+  "name": "Hi Teacher",
+  "launcherName": "Hi Teacher",
+  "display": "standalone",
+  "themeColor": "#05060B",
+  "themeColorDark": "#05060B",
+  "navigationColor": "#05060B",
+  "navigationColorDark": "#05060B",
+  "navigationDividerColor": "#05060B",
+  "navigationDividerColorDark": "#05060B",
+  "backgroundColor": "#05060B",
+  "enableNotifications": true,
+  "startUrl": "/Hi-Teacher/",
+  "iconUrl": "https://jpleguizamon.github.io/Hi-Teacher/icons/icon-512.png",
+  "maskableIconUrl": "https://jpleguizamon.github.io/Hi-Teacher/icons/icon-maskable-512.png",
+  "appVersionName": "8.15",
+  "appVersionCode": 1,
+  "shortcuts": [],
+  "splashScreenFadeOutDuration": 300,
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://jpleguizamon.github.io/Hi-Teacher/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://jpleguizamon.github.io/Hi-Teacher/",
+  "minSdkVersion": 23,
+  "orientation": "any",
+  "additionalTrustedOrigins": [],
+  "fingerprints": [
+    {
+      "name": "android",
+      "value": "EA:FF:21:1D:42:4E:3D:64:ED:21:57:6B:0D:E5:8E:A3:82:3B:15:41:38:EC:B8:3F:9D:A4:30:56:D6:F1:70:DA"
+    }
+  ],
+  "retainedBundles": [],
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "signingKey": {
+    "path": "./hi-teacher.keystore",
+    "alias": "android"
+  }
+}

@@ -1,0 +1,4 @@
+Sons do app do aluno (8.13): notas gravadas de violão de nylon, piano, baixo acústico e
+woodblock (clique do metrônomo), do banco FluidR3 GM (licença MIT), na versão em MP3 de
+https://github.com/gleitz/midi-js-soundfonts. O nome do arquivo é o número MIDI da nota.
+Há uma nota a cada 3 semitons; o app ajusta a altura pras notas do meio.
