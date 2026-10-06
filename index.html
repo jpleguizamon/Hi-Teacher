@@ -1822,6 +1822,8 @@ html.standalone .only-browser{display:none}
 .mk-card{border-color:color-mix(in srgb,var(--orange) 45%,transparent);margin-bottom:1.25rem}
 .mk-card .stu-absent-form:not(:empty){margin-top:0.625rem}
 .month-group{margin-bottom:0.75rem;overflow:hidden}
+.stu-profile-det{margin-bottom:1.25rem}
+.stu-profile-body{padding:1rem}
 .month-sum{display:flex;align-items:center;gap:0.625rem;padding:0.875rem 1rem;cursor:pointer;list-style:none;font-weight:700;color:var(--text);font-size:0.9375rem}
 .month-sum::-webkit-details-marker{display:none}
 .month-sum span:first-child{flex:1}
@@ -2662,8 +2664,6 @@ body.pdf-open{overflow:hidden}
 <button class="nav-item" data-stu-page="practice">Praticar</button>
 <button class="nav-item" data-stu-page="material">Matérias</button>
 <button class="nav-item" data-stu-page="songs">Músicas</button>
-<button class="nav-item" data-stu-page="goals">Metas</button>
-<button class="nav-item" data-stu-page="recordings">Gravações</button>
 </div>
 </div>
 <div class="nav-group collapsed">
@@ -2675,7 +2675,6 @@ body.pdf-open{overflow:hidden}
 <button class="nav-item" data-stu-page="progress">Minha prática</button>
 <button class="nav-item" data-stu-page="achievements">Conquistas</button>
 <button class="nav-item" data-stu-page="evolution">Nível e evolução</button>
-<button class="nav-item" data-stu-page="pthistory">Histórico de prática</button>
 </div>
 </div>
 <div class="nav-group collapsed">
@@ -3499,7 +3498,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.17";
+const APP_VERSION = "8.18";
 // ===================== App instalável (8.4) =====================
 // Service worker (sw.js), aviso de versão nova, faixa "Sem internet", botão "Instalar o app",
 // atalhos do ícone (?p=...) e botão voltar do celular fechando modal/menu no app instalado.
@@ -5207,6 +5206,7 @@ if (kind === "bass") chordTool.mode = "scale";
 }
 function stuOpenPage(page){
 try { stuNotifClose(); } catch(e) {}
+if (page === "pthistory") page = "progress";
 if (!STU_PAGES[page] || !stuPageAllowed(page)) page = "home";
 stuTab = page;
 if (!demoMode) sessSet("jp_stu_active_page", page);
@@ -5233,6 +5233,7 @@ document.getElementById("demoInstr").onchange = e => demoSwitchInstrument(e.targ
 stuFeatureHold();
 let stuRenderedTab = null;
 function stuRender(){
+if (stuTab === "pthistory") stuTab = "progress";
 if (!STU_PAGES[stuTab] || !stuPageAllowed(stuTab)) stuTab = "home";
 stuApplyTools();
 // Mudou de página: desliga os sons e o microfone (o cronômetro de estudo continua).
@@ -5577,7 +5578,7 @@ lines.push("END:VCALENDAR");
 return { text: lines.join("\r\n"), n: list.length };
 }
 // Aulas (8.7): duas abas. Linhas limpas (data/horário e selo); as ações ficam no painel da aula.
-let stuLessonsTab = "next", stuMoreWeeks = false;
+let stuLessonsTab = "next", stuMoreWeeks = false, stuProfileOpen = false;
 function stuUpBadge(x){
 const st = stuLessonStatus(x), rr = stuReschedReq(x.key);
 if (rr) return { text: "Remarcação pedida", cls: "wait" };
@@ -5617,7 +5618,7 @@ const byMonth = new Map();
 past.forEach(l => { const k = isoFromBr(l.date).slice(0, 7); if (!byMonth.has(k)) byMonth.set(k, []); byMonth.get(k).push(l); });
 const monthName = k => { const [y, m] = k.split("-").map(Number); const t = MONTH_FULL[m - 1]; return `${t[0].toUpperCase()}${t.slice(1)}${y !== new Date().getFullYear() ? " de " + y : ""}`; };
 const keys = [...byMonth.keys()], openKey = keys.includes(currentMonthKey()) ? currentMonthKey() : keys[0];
-return `<div class="settings-group-label">Histórico</div>` + stuAnnHistoryHTML() + (past.length ? keys.map(k => `<details class="settings-card month-group"${k === openKey ? " open" : ""}><summary class="month-sum"><span>${monthName(k)}</span><span class="stu-muted">${byMonth.get(k).filter(l => !isNoClass(l)).length} aula${byMonth.get(k).filter(l => !isNoClass(l)).length === 1 ? "" : "s"}</span><span class="settings-row-chevron" aria-hidden="true">›</span></summary><div class="month-body">${byMonth.get(k).map(pastRow).join("")}</div></details>`).join("") : stuCard("", `<div class="stu-empty">Ainda não há aulas no histórico.</div>`));
+return `<div class="settings-group-label">Histórico</div>` + (past.length ? keys.map(k => `<details class="settings-card month-group"${k === openKey ? " open" : ""}><summary class="month-sum"><span>${monthName(k)}</span><span class="stu-muted">${byMonth.get(k).filter(l => !isNoClass(l)).length} aula${byMonth.get(k).filter(l => !isNoClass(l)).length === 1 ? "" : "s"}</span><span class="settings-row-chevron" aria-hidden="true">›</span></summary><div class="month-body">${byMonth.get(k).map(pastRow).join("")}</div></details>`).join("") : stuCard("", `<div class="stu-empty">Ainda não há aulas no histórico.</div>`));
 })();
 let html = "";
 // 1) Reposições pendentes no topo.
@@ -5729,16 +5730,16 @@ const s = stuCur.s, tp = stuCur.tp, content = stuContent();
 const days = s.lessonFrequency === "single" ? "Aulas avulsas" : studentDays(s).length ? orderedDays(studentDays(s)).map(d => `${WEEKDAY_NAMES[d]} ${getStudentTimeFor(s, d)}`).join(" · ") : "";
 const pairs = [["Nome", s.name], ["Telefone", s.phone], ["Nascimento", s.birthDate ? formatDateShort(s.birthDate) : ""], ["Responsável", s.guardianName], ["Tel. do responsável", s.guardianPhone], ["Instrumento", s.instrument], ["Aulas", days]];
 const changes = stuRequestsFor("change_data").filter(r => r.status !== "cancelled").slice(0, 5);
-return stuCard("Meus dados", `<dl class="sheet-grid">${pairs.filter(p => p[1]).map(([k, v]) => `<div class="sheet-pair"><dt>${k}</dt><dd>${escapeHtml(v)}</dd></div>`).join("")}</dl>
+// 8.18: "Meus dados" fica guardado dentro de "Perfil" (abre ao tocar); "Professor" e
+// "Regras e combinados" saíram das configurações.
+return `<div class="settings-group-label">Perfil</div><details class="settings-card month-group stu-profile-det"${stuProfileOpen ? " open" : ""}><summary class="month-sum"><span>Meus dados</span><span class="stu-muted">${escapeHtml(firstName(s.name))}</span><span class="settings-row-chevron" aria-hidden="true">›</span></summary><div class="month-body stu-profile-body"><dl class="sheet-grid">${pairs.filter(p => p[1]).map(([k, v]) => `<div class="sheet-pair"><dt>${k}</dt><dd>${escapeHtml(v)}</dd></div>`).join("")}</dl>
 <button type="button" class="btn-historico" id="stuChangeBtn" style="width:100%;margin-top:0.75rem">Pedir alteração</button>
 <div id="stuChangeForm" style="display:none;margin-top:0.75rem">
 <div class="field"><label>O que mudar?</label><select id="stuChangeField">${STU_CHANGE_FIELDS.map(([k, l]) => `<option value="${k}">${l}</option>`).join("")}</select></div>
 <div class="field" id="stuChangeValueField"><label>Novo valor</label><input type="text" id="stuChangeValue"></div>
 <div class="field"><label>Observação (opcional)</label><textarea id="stuChangeNote" rows="2"></textarea></div>
 <div class="actions"><button class="cancel" id="stuChangeCancel">Cancelar</button><button class="save" id="stuChangeSend">Enviar pedido</button></div></div>
-${changes.length ? `<div class="stu-sub-list">${changes.map(r => `<div class="stu-muted">Pedido de ${formatDateShort(r.created_at.slice(0,10)).slice(0,5)}: ${r.status === "pending" ? "aguardando o professor" : r.status === "accepted" ? "aplicado" : "não aceito"}${r.response ? ` · "${escapeHtml(r.response)}"` : ""}</div>`).join("")}</div>` : ""}`)
-+ stuCard("Professor", `<div class="stu-teacher">${tp.photo ? `<span class="stu-teacher-photo" style="background-image:url(${escapeHtml(tp.photo)})"></span>` : ""}<div><div class="stu-row-title">${escapeHtml(tp.display_name || "Professor")}</div>${tp.city || tp.state ? `<div class="stu-muted">${escapeHtml([tp.city, tp.state].filter(Boolean).join(" – "))}</div>` : ""}</div></div>`)
-+ (content.rules ? stuCard("Regras e combinados", `<div class="stu-hw">${escapeHtml(content.rules)}</div>`) : "")
+${changes.length ? `<div class="stu-sub-list">${changes.map(r => `<div class="stu-muted">Pedido de ${formatDateShort(r.created_at.slice(0,10)).slice(0,5)}: ${r.status === "pending" ? "aguardando o professor" : r.status === "accepted" ? "aplicado" : "não aceito"}${r.response ? ` · "${escapeHtml(r.response)}"` : ""}</div>`).join("")}</div>` : ""}</div></details>`
 + stuCard("Preferências", `<div class="toggle-field"><label>Modo criança (botões maiores e figurinhas)</label><label class="switch"><input type="checkbox" id="stuKid" ${stuKidMode() ? "checked" : ""}><span class="switch-slider"></span></label></div>
 ${pwaCanInstall() ? `<button type="button" class="btn-historico" id="stuInstall" style="width:100%;margin-top:0.75rem">Instalar o app</button>` : ""}`)
 + `<div class="settings-group-label">Agenda</div><div class="settings-card study-list ics-card" style="margin-bottom:1.25rem"><div class="settings-row study-row" id="stuIcs" role="button" tabindex="0"><span class="settings-row-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-calendar"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Colocar as aulas na agenda do celular</div><div class="settings-row-sub">Com lembrete 1 dia e 1 hora antes</div></div><span class="settings-row-chevron" aria-hidden="true">›</span></div></div>`
@@ -5834,6 +5835,7 @@ if (hwt) hwt.onclick = () => { const [a, z] = hwt.dataset.hwtrain.split("|").map
 const ch = main.querySelector("[data-challenge]");
 if (ch) ch.onclick = () => { recUi.title = `Desafio: ${String((stuContent().board || {}).challenge || "").slice(0, 60)}`; stuOpenPage("recordings"); };
 main.querySelectorAll("[data-rsvp]").forEach(b => b.onclick = () => { const [id, v] = b.dataset.rsvp.split("|"); const cur = jMap(journal(), "rsvp")[id]; jSet("rsvp", id, cur && cur.v === v ? null : { v }); stuRender(); });
+const pdet = main.querySelector(".stu-profile-det"); if (pdet) pdet.ontoggle = () => { stuProfileOpen = pdet.open; };
 const ics = main.querySelector("#stuIcs");
 if (ics) ics.onclick = () => {
 const f = stuCalendarFile();
@@ -5948,7 +5950,7 @@ metroScheduler(); requestAnimationFrame(metroDraw);
 metroProgInfo();
 }
 function metroStop(){ metro.running = false; clearTimeout(metro.timer); document.querySelectorAll(".metro-dot").forEach(d => d.classList.remove("on")); const b = document.getElementById("metroToggle"); if (b) b.textContent = "Tocar"; metroProgInfo(); }
-function metroSetBpm(v){ metro.bpm = Math.max(30, Math.min(240, Math.round(v))); const n = document.getElementById("metroBpm"), r = document.getElementById("metroRange"); if (n) n.textContent = metro.bpm; if (r) r.value = metro.bpm; }
+function metroSetBpm(v){ metro.bpm = Math.max(20, Math.min(300, Math.round(v))); const n = document.getElementById("metroBpm"), r = document.getElementById("metroRange"); if (n) n.textContent = metro.bpm; if (r) r.value = metro.bpm; }
 function metroProgInfo(){
 const el = document.getElementById("metroProgInfo");
 if (!el) return;
@@ -5962,8 +5964,8 @@ el.textContent = `Próximo aumento em ${left} compasso${left === 1 ? "" : "s"} (
 function metroTrain(from, to){
 if (!stuToolGate("metronome")) return;
 metroStop();
-metro.bpm = Math.max(30, Math.min(240, from));
-metro.prog = { on: true, step: Math.max(1, Math.round((to - from) / 8)) || 2, every: 4, target: Math.max(30, Math.min(240, to)) };
+metro.bpm = Math.max(20, Math.min(300, from));
+metro.prog = { on: true, step: Math.max(1, Math.round((to - from) / 8)) || 2, every: 4, target: Math.max(20, Math.min(300, to)) };
 stuOpenPage("metronome");
 }
 
@@ -6074,7 +6076,7 @@ function metroHTML(){
 if (metro.accents.length !== metro.beats) metro.accents = metroDefaultAccents(metro.beats);
 const p = metro.prog;
 return stuCard("Metrônomo", `<div class="metro-bpm"><button type="button" class="metro-step" data-bpm="-1" aria-label="Menos 1 BPM">−</button><div><span id="metroBpm">${metro.bpm}</span><small>BPM</small></div><button type="button" class="metro-step" data-bpm="1" aria-label="Mais 1 BPM">+</button></div>
-<input type="range" min="30" max="240" value="${metro.bpm}" id="metroRange" class="metro-range" aria-label="Andamento">
+<input type="range" min="20" max="300" value="${metro.bpm}" id="metroRange" class="metro-range" aria-label="Andamento">
 <div class="reason-chips metro-sigs">${METRO_SIGS.map(([l, n]) => `<button type="button" class="filter-chip${metro.beats === n ? " selected" : ""}" data-sig="${n}">${l}</button>`).join("")}</div>
 <div class="reason-chips metro-sigs">${METRO_SUBS.map(([n, l]) => `<button type="button" class="filter-chip${metro.sub === n ? " selected" : ""}" data-sub="${n}">${l}</button>`).join("")}</div>
 <div class="metro-dots">${metro.accents.map((lvl, i) => `<button type="button" class="metro-dot${lvl === 2 ? " first" : lvl === 0 ? " mute" : ""}" data-acc="${i}" aria-label="Tempo ${i + 1}: ${lvl === 2 ? "forte" : lvl === 0 ? "mudo" : "normal"}"></button>`).join("")}</div>
@@ -6084,7 +6086,7 @@ return stuCard("Metrônomo", `<div class="metro-bpm"><button type="button" class
 <div class="metro-prog${p.on ? "" : " off"}">
 <div class="field"><label>Somar (BPM)</label><input type="number" min="1" max="30" id="metroProgStep" value="${p.step}" inputmode="numeric"></div>
 <div class="field"><label>A cada (compassos)</label><input type="number" min="1" max="32" id="metroProgEvery" value="${p.every}" inputmode="numeric"></div>
-<div class="field"><label>Até (BPM)</label><input type="number" min="30" max="240" id="metroProgTarget" value="${p.target}" inputmode="numeric"></div>
+<div class="field"><label>Até (BPM)</label><input type="number" min="20" max="300" id="metroProgTarget" value="${p.target}" inputmode="numeric"></div>
 </div><div class="stu-muted" id="metroProgInfo"></div>`);
 }
 function tunerHTML(opts){
@@ -6126,7 +6128,7 @@ if (metro.taps.length >= 2) { const iv = []; for (let i = 1; i < metro.taps.leng
 const p = metro.prog, num = (id, min, max, def) => { const v = Math.round(Number(main.querySelector(id).value)); return isFinite(v) && v >= min ? Math.min(max, v) : def; };
 const syncProg = () => {
 p.on = main.querySelector("#metroProgOn").checked;
-p.step = num("#metroProgStep", 1, 30, 5); p.every = num("#metroProgEvery", 1, 32, 4); p.target = num("#metroProgTarget", 30, 240, 120);
+p.step = num("#metroProgStep", 1, 30, 5); p.every = num("#metroProgEvery", 1, 32, 4); p.target = num("#metroProgTarget", 20, 300, 120);
 main.querySelector(".metro-prog").classList.toggle("off", !p.on);
 metroProgInfo();
 };
@@ -6270,7 +6272,35 @@ const KEY_ROOTS = [["C",0],["C#",1],["D",2],["D#",3],["E",4],["F",5],["F#",6],["
 function stuFlatsOn(){ return demoMode === "view" ? !!(viewAsRef && viewAsRef.flatsOn) : !!(stuCur && stuCur.view && stuCur.view.flats); }
 function noteLabel(n){ const pc = PC_SHARP.indexOf(n); return pc >= 0 && n.includes("#") && stuFlatsOn() ? `${n} (${PC_FLAT[pc]})` : n; }
 function notePtLabel(n){ const pc = PC_SHARP.indexOf(n); return pc >= 0 && n.includes("#") && stuFlatsOn() ? `${NOTE_PT[n]} (${NOTE_PT[PC_FLAT[pc]]})` : (NOTE_PT[n] || n); }
-function pcName(pc, flats){ return (flats ? PC_FLAT : PC_SHARP)[((pc % 12) + 12) % 12]; }
+function pcName(pc, flats){ const k = ((pc % 12) + 12) % 12; if (flats && typeof flats === "object") return flats[k] || PC_SHARP[k]; return (flats ? PC_FLAT : PC_SHARP)[k]; }
+// Grafia certa da escala: cada nota numa letra (escala de 7 notas: as 7 letras em ordem; as
+// outras usam o grau: 3ª menor = Mib, 5ª diminuta do blues = Solb). Entre C# e Db como tônica,
+// fica a que tem menos acidentes (empate: sustenido).
+const SPELL_LETTERS = ["C","D","E","F","G","A","B"], LETTER_PC = [0,2,4,5,7,9,11];
+const DEGREE_OF = { 0:0, 1:1, 2:1, 3:2, 4:2, 5:3, 6:4, 7:4, 8:5, 9:5, 10:6, 11:6 };
+function spellScale(rootPc, ivs){
+let best = null;
+SPELL_LETTERS.forEach((L, li) => {
+const rootAcc = ((rootPc - LETTER_PC[li] + 18) % 12) - 6;
+if (Math.abs(rootAcc) > 1) return;
+let cost = 0, ok = true;
+// Blues: a 5ª diminuta não decide a tônica (vale a da pentatônica menor).
+const names = ivs.map((iv, k) => {
+const d = ivs.length === 7 ? k : DEGREE_OF[iv], ti = (li + d) % 7, pc = (rootPc + iv) % 12;
+const acc = ((pc - LETTER_PC[ti] + 18) % 12) - 6;
+if (Math.abs(acc) > 2) ok = false;
+if (!(iv === 6 && ivs.includes(7))) cost += Math.abs(acc) === 2 ? 5 : Math.abs(acc);
+return SPELL_LETTERS[ti] + (acc > 0 ? "#".repeat(acc) : "b".repeat(-acc));
+});
+if (!ok) return;
+cost += rootAcc < 0 ? 0.1 : 0;
+if (!best || cost < best.cost) best = { cost, names };
+});
+const map = {};
+ivs.forEach((iv, k) => { map[(rootPc + iv) % 12] = best.names[k]; });
+return { names: best.names, map };
+}
+function ptSpelled(n){ const m = /^([A-G])(#{1,2}|b{1,2})?$/.exec(n); return m ? ({ C:"Dó", D:"Ré", E:"Mi", F:"Fá", G:"Sol", A:"Lá", B:"Si" })[m[1]] + (m[2] || "") : n; }
 function rootUsesFlats(name){ return /b$/.test(name) || name === "F"; }
 function ptName(n){ return NOTE_PT[n] || n; }
 const CHORD_TYPES = [["", "Maior", [0,4,7]], ["m", "Menor", [0,3,7]], ["7", "Com sétima", [0,4,7,10]], ["m7", "Menor com sétima", [0,3,7,10]], ["7M", "Com sétima maior", [0,4,7,11]], ["sus4", "Suspenso (4ª)", [0,5,7]], ["dim", "Diminuto", [0,3,6]], ["aug", "Aumentado", [0,4,8]]];
@@ -6301,7 +6331,7 @@ aug: [["A",[-1,0,3,2,2,-1],9],["E",[0,3,2,1,1,0],4]]
 };
 const SHAPE_PT = { C: "Dó", A: "Lá", G: "Sol", E: "Mi", D: "Ré" };
 const GUITAR_OPEN = [40, 45, 50, 55, 59, 64];
-function guitarShapes(rootName, pc, suffix){
+function guitarShapesStd(rootName, pc, suffix){
 return (SHAPE_BASE[suffix] || []).map(([letter, shape, ref]) => {
 const r = (pc - ref + 12) % 12;
 const frets = shape.map(o => o < 0 ? -1 : o + r);
@@ -6312,7 +6342,92 @@ return { id: letter, letter, pos: r, frets, barre, from: zeros.length ? zeros[0]
 label: r === 0 ? `Aberto · forma de ${SHAPE_PT[letter]}` : `Forma de ${SHAPE_PT[letter]} · casa ${r}` };
 }).sort((a, b) => a.pos - b.pos);
 }
-function shapeMidis(sh){ return sh.frets.map((f, i) => f < 0 ? null : GUITAR_OPEN[i] + f).filter(x => x !== null); }
+function shapeMidis(sh){ const open = sh.open || GUITAR_OPEN; return sh.frets.map((f, i) => f < 0 ? null : open[i] + f).filter(x => x !== null); }
+// ---- Afinações diferentes (8.18): acordes e escalas seguem a afinação escolhida no Afinador ----
+// Vale a mesma escolha nos dois lugares (tuner.mode). Padrão: formas de sempre (CAGED).
+// Meio tom abaixo: os mesmos desenhos do padrão, só que o desenho do acorde meio tom acima
+// (é como os guitarristas tocam em Mib: o desenho de Ré soa Dó#). Drop D e Sol aberto: desenhos
+// calculados para a afinação (tônica no baixo, até 4 dedos, no máximo 4 casas de abertura,
+// cordas abafadas só nos graves), com as referências clássicas: em Drop D o Ré com a 6ª solta
+// (000232) e o Sol 520003; em Sol aberto, acorde maior = pestana inteira na casa da tônica.
+const ALT_TUNINGS = { guitar: ["guitar", "guitarDropD", "guitarHalf", "guitarOpenG"], ukulele: ["ukulele", "ukuleleBari"], bass: ["bass", "bass5"] };
+function chordTuning(view){
+view = view || chordTool.view;
+const list = ALT_TUNINGS[view];
+return list && list.includes(tuner.mode) ? tuner.mode : view;
+}
+function genVoicings(open, rootPc, ivs, opts = {}){
+  evalV.fifthOk = !!opts.fifthBass; evalV.openMax = opts.openMax || 5;
+  const pcs = new Set(ivs.map(i => (rootPc + i) % 12));
+  const third = ivs.find(i => i === 3 || i === 4 || i === 5 || i === 2);
+  const req = new Set([rootPc, ...ivs.filter(i => i !== 7 && i !== 0).map(i => (rootPc + i) % 12)]);
+  if (ivs.includes(6) || ivs.includes(8)) ivs.forEach(i => req.add((rootPc + i) % 12));
+  const n = open.length, out = [];
+  for (let base = 0; base <= 12; base++) {
+    const lo = Math.max(1, base), hi = base === 0 ? 3 : base + 3;
+    const opt = open.map(o => { const a = [-1]; if (pcs.has(o % 12)) a.push(0); for (let f = lo; f <= hi; f++) if (pcs.has((o + f) % 12)) a.push(f); return a; });
+    const cur = new Array(n);
+    const rec = i => {
+      if (i === n) { const v = evalV(cur.slice(), open, rootPc, req, base); if (v) out.push(v); return; }
+      for (const f of opt[i]) { cur[i] = f; rec(i + 1); }
+    };
+    rec(0);
+  }
+  // Melhor desenho de cada região do braço (até 3).
+  const best = new Map();
+  out.forEach(v => { const k = v.pos; if (!best.has(k) || best.get(k).score > v.score) best.set(k, v); });
+  let list = [...best.values()].sort((a, b) => a.score - b.score);
+  const picked = [];
+  list.forEach(v => { if (picked.length < 3 && !picked.some(p => Math.abs(p.pos - v.pos) < 3)) picked.push(v); });
+  return picked.sort((a, b) => a.pos - b.pos);
+}
+function evalV(fr, open, rootPc, req, base){
+  const n = fr.length;
+  // cordas mudas só nos graves (seguidas) e no máximo 2
+  let firstPlayed = fr.findIndex(f => f >= 0);
+  if (firstPlayed < 0 || firstPlayed > 2) return null;
+  if (fr.slice(firstPlayed).some(f => f < 0)) return null;
+  const bassPc = (open[firstPlayed] + fr[firstPlayed]) % 12, fifthBass = bassPc === (rootPc + 7) % 12;
+  if (bassPc !== rootPc && !(fifthBass && evalV.fifthOk)) return null;
+  const pcsHit = new Set(fr.map((f, i) => f < 0 ? null : (open[i] + f) % 12).filter(x => x !== null));
+  for (const r of req) if (!pcsHit.has(r)) return null;
+  const fretted = fr.filter(f => f > 0);
+  if (!fretted.length) return { frets: fr, pos: 0, score: fr.filter(f => f < 0).length * 1.2 - fr.filter(f => f === 0).length * 0.4 + (bassPc !== rootPc ? 1.5 : 0), barre: 0 };
+  const mn = Math.min(...fretted), mx = Math.max(...fretted);
+  if (mx - mn > 3) return null;
+  if (mx > (evalV.openMax || 5) && fr.some(f => f === 0)) return null;
+  // dedos: pestana na menor casa se houver 2+ notas nela
+  const atMin = fr.map((f, i) => f === mn ? i : -1).filter(i => i >= 0);
+  let fingers, barre = 0;
+  const others = fretted.filter(f => f > mn).length;
+  if (atMin.length >= 2 && others + 1 <= 4) {
+    // pestana: nenhuma corda solta entre a primeira da pestana e a 1ª corda
+    const from = atMin[0];
+    if (fr.slice(from).some(f => f === 0)) { fingers = fretted.length; } else { fingers = others + 1; barre = mn; }
+  } else fingers = fretted.length;
+  if (fingers > 4) return null;
+  const opens = fr.filter(f => f === 0).length, mutes = fr.filter(f => f < 0).length;
+  const pos = opens && mn <= 4 ? 0 : mn;
+  const score = mn * 0.6 + mutes * 1.2 - opens * 0.4 + fingers * 0.3 + (mx - mn) * 0.4 + (barre ? 0.5 : 0) + (bassPc !== rootPc ? 1.5 : 0);
+  return { frets: fr, pos, score, barre, from: barre ? atMin[0] : 0, to: barre ? atMin[atMin.length - 1] : 0 };
+}
+
+function guitarShapes(rootName, pc, suffix){
+const tk = chordTuning("guitar");
+if (tk === "guitar") return guitarShapesStd(rootName, pc, suffix);
+const open = TUNINGS[tk].notes.map(noteToMidi);
+if (tk === "guitarHalf") return guitarShapesStd(rootName, (pc + 1) % 12, suffix).map(sh => ({ ...sh, open }));
+const def = CHORD_TYPES.find(c => c[0] === suffix);
+if (!def) return [];
+let list = genVoicings(open, pc, def[2], tk === "guitarOpenG" ? { fifthBass: true, openMax: 4 } : {});
+// Sol aberto: acorde maior é a pestana inteira (G solto, A na 2ª casa, C na 5ª...).
+if (tk === "guitarOpenG" && suffix === "") {
+const r = (pc - 7 + 12) % 12, frets = [r, r, r, r, r, r];
+list = [{ frets, pos: r, barre: r, from: 0, to: 5 }].concat(list.filter(v => v.frets.join() !== frets.join() && Math.abs(v.pos - r) >= 3)).slice(0, 3);
+}
+return list.sort((a, b) => a.pos - b.pos).map((v, i) => ({ id: `${tk}:${v.frets.join(".")}`, pos: v.pos, frets: v.frets, barre: v.barre || 0, from: v.from || 0, to: v.to || 0, open,
+label: v.pos === 0 ? "Aberto" : `${v.barre ? "Pestana" : "Desenho"} · casa ${v.pos}` }));
+}
 function chordDiagramSVG(sh){
 const fretted = sh.frets.filter(f => f > 0);
 const max = Math.max(0, ...fretted), min = fretted.length ? Math.min(...fretted) : 1;
@@ -6371,6 +6486,13 @@ s += `<circle cx="${x}" cy="${y}" r="9" class="fb-dot${pc === rootPc ? " root" :
 });
 return s + `</svg>`;
 }
+// Afinação usada em Acordes e escalas: a mesma do Afinador (tocar troca nos dois).
+function tuningChipsHTML(){
+const list = ALT_TUNINGS[chordTool.view];
+if (!list) return "";
+const cur = chordTuning();
+return `<div class="field tuning-field"><label>Afinação</label><div class="reason-chips">${list.map(k => `<button type="button" class="filter-chip${cur === k ? " selected" : ""}" data-ctuning="${k}">${escapeHtml(TUNING_SHORT[k] || TUNINGS[k].label)}</button>`).join("")}</div>${cur !== list[0] ? `<div class="rules-small" style="margin:0.375rem 0 0">${cur === "guitarHalf" ? "Desenhos ajustados pra soar no tom certo com o violão meio tom abaixo." : `Desenhos e braço montados para a afinação ${escapeHtml(TUNINGS[cur].label.replace(/^Violão /, ""))} (${TUNINGS[cur].notes.map(n => n.replace(/\d$/, "")).join(" ")}).`}</div>` : ""}</div>`;
+}
 const chordTool = { mode: "chord", root: "C", type: "", scale: "maior", view: "guitar", sel: null, scaleSel: null };
 // Liberação aos poucos (8.13): o professor libera acordes ("c:Am"), formas ("f:Am@A") e escalas
 // ("s:pentam") no "Ver como", segurando o dedo. Na demonstração está tudo liberado.
@@ -6398,21 +6520,25 @@ if (isChord && !full && !myChords.length) return html + stuCard("", `<div class=
 if (!isChord && !full && !myScales.length) return html + stuCard("", `<div class="stu-empty">O professor vai liberar as escalas conforme as aulas.</div>`);
 const pc = KEY_ROOTS.find(r => r[0] === t.root)[1];
 const def = isChord ? CHORD_TYPES.find(c => c[0] === t.type) : SCALE_TYPES.find(c => c[0] === t.scale);
-const pcs = def[2].map(i => pc + i), names = pcs.map(p => pcName(p, false));
+const pcs = def[2].map(i => pc + i);
+// Escala (8.18): uma letra de cada (C D Eb F G Ab Bb), nunca Ré e Ré# juntos.
+const sp = isChord ? null : spellScale(pc, def[2]), names = sp ? sp.names : pcs.map(p => pcName(p, false));
+const spell = sp ? sp.map : false;
 const key = isChord ? chordKeyOf(t.root, t.type) : t.scale;
 const locked = on && !on.has((isChord ? "c:" : "s:") + key);
-const title = isChord ? key : `${noteLabel(t.root)} ${def[1].toLowerCase()}`;
+const title = isChord ? key : `${sp.names[0]} ${def[1].toLowerCase()}`;
 let draw = "";
-if (t.view === "keys") draw = `<div class="kb-wrap">${keyboardSVG(pcs, pc, false)}</div>`;
+if (t.view === "keys") draw = `<div class="kb-wrap">${keyboardSVG(pcs, pc, spell)}</div>`;
 else if (isChord && isGuitar) {
-const all = guitarShapes(t.root, pc, t.type), mine = full ? all : all.filter(sh => on.has(`f:${key}@${sh.id}`));
+const all = guitarShapes(t.root, pc, t.type), mine = full || chordTuning() !== "guitar" ? all : all.filter(sh => on.has(`f:${key}@${sh.id}`));
 const shapes = mine.length ? mine : all.slice(0, 1);
 draw = shapes.length ? `<div class="chord-shapes">${shapes.map(sh => { const lk = on && !on.has(`f:${key}@${sh.id}`) && view; return `<button type="button" class="chord-shape${lk ? " locked" : ""}" data-shape="${sh.id}" aria-label="Ouvir: ${escapeHtml(sh.label)}">${chordDiagramSVG(sh)}<span>${escapeHtml(sh.label)}</span></button>`; }).join("")}</div>` : "";
-draw += `<div class="fb-wrap">${fretboardSVG("guitar", pcs, pc, false)}</div>`;
-} else draw = `<div class="fb-wrap">${fretboardSVG(t.view === "guitar" ? "guitar" : t.view, pcs, pc, false)}</div>`;
+draw += `<div class="fb-wrap">${fretboardSVG(chordTuning(), pcs, pc, spell)}</div>`;
+} else draw = `<div class="fb-wrap">${fretboardSVG(chordTuning(), pcs, pc, spell)}</div>`;
 html += stuCard("", `<div class="chord-head${locked && view ? " locked" : ""}" id="chordHold"${view ? ` role="button" tabindex="0"` : ""}><div class="chord-title">${escapeHtml(title)}</div>${view ? `<span class="stu-status ${locked ? "off" : "ok"}">${locked ? "Não liberado" : "Liberado"}</span>` : ""}</div>
 ${view ? `<div class="rules-small">Segure o dedo no nome${isChord && isGuitar ? " ou numa forma" : ""} para liberar ou tirar.</div>` : ""}
-<div class="chord-notes">${names.map(n => `<span>${escapeHtml(noteLabel(n))}<small>${escapeHtml(notePtLabel(n))}</small></span>`).join("")}</div>
+<div class="chord-notes">${names.map(n => `<span>${escapeHtml(sp ? n : noteLabel(n))}<small>${escapeHtml(sp ? ptSpelled(n) : notePtLabel(n))}</small></span>`).join("")}</div>
+${tuningChipsHTML()}
 ${draw}
 <div class="actions"><button class="save" id="chordPlay">Ouvir</button></div>`);
 return html;
@@ -6450,6 +6576,7 @@ main.querySelectorAll("[data-croot]").forEach(b => b.onclick = () => { t.root = 
 main.querySelectorAll("[data-ctype]").forEach(b => b.onclick = () => { t.type = b.dataset.ctype; stuRender(); });
 main.querySelectorAll("[data-csel]").forEach(b => b.onclick = () => { t.sel = b.dataset.csel; stuRender(); });
 main.querySelectorAll("[data-cscale]").forEach(b => b.onclick = () => { t.scale = b.dataset.cscale; stuRender(); });
+main.querySelectorAll("[data-ctuning]").forEach(b => b.onclick = () => { tuner.mode = b.dataset.ctuning; stuRender(); });
 const pc = KEY_ROOTS.find(r => r[0] === t.root)[1], key = chordKeyOf(t.root, t.type);
 const playShape = id => { const sh = guitarShapes(t.root, pc, t.type).find(x => x.id === id); if (!sh) return; toolsStopAudio(); synthChord(shapeMidis(sh), getAudioCtx().currentTime + 0.05, 2.4, { strum: 0.035, vol: 0.3 }); };
 main.querySelectorAll("[data-shape]").forEach(b => b.onclick = () => playShape(b.dataset.shape));
@@ -6548,7 +6675,7 @@ const opts = ear.mode === "rhythm" && q ? `<div class="rhythm-opts">${q.options.
 return stuCard("Treino de ouvido", `<div class="reason-chips">${[["interval", "Intervalos"], ["chord", "Acordes"], ["rhythm", "Ditado rítmico"]].map(([k, l]) => `<button type="button" class="filter-chip${ear.mode === k ? " selected" : ""}" data-earmode="${k}">${l}</button>`).join("")}</div>
 ${ear.mode !== "rhythm" ? `<div class="reason-chips">${(ear.mode === "interval" ? [["easy", "Fácil"], ["mid", "Médio"], ["all", "Todos"]] : [["easy", "Maior e menor"], ["all", "Com diminuto e aumentado"]]).map(([k, l]) => `<button type="button" class="filter-chip${ear.level === k ? " selected" : ""}" data-earlevel="${k}">${l}</button>`).join("")}</div>` : `<div class="stu-muted">Ouça 4 cliques de contagem e depois o ritmo. Escolha o desenho certo.</div>`}
 ${ear.mode === "interval" ? `<div class="toggle-field"><label>Notas juntas (harmônico)</label><label class="switch"><input type="checkbox" id="earHarm" ${ear.harmonic ? "checked" : ""}><span class="switch-slider"></span></label></div>` : ""}
-<div class="ear-score">Acertos: <b>${ear.ok}</b> de ${ear.total}</div>
+<div class="ear-score">Acertos: <b>${ear.ok}</b> de ${ear.total}${ear.total ? ` <button type="button" class="btn-link-inline ear-reset" id="earReset">Zerar</button>` : ""}</div>
 <div class="actions"><button class="save" id="earGo">${q ? "Ouvir de novo" : "Começar"}</button>${q && ear.answered ? `<button class="cancel" id="earNext">Próxima</button>` : ""}</div>
 ${q ? opts : ""}${fb}`);
 }
@@ -6566,6 +6693,7 @@ main.querySelectorAll("[data-earlevel]").forEach(b => b.onclick = () => { ear.le
 const h = main.querySelector("#earHarm"); if (h) h.onchange = () => { ear.harmonic = h.checked; };
 main.querySelector("#earGo").onclick = () => { if (!ear.q) { earNewQuestion(); stuRender(); } else earPlay(); };
 const nx = main.querySelector("#earNext"); if (nx) nx.onclick = () => { earNewQuestion(); stuRender(); };
+const rz = main.querySelector("#earReset"); if (rz) rz.onclick = () => { toolsStopAudio(); ear.ok = 0; ear.total = 0; ear.q = null; ear.answered = null; stuRender(); };
 main.querySelectorAll("[data-ear]").forEach(b => b.onclick = () => {
 if (!ear.q || ear.answered) return;
 const k = b.dataset.ear;
@@ -6676,12 +6804,12 @@ const parts = DRUM_PARTS.filter(([k]) => g.parts[k]);
 const playing = seq.on && seq.owner === "groove", rplaying = seq.on && seq.owner === "rud";
 return stuCard("Grooves", `<div class="reason-chips">${GROOVES.map(x => `<button type="button" class="filter-chip${x.id === g.id ? " selected" : ""}" data-groove="${x.id}">${x.name}</button>`).join("")}</div>
 <div class="drum-grid-wrap"><table class="drum-grid">${parts.map(([k, l]) => `<tr><th>${l}</th>${Array.from({ length: g.steps }, (_, i) => `<td class="${g.parts[k].includes(i) ? "hit" : ""}${i % (g.steps === 12 ? 3 : 4) === 0 ? " beat" : ""}" data-col="${i}"></td>`).join("")}</tr>`).join("")}</table></div>
-<div class="bpm-row"><label>Andamento <b id="grooveBpmTxt">${drums.bpm}</b> BPM</label><input type="range" min="40" max="200" value="${drums.bpm}" id="grooveBpm" class="metro-range"></div>
+<div class="bpm-row"><label>Andamento <b id="grooveBpmTxt">${drums.bpm}</b> BPM</label><input type="range" min="40" max="260" value="${drums.bpm}" id="grooveBpm" class="metro-range"></div>
 <div class="actions"><button class="save" id="grooveToggle">${playing ? "Parar" : "Tocar"}</button></div>`)
 + stuCard("Rudimentos", `<div class="reason-chips">${RUDIMENTS.map(x => `<button type="button" class="filter-chip${x.id === r.id ? " selected" : ""}" data-rud="${x.id}">${x.name}</button>`).join("")}</div>
 <div class="stick-row">${r.stick.split(" ").map((k, i) => `<span class="stick${r.id === "flam" && k === k.toUpperCase() ? " acc" : ""}" data-sk="${i}">${k.toUpperCase()}</span>`).join("")}</div>
 <div class="stu-muted">D = mão direita, E = mão esquerda.${r.id === "flam" ? " As letras em destaque são as notas fortes." : ""} Com fone, a direita toca no lado direito.</div>
-<div class="bpm-row"><label>Andamento <b id="rudBpmTxt">${drums.rudBpm}</b> BPM</label><input type="range" min="40" max="180" value="${drums.rudBpm}" id="rudBpm" class="metro-range"></div>
+<div class="bpm-row"><label>Andamento <b id="rudBpmTxt">${drums.rudBpm}</b> BPM</label><input type="range" min="40" max="240" value="${drums.rudBpm}" id="rudBpm" class="metro-range"></div>
 <div class="actions"><button class="save" id="rudToggle">${rplaying ? "Parar" : "Tocar"}</button></div>`)
 + stuCard("Contador de BPM", `<button type="button" class="tap-big" id="tapBig">Toque aqui no ritmo</button>
 <div class="tap-out" id="tapOut">${drums.tapBpm ? `${drums.tapBpm} BPM` : "—"}</div>
@@ -6747,7 +6875,7 @@ function voiceHTML(){
 const w = voiceTool, playing = seq.on && seq.owner === "warm";
 return stuCard("Aquecimento vocal", `<div class="field"><label>Exercício</label><div class="reason-chips">${WARMUPS.map(x => `<button type="button" class="filter-chip${w.warm === x.id ? " selected" : ""}" data-warm="${x.id}">${x.name}</button>`).join("")}</div></div>
 <div class="field"><label>Sua voz</label><select id="warmRange">${VOICE_RANGES.map(([k, l]) => `<option value="${k}"${w.range === k ? " selected" : ""}>${l}</option>`).join("")}</select></div>
-<div class="bpm-row"><label>Andamento <b id="warmBpmTxt">${w.bpm}</b> BPM</label><input type="range" min="50" max="140" value="${w.bpm}" id="warmBpm" class="metro-range"></div>
+<div class="bpm-row"><label>Andamento <b id="warmBpmTxt">${w.bpm}</b> BPM</label><input type="range" min="40" max="180" value="${w.bpm}" id="warmBpm" class="metro-range"></div>
 <div class="warm-now" id="warmNow">${playing ? "…" : "O piano toca o acorde, depois o exercício. Cante junto na vogal \"a\" ou \"u\". Sobe meio tom a cada repetição e depois volta."}</div>
 <div class="actions"><button class="save" id="warmToggle">${playing ? "Parar" : "Começar"}</button></div>`)
 + tunerHTML({ voice: true })
@@ -6876,7 +7004,7 @@ const b = backing, pr = PROGRESSIONS.find(x => x.id === b.prog), playing = seq.o
 return stuCard("Bases pra improvisar", `<div class="field"><label>Progressão</label><div class="reason-chips">${PROGRESSIONS.map(x => `<button type="button" class="filter-chip${x.id === b.prog ? " selected" : ""}" data-prog="${x.id}">${x.name}</button>`).join("")}</div></div>
 <div class="field"><label>Tom</label><div class="reason-chips key-chips">${KEY_ROOTS.map(([n]) => `<button type="button" class="filter-chip${b.key === n ? " selected" : ""}" data-bkey="${n}">${escapeHtml(noteLabel(n))}</button>`).join("")}</div></div>
 <div class="field"><label>Estilo</label><div class="reason-chips">${[["pop", "Pop"], ["ballad", "Balada"]].map(([k, l]) => `<button type="button" class="filter-chip${b.style === k ? " selected" : ""}" data-bstyle="${k}">${l}</button>`).join("")}</div></div>
-<div class="bpm-row"><label>Andamento <b id="bkBpmTxt">${b.bpm}</b> BPM</label><input type="range" min="50" max="180" value="${b.bpm}" id="bkBpm" class="metro-range"></div>`)
+<div class="bpm-row"><label>Andamento <b id="bkBpmTxt">${b.bpm}</b> BPM</label><input type="range" min="40" max="240" value="${b.bpm}" id="bkBpm" class="metro-range"></div>`)
 + stuCard("", `<div class="bk-now"><div class="bk-cur" id="bkCur">${escapeHtml(backingChordName(b.key, pr.chords[0][0], pr.chords[0][1]))}</div><div class="bk-next" id="bkNext">${playing ? "" : "Aperte tocar e improvise por cima"}</div></div>
 <div class="bk-list">${pr.chords.map(([o, s], i) => `<span data-bk="${i}">${escapeHtml(backingChordName(b.key, o, s))}</span>`).join("")}</div>
 <div class="stu-muted">Escala que combina: ${escapeHtml(b.key)} ${pr.id === "minor" ? "pentatônica menor" : pr.id === "blues" ? "blues" : "pentatônica maior"}.</div>
@@ -7732,7 +7860,9 @@ const mStart = new Date(); mStart.setDate(1); mStart.setHours(0,0,0,0);
 const month = practiceIn(d, mStart.getTime(), now + 1), wk = practiceIn(d, weekStartOf(new Date()).getTime(), now + 1);
 return stuCard("Esta semana e este mês", `<div class="stat-row"><div><b>${wk.days}</b><span>dia${wk.days === 1 ? "" : "s"} nesta semana</span></div><div><b>${streak}</b><span>dia${streak === 1 ? "" : "s"} seguidos</span></div><div><b>${minText(month.min)}</b><span>neste mês</span></div></div>
 <div class="stu-muted prog-total">${minText(total)} de prática no total</div>`)
-+ stuCard("Minutos por semana", weeklyBarsSVG(d));
++ stuCard("Minutos por semana", weeklyBarsSVG(d))
+// 8.18: o histórico de prática (antes página própria) fica aqui embaixo.
++ (stuOff().has("pthistory") ? "" : `<div class="settings-group-label">Histórico de prática</div>` + ptHistoryHTML());
 }
 function achievementsHTML(){
 const d = journal(), ach = achievementsOf(d, stuCur.s, stuThemesCount()), got = ach.filter(a => a.got);
