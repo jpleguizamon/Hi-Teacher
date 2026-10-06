@@ -1818,6 +1818,7 @@ html.standalone .only-browser{display:none}
 .seg-tab.on{background:var(--accent);color:var(--accent-ink)}
 .more-weeks{width:100%;margin:-0.25rem 0 1.25rem}
 .ics-card{margin-bottom:0.5rem}
+.ear-finish{display:block;width:100%;margin-top:1.25rem;padding:0.9375rem;font-size:1rem}
 .rules-small{font-size:0.6875rem;color:var(--muted);line-height:1.45;margin:0 0.25rem 1.5rem}
 .mk-card{border-color:color-mix(in srgb,var(--orange) 45%,transparent);margin-bottom:1.25rem}
 .mk-card .stu-absent-form:not(:empty){margin-top:0.625rem}
@@ -3498,7 +3499,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.18";
+const APP_VERSION = "8.19";
 // ===================== App instalável (8.4) =====================
 // Service worker (sw.js), aviso de versão nova, faixa "Sem internet", botão "Instalar o app",
 // atalhos do ícone (?p=...) e botão voltar do celular fechando modal/menu no app instalado.
@@ -5415,9 +5416,9 @@ b += `<div class="ws-head"><span class="ws-label">Para casa</span><span class="w
 <div class="ws-text">${escapeHtml(hw.homework)}</div>
 ${g.min ? `<div class="ws-meta ws-min">Hoje: ${todayMin} de ${g.min} min</div><div class="hw-bar study-bar"><span style="width:${Math.min(100, Math.round(todayMin / g.min * 100))}%"></span></div>` : ""}`;
 if (board.challenge) b += `<div class="ws-chal"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-target"/></svg><span><b>Desafio:</b> ${escapeHtml(board.challenge)}</span></div>`;
-b += `<div class="ws-acts">${done ? `<button type="button" class="status completed study-pill" data-hwundo title="Desfazer">Feita ✓</button>` : `<button type="button" class="btn-edit-toggle study-pill" data-hwdone>Marcar feita</button>`}<button type="button" class="btn-edit-toggle study-pill" data-hwpractice>Praticar</button>${board.challenge ? `<button type="button" class="btn-edit-toggle study-pill" data-challenge>Gravar o desafio</button>` : ""}</div>`;
+b += `<div class="ws-acts">${done ? `<button type="button" class="status completed study-pill" data-hwundo title="Desfazer">Feita ✓</button>` : `<button type="button" class="btn-edit-toggle study-pill" data-hwdone>Marcar feita</button>`}<button type="button" class="btn-edit-toggle study-pill" data-hwpractice>Praticar</button></div>`;
 } else {
-b += `<div class="ws-head"><span class="ws-label">Desafio da semana</span></div><div class="ws-text">${escapeHtml(board.challenge)}</div><div class="ws-acts"><button type="button" class="btn-edit-toggle study-pill" data-challenge>Gravar o desafio</button></div>`;
+b += `<div class="ws-head"><span class="ws-label">Desafio da semana</span></div><div class="ws-text">${escapeHtml(board.challenge)}</div>`;
 }
 parts.push(`<div class="ws-block">${b}</div>`);
 }
@@ -6273,32 +6274,35 @@ function stuFlatsOn(){ return demoMode === "view" ? !!(viewAsRef && viewAsRef.fl
 function noteLabel(n){ const pc = PC_SHARP.indexOf(n); return pc >= 0 && n.includes("#") && stuFlatsOn() ? `${n} (${PC_FLAT[pc]})` : n; }
 function notePtLabel(n){ const pc = PC_SHARP.indexOf(n); return pc >= 0 && n.includes("#") && stuFlatsOn() ? `${NOTE_PT[n]} (${NOTE_PT[PC_FLAT[pc]]})` : (NOTE_PT[n] || n); }
 function pcName(pc, flats){ const k = ((pc % 12) + 12) % 12; if (flats && typeof flats === "object") return flats[k] || PC_SHARP[k]; return (flats ? PC_FLAT : PC_SHARP)[k]; }
-// Grafia certa da escala: cada nota numa letra (escala de 7 notas: as 7 letras em ordem; as
-// outras usam o grau: 3ª menor = Mib, 5ª diminuta do blues = Solb). Entre C# e Db como tônica,
-// fica a que tem menos acidentes (empate: sustenido).
+// Grafia certa (8.19, revista com a teoria): a escala começa SEMPRE na tônica escolhida (C#
+// maior começa em C#, nunca em Db) e cada nota usa a letra seguinte, uma letra por nota
+// ("each note name is used once and in order" — escala diatônica). Escalas de 7 notas: as 7
+// letras em ordem (C# maior = C# D# E# F# G# A# B#; G# menor harmônica = ... F##). Pentatônicas e
+// blues usam o grau de cada nota (pentatônica menor 1 b3 4 5 b7; blues 1 b3 4 b5 5 b7: C Eb F Gb
+// G Bb). Acordes: 1, 3ª, 5ª (b5 no diminuto, #5 no aumentado), 7ª; sus4 com a 4ª.
+// Tons "teóricos" (ex.: D# maior, com F## e C##) ficam certos e ganham a dica do nome comum (Eb).
 const SPELL_LETTERS = ["C","D","E","F","G","A","B"], LETTER_PC = [0,2,4,5,7,9,11];
 const DEGREE_OF = { 0:0, 1:1, 2:1, 3:2, 4:2, 5:3, 6:4, 7:4, 8:5, 9:5, 10:6, 11:6 };
-function spellScale(rootPc, ivs){
-let best = null;
-SPELL_LETTERS.forEach((L, li) => {
-const rootAcc = ((rootPc - LETTER_PC[li] + 18) % 12) - 6;
-if (Math.abs(rootAcc) > 1) return;
-let cost = 0, ok = true;
-// Blues: a 5ª diminuta não decide a tônica (vale a da pentatônica menor).
-const names = ivs.map((iv, k) => {
-const d = ivs.length === 7 ? k : DEGREE_OF[iv], ti = (li + d) % 7, pc = (rootPc + iv) % 12;
+const CHORD_DEGREE_OF = { 0:0, 2:1, 3:2, 4:2, 5:3, 6:4, 7:4, 8:4, 9:5, 10:6, 11:6 };
+function spellFrom(letterIdx, rootPc, ivs, chord){
+return ivs.map((iv, k) => {
+const d = chord ? CHORD_DEGREE_OF[iv] : ivs.length === 7 ? k : DEGREE_OF[iv], ti = (letterIdx + d) % 7, pc = (rootPc + iv) % 12;
 const acc = ((pc - LETTER_PC[ti] + 18) % 12) - 6;
-if (Math.abs(acc) > 2) ok = false;
-if (!(iv === 6 && ivs.includes(7))) cost += Math.abs(acc) === 2 ? 5 : Math.abs(acc);
 return SPELL_LETTERS[ti] + (acc > 0 ? "#".repeat(acc) : "b".repeat(-acc));
 });
-if (!ok) return;
-cost += rootAcc < 0 ? 0.1 : 0;
-if (!best || cost < best.cost) best = { cost, names };
-});
+}
+function spellScale(rootName, rootPc, ivs, chord){
+const li = SPELL_LETTERS.indexOf(String(rootName).charAt(0));
+const names = spellFrom(li, rootPc, ivs, chord);
 const map = {};
-ivs.forEach((iv, k) => { map[(rootPc + iv) % 12] = best.names[k]; });
-return { names: best.names, map };
+ivs.forEach((iv, k) => { map[(rootPc + iv) % 12] = names[k]; });
+// Dica do nome mais comum quando a grafia precisa de dobrado sustenido/bemol.
+let alt = null;
+if (names.some(n => /##|bb/.test(n))) {
+const other = SPELL_LETTERS.findIndex((L, k) => k !== li && Math.abs(((rootPc - LETTER_PC[k] + 18) % 12) - 6) === 1);
+if (other >= 0) { const a = spellFrom(other, rootPc, ivs, chord); if (!a.some(n => /##|bb/.test(n))) alt = a; }
+}
+return { names, map, alt };
 }
 function ptSpelled(n){ const m = /^([A-G])(#{1,2}|b{1,2})?$/.exec(n); return m ? ({ C:"Dó", D:"Ré", E:"Mi", F:"Fá", G:"Sol", A:"Lá", B:"Si" })[m[1]] + (m[2] || "") : n; }
 function rootUsesFlats(name){ return /b$/.test(name) || name === "F"; }
@@ -6522,11 +6526,11 @@ const pc = KEY_ROOTS.find(r => r[0] === t.root)[1];
 const def = isChord ? CHORD_TYPES.find(c => c[0] === t.type) : SCALE_TYPES.find(c => c[0] === t.scale);
 const pcs = def[2].map(i => pc + i);
 // Escala (8.18): uma letra de cada (C D Eb F G Ab Bb), nunca Ré e Ré# juntos.
-const sp = isChord ? null : spellScale(pc, def[2]), names = sp ? sp.names : pcs.map(p => pcName(p, false));
-const spell = sp ? sp.map : false;
+const sp = spellScale(t.root, pc, def[2], isChord), names = sp.names;
+const spell = sp.map;
 const key = isChord ? chordKeyOf(t.root, t.type) : t.scale;
 const locked = on && !on.has((isChord ? "c:" : "s:") + key);
-const title = isChord ? key : `${sp.names[0]} ${def[1].toLowerCase()}`;
+const title = isChord ? key : `${noteLabel(t.root)} ${def[1].toLowerCase()}`;
 let draw = "";
 if (t.view === "keys") draw = `<div class="kb-wrap">${keyboardSVG(pcs, pc, spell)}</div>`;
 else if (isChord && isGuitar) {
@@ -6537,7 +6541,8 @@ draw += `<div class="fb-wrap">${fretboardSVG(chordTuning(), pcs, pc, spell)}</di
 } else draw = `<div class="fb-wrap">${fretboardSVG(chordTuning(), pcs, pc, spell)}</div>`;
 html += stuCard("", `<div class="chord-head${locked && view ? " locked" : ""}" id="chordHold"${view ? ` role="button" tabindex="0"` : ""}><div class="chord-title">${escapeHtml(title)}</div>${view ? `<span class="stu-status ${locked ? "off" : "ok"}">${locked ? "Não liberado" : "Liberado"}</span>` : ""}</div>
 ${view ? `<div class="rules-small">Segure o dedo no nome${isChord && isGuitar ? " ou numa forma" : ""} para liberar ou tirar.</div>` : ""}
-<div class="chord-notes">${names.map(n => `<span>${escapeHtml(sp ? n : noteLabel(n))}<small>${escapeHtml(sp ? ptSpelled(n) : notePtLabel(n))}</small></span>`).join("")}</div>
+<div class="chord-notes">${names.map(n => `<span>${escapeHtml(n)}<small>${escapeHtml(ptSpelled(n))}</small></span>`).join("")}</div>
+${sp.alt ? `<div class="rules-small" style="margin:0.25rem 0 0.75rem">Tom com dobrado sustenido (##). Na prática costuma-se escrever como ${escapeHtml(sp.alt[0])}${isChord ? escapeHtml(t.type) : " " + escapeHtml(def[1].toLowerCase())}: ${escapeHtml(sp.alt.join(" "))}.</div>` : ""}
 ${tuningChipsHTML()}
 ${draw}
 <div class="actions"><button class="save" id="chordPlay">Ouvir</button></div>`);
@@ -6675,9 +6680,10 @@ const opts = ear.mode === "rhythm" && q ? `<div class="rhythm-opts">${q.options.
 return stuCard("Treino de ouvido", `<div class="reason-chips">${[["interval", "Intervalos"], ["chord", "Acordes"], ["rhythm", "Ditado rítmico"]].map(([k, l]) => `<button type="button" class="filter-chip${ear.mode === k ? " selected" : ""}" data-earmode="${k}">${l}</button>`).join("")}</div>
 ${ear.mode !== "rhythm" ? `<div class="reason-chips">${(ear.mode === "interval" ? [["easy", "Fácil"], ["mid", "Médio"], ["all", "Todos"]] : [["easy", "Maior e menor"], ["all", "Com diminuto e aumentado"]]).map(([k, l]) => `<button type="button" class="filter-chip${ear.level === k ? " selected" : ""}" data-earlevel="${k}">${l}</button>`).join("")}</div>` : `<div class="stu-muted">Ouça 4 cliques de contagem e depois o ritmo. Escolha o desenho certo.</div>`}
 ${ear.mode === "interval" ? `<div class="toggle-field"><label>Notas juntas (harmônico)</label><label class="switch"><input type="checkbox" id="earHarm" ${ear.harmonic ? "checked" : ""}><span class="switch-slider"></span></label></div>` : ""}
-<div class="ear-score">Acertos: <b>${ear.ok}</b> de ${ear.total}${ear.total ? ` <button type="button" class="btn-link-inline ear-reset" id="earReset">Zerar</button>` : ""}</div>
+<div class="ear-score">Acertos: <b>${ear.ok}</b> de ${ear.total}</div>
 <div class="actions"><button class="save" id="earGo">${q ? "Ouvir de novo" : "Começar"}</button>${q && ear.answered ? `<button class="cancel" id="earNext">Próxima</button>` : ""}</div>
-${q ? opts : ""}${fb}`);
+${q ? opts : ""}${fb}
+${q || ear.total ? `<button type="button" class="save ear-finish" id="earFinish">Finalizar</button>` : ""}`);
 }
 function earAnswer(ok, key, right, pick){
 ear.total++; if (ok) ear.ok++;
@@ -6693,7 +6699,7 @@ main.querySelectorAll("[data-earlevel]").forEach(b => b.onclick = () => { ear.le
 const h = main.querySelector("#earHarm"); if (h) h.onchange = () => { ear.harmonic = h.checked; };
 main.querySelector("#earGo").onclick = () => { if (!ear.q) { earNewQuestion(); stuRender(); } else earPlay(); };
 const nx = main.querySelector("#earNext"); if (nx) nx.onclick = () => { earNewQuestion(); stuRender(); };
-const rz = main.querySelector("#earReset"); if (rz) rz.onclick = () => { toolsStopAudio(); ear.ok = 0; ear.total = 0; ear.q = null; ear.answered = null; stuRender(); };
+const fin = main.querySelector("#earFinish"); if (fin) fin.onclick = () => { toolsStopAudio(); const ok = ear.ok, tot = ear.total; ear.ok = 0; ear.total = 0; ear.q = null; ear.answered = null; stuRender(); if (tot) stuToast(`Treino finalizado: ${ok} de ${tot} (${Math.round(ok / tot * 100)}%).`); };
 main.querySelectorAll("[data-ear]").forEach(b => b.onclick = () => {
 if (!ear.q || ear.answered) return;
 const k = b.dataset.ear;
@@ -6997,12 +7003,15 @@ const PROGRESSIONS = [
 { id: "jazz", name: "ii–V–I (jazz)", chords: [[2, "m7"], [7, "7"], [0, "7M"], [0, "7M"]] },
 { id: "minor", name: "i–VII–VI–VII (menor)", chords: [[0, "m"], [10, ""], [8, ""], [10, ""]] }
 ];
-const backing = { key: "C", prog: "pop", style: "pop", bpm: 90 };
+const backing = { key: "C", prog: "pop", style: "pop", bpm: 90, inst: null };
+// Som da base (8.19): violão ou teclado gravados; começa pelo instrumento do aluno.
+function backingInst(){ return backing.inst || (soundInst() === "guitar" ? "guitar" : "piano"); }
 function backingChordName(k, off, suffix){ const pc = (KEY_ROOTS.find(r => r[0] === k)[1] + off) % 12; return pcName(pc, false) + suffix; }
 function backingHTML(){
 const b = backing, pr = PROGRESSIONS.find(x => x.id === b.prog), playing = seq.on && seq.owner === "backing";
 return stuCard("Bases pra improvisar", `<div class="field"><label>Progressão</label><div class="reason-chips">${PROGRESSIONS.map(x => `<button type="button" class="filter-chip${x.id === b.prog ? " selected" : ""}" data-prog="${x.id}">${x.name}</button>`).join("")}</div></div>
 <div class="field"><label>Tom</label><div class="reason-chips key-chips">${KEY_ROOTS.map(([n]) => `<button type="button" class="filter-chip${b.key === n ? " selected" : ""}" data-bkey="${n}">${escapeHtml(noteLabel(n))}</button>`).join("")}</div></div>
+<div class="field"><label>Som</label><div class="reason-chips">${[["guitar", "Violão"], ["piano", "Teclado"]].map(([k, l]) => `<button type="button" class="filter-chip${backingInst() === k ? " selected" : ""}" data-binst="${k}">${l}</button>`).join("")}</div></div>
 <div class="field"><label>Estilo</label><div class="reason-chips">${[["pop", "Pop"], ["ballad", "Balada"]].map(([k, l]) => `<button type="button" class="filter-chip${b.style === k ? " selected" : ""}" data-bstyle="${k}">${l}</button>`).join("")}</div></div>
 <div class="bpm-row"><label>Andamento <b id="bkBpmTxt">${b.bpm}</b> BPM</label><input type="range" min="40" max="240" value="${b.bpm}" id="bkBpm" class="metro-range"></div>`)
 + stuCard("", `<div class="bk-now"><div class="bk-cur" id="bkCur">${escapeHtml(backingChordName(b.key, pr.chords[0][0], pr.chords[0][1]))}</div><div class="bk-next" id="bkNext">${playing ? "" : "Aperte tocar e improvise por cima"}</div></div>
@@ -7016,25 +7025,71 @@ const restart = () => { const was = seq.on && seq.owner === "backing"; seqStop()
 main.querySelectorAll("[data-prog]").forEach(x => x.onclick = () => { b.prog = x.dataset.prog; restart(); });
 main.querySelectorAll("[data-bkey]").forEach(x => x.onclick = () => { b.key = x.dataset.bkey; restart(); });
 main.querySelectorAll("[data-bstyle]").forEach(x => x.onclick = () => { b.style = x.dataset.bstyle; restart(); });
+main.querySelectorAll("[data-binst]").forEach(x => x.onclick = () => { b.inst = x.dataset.binst; restart(); });
 main.querySelector("#bkBpm").oninput = e => { b.bpm = Number(e.target.value); main.querySelector("#bkBpmTxt").textContent = b.bpm; };
 main.querySelector("#bkToggle").onclick = () => { if (seq.on && seq.owner === "backing") seqStop(); else backingStart(); };
 }
+// 8.19: a base soa como gente tocando. Violão: desenho de verdade (forma aberta do acorde),
+// batida D D U U D U no pop e dedilhado na balada, com as cordas uma depois da outra e pequenas
+// variações de força e de tempo. Teclado: mão esquerda com a tônica em oitava e direita com o
+// acorde perto do Dó central (pop) ou arpejo (balada). Os sons gravados carregam antes de tocar.
+function backingParts(off, suffix){
+const rootPc = KEY_ROOTS.find(r => r[0] === backing.key)[1], pc = (rootPc + off) % 12;
+const iv = CHORD_TYPES.find(c => c[0] === suffix)[2];
+const shapes = guitarShapesStd(pcName(pc, false), pc, suffix);
+const sh = shapes.find(x => x.pos <= 5) || shapes[0];
+const gtr = sh ? shapeMidis({ ...sh, open: GUITAR_OPEN }) : iv.map(i => 48 + pc + i);
+const rh = iv.map(i => { let m = 55 + ((pc + i - 7 + 12) % 12); return m; }).sort((x, y) => x - y);
+const lh = 36 + pc + (pc > 7 ? -12 : 0);
+return { gtr, rh, lh, bass: lh };
+}
 function backingStart(){
-const b = backing, pr = PROGRESSIONS.find(x => x.id === b.prog), per = pr.swing ? 3 : 2;
-const rootPc = KEY_ROOTS.find(r => r[0] === b.key)[1];
-const voicing = (off, suffix) => { const pc = (rootPc + off) % 12; const iv = CHORD_TYPES.find(c => c[0] === suffix)[2]; return iv.map(i => { let m = 52 + ((pc + i - 4 + 12) % 12); return m; }).sort((x, y) => x - y); };
+const b = backing, pr = PROGRESSIONS.find(x => x.id === b.prog), per = pr.swing ? 3 : 2, inst = backingInst();
+const parts = pr.chords.map(([o, sfx]) => backingParts(o, sfx));
+const bt0 = document.getElementById("bkToggle"); if (bt0) { bt0.textContent = "Carregando o som…"; bt0.disabled = true; }
+const need = new Set();
+parts.forEach(p => { (inst === "guitar" ? p.gtr : p.rh.concat([p.lh, p.lh + 12], p.rh.map(m => m + 12))).forEach(m => need.add(`${inst}|${sampleNearest(inst, m)}`)); if (inst === "guitar") need.add(`bass|${sampleNearest("bass", p.bass)}`); });
+const loads = [...need].map(k => { const [set, m] = k.split("|"); return sampleLoad(set, Number(m)); });
+Promise.race([Promise.all(loads), new Promise(r => setTimeout(r, 6000))]).then(() => {
+const bt1 = document.getElementById("bkToggle"); if (bt1) bt1.disabled = false;
+if (stuTab !== "backing") return;
+backingRun(b, pr, per, inst, parts);
+});
+}
+function backingRun(b, pr, per, inst, parts){
+const hum = () => (Math.random() - 0.5) * 0.012, vj = v => v * (0.88 + Math.random() * 0.24);
+const strum = (notes, t, down, vol, len) => { const list = down ? notes : notes.slice(-4).reverse(); list.forEach((m, k) => synthNote(m, t + k * (down ? 0.016 : 0.012), len, { vol: vj(vol) / Math.sqrt(list.length / 2), inst: "guitar" })); };
 seqStart("backing", () => 60 / b.bpm / per, (step, t) => {
 const sub = step % per, beat = Math.floor(step / per), bar = Math.floor(beat / 4), inBar = beat % 4;
-const [off, suffix] = pr.chords[bar % pr.chords.length];
-const bassPc = (rootPc + off) % 12, dur = 60 / b.bpm;
-if (sub === 0) {
-if (b.style === "pop") { synthChord(voicing(off, suffix), t, dur * 0.85, { vol: 0.13 }); }
-else if (inBar === 0) synthChord(voicing(off, suffix), t, dur * 3.9, { vol: 0.14, sustain: 0.8, attack: 0.08 });
-if (inBar === 0 || inBar === 2) synthNote(36 + bassPc + (bassPc > 7 ? -12 : 0), t, dur * 1.8, { vol: 0.32, sustain: 0.6, inst: "bass" });
-if (inBar === 0 || (b.style === "pop" && inBar === 2)) drumHit("kick", t, 0.9);
-if (inBar === 1 || inBar === 3) drumHit(b.style === "ballad" ? "rim" : "snare", t, b.style === "ballad" ? 1.4 : 0.8);
+if (per === 3 && sub === 1) return;
+const e = inBar * 2 + (sub ? 1 : 0), beatDur = 60 / b.bpm, p = parts[bar % parts.length];
+const tt = t + hum();
+if (inst === "guitar") {
+if (b.style === "pop") {
+const pat = { 0: [true, 0.34], 2: [true, 0.26], 3: [false, 0.18], 5: [false, 0.2], 6: [true, 0.26], 7: [false, 0.17] }[e];
+if (pat) strum(p.gtr, tt, pat[0], pat[1], beatDur * 1.6);
+} else {
+const g = p.gtr, top = g.slice(-3), alt = g[1] || g[0];
+const m = [g[0], top[0], top[1], top[2], alt, top[1], top[2], top[1]][e];
+if (m) synthNote(m, tt, beatDur * 2.2, { vol: vj(e === 0 || e === 4 ? 0.3 : 0.22), inst: "guitar" });
 }
-if (pr.swing ? sub !== 1 : true) drumHit("hat", t, b.style === "ballad" ? 0.35 : sub === 0 ? 0.7 : 0.45);
+if (sub === 0 && (inBar === 0 || inBar === 2)) synthNote(p.bass, t, beatDur * 1.8, { vol: 0.28, inst: "bass" });
+} else {
+if (b.style === "pop") {
+if (e === 0 || e === 4) { synthNote(p.lh, tt, beatDur * 1.9, { vol: vj(0.3), inst: "piano" }); synthNote(p.lh + 12, tt + 0.004, beatDur * 1.9, { vol: vj(0.22), inst: "piano" }); }
+if (e % 2 === 0) p.rh.forEach((m, k) => synthNote(m, tt + k * 0.006, beatDur * 0.9, { vol: vj(e === 0 || e === 4 ? 0.2 : 0.14), inst: "piano" }));
+else if (e === 3 || e === 7) p.rh.forEach((m, k) => synthNote(m, tt + k * 0.005, beatDur * 0.4, { vol: vj(0.1), inst: "piano" }));
+} else {
+if (e === 0) { synthNote(p.lh, tt, beatDur * 4, { vol: vj(0.3), inst: "piano" }); synthNote(p.lh + 12, tt + 0.01, beatDur * 4, { vol: vj(0.2), inst: "piano" }); }
+const arp = [p.rh[0], p.rh[1], p.rh[2], p.rh[0] + 12, p.rh[2], p.rh[1], p.rh[2], p.rh[0] + 12];
+synthNote(arp[e], tt, beatDur * 1.6, { vol: vj(e === 0 ? 0.22 : 0.16), inst: "piano" });
+}
+}
+if (sub === 0) {
+if (inBar === 0 || (b.style === "pop" && inBar === 2)) drumHit("kick", t, 0.75);
+if (inBar === 1 || inBar === 3) drumHit(b.style === "ballad" ? "rim" : "snare", t, b.style === "ballad" ? 1.1 : 0.55);
+}
+if (pr.swing ? sub !== 1 : true) drumHit("hat", t + hum(), b.style === "ballad" ? 0.22 : sub === 0 ? 0.4 : 0.26);
 }, step => {
 const beat = Math.floor(step / per), bar = Math.floor(beat / 4), i = bar % pr.chords.length, n = (i + 1) % pr.chords.length;
 const cur = document.getElementById("bkCur"), nx = document.getElementById("bkNext");
