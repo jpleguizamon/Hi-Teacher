@@ -934,8 +934,10 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .stats-sec:first-child{margin-top:0}
 .stats-grid{margin-bottom:0}
 .stats-grid .kpi-value{font-size:1.375rem}
-.stats-grid .kpi-value.up{color:var(--green,#4ade80)}
-.stats-grid .kpi-value.down{color:var(--red,#f87171)}
+.stats-trend{display:inline-flex;align-items:center;gap:0.125rem;margin-left:0.5rem;vertical-align:middle;font-size:0.75rem;font-weight:750;padding:0.125rem 0.4375rem 0.125rem 0.3125rem;border-radius:var(--radius-pill)}
+.stats-trend svg{width:0.875rem;height:0.875rem;fill:currentColor}
+.stats-trend.up{color:var(--green,#4ade80);background:rgba(74,222,128,.12)}
+.stats-trend.down{color:#f87171;background:rgba(248,113,113,.12)}
 .stats-wide{grid-column:1/-1}
 .stats-bars{display:flex;flex-direction:column;gap:0.5rem;margin-top:0.625rem}
 .stats-bar-row{display:grid;grid-template-columns:minmax(0,7rem) 1fr auto;align-items:center;gap:0.5rem;font-size:0.75rem;color:var(--text-2)}
@@ -1260,13 +1262,14 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .stu-wait-hint{font-size:0.75rem;color:var(--muted);margin:-0.5rem 0 1rem}
 body.student-mode #app,body.student-mode #sidebar,body.student-mode #overlay{display:none!important}
 body:not(.student-mode) .stu-shell{display:none!important}
-.stu-avatar{padding:0;cursor:pointer;font-family:inherit}
-.stu-avatar:focus-visible{outline:0.125rem solid var(--accent);outline-offset:0.125rem}
 .stu-picker{display:block;margin-top:0.375rem;max-width:100%;background:var(--glass-field);color:var(--text);border:0.0625rem solid var(--glass-border);border-radius:var(--radius-pill);padding:0.3125rem 0.75rem;font:inherit;font-size:0.75rem;font-weight:650}
 /* Modo demonstração: faixa fixa acima do cabeçalho */
 .demo-bar{position:fixed;left:0;right:0;top:0;z-index:40;height:2.5rem;display:flex;align-items:center;justify-content:center;gap:0.75rem;padding:0 1rem;
   background:color-mix(in srgb,var(--orange) 22%,var(--bg));border-bottom:0.0625rem solid color-mix(in srgb,var(--orange) 55%,transparent);color:var(--text);font-size:0.8125rem;font-weight:700}
 .demo-bar span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.demo-bar .demo-instr{flex:0 1 auto;min-width:0;max-width:9rem;border:0.0625rem solid color-mix(in srgb,var(--orange) 60%,transparent);background:rgba(0,0,0,.25);color:var(--text);border-radius:var(--radius-pill);padding:0.3125rem 0.625rem;font:inherit;font-size:0.75rem;font-weight:700}
+.demo-bar .demo-instr option{background:#0b1220;color:#fff}
+@media (max-width:26rem){.demo-bar{gap:0.5rem;padding:0 0.625rem}}
 .demo-bar button{flex:none;border:0.0625rem solid color-mix(in srgb,var(--orange) 60%,transparent);background:transparent;color:var(--text);border-radius:var(--radius-pill);padding:0.3125rem 0.75rem;font:inherit;font-size:0.75rem;font-weight:750;cursor:pointer}
 /* Faixas fixas no topo (demonstração e sem internet) empurram o cabeçalho pra baixo; o
    entalhe do iPhone (safe-area) fica com a primeira faixa visível. */
@@ -2420,7 +2423,7 @@ body.pdf-open{overflow:hidden}
 </main>
 
 <main id="evolutionStatsPage" style="display:none">
-<div class="page-title-bar" style="margin-top:0"><h2 class="page-title-text">Estatísticas<button type="button" class="help-icon" data-help="Os números mais importantes do seu trabalho, calculados com os seus alunos e com os gráficos de Evolução. Crescimento e médias usam os últimos 12 meses.">!</button></h2></div>
+<div class="page-title-bar" style="margin-top:0"><h2 class="page-title-text">Estatísticas<button type="button" class="help-icon" data-help="Os números mais importantes do seu trabalho, calculados com os seus alunos e com os gráficos de Evolução. Crescimento e médias usam os últimos 12 meses. A seta verde (para cima) ou vermelha (para baixo) compara com 3 meses atrás.">!</button></h2></div>
 <div id="statsBody"></div>
 </main>
 
@@ -2638,8 +2641,7 @@ body.pdf-open{overflow:hidden}
 <select id="stuPicker" class="stu-picker" aria-label="Aluno" style="display:none"></select>
 </div>
 <div class="stu-head-right"><button type="button" class="stu-timer-chip" id="stuTimerChip" style="display:none" aria-label="Voltar pro cronômetro"></button>
-<button type="button" class="stu-bell" id="stuBell" aria-label="Notificações"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-bell"/></svg><span class="stu-bell-badge" id="stuBellBadge" style="display:none"></span></button>
-<button type="button" class="avatar stu-avatar" id="stuAvatar" aria-label="Abrir o perfil"></button></div>
+<button type="button" class="stu-bell" id="stuBell" aria-label="Notificações" aria-haspopup="dialog" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-bell"/></svg><span class="stu-bell-badge" id="stuBellBadge" style="display:none"></span></button></div>
 </div>
 </header>
 <main id="stuMain"></main>
@@ -2695,12 +2697,12 @@ body.pdf-open{overflow:hidden}
 </div>
 </div>
 <div class="sidebar-footer">
-<button class="settings-btn" id="stuProfileNav" data-stu-page="profile"><svg viewBox="0 0 24 24"><use href="#icon-user"/></svg><span>Perfil</span></button>
+<button class="settings-btn" id="stuProfileNav" data-stu-page="profile" title="Configurações"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg><span>Configurações</span></button>
 <button type="button" class="sidebar-logout" id="stuLogoutNav"><svg viewBox="0 0 24 24"><use href="#icon-logout"/></svg><span id="stuLogoutLabel">Sair da conta</span></button>
 <a class="sidebar-legal" href="privacidade.html" target="_blank" rel="noopener">Privacidade</a>
 </div>
 </aside>
-<div class="demo-bar" id="demoBar" style="display:none"><span id="demoBarText"></span><button type="button" id="demoExit">Sair da demonstração</button></div>
+<div class="demo-bar" id="demoBar" style="display:none"><span id="demoBarText"></span><select id="demoInstr" class="demo-instr" aria-label="Instrumento da demonstração" style="display:none"></select><button type="button" id="demoExit">Sair da demonstração</button></div>
 
 
 <div class="modal-bg" id="importModal">
@@ -3497,7 +3499,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.16";
+const APP_VERSION = "8.17";
 // ===================== App instalável (8.4) =====================
 // Service worker (sw.js), aviso de versão nova, faixa "Sem internet", botão "Instalar o app",
 // atalhos do ícone (?p=...) e botão voltar do celular fechando modal/menu no app instalado.
@@ -5047,13 +5049,11 @@ function stuRenderPicker(){
 const sel = document.getElementById("stuPicker");
 const logo = document.querySelector("#sidebar .side-logo-img");
 ["stuLogo", "stuSideLogo"].forEach(id => { const img = document.getElementById(id); if (logo && img && !img.getAttribute("src")) img.src = logo.src; });
-const av = document.getElementById("stuAvatar");
-av.textContent = initials(stuCur.s.name || "A");
 if (stu.students.length < 2) { sel.style.display = "none"; return; }
 sel.style.display = "";
 sel.innerHTML = stu.students.map(x => `<option value="${x.link.id}">${escapeHtml(firstName(x.s.name))}${x.s.instrument ? " · " + escapeHtml(x.s.instrument) : ""} com ${escapeHtml(x.tp.display_name || "Professor")}</option>`).join("");
 sel.value = stuCur.link.id;
-sel.onchange = () => { _nativeSetItem.call(localStorage, STU_PICK_KEY, sel.value); stuApplyContext(stu.students.find(x => x.link.id === sel.value)); document.getElementById("stuAvatar").textContent = initials(stuCur.s.name || "A"); stuRender(); };
+sel.onchange = () => { _nativeSetItem.call(localStorage, STU_PICK_KEY, sel.value); stuApplyContext(stu.students.find(x => x.link.id === sel.value)); stuRender(); };
 }
 
 // ---------- Aulas do aluno (mesmo motor do professor) ----------
@@ -5144,7 +5144,7 @@ await startStudentMode(true);
 // Título de seção igual ao do professor (caixa alta pequena) + card de vidro.
 function stuCard(title, inner, extraCls){ return `${title ? `<div class="settings-group-label">${title}</div>` : ""}<section class="stu-card${extraCls ? " " + extraCls : ""}">${inner}</section>`; }
 const STU_PAGES = { home: "Início", lessons: "Aulas", money: "Financeiro", practice: "Praticar", songs: "Músicas", goals: "Metas", recordings: "Gravações", progress: "Minha prática", achievements: "Conquistas", evolution: "Nível e evolução", pthistory: "Histórico de prática", material: "Matérias",
-metronome: "Metrônomo", tuner: "Afinador", chords: "Acordes e escalas", ear: "Treino de ouvido", reading: "Leitura de partitura", drums: "Bateria", voice: "Canto", player: "Tocar junto", backing: "Bases", profile: "Perfil" };
+metronome: "Metrônomo", tuner: "Afinador", chords: "Acordes e escalas", ear: "Treino de ouvido", reading: "Leitura de partitura", drums: "Bateria", voice: "Canto", player: "Tocar junto", backing: "Bases", profile: "Configurações" };
 // Troca de página do modo aluno: mesma animação e mesma lógica de menu do openPage do professor.
 // Ferramentas por instrumento (8.6): o aluno só vê o que faz parte do aprendizado dele.
 // Instrumento que o app não reconhece (ou vazio) mostra todas.
@@ -5206,6 +5206,7 @@ if (kind === "bass") chordTool.mode = "scale";
 }
 }
 function stuOpenPage(page){
+try { stuNotifClose(); } catch(e) {}
 if (!STU_PAGES[page] || !stuPageAllowed(page)) page = "home";
 stuTab = page;
 if (!demoMode) sessSet("jp_stu_active_page", page);
@@ -5224,11 +5225,11 @@ document.querySelectorAll("#stuSidebar [data-stu-page]").forEach(b => b.onclick 
 if (b.classList.contains("feat-off")) { stuToast("Ainda não liberada. Segure o dedo para liberar."); return; }
 stuOpenPage(b.dataset.stuPage);
 });
-document.getElementById("stuAvatar").onclick = () => stuOpenPage("profile");
 document.getElementById("stuTimerChip").onclick = () => stuOpenPage("practice");
-document.getElementById("stuBell").onclick = stuOpenNotices;
+document.getElementById("stuBell").onclick = e => { e.stopPropagation(); stuOpenNotices(); };
 document.getElementById("stuLogoutNav").onclick = () => { if (demoMode) return demoExit(); if (confirm("Sair da conta?")) stuSignOut(); };
 document.getElementById("demoExit").onclick = () => demoExit();
+document.getElementById("demoInstr").onchange = e => demoSwitchInstrument(e.target.value);
 stuFeatureHold();
 let stuRenderedTab = null;
 function stuRender(){
@@ -5442,14 +5443,41 @@ try { count = stuNotices(stuUpcoming(28)).length; } catch(e) {}
 n.textContent = count; n.style.display = count ? "" : "none";
 b.setAttribute("aria-label", count ? `Notificações (${count})` : "Notificações");
 }
+// 8.16: o sino abre o mesmo balão do professor (no mesmo canto), em vez de uma janela.
 function stuOpenNotices(){
-const notes = stuNotices(stuUpcoming(28));
-const body = document.createElement("div");
-body.innerHTML = notes.length ? notes.map((n, i) => `<button type="button" class="stu-notice notice-btn ${n.cls || ""}" data-ni="${i}"><span>${n.html}</span><span class="settings-row-chevron" aria-hidden="true">›</span></button>`).join("") : `<div class="stu-empty">Nenhuma notificação por enquanto.</div>`;
-// Cada aviso leva direto à página certa (e abre a aula, quando é de uma aula).
-body.querySelectorAll("[data-ni]").forEach(x => x.onclick = () => { const n = notes[Number(x.dataset.ni)]; closeQuickModal(); stuOpenPage(n.go || "home"); if (n.lp) stuOpenLessonPanel(n.lp); });
-openQuickModal("Notificações", "", body, null, "Fechar");
+let pop = document.getElementById("stuNotifPop");
+if (pop && !pop.hidden) { stuNotifClose(); return; }
+if (!pop) {
+pop = document.createElement("div");
+pop.id = "stuNotifPop"; pop.className = "notif-pop"; pop.hidden = true;
+pop.setAttribute("role", "dialog"); pop.setAttribute("aria-label", "Notificações");
+document.body.appendChild(pop);
 }
+const notes = stuNotices(stuUpcoming(28));
+pop.innerHTML = `<div class="notif-pop-title">Notificações</div><div class="notif-list">${notes.length ? notes.map((n, i) => `<button type="button" class="notif-item${n.cls === "warn" ? " warn" : ""}" data-ni="${i}"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-${n.cls === "warn" ? "alert" : "bell"}"/></svg><span class="notif-text">${n.html}</span><span class="settings-row-chevron" aria-hidden="true">›</span></button>`).join("") : `<div class="notif-empty">Nenhuma notificação por enquanto.</div>`}</div>`;
+// Cada aviso leva direto à página certa (e abre a aula, quando é de uma aula).
+pop.querySelectorAll("[data-ni]").forEach(x => x.onclick = () => { const n = notes[Number(x.dataset.ni)]; stuNotifClose(); stuOpenPage(n.go || "home"); if (n.lp) stuOpenLessonPanel(n.lp); });
+pop.hidden = false;
+notifPlace(pop, document.getElementById("stuBell"));
+document.getElementById("stuBell").setAttribute("aria-expanded", "true");
+}
+function stuNotifClose(){
+const pop = document.getElementById("stuNotifPop");
+if (!pop || pop.hidden) return;
+pop.hidden = true;
+document.getElementById("stuBell").setAttribute("aria-expanded", "false");
+}
+// Posição do balão: logo abaixo do sino, alinhado à direita dele (professor e aluno).
+function notifPlace(pop, b){
+if (!pop || !b) return;
+const r = b.getBoundingClientRect();
+pop.style.top = `${Math.max(8, r.bottom + 8)}px`;
+pop.style.right = `${Math.max(12, window.innerWidth - r.right)}px`;
+pop.style.maxHeight = `${Math.max(200, window.innerHeight - r.bottom - 24)}px`;
+}
+document.addEventListener("click", e => { const pop = document.getElementById("stuNotifPop"); if (pop && !pop.hidden && !pop.contains(e.target) && !e.target.closest("#stuBell")) stuNotifClose(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") stuNotifClose(); });
+window.addEventListener("resize", () => { const pop = document.getElementById("stuNotifPop"); if (pop && !pop.hidden) notifPlace(pop, document.getElementById("stuBell")); });
 // Subseção dentro de um card: título pequeno em azul e linha separando da anterior.
 function stuSub(title, inner){ return `<div class="stu-subsec"><div class="stu-sub-title">${title}</div>${inner}</div>`; }
 function stuNextEvents(){
@@ -5559,14 +5587,13 @@ if (st.text) return { text: st.text, cls: st.cls || "info" };
 return null;
 }
 function lessonsBind(main){
-main.querySelectorAll("[data-ltab]").forEach(b => b.onclick = () => { stuLessonsTab = b.dataset.ltab; stuRender(); });
 const more = main.querySelector("#moreWeeks"); if (more) more.onclick = () => { stuMoreWeeks = true; stuRender(); };
 const ics = main.querySelector("#stuIcs"); if (ics) ics.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); ics.click(); } };
 }
 function stuLessonsHTML(){
 const s = stuCur.s, rules = stuResched();
-const tabs = `<div class="seg-tabs" role="tablist" aria-label="Aulas"><button type="button" role="tab" class="seg-tab${stuLessonsTab === "next" ? " on" : ""}" aria-selected="${stuLessonsTab === "next"}" data-ltab="next">Próximas</button><button type="button" role="tab" class="seg-tab${stuLessonsTab === "hist" ? " on" : ""}" aria-selected="${stuLessonsTab === "hist"}" data-ltab="hist">Histórico</button></div>`;
-if (stuLessonsTab === "hist") {
+// Histórico (8.16): fica embaixo das próximas aulas, sem as abas "Próximas / Histórico".
+const histHTML = (() => {
 const content = stuContent();
 const starsOk = !!stuCur.tp.show_evaluations && content.evalView !== "chart";
 const crit = (appSettings.criteria || []).filter(c => c && c.key && !c.removed);
@@ -5590,9 +5617,9 @@ const byMonth = new Map();
 past.forEach(l => { const k = isoFromBr(l.date).slice(0, 7); if (!byMonth.has(k)) byMonth.set(k, []); byMonth.get(k).push(l); });
 const monthName = k => { const [y, m] = k.split("-").map(Number); const t = MONTH_FULL[m - 1]; return `${t[0].toUpperCase()}${t.slice(1)}${y !== new Date().getFullYear() ? " de " + y : ""}`; };
 const keys = [...byMonth.keys()], openKey = keys.includes(currentMonthKey()) ? currentMonthKey() : keys[0];
-return tabs + stuAnnHistoryHTML() + (past.length ? keys.map(k => `<details class="settings-card month-group"${k === openKey ? " open" : ""}><summary class="month-sum"><span>${monthName(k)}</span><span class="stu-muted">${byMonth.get(k).filter(l => !isNoClass(l)).length} aula${byMonth.get(k).filter(l => !isNoClass(l)).length === 1 ? "" : "s"}</span><span class="settings-row-chevron" aria-hidden="true">›</span></summary><div class="month-body">${byMonth.get(k).map(pastRow).join("")}</div></details>`).join("") : stuCard("", `<div class="stu-empty">Ainda não há aulas no histórico.</div>`));
-}
-let html = tabs;
+return `<div class="settings-group-label">Histórico</div>` + stuAnnHistoryHTML() + (past.length ? keys.map(k => `<details class="settings-card month-group"${k === openKey ? " open" : ""}><summary class="month-sum"><span>${monthName(k)}</span><span class="stu-muted">${byMonth.get(k).filter(l => !isNoClass(l)).length} aula${byMonth.get(k).filter(l => !isNoClass(l)).length === 1 ? "" : "s"}</span><span class="settings-row-chevron" aria-hidden="true">›</span></summary><div class="month-body">${byMonth.get(k).map(pastRow).join("")}</div></details>`).join("") : stuCard("", `<div class="stu-empty">Ainda não há aulas no histórico.</div>`));
+})();
+let html = "";
 // 1) Reposições pendentes no topo.
 const pend = (s.makeups || []).filter(m => m.status === "pending" && m.kind !== "single");
 if (pend.length) html += `<div class="settings-group-label">Reposições pendentes</div><div class="settings-card study-list mk-card">${pend.map(m => {
@@ -5607,9 +5634,10 @@ return `<button type="button" class="stu-lrow up-row${first ? " up-next" : ""}" 
 html += up.length ? `<div class="settings-group-label">Próximas aulas</div><div class="settings-card lrow-card">${shown.map(row).join("")}</div>`
 + (up.length > shown.length ? `<button type="button" class="btn-historico more-weeks" id="moreWeeks">Ver mais aulas</button>` : "")
 : `<div class="settings-group-label">Próximas aulas</div>${stuCard("", `<div class="stu-empty">Nenhuma aula nas próximas 4 semanas.</div>`)}`;
-// 3) Agenda do celular, discreta, com as regras embaixo.
-html += `<div class="settings-card study-list ics-card"><div class="settings-row study-row" id="stuIcs" role="button" tabindex="0"><span class="settings-row-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-bell"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Colocar as aulas na agenda do celular</div><div class="settings-row-sub">Com lembrete 1 dia e 1 hora antes</div></div><span class="settings-row-chevron" aria-hidden="true">›</span></div></div>
-${rules.on ? `<div class="rules-small">Remarcação: até ${rules.minHours} h antes${rules.maxMonth ? `, no máximo ${rules.maxMonth} por mês` : ""}. Toque numa aula pra remarcar ou avisar falta.</div>` : `<div class="rules-small">Toque numa aula pra ver os detalhes ou avisar falta.</div>`}`;
+// 3) Regras de remarcação, discretas (a agenda do celular foi para Configurações na 8.16).
+html += `${rules.on ? `<div class="rules-small">Remarcação: até ${rules.minHours} h antes${rules.maxMonth ? `, no máximo ${rules.maxMonth} por mês` : ""}. Toque numa aula pra remarcar ou avisar falta.</div>` : `<div class="rules-small">Toque numa aula pra ver os detalhes ou avisar falta.</div>`}`;
+// 4) Histórico das aulas.
+html += histHTML;
 return html;
 }
 // Pix "copia e cola" (BR Code estático) com o valor já preenchido.
@@ -5713,6 +5741,7 @@ ${changes.length ? `<div class="stu-sub-list">${changes.map(r => `<div class="st
 + (content.rules ? stuCard("Regras e combinados", `<div class="stu-hw">${escapeHtml(content.rules)}</div>`) : "")
 + stuCard("Preferências", `<div class="toggle-field"><label>Modo criança (botões maiores e figurinhas)</label><label class="switch"><input type="checkbox" id="stuKid" ${stuKidMode() ? "checked" : ""}><span class="switch-slider"></span></label></div>
 ${pwaCanInstall() ? `<button type="button" class="btn-historico" id="stuInstall" style="width:100%;margin-top:0.75rem">Instalar o app</button>` : ""}`)
++ `<div class="settings-group-label">Agenda</div><div class="settings-card study-list ics-card" style="margin-bottom:1.25rem"><div class="settings-row study-row" id="stuIcs" role="button" tabindex="0"><span class="settings-row-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-calendar"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Colocar as aulas na agenda do celular</div><div class="settings-row-sub">Com lembrete 1 dia e 1 hora antes</div></div><span class="settings-row-chevron" aria-hidden="true">›</span></div></div>`
 + stuPrivacyCardHTML()
 + (!demoMode && isTeacherToo(authCurrentUser.id) ? `<button type="button" class="btn-historico stu-logout" id="stuTeacherBtn">Voltar para o modo professor</button>` : "")
 + (demoMode ? "" : `<button type="button" class="cancel stu-logout" id="stuLogoutBtn">Sair da conta</button>`);
@@ -7887,6 +7916,8 @@ stuTab = "home";
 document.getElementById("demoBarText").textContent = label;
 document.getElementById("demoExit").textContent = kind === "view" ? "Sair" : "Sair da demonstração";
 document.getElementById("demoBar").style.display = "";
+{ const sel = document.getElementById("demoInstr"); sel.style.display = kind === "demo" ? "" : "none";
+if (kind === "demo") { const cur = (stuObj.students[0] && stuObj.students[0].s.instrument) || ""; sel.innerHTML = demoInstrumentList().map(x => `<option${x.toLowerCase() === cur.toLowerCase() ? " selected" : ""}>${escapeHtml(x)}</option>`).join(""); } }
 document.body.classList.add("demo-on");
 document.getElementById("stuLogoutLabel").textContent = "Sair da demonstração";
 stuShowShell(stu.students[0]);
@@ -7907,15 +7938,65 @@ openPage(d.page);
 if (d.sheet !== null && d.sheet !== undefined && students.some(x => x.id === d.sheet)) openStudentSheet(d.sheet);
 setTimeout(() => window.scrollTo(0, d.scroll || 0), 0);
 }
+// Conteúdo da demonstração por tipo de instrumento (8.16): aulas, matérias, músicas e mural
+// mudam conforme o instrumento escolhido na faixa de cima. Sem tipo reconhecido: o de violão.
+const DEMO_PACKS = {
+strings: { topics: [["Escala de Dó maior e dedilhado", "Escala de Dó 10 min por dia, devagar"], ["Acordes G, C e D com troca no tempo", "Trocar G-C-D com o metrônomo a 70 BPM"], ["Ritmo de balada e primeira música", "Tocar a música inteira 3 vezes"], ["Leitura de cifra", "Ler e tocar a cifra da página 4"], ["Revisão e dúvidas", "Revisar tudo que vimos no mês"]],
+  themes: ["Ritmo de balada", "Acordes maiores", "Escala de Dó", "Leitura de cifra", "Troca de acordes", "Dedilhado básico"],
+  songs: [["Asa Branca", "Luiz Gonzaga"], ["Wonderwall", "Oasis"], ["Garota de Ipanema", "Tom Jobim"], ["Trem-bala", "Ana Vilela"]],
+  board: { tip: "Pratique devagar: a velocidade vem com a repetição.", videoTitle: "Como trocar acordes sem parar o ritmo", challenge: "Grave o ritmo da aula a 80 BPM." } },
+keys: { topics: [["Postura das mãos e dedilhado 1-2-3-4-5", "Cinco dedos em Dó, 10 min por dia"], ["Escala de Dó com as duas mãos", "Escala de Dó mãos juntas a 60 BPM"], ["Acordes C, F e G com inversões", "Trocar C-F-G usando as inversões mais próximas"], ["Mão esquerda em baixo alternado", "Tocar a música com o baixo alternado"], ["Revisão e dúvidas", "Revisar tudo que vimos no mês"]],
+  themes: ["Postura e dedilhado", "Escala de Dó", "Inversões de acordes", "Leitura na clave de Sol", "Mão esquerda", "Pedal de sustentação"],
+  songs: [["Für Elise", "Beethoven"], ["Imagine", "John Lennon"], ["Carinhoso", "Pixinguinha"], ["River Flows in You", "Yiruma"]],
+  board: { tip: "Pratique cada mão separada antes de juntar.", videoTitle: "Como usar as inversões para trocar de acorde", challenge: "Grave a escala de Dó com as duas mãos a 70 BPM." } },
+drums: { topics: [["Pegada das baquetas e toque simples", "Toque simples 5 min a 80 BPM"], ["Ritmo de rock básico", "Rock básico com o metrônomo a 90 BPM"], ["Viradas de 1 tempo na caixa", "Encaixar uma virada a cada 4 compassos"], ["Coordenação: bumbo e chimbal", "Bumbo nos tempos 1 e 3, chimbal em colcheias"], ["Revisão e dúvidas", "Revisar tudo que vimos no mês"]],
+  themes: ["Rudimentos: toque simples", "Rock básico", "Viradas", "Coordenação de pés", "Leitura rítmica", "Dinâmica"],
+  songs: [["Back in Black", "AC/DC"], ["Billie Jean", "Michael Jackson"], ["Ainda é Cedo", "Legião Urbana"], ["Seven Nation Army", "The White Stripes"]],
+  board: { tip: "Conte em voz alta enquanto toca: o tempo vem antes da velocidade.", videoTitle: "Como fazer viradas sem perder o tempo", challenge: "Grave o rock básico a 100 BPM sem parar." } },
+voice: { topics: [["Respiração e apoio", "Respiração 4-4-8, 5 min por dia"], ["Aquecimento com vocalizes", "Vocalize em 5 notas, subindo meio tom"], ["Afinação: notas longas", "Sustentar Dó, Mi e Sol com o afinador"], ["Interpretação da primeira música", "Cantar a música inteira 2 vezes gravando"], ["Revisão e dúvidas", "Revisar tudo que vimos no mês"]],
+  themes: ["Respiração", "Vocalizes", "Afinação", "Extensão vocal", "Dicção", "Interpretação"],
+  songs: [["Aquarela", "Toquinho"], ["Hallelujah", "Leonard Cohen"], ["Velha Infância", "Tribalistas"], ["Someone Like You", "Adele"]],
+  board: { tip: "Beba água e aqueça a voz antes de cantar.", videoTitle: "Exercícios de respiração para cantar", challenge: "Grave o vocalize da aula em 3 tons diferentes." } },
+bass: { topics: [["Postura e dedilhado alternado", "Dedos 1 e 2 alternados, 10 min por dia"], ["Notas na corda Mi e Lá", "Achar as notas naturais até a casa 5"], ["Linha de baixo com tônica e quinta", "Tônica e quinta em C, F e G"], ["Groove com o metrônomo", "Groove da aula a 80 BPM"], ["Revisão e dúvidas", "Revisar tudo que vimos no mês"]],
+  themes: ["Dedilhado alternado", "Notas no braço", "Tônica e quinta", "Groove", "Escala maior", "Leitura de tablatura"],
+  songs: [["Another One Bites the Dust", "Queen"], ["Stand by Me", "Ben E. King"], ["Mas que Nada", "Jorge Ben"], ["Come Together", "The Beatles"]],
+  board: { tip: "Toque junto com a bateria: o baixo segura o tempo da banda.", videoTitle: "Como criar uma linha de baixo simples", challenge: "Grave o groove da aula a 90 BPM." } },
+bowed: { topics: [["Postura e arco solto", "Cordas soltas com arco longo, 10 min"], ["Primeira posição: dedos 1, 2 e 3", "Escala de Ré maior devagar"], ["Afinação com o afinador", "Conferir cada nota da escala"], ["Primeira música", "Tocar a música inteira 3 vezes"], ["Revisão e dúvidas", "Revisar tudo que vimos no mês"]],
+  themes: ["Postura do arco", "Cordas soltas", "Primeira posição", "Escala de Ré", "Afinação", "Leitura de partitura"],
+  songs: [["Ode à Alegria", "Beethoven"], ["Canon em Ré", "Pachelbel"], ["Asa Branca", "Luiz Gonzaga"], ["Brilha, Brilha Estrelinha", "Tradicional"]],
+  board: { tip: "Arco reto e devagar: o som bonito vem antes da velocidade.", videoTitle: "Como segurar o arco", challenge: "Grave a escala de Ré com arcos longos." } },
+winds: { topics: [["Respiração e embocadura", "Notas longas 5 min por dia"], ["Primeiras notas: Sol, Lá e Si", "Tocar Sol-Lá-Si com o afinador"], ["Escala de Dó maior", "Escala de Dó a 60 BPM"], ["Articulação: ligado e destacado", "Tocar a escala ligada e destacada"], ["Revisão e dúvidas", "Revisar tudo que vimos no mês"]],
+  themes: ["Respiração", "Embocadura", "Notas longas", "Escala de Dó", "Articulação", "Leitura de partitura"],
+  songs: [["Careless Whisper", "George Michael"], ["Tico-Tico no Fubá", "Zequinha de Abreu"], ["Garota de Ipanema", "Tom Jobim"], ["Asa Branca", "Luiz Gonzaga"]],
+  board: { tip: "Notas longas todos os dias deixam o som mais firme.", videoTitle: "Como melhorar a respiração no sopro", challenge: "Grave uma nota longa de 10 segundos sem tremer." } }
+};
+function demoPack(instr){ return DEMO_PACKS[instrumentKind(instr)] || DEMO_PACKS.strings; }
+// Instrumentos que a faixa da demonstração oferece: os do professor e os mais comuns.
+function demoInstrumentList(){
+const seen = new Set(), out = [];
+[...(appSettings.instruments || []), "Violão", "Guitarra", "Piano", "Teclado", "Bateria", "Canto", "Baixo", "Ukulele", "Violino", "Saxofone", "Flauta"].forEach(x => { const t = String(x || "").trim(), k = t.toLowerCase(); if (t && !seen.has(k)) { seen.add(k); out.push(t); } });
+return out;
+}
+// Troca o instrumento sem sair da demonstração: refaz o aluno fictício e volta pra mesma página.
+function demoSwitchInstrument(instr){
+if (demoMode !== "demo") return;
+toolsStopAll(); playerPause(); readingStopTimer(); if (recorder.mr) recStop(false);
+planRun = null; ptMem = {}; journalMem = {}; recMem = { recs: [], files: [] }; stuRenderedTab = null; stuApplyTools.last = null;
+const page = stuTab;
+stu = demoStudent(instr);
+stuShowShell(stu.students[0]);
+stuOpenPage(page);
+}
 // Aluno fictício: aulas com uma remarcada, uma reposição e um feriado; histórico anotado e
 // avaliado; uma mensalidade paga (com recibo), uma a pagar e uma atrasada.
-function demoStudent(){
+function demoStudent(instr){
 const t = appSettings;
+const instrument = instr || (t.instruments || [])[0] || "Violão", pack = demoPack(instrument);
 const today = new Date(); today.setHours(0,0,0,0);
 const day = n => { const d = new Date(today); d.setDate(d.getDate() + n); return d; };
 const monthKey = n => { const d = new Date(today.getFullYear(), today.getMonth() + n, 1); return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}`; };
 const days = [day(1).getDay(), day(4).getDay()];
-const s = { id: -424242, name: "Ana Demo", instrument: (t.instruments || [])[0] || "Violão", days, time: "18:00", entry: isoOf(day(-200)), trackingSince: isoOf(day(-35)), active: true,
+const s = { id: -424242, name: "Ana Demo", instrument, days, time: "18:00", entry: isoOf(day(-200)), trackingSince: isoOf(day(-35)), active: true,
 value: 150, dueDay: today.getDate() <= 26 ? today.getDate() + 3 : 31, phone: "(11) 90000-0000", birthDate: "2006-05-12", locationType: "studio", lessons: [], makeups: [] };
 const fut = [], past = [];
 for (let i = 1; i <= 35 && fut.length < 6; i++) if (days.includes(day(i).getDay())) fut.push(day(i));
@@ -7930,7 +8011,7 @@ const rep = new Date(fut[2]); rep.setDate(rep.getDate() + 2);
 s.makeups.push({ id: "mkdemo2", originDate: brOf(absent), reason: "absent_notice", status: "scheduled", date: isoOf(rep), time: "17:00" });
 s.lessons.push({ date: brOf(absent), status: "noclass", reason: "absent_notice", makeupCreated: "mkdemo2" });
 const crit = (t.criteria || []).filter(c => c && c.key && !c.removed);
-const topics = [["Escala de Dó maior e dedilhado", "Escala de Dó 10 min por dia, devagar"], ["Acordes G, C e D com troca no tempo", "Trocar G-C-D com o metrônomo a 70 BPM"], ["Ritmo de balada e primeira música", "Tocar a música inteira 3 vezes"], ["Leitura de cifra", "Ler e tocar a cifra da página 4"], ["Revisão e dúvidas", "Revisar tudo que vimos no mês"]];
+const topics = pack.topics;
 past.filter(d => d !== absent).forEach((d, i) => {
 const [taught, homework] = topics[i % topics.length];
 const l = { date: brOf(d), status: i % 2 === 0 ? "evaluated" : "given", taught, homework };
@@ -7943,7 +8024,7 @@ const loc = t.location || {};
 const tp = { display_name: (t.profile || {}).name || "Professor", full_name: (t.profile || {}).fullName || "", document: (t.profile || {}).document || null, photo: (t.profile || {}).photo || null,
 city: loc.city || "", state: loc.state || null,
 breaks: [...(t.breaks || []).filter(b => !b.studentId), { id: "brdemo", label: "Feriado", start: isoOf(fut[3]), end: isoOf(fut[3]) }],
-settings: { lessonDuration: t.lessonDuration, paymentsSince: monthKey(-2), criteria: t.criteria, evalFrequency: "every", instruments: t.instruments, weekStart: t.weekStart, content: demoContent(fut) },
+settings: { lessonDuration: t.lessonDuration, paymentsSince: monthKey(-2), criteria: t.criteria, evalFrequency: "every", instruments: t.instruments, weekStart: t.weekStart, content: demoContent(fut, pack) },
 show_evaluations: true };
 // Uma reposição pendente (pra mostrar "Escolher horário").
 const cancelled = past[1] && s.lessons.find(l => l.date === brOf(past[1]) && !l.makeupId);
@@ -7955,17 +8036,17 @@ s.makeups.push({ id: "mkdemo3", originDate: cancelled.date, reason: "teacher_can
 if (t.useLevels && (t.levels || []).length) s.level = t.levels[Math.min(1, t.levels.length - 1)];
 // Temas: os do Organizador do professor (até 2) ou dois de exemplo.
 const plans = (typeof lessonPlans !== "undefined" ? lessonPlans : []).slice(0, 2);
-const demoTopics = ["Ritmo de balada", "Acordes maiores", "Escala de Dó", "Leitura de cifra", "Troca de acordes", "Dedilhado básico"];
+const demoTopics = pack.themes;
 const themes = (plans.length ? plans.map(p => ({ id: String(p.id), topic: p.topic, images: getPlanImages(p).slice(0, 2) })) : []).concat(demoTopics.slice(0, 6 - plans.length).map((topic, i) => ({ id: "th" + i, topic, images: [] })))
 .map((t, i) => ({ ...t, date: brOf(past[Math.max(0, past.length - 1 - i)] || past[0]), rating: [4, 5, 2, 4, 3, 1][i % 6] }));
-const songs = [["Asa Branca", "Luiz Gonzaga", -3], ["Wonderwall", "Oasis", -10], ["Garota de Ipanema", "Tom Jobim", -24], ["Trem-bala", "Ana Vilela", -40]].map(([t, a, n], i) => ({ id: "dc" + i, t, a, u: "https://drive.google.com/file/d/demo" + i + "xxxxxxxx/view", d: isoOf(day(n)) }));
+const songs = pack.songs.map(([t, a], i) => [t, a, [-3, -10, -24, -40][i]]).map(([t, a, n], i) => ({ id: "dc" + i, t, a, u: "https://drive.google.com/file/d/demo" + i + "xxxxxxxx/view", d: isoOf(day(n)) }));
 const view = { group: false, themes, songs, ...(s.level ? { certificates: [{ level: s.level, date: isoOf(day(-20)) }] } : {}) };
 const anns = [{ tid: "demoann1", id: "demoann1", student_id: "demo", read_at: null, title: "Recital de fim de ano", body: "Os ensaios gerais vão ser aos sábados às 10h, no estúdio. Traga a pasta com as músicas.", created_at: new Date(Date.now() - 86400000).toISOString(), expires_at: null },
 { tid: "demoann2", id: "demoann2", student_id: "demo", read_at: new Date(Date.now() - 6 * 86400000).toISOString(), title: "Feriado", body: "Não teremos aula na segunda, dia 12.", created_at: new Date(Date.now() - 7 * 86400000).toISOString(), expires_at: null }];
 return { links: [], joins: [], requests: [], at: new Date().toISOString(), students: [{ s, uuid: "demo", row: {}, link: { id: "demo", role: "student" }, tp, view, anns }] };
 }
 // O que o professor configurou em "Conteúdo para os alunos"; o que faltar ganha um exemplo.
-function demoContent(fut){
+function demoContent(fut, pack){
 const real = studentContentPublic();
 const day = n => { const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() + n); return d; };
 const slots = [];
@@ -7974,7 +8055,7 @@ return {
 pix: real.pix || { key: "exemplo@email.com", name: (appSettings.profile || {}).fullName || "Professor", city: (appSettings.location || {}).city || "" },
 rules: real.rules || "Falta avisada com 24 h de antecedência tem reposição.\nFérias em janeiro e em julho.\nReajuste da mensalidade uma vez por ano.",
 reminder: real.reminder || "Leve seu caderno.",
-board: real.board || { tip: "Pratique devagar: a velocidade vem com a repetição.", video: "https://www.youtube.com/", videoTitle: "Como trocar acordes sem parar o ritmo", challenge: "Grave o ritmo da aula a 80 BPM." },
+board: real.board || { video: "https://www.youtube.com/", ...((pack || DEMO_PACKS.strings).board) },
 events: real.events || [{ id: "evdemo", name: "Recital de fim de ano", date: isoOf(day(40)), time: "19:00", place: "Auditório da escola", notes: "Chegar 30 min antes.", order: "" }],
 resched: real.resched || { on: true, minHours: 24, maxMonth: 2 },
 openSlots: real.openSlots && real.openSlots.length ? real.openSlots : slots,
@@ -13302,12 +13383,23 @@ const box = document.getElementById("statsBody");
 if (!box) return;
 const todayIso = isoOf(new Date()), cur = currentMonthKey(), yearAgo = isoOf(new Date(new Date().setFullYear(new Date().getFullYear() - 1)));
 const active = students.filter(s => s.active !== false);
-const card = (title, value, sub, cls) => `<div class="kpi-card"><div class="kpi-title">${title}</div><div class="kpi-value${cls ? " " + cls : ""}">${value}</div>${sub ? `<div class="kpi-sub">${sub}</div>` : ""}</div>`;
+const ago3 = addMonths(cur, -3), ago3Iso = isoOf(new Date(new Date().getFullYear(), new Date().getMonth() - 3, new Date().getDate()));
+const activeOn = iso => students.filter(s => s.entry && s.entry <= iso && (s.active !== false || (s.exit && s.exit > iso)));
+const stayAvgOn = iso => { const v = students.filter(s => s.entry && /^\d{4}-\d{2}-\d{2}/.test(s.entry) && s.entry <= iso).map(s => s.active === false && s.exit && s.exit <= iso ? statsMonthsBetween(s.entry, s.exit) : (s.active !== false || (s.exit && s.exit > iso)) ? statsMonthsBetween(s.entry, iso) : null).filter(x => x !== null); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : -1; };
+const valAt = (data, key) => Number((((data || {})[key.slice(0, 4)] || [])[Number(key.slice(5, 7)) - 1] || {}).value) || 0;
+const perWeek = list => list.filter(s => s.lessonFrequency !== "single").reduce((a, s) => a + (s.lessonFrequency === "biweekly" ? 0.5 : 1) * Math.max(1, studentDays(s).length), 0);
+// Seta (8.16): verde pra cima se subiu, vermelha pra baixo se caiu, comparando com 3 meses atrás.
+const trend = t => {
+if (!t || !(t.before >= 0) || !(t.now >= 0) || Math.abs(t.now - t.before) < 1e-9) return "";
+const up = t.now > t.before, pct = t.before > 0 ? ` ${Math.abs(Math.round((t.now / t.before - 1) * 100))}%` : "";
+return `<span class="stats-trend ${up ? "up" : "down"}" title="${up ? "Subiu" : "Caiu"} em relação a 3 meses atrás" aria-label="${up ? "Subiu" : "Caiu"}${pct} em relação a 3 meses atrás"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${up ? "M12 5l7 8h-4.5v6h-5v-6H5z" : "M12 19l-7-8h4.5V5h5v6H19z"}"/></svg>${pct}</span>`;
+};
+const card = (title, value, sub, tr) => `<div class="kpi-card"><div class="kpi-title">${title}</div><div class="kpi-value">${value}${trend(tr)}</div>${sub ? `<div class="kpi-sub">${sub}</div>` : ""}</div>`;
 const sec = (title, cards) => `<div class="stats-sec"><div class="settings-group-label">${title}</div><div class="kpi-grid stats-grid">${cards.join("")}</div></div>`;
-const growthCard = (title, g, unit, empty) => {
-if (!g) return card(title, "—", empty);
+const growthCard = (title, g, unit, empty, tr) => {
+if (!g) return card(title, "—", empty, tr);
 const val = v => unit === "R$" ? `R$ ${moneyText(Math.round(v))}` : `${v} aluno${v === 1 ? "" : "s"}`;
-return card(title, `${statsPct(g.pct)} <span style="font-size:0.75rem;font-weight:600;color:var(--muted)">por mês</span>`, `De ${val(g.a.value)} em ${monthLabel(g.a.key)} para ${val(g.b.value)} em ${monthLabel(g.b.key)}.`, g.pct > 0.0005 ? "up" : g.pct < -0.0005 ? "down" : "");
+return card(title, `${statsPct(g.pct)} <span style="font-size:0.75rem;font-weight:600;color:var(--muted)">por mês</span>`, `De ${val(g.a.value)} em ${monthLabel(g.a.key)} para ${val(g.b.value)} em ${monthLabel(g.b.key)}.`, tr);
 };
 // ---- Alunos ----
 const groups = active.filter(s => getFormat(s) === "Grupo").length;
@@ -13323,10 +13415,10 @@ const stayed = base.filter(s => s.active !== false).length;
 let stuSeries = statsSeries(studentCountsData);
 if (stuSeries.length < 2) { stuSeries = []; for (let i = 11; i >= 0; i--) { const k = addMonths(cur, -i), n = statsActiveAt(k); if (n > 0) stuSeries.push({ key: k, value: n }); } }
 const alunos = [
-card("Alunos ativos", String(active.length), active.length ? `${active.length - groups} individual${active.length - groups === 1 ? "" : "is"} · ${groups} em grupo` : "Nenhum aluno ativo."),
-card("Média de permanência", statsMonthsText(avg(stayAll)), stayAll.length ? [stayAct.length ? `Ativos: ${statsMonthsText(avg(stayAct))}` : "", stayEx.length ? `Quem saiu ficou: ${statsMonthsText(avg(stayEx))}` : ""].filter(Boolean).join(" · ") : "Preencha a data de entrada dos alunos."),
-growthCard("Crescimento de alunos", statsGrowth(stuSeries), "alunos", "Precisa de pelo menos 2 meses com alunos registrados."),
-card("Entradas e saídas", `+${joined} / −${left}`, `Nos últimos 12 meses. Saldo: ${joined - left > 0 ? "+" : ""}${joined - left}.`, joined > left ? "up" : joined < left ? "down" : ""),
+card("Alunos ativos", String(active.length), active.length ? `${active.length - groups} individual${active.length - groups === 1 ? "" : "is"} · ${groups} em grupo` : "Nenhum aluno ativo.", { now: activeOn(todayIso).length, before: activeOn(ago3Iso).length }),
+card("Média de permanência", statsMonthsText(avg(stayAll)), stayAll.length ? [stayAct.length ? `Ativos: ${statsMonthsText(avg(stayAct))}` : "", stayEx.length ? `Quem saiu ficou: ${statsMonthsText(avg(stayEx))}` : ""].filter(Boolean).join(" · ") : "Preencha a data de entrada dos alunos.", { now: stayAvgOn(todayIso), before: stayAvgOn(ago3Iso) }),
+growthCard("Crescimento de alunos", statsGrowth(stuSeries), "alunos", "Precisa de pelo menos 2 meses com alunos registrados.", { now: activeOn(todayIso).length, before: activeOn(ago3Iso).length }),
+card("Entradas e saídas", `+${joined} / −${left}`, `Nos últimos 12 meses. Saldo: ${joined - left > 0 ? "+" : ""}${joined - left}.`),
 card("Continuam com você", base.length ? `${Math.round(stayed / base.length * 100)}%` : "—", base.length ? `${stayed} de ${base.length} alunos que você tinha há 1 ano ainda estão ativos.` : "Aparece quando houver alunos com mais de 1 ano.")
 ];
 // ---- Dinheiro ----
@@ -13340,21 +13432,21 @@ const avgFee = monthly.length ? monthly.reduce((a, s) => a + Number(studentMonth
 let lateN = 0, lateV = 0;
 active.filter(paysMe).forEach(s => unpaidMonths(s).forEach(k => { if (isPastDue(s, k)) { lateN++; lateV += Number(studentMonthlyValue(s) || 0); } }));
 const dinheiro = [
-growthCard("Crescimento do faturamento", statsGrowth(earn), "R$", "Precisa de pelo menos 2 meses com faturamento."),
-card("Faturamento médio", earn.length ? `R$ ${moneyText(Math.round(avgEarn))}` : "—", earn.length ? `Por mês, nos últimos 12 meses (${earn.length} ${earn.length === 1 ? "mês" : "meses"} com valor).` : "Ainda sem meses com faturamento."),
-card(`Faturamento de ${y}`, `R$ ${moneyText(Math.round(thisYear))}`, lastYear > 0 ? `${statsPct(thisYear / lastYear - 1)} em relação ao mesmo período de ${y - 1}.` : `De janeiro até ${MONTH_ABBR[m]}.`, lastYear > 0 ? (thisYear > lastYear ? "up" : thisYear < lastYear ? "down" : "") : ""),
-card("Previsto para este mês", `R$ ${moneyText(Math.round(calculateCurrentMonthlyRevenue()))}`, "Somando mensalidades, aulas avulsas e pacotes do mês."),
+growthCard("Crescimento do faturamento", statsGrowth(earn), "R$", "Precisa de pelo menos 2 meses com faturamento.", earn.length ? { now: earn[earn.length - 1].value, before: valAt(earningsData, addMonths(earn[earn.length - 1].key, -3)) || -1 } : null),
+card("Faturamento médio", earn.length ? `R$ ${moneyText(Math.round(avgEarn))}` : "—", earn.length ? `Por mês, nos últimos 12 meses (${earn.length} ${earn.length === 1 ? "mês" : "meses"} com valor).` : "Ainda sem meses com faturamento.", (() => { const avg3 = (a, b) => { const v = earn.filter(x => x.key > a && x.key <= b); return v.length ? v.reduce((t, x) => t + x.value, 0) / v.length : -1; }; return { now: avg3(ago3, cur), before: avg3(addMonths(cur, -6), ago3) }; })()),
+card(`Faturamento de ${y}`, `R$ ${moneyText(Math.round(thisYear))}`, lastYear > 0 ? `${statsPct(thisYear / lastYear - 1)} em relação ao mesmo período de ${y - 1}.` : `De janeiro até ${MONTH_ABBR[m]}.`),
+card("Previsto para este mês", `R$ ${moneyText(Math.round(calculateCurrentMonthlyRevenue()))}`, "Somando mensalidades, aulas avulsas e pacotes do mês.", { now: calculateCurrentMonthlyRevenue(), before: valAt(earningsData, ago3) || -1 }),
 card("Mensalidade média", monthly.length ? `R$ ${moneyText(Math.round(avgFee))}` : "—", monthly.length ? `Entre ${monthly.length} aluno${monthly.length === 1 ? "" : "s"} com mensalidade.` : "Nenhum aluno com mensalidade."),
-card("Em atraso", lateN ? `R$ ${moneyText(Math.round(lateV))}` : "R$ 0", lateN ? `${lateN} mensalidade${lateN === 1 ? "" : "s"} vencida${lateN === 1 ? "" : "s"}.` : "Nenhuma mensalidade vencida.", lateN ? "down" : "")
+card("Em atraso", lateN ? `R$ ${moneyText(Math.round(lateV))}` : "R$ 0", lateN ? `${lateN} mensalidade${lateN === 1 ? "" : "s"} vencida${lateN === 1 ? "" : "s"}.` : "Nenhuma mensalidade vencida.")
 ];
 // ---- Aulas ----
 const abs = active.reduce((a, s) => a + (countMonthAbsences(s) || 0), 0);
 const inst = {};
 active.forEach(s => { const k = String(s.instrument || "").trim() || "Sem instrumento"; inst[k] = (inst[k] || 0) + 1; });
 const instList = Object.entries(inst).sort((a, b) => b[1] - a[1]).slice(0, 5), instMax = instList.length ? instList[0][1] : 1;
-const weekly = active.filter(s => s.lessonFrequency !== "single").reduce((a, s) => a + (s.lessonFrequency === "biweekly" ? 0.5 : 1) * Math.max(1, studentDays(s).length), 0);
+const weekly = perWeek(active);
 const aulas = [
-card("Aulas por semana", String(Math.round(weekly * 10) / 10).replace(".", ","), "Aulas fixas dos alunos ativos (quinzenal conta meia)."),
+card("Aulas por semana", String(Math.round(weekly * 10) / 10).replace(".", ","), "Aulas fixas dos alunos ativos (quinzenal conta meia).", { now: perWeek(activeOn(todayIso)), before: perWeek(activeOn(ago3Iso)) }),
 card("Faltas neste mês", String(abs), active.length ? `Média de ${(abs / active.length).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} por aluno.` : ""),
 `<div class="kpi-card stats-wide"><div class="kpi-title">Alunos por instrumento</div>${instList.length ? `<div class="stats-bars">${instList.map(([k, n]) => `<div class="stats-bar-row"><span>${escapeHtml(k)}</span><span class="stats-bar"><i style="width:${Math.round(n / instMax * 100)}%"></i></span><span>${n}</span></div>`).join("")}</div>` : `<div class="kpi-sub">Nenhum aluno ativo.</div>`}</div>`
 ];
@@ -16954,14 +17046,7 @@ list.innerHTML = items.length ? items.map((x, i) => `<button type="button" class
 list.querySelectorAll("[data-notif]").forEach(b => b.onclick = () => { teacherNotifClose(); items[Number(b.dataset.notif)].go(); });
 } finally { teacherNotifFilling = false; }
 }
-function teacherNotifPlace(){
-const pop = document.getElementById("teacherNotifPop"), b = document.getElementById("teacherBell");
-if (!pop || !b) return;
-const r = b.getBoundingClientRect();
-pop.style.top = `${Math.max(8, r.bottom + 8)}px`;
-pop.style.right = `${Math.max(12, window.innerWidth - r.right)}px`;
-pop.style.maxHeight = `${Math.max(200, window.innerHeight - r.bottom - 24)}px`;
-}
+function teacherNotifPlace(){ notifPlace(document.getElementById("teacherNotifPop"), document.getElementById("teacherBell")); }
 function teacherNotifOpen(){
 const pop = teacherNotifPopEl();
 teacherNotifFill();
