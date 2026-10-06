@@ -1371,6 +1371,16 @@ button.metro-dot{width:1.75rem;height:1.75rem;padding:0;cursor:pointer}
 .stu-card > .board-item:first-child{border-top:none;padding-top:0}
 .board-lbl{display:block;font-size:0.6875rem;font-weight:750;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);margin-bottom:0.125rem}
 .board-item .btn-edit-toggle{margin-top:0.5rem}
+.mat-chips{display:flex;flex-wrap:wrap;gap:0.375rem;margin:0.25rem 0 0.5rem}
+.mat-chip{display:inline-flex;align-items:center;gap:0.375rem;padding:0.3rem 0.625rem;border-radius:999px;background:var(--glass-inset);border:0.0625rem solid var(--glass-border-soft);font-size:0.8125rem;color:var(--text)}
+.mat-chip button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.875rem;padding:0;line-height:1}
+.mat-add{display:flex;flex-wrap:wrap;gap:0.375rem;align-items:center}
+.mat-add select{flex:1 1 40%;min-width:0}
+.mat-preset-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(9rem,1fr));gap:0.5rem;padding:0.25rem 0 0.5rem}
+.mat-preset-list .lesson-card-mini{cursor:pointer;text-align:left}
+.mat-renamed{display:block;font-size:0.6875rem;color:var(--muted);font-weight:500;margin-top:0.125rem}
+.theme-unlock{display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-top:0.5rem;font-size:0.8125rem;color:var(--text-2)}
+.theme-unlock .btn-historico{margin-left:auto}
 .mat-line{display:flex;align-items:center;gap:0.75rem;width:100%;background:none;border:none;padding:0;color:inherit;font:inherit;text-align:left;cursor:pointer}
 .mat-line .stu-row-title{flex:1;min-width:0}
 .mat-line img{width:3.5rem;height:3.5rem;object-fit:cover;border-radius:var(--radius-sm);border:0.0625rem solid var(--glass-border-soft)}
@@ -2445,6 +2455,8 @@ body.pdf-open{overflow:hidden}
 <div class="lesson-grid" id="plannerList"></div>
 <div class="page-title-bar" style="margin-top:28px"><h2 class="page-title-text">Pequenos Temas</h2></div>
 <div class="lesson-grid-mini" id="plannerListNoAttachment"></div>
+<div class="page-title-bar" style="margin-top:28px"><h2 class="page-title-text">Matérias prontas<button type="button" class="help-icon" data-help="Matérias que já vêm no app, uma para cada função: afinação, metrônomo, cada escala, acordes... Toque numa para trocar o nome ou escolher o que ela libera no app do aluno. Quando você vincula a matéria a um aluno (em Desempenho), o que ela libera aparece no app dele.">!</button></h2></div>
+<div id="plannerPresets"></div>
 </main>
 
 <main id="agendaPage" style="display:none">
@@ -3477,6 +3489,7 @@ body.pdf-open{overflow:hidden}
 <h2 id="vPlanTitle" style="font-size:18px; font-weight:800; color:#f8fafc; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Título da Aula</h2>
 </div>
 <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+<button class="edit" id="btnFuncPlanView" style="padding:6px 14px; font-size:12px;">Libera no app</button>
 <button class="edit" id="btnEditPlanView" style="padding:6px 14px; font-size:12px;">Editar</button>
 <button class="btn-delete" id="btnDeletePlanView" style="width:auto; margin:0; padding:8px 14px; font-size:12px;">Excluir</button>
 <button class="close-btn-inline" id="closeViewPlanBtn" aria-label="Fechar">✕</button>
@@ -3499,7 +3512,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.19";
+const APP_VERSION = "8.20";
 // ===================== App instalável (8.4) =====================
 // Service worker (sw.js), aviso de versão nova, faixa "Sem internet", botão "Instalar o app",
 // atalhos do ícone (?p=...) e botão voltar do celular fechando modal/menu no app instalado.
@@ -6508,18 +6521,21 @@ function chordSortKey(k){ const p = chordParse(k); return p ? KEY_ROOTS.findInde
 function chordsHTML(){
 const t = chordTool, on = chordsOn(), view = demoMode === "view", isChord = t.mode === "chord", isGuitar = t.view === "guitar";
 const myChords = on ? [...on].filter(k => k.startsWith("c:")).map(k => k.slice(2)).filter(k => { const p = chordParse(k); return p && CHORD_TYPES.some(c => c[0] === p.type); }).sort((a, b) => chordSortKey(a) - chordSortKey(b)) : null;
-const myScales = on ? SCALE_TYPES.filter(([k]) => on.has("s:" + k)) : SCALE_TYPES;
+const scaleOk = (k, r) => on.has("s:" + k) || on.has(`s:${k}@${r}`);
+const myScales = on ? SCALE_TYPES.filter(([k]) => on.has("s:" + k) || KEY_ROOTS.some(([r]) => on.has(`s:${k}@${r}`))) : SCALE_TYPES;
 // O aluno escolhe entre os liberados; professor (Ver como) e demonstração veem tudo.
 const full = !on || view;
 if (isChord && !full) { if (!myChords.includes(t.sel)) t.sel = myChords[0] || null; if (t.sel) { const p = chordParse(t.sel); t.root = p.root; t.type = p.type; } }
-if (!isChord && !full) { if (!myScales.some(x => x[0] === t.scale)) t.scale = (myScales[0] || [])[0]; }
+if (!isChord && !full) { if (!myScales.some(x => x[0] === t.scale)) t.scale = (myScales[0] || [])[0]; if (t.scale && !scaleOk(t.scale, t.root)) t.root = (KEY_ROOTS.find(([r]) => scaleOk(t.scale, r)) || KEY_ROOTS[0])[0]; }
+// 8.20: escala liberada só em alguns tons (matéria "Escala maior de Dó") mostra só esses tons.
+const myRoots = !isChord && !full && t.scale ? KEY_ROOTS.filter(([r]) => scaleOk(t.scale, r)) : KEY_ROOTS;
 let html = stuCard("", `<div class="reason-chips"><button type="button" class="filter-chip${isChord ? " selected" : ""}" data-cmode="chord">Acordes</button><button type="button" class="filter-chip${!isChord ? " selected" : ""}" data-cmode="scale">Escalas</button></div>
 ${view ? `<div class="flats-row" id="flatsHold" role="button" tabindex="0"><span>Bemol entre parênteses (ex.: C# (Db))</span><span class="stu-status ${stuFlatsOn() ? "ok" : "off"}">${stuFlatsOn() ? "Liberado" : "Não liberado"}</span></div>` : ""}
 ${isChord ? (full ? `<div class="field"><label>Tom</label><div class="reason-chips key-chips">${KEY_ROOTS.map(([n]) => `<button type="button" class="filter-chip${t.root === n ? " selected" : ""}" data-croot="${n}">${escapeHtml(noteLabel(n))}</button>`).join("")}</div></div>
 <div class="field"><label>Tipo de acorde</label><div class="reason-chips">${CHORD_TYPES.map(([k, l]) => `<button type="button" class="filter-chip${t.type === k ? " selected" : ""}${on && !on.has("c:" + chordKeyOf(t.root, k)) ? " locked" : ""}" data-ctype="${k}">${l}</button>`).join("")}</div></div>`
 : myChords.length ? `<div class="field"><label>Seus acordes</label><div class="reason-chips">${myChords.map(k => `<button type="button" class="filter-chip${t.sel === k ? " selected" : ""}" data-csel="${escapeHtml(k)}">${escapeHtml(k)}</button>`).join("")}</div></div>` : "")
-: `${full || myScales.length ? `<div class="field"><label>Tom</label><div class="reason-chips key-chips">${KEY_ROOTS.map(([n]) => `<button type="button" class="filter-chip${t.root === n ? " selected" : ""}" data-croot="${n}">${escapeHtml(noteLabel(n))}</button>`).join("")}</div></div>
-<div class="field"><label>Escala</label><div class="reason-chips">${(full ? SCALE_TYPES : myScales).map(([k, l]) => `<button type="button" class="filter-chip${t.scale === k ? " selected" : ""}${on && !on.has("s:" + k) ? " locked" : ""}" data-cscale="${k}">${l}</button>`).join("")}</div></div>` : ""}`}`);
+: `${full || myScales.length ? `<div class="field"><label>Tom</label><div class="reason-chips key-chips">${myRoots.map(([n]) => `<button type="button" class="filter-chip${t.root === n ? " selected" : ""}" data-croot="${n}">${escapeHtml(noteLabel(n))}</button>`).join("")}</div></div>
+<div class="field"><label>Escala</label><div class="reason-chips">${(full ? SCALE_TYPES : myScales).map(([k, l]) => `<button type="button" class="filter-chip${t.scale === k ? " selected" : ""}${on && !scaleOk(k, t.root) ? " locked" : ""}" data-cscale="${k}">${l}</button>`).join("")}</div></div>` : ""}`}`);
 if (isChord && !full && !myChords.length) return html + stuCard("", `<div class="stu-empty">O professor vai liberar os acordes conforme as aulas. Cada acorde novo aparece aqui.</div>`);
 if (!isChord && !full && !myScales.length) return html + stuCard("", `<div class="stu-empty">O professor vai liberar as escalas conforme as aulas.</div>`);
 const pc = KEY_ROOTS.find(r => r[0] === t.root)[1];
@@ -6529,7 +6545,7 @@ const pcs = def[2].map(i => pc + i);
 const sp = spellScale(t.root, pc, def[2], isChord), names = sp.names;
 const spell = sp.map;
 const key = isChord ? chordKeyOf(t.root, t.type) : t.scale;
-const locked = on && !on.has((isChord ? "c:" : "s:") + key);
+const locked = on && (isChord ? !on.has("c:" + key) : !scaleOk(key, t.root));
 const title = isChord ? key : `${noteLabel(t.root)} ${def[1].toLowerCase()}`;
 let draw = "";
 if (t.view === "keys") draw = `<div class="kb-wrap">${keyboardSVG(pcs, pc, spell)}</div>`;
@@ -13128,6 +13144,7 @@ function renderPlanner() {
 const container = document.getElementById("plannerList");
 container.innerHTML = "";
 renderPlannerNoAttachment();
+renderPlannerPresets();
 
 const attachedPlans = lessonPlans.filter(p => themeHasAttachment(p));
 
@@ -13368,6 +13385,7 @@ gallery.appendChild(img);
 container.appendChild(gallery);
 }
 
+document.getElementById("btnFuncPlanView").onclick = () => openMateriaEditor(planId);
 document.getElementById("btnEditPlanView").onclick = () => {
 document.getElementById("modalViewPlanBg").classList.remove("show");
 openEditPlanModal(planId);
@@ -14110,7 +14128,130 @@ return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart
 }
 
 function getThemeById(themeId){
-return lessonPlans.find(p => p.id === themeId);
+const own = lessonPlans.find(p => p.id === themeId);
+if (own || typeof themeId !== "string" || !themeId.startsWith("mp:")) return own;
+const p = materiaPresets().find(x => x.id === themeId);
+return p ? presetPlan(p) : undefined;
+}
+
+/* ===== Matérias prontas (8.20) =====
+   Uma matéria para cada função do app (ferramentas, acordes, cada escala em cada tom). Não ficam
+   guardadas na lista de temas: vêm do código, e o professor só guarda o que mudou (nome ou o que
+   a matéria libera) em appSettings.materias. Qualquer tema pode liberar funções (plan.unlock):
+   "t:metronome" (ferramenta), "c:Am" (acorde), "s:maior@C" (escala num tom), "s:maior" (todos os tons).
+   Vincular a matéria ao aluno libera no app dele; o vínculo guarda o que ele acrescentou (added)
+   pra tirar só isso depois. */
+const PT_NOTE = { C: "Dó", "C#": "Dó#", D: "Ré", "D#": "Ré#", E: "Mi", F: "Fá", "F#": "Fá#", G: "Sol", "G#": "Sol#", A: "Lá", "A#": "Lá#", B: "Si" };
+const MAT_NATURAL = ["C", "D", "E", "F", "G", "A", "B"];
+const MAT_TOOLS = [["tuner", "Afinação do instrumento"], ["metronome", "Uso do metrônomo"], ["ear", "Treino de ouvido"], ["reading", "Leitura de partitura"], ["backing", "Tocar com bases"], ["player", "Tocar junto com músicas"], ["drums", "Ritmos de bateria"], ["voice", "Exercícios de canto"]];
+const MAT_CHORDS = { "": "Acordes maiores", m: "Acordes menores", "7": "Acordes com sétima", m7: "Acordes menores com sétima", "7M": "Acordes com sétima maior", sus4: "Acordes suspensos (4ª)", dim: "Acordes diminutos", aug: "Acordes aumentados" };
+const MAT_SCALES = { maior: "Escala maior", menor: "Escala menor natural", penta: "Escala pentatônica maior", pentam: "Escala pentatônica menor", blues: "Escala blues", harm: "Escala menor harmônica", dor: "Modo dórico", mixo: "Modo mixolídio" };
+function materiaPresets(){
+if (materiaPresets.list) return materiaPresets.list;
+const L = [];
+MAT_TOOLS.forEach(([p, n]) => L.push({ id: "mp:t:" + p, group: "Ferramentas", topic: n, unlock: ["t:" + p] }));
+CHORD_TYPES.forEach(([k]) => L.push({ id: "mp:c:" + (k || "M"), group: "Acordes", topic: `${MAT_CHORDS[k]} (${MAT_NATURAL.map(r => r + k).join(" ")})`, unlock: ["t:chords", ...MAT_NATURAL.map(r => "c:" + r + k)] }));
+SCALE_TYPES.forEach(([k]) => KEY_ROOTS.forEach(([r]) => L.push({ id: `mp:s:${k}:${r}`, group: MAT_SCALES[k], topic: `${MAT_SCALES[k]} de ${PT_NOTE[r]}`, unlock: ["t:chords", `s:${k}@${r}`] })));
+return materiaPresets.list = L;
+}
+function matOverrides(){ return appSettings.materias && typeof appSettings.materias === "object" ? appSettings.materias : {}; }
+function presetPlan(p){ const o = matOverrides()[p.id] || {}; return { id: p.id, topic: o.name || p.topic, baseTopic: p.topic, imgUrls: [], preset: true, group: p.group, unlock: Array.isArray(o.unlock) ? o.unlock : p.unlock }; }
+function allMaterias(){ return lessonPlans.concat(materiaPresets().map(presetPlan)); }
+function matUnlock(plan){ return plan && Array.isArray(plan.unlock) ? plan.unlock : []; }
+function matKeyLabel(k){
+if (k.startsWith("t:")) return `Ferramenta ${STU_PAGES[k.slice(2)] || k.slice(2)}`;
+if (k.startsWith("c:")) return `Acorde ${k.slice(2)}`;
+if (k.startsWith("f:")) return `Forma ${k.slice(2).replace("@", " ")}`;
+if (k.startsWith("s:")) { const [t, r] = k.slice(2).split("@"); return `${MAT_SCALES[t] || t}${r ? ` de ${PT_NOTE[r] || r}` : " (todos os tons)"}`; }
+return k;
+}
+// Resumo curto do que a matéria libera (as ferramentas "Acordes e escalas" ficam implícitas).
+function matUnlockText(keys){
+const shown = keys.filter(k => k !== "t:chords");
+const list = (shown.length ? shown : keys).map(matKeyLabel);
+return list.length > 4 ? `${list.slice(0, 3).join(", ")} e mais ${list.length - 3}` : list.join(", ");
+}
+// Liga ou tira o que a matéria libera no app do aluno (ferramentas em appOn, o resto em chordsOn).
+function matRelease(student, assignment, on){
+const chords = new Set(student.chordsOn || []), tools = new Set(student.appOn || []);
+const has = k => k.startsWith("t:") ? tools.has(k.slice(2)) : chords.has(k);
+const set = (k, v) => { const sset = k.startsWith("t:") ? tools : chords, x = k.startsWith("t:") ? k.slice(2) : k; if (v) sset.add(x); else sset.delete(x); };
+if (on) {
+const keys = matUnlock(getThemeById(assignment.themeId));
+const added = keys.filter(k => !has(k));
+added.forEach(k => set(k, true));
+assignment.released = true;
+assignment.added = [...new Set((assignment.added || []).concat(added))];
+} else {
+const keep = new Set();
+(student.themes || []).forEach(a => { if (a !== assignment && a.released) matUnlock(getThemeById(a.themeId)).forEach(k => keep.add(k)); });
+(assignment.added || []).forEach(k => { if (!keep.has(k)) set(k, false); });
+delete assignment.released; delete assignment.added;
+}
+if (chords.size) student.chordsOn = [...chords]; else delete student.chordsOn;
+if (tools.size) student.appOn = [...tools]; else delete student.appOn;
+}
+// Editor: trocar o nome e escolher o que a matéria libera.
+function openMateriaEditor(id){
+const plan = getThemeById(id);
+if (!plan) return;
+let keys = matUnlock(plan).slice();
+const body = document.createElement("div");
+const draw = () => {
+const kind = (body.querySelector("#matKind") || {}).value || "s";
+body.innerHTML = `<div class="field"><label>Nome da matéria</label><input id="matName" value="${escapeHtml(body.dataset.name ?? plan.topic)}">${plan.preset && (body.dataset.name ?? plan.topic) !== plan.baseTopic ? `<div class="rules-small" style="margin:0.375rem 0 0">Nome original: ${escapeHtml(plan.baseTopic)} · <a href="#" id="matReset">voltar ao original</a></div>` : ""}</div>
+<div class="field"><label>Libera no app do aluno</label>${keys.length ? `<div class="mat-chips">${keys.map((k, i) => `<span class="mat-chip">${escapeHtml(matKeyLabel(k))}<button type="button" data-mdel="${i}" aria-label="Tirar">✕</button></span>`).join("")}</div>` : `<div class="rules-small" style="margin:0 0 0.5rem">Nada ainda. Esta matéria não libera funções.</div>`}
+<div class="mat-add"><select id="matKind"><option value="s"${kind === "s" ? " selected" : ""}>Escala</option><option value="c"${kind === "c" ? " selected" : ""}>Acorde</option><option value="t"${kind === "t" ? " selected" : ""}>Ferramenta</option></select>
+${kind === "t" ? `<select id="matA">${TOOL_PAGES.map(p => `<option value="${p}">${escapeHtml(STU_PAGES[p])}</option>`).join("")}</select>`
+: kind === "c" ? `<select id="matA">${KEY_ROOTS.map(([r]) => `<option value="${r}">${r}</option>`).join("")}</select><select id="matB">${CHORD_TYPES.map(([k, l]) => `<option value="${k}">${escapeHtml(l)}</option>`).join("")}</select>`
+: `<select id="matA">${SCALE_TYPES.map(([k]) => `<option value="${k}">${escapeHtml(MAT_SCALES[k])}</option>`).join("")}</select><select id="matB"><option value="">Todos os tons</option>${KEY_ROOTS.map(([r]) => `<option value="${r}">${PT_NOTE[r]}</option>`).join("")}</select>`}
+<button type="button" class="btn-historico" id="matAdd">Adicionar</button></div></div>
+<div class="rules-small">Ao vincular a matéria a um aluno (em Desempenho), isso aparece no app dele.</div>`;
+body.querySelector("#matName").oninput = e => { body.dataset.name = e.target.value; };
+body.querySelector("#matKind").onchange = draw;
+const reset = body.querySelector("#matReset");
+if (reset) reset.onclick = e => { e.preventDefault(); body.dataset.name = plan.baseTopic; draw(); };
+body.querySelectorAll("[data-mdel]").forEach(b => b.onclick = () => { keys.splice(Number(b.dataset.mdel), 1); draw(); });
+body.querySelector("#matAdd").onclick = () => {
+const k = body.querySelector("#matKind").value, a = body.querySelector("#matA").value, bEl = body.querySelector("#matB"), b = bEl ? bEl.value : "";
+const add = k === "t" ? ["t:" + a] : k === "c" ? ["t:chords", "c:" + a + b] : ["t:chords", b ? `s:${a}@${b}` : "s:" + a];
+add.forEach(x => { if (!keys.includes(x)) keys.push(x); });
+draw();
+};
+};
+draw();
+openQuickModal(plan.preset ? "Matéria pronta" : "Matéria", "", body, () => {
+const name = String(body.dataset.name ?? plan.topic).trim();
+if (!name) { alert("Dê um nome para a matéria."); return; }
+if (plan.preset) {
+const base = materiaPresets().find(p => p.id === id), ov = {};
+if (name !== base.topic) ov.name = name;
+if (keys.join("|") !== base.unlock.join("|")) ov.unlock = keys.slice();
+const all = { ...matOverrides() };
+if (Object.keys(ov).length) all[id] = ov; else delete all[id];
+appSettings.materias = Object.keys(all).length ? all : undefined;
+saveAppSettings();
+} else {
+const p = lessonPlans.find(x => x.id === id);
+if (!p) return;
+p.topic = name;
+if (keys.length) p.unlock = keys.slice(); else delete p.unlock;
+localStorage.setItem("jp_lesson_plans_v5", JSON.stringify(lessonPlans));
+}
+closeQuickModal();
+if (currentPage === "planner") renderPlanner();
+if (document.getElementById("modalViewPlanBg").classList.contains("show")) document.getElementById("vPlanTitle").textContent = name;
+}, "Cancelar", "Salvar");
+}
+let matPresetOpen = null;
+function renderPlannerPresets(){
+const box = document.getElementById("plannerPresets");
+if (!box) return;
+const groups = new Map();
+materiaPresets().map(presetPlan).forEach(p => { if (!groups.has(p.group)) groups.set(p.group, []); groups.get(p.group).push(p); });
+box.innerHTML = [...groups].map(([g, list]) => `<details class="settings-card month-group"${matPresetOpen === g ? " open" : ""} data-mgroup="${escapeHtml(g)}"><summary class="month-sum"><span>${escapeHtml(g)}</span><span class="stu-muted">${list.length}</span><span class="settings-row-chevron" aria-hidden="true">›</span></summary><div class="month-body"><div class="mat-preset-list">${list.map(p => `<button type="button" class="lesson-card-mini" data-mpid="${escapeHtml(p.id)}"><span class="lesson-title-mini">${escapeHtml(p.topic)}</span>${p.topic !== p.baseTopic ? `<span class="mat-renamed">${escapeHtml(p.baseTopic)}</span>` : ""}</button>`).join("")}</div></div></details>`).join("");
+box.querySelectorAll("details[data-mgroup]").forEach(d => d.addEventListener("toggle", () => { if (d.open) matPresetOpen = d.dataset.mgroup; else if (matPresetOpen === d.dataset.mgroup) matPresetOpen = null; }));
+box.querySelectorAll("[data-mpid]").forEach(b => b.onclick = () => openMateriaEditor(b.dataset.mpid));
 }
 
 // Considera "sem anexo" um tema/aula sem nenhuma imagem — conteúdos mais simples,
@@ -14223,15 +14364,23 @@ itemDiv.innerHTML = `
 <span class="criterion-label">Avaliação</span>
 ${buildStarInputHTML(assignment.rating || 0)}
 </div>
+${matUnlock(plan).length ? `<div class="theme-unlock"><span>${assignment.released ? "Liberado no app" : "Libera no app"}: ${escapeHtml(matUnlockText(matUnlock(plan)))}</span><button type="button" class="btn-historico theme-release-btn">${assignment.released ? "Tirar do app" : "Liberar no app"}</button></div>` : ""}
 `;
 // Tira só o vínculo deste tema com este aluno (e a nota dele); o tema continua existindo
 // no Organizador de Aulas e nos outros alunos.
 itemDiv.querySelector('.theme-remove-btn').onclick = () => {
 if (!confirm(`Tirar o tema "${topicName}" de ${student.name}? A avaliação desse tema para esse aluno também será apagada.`)) return;
+if (assignment.released) matRelease(student, assignment, false);
 student.themes = (student.themes || []).filter(a => a !== assignment);
 localStorage.setItem("jp_students_v5", JSON.stringify(students));
 renderPerformanceModalContent(student);
 renderStudentsPerformance();
+};
+const relBtn = itemDiv.querySelector('.theme-release-btn');
+if (relBtn) relBtn.onclick = () => {
+matRelease(student, assignment, !assignment.released);
+localStorage.setItem("jp_students_v5", JSON.stringify(students));
+renderPerformanceModalContent(student);
 };
 attachStarInputHandlers(itemDiv.querySelector('.star-input'), { set: (v) => {
 assignment.rating = v;
@@ -14258,11 +14407,11 @@ document.getElementById('temaPickerModal').style.display = 'none';
 function renderTemaPickerList(){
 const list = document.getElementById('temaPickerList');
 list.innerHTML = '';
-const query = (document.getElementById('temaPickerSearch').value || '').toLowerCase();
+const query = stripAccents(document.getElementById('temaPickerSearch').value || '').toLowerCase();
 const student = students.find(s => s.id === performanceModalStudentId);
 const linkedIds = new Set((student?.themes || []).map(t => t.themeId));
 
-const options = lessonPlans.filter(p => p.topic.toLowerCase().includes(query));
+const options = allMaterias().filter(p => stripAccents(p.topic).toLowerCase().includes(query));
 
 if(options.length === 0){
 list.innerHTML = `<div class="student-picker-empty">Nenhum tema encontrado.</div>`;
@@ -14273,7 +14422,7 @@ options.forEach(plan => {
 const item = document.createElement('div');
 const already = linkedIds.has(plan.id);
 item.className = `student-picker-item ${already?'selected':''}`;
-item.innerHTML = `<div class="student-picker-avatar"><svg class="inline-icon" viewBox="0 0 24 24" style="width:1rem;height:1rem"><use href="#icon-music"/></svg></div><div class="student-picker-name" style="flex:1;min-width:0">${plan.topic}</div>${already?'<div class="student-picker-instrument">Vinculado</div>':''}`;
+item.innerHTML = `<div class="student-picker-avatar"><svg class="inline-icon" viewBox="0 0 24 24" style="width:1rem;height:1rem"><use href="#icon-music"/></svg></div><div class="student-picker-name" style="flex:1;min-width:0">${escapeHtml(plan.topic)}</div>${already?'<div class="student-picker-instrument">Vinculado</div>':plan.preset?`<div class="student-picker-instrument">${escapeHtml(plan.group)}</div>`:''}`;
 if(!already){
 item.onclick = () => linkTemaToStudent(plan.id);
 }
@@ -14288,9 +14437,14 @@ const student = students.find(s => s.id === performanceModalStudentId);
 if(!student) return;
 if(!student.themes) student.themes = [];
 if(student.themes.some(t => t.themeId === themeId)) return;
-student.themes.push({ themeId, rating: null, date: todayBr() });
+const assignment = { themeId, rating: null, date: todayBr() };
+student.themes.push(assignment);
+// 8.20: vincular a matéria libera no app do aluno o que ela libera (ex.: Escala maior de Dó).
+const unlock = matUnlock(getThemeById(themeId));
+if (unlock.length) matRelease(student, assignment, true);
 localStorage.setItem("jp_students_v5", JSON.stringify(students));
 closeTemaPicker();
+if (unlock.length) showCloudWarning(`Liberado no app de ${firstName(student.name)}: ${matUnlockText(unlock)}.`);
 renderPerformanceModalContent(student);
 renderStudentsPerformance();
 }
