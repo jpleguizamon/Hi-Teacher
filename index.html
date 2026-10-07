@@ -3514,7 +3514,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.21";
+const APP_VERSION = "8.22";
 // ===================== App instalável (8.4) =====================
 // Service worker (sw.js), aviso de versão nova, faixa "Sem internet", botão "Instalar o app",
 // atalhos do ícone (?p=...) e botão voltar do celular fechando modal/menu no app instalado.
@@ -11216,8 +11216,9 @@ const instruments = [...new Set(group.map(x => x.student.instrument).filter(Bool
 const durs = [...new Set(group.map(x => getStudentDuration(x.student)))].sort((a,b) => a - b);
 document.getElementById("lpSub").textContent = [time, instruments, durs.join(" e ") + " min", group.length > 1 ? `turma de ${group.length}` : ""].filter(Boolean).join(" · ");
 const body = document.getElementById("lpBody");
-// Hoje, depois que a aula terminou e foi dada: anotar ali mesmo (não aparece se não teve aula).
-const noteable = isToday ? group.filter(x => !x.off && !(x.record && isNoClass(x.record)) && now >= lessonEnd(date, time, x.student)) : [];
+// Hoje, a partir do começo da aula (8.22; antes só depois que terminava): anotar ali mesmo
+// (não aparece se não teve aula). Durante a aula fica como rascunho; vira registro quando acaba.
+const noteable = isToday ? group.filter(x => !x.off && !(x.record && isNoClass(x.record)) && now >= start) : [];
 body.innerHTML = group.map((x, i) => {
 const s = x.student;
 const key = `p${iso}-${time}-${i}`;
@@ -11271,10 +11272,43 @@ function todayRecordOf(x, date){
 const br = brOf(date);
 return (x.student.lessons || []).find(l => l.date === br && (x.makeupId ? l.makeupId === x.makeupId : !l.makeupId)) || null;
 }
-function todayNotesHTML(x, date, i, canCopy){
+// Rascunho das anotações durante a aula (8.22): s.noteDrafts["dd/mm/aaaa|reposição"] = { taught, homework }.
+// Não cria o registro da aula antes da hora (senão a aula contaria como dada e a avaliação abriria
+// no meio). Quando a aula termina, flushNoteDrafts passa o rascunho pro registro, igual a anotar depois.
+function noteDraftKey(x, date){ return `${brOf(date)}|${x.makeupId || ""}`; }
+function noteDraftOf(x, date){ const d = x.student.noteDrafts; return (d && d[noteDraftKey(x, date)]) || null; }
+function setNoteDraft(x, date, taught, homework){
+const s = x.student, k = noteDraftKey(x, date), d = { ...(s.noteDrafts || {}) }, old = d[k] || {};
+if ((old.taught || "") === taught && (old.homework || "") === homework) return false;
+if (taught || homework) d[k] = { ...(taught ? { taught } : {}), ...(homework ? { homework } : {}) }; else delete d[k];
+if (Object.keys(d).length) s.noteDrafts = d; else delete s.noteDrafts;
+saveStudents();
+return true;
+}
+function flushNoteDrafts(){
+const now = new Date();
+let changed = false;
+students.forEach(s => {
+if (!s.noteDrafts) return;
+Object.entries({ ...s.noteDrafts }).forEach(([k, d]) => {
+const [br, makeupId] = k.split("|"), date = dateFromIso(isoFromBr(br));
+const x = getLessonsOnDate(date).find(y => y.student === s && (makeupId ? y.makeupId === makeupId : y.kind === "regular"));
+if (x && now < lessonEnd(date, x.time, s)) return; // aula ainda não acabou
+delete s.noteDrafts[k];
+if (x && !x.off && !(x.record && isNoClass(x.record))) {
 const rec = todayRecordOf(x, date) || {};
+saveTodayNotes(x, date, rec.taught || d.taught || "", rec.homework || d.homework || "");
+}
+changed = true;
+});
+if (s.noteDrafts && !Object.keys(s.noteDrafts).length) delete s.noteDrafts;
+});
+if (changed) saveStudents();
+}
+function todayNotesHTML(x, date, i, canCopy){
+const rec = todayRecordOf(x, date) || noteDraftOf(x, date) || {};
 return `<div class="lp-notes" data-lp-notes="${i}">
-<div class="lp-last-title">Anotações de hoje</div>
+<div class="lp-last-title">${new Date() < lessonEnd(date, x.time, x.student) ? "Anotações da aula (em andamento)" : "Anotações de hoje"}</div>
 <div class="field"><label>O que foi dado</label><textarea rows="2" class="lp-taught" placeholder="Ex.: escala de Dó maior, música X">${escapeHtml(rec.taught || "")}</textarea></div>
 ${canCopy ? `<div class="lp-copy-row"><button type="button" class="btn-link-inline lp-copy">Copiar para todos</button></div>` : ""}
 <div class="field"><label>Para estudar em casa</label><textarea rows="2" class="lp-homework" placeholder="Ex.: praticar a escala 10 min por dia">${escapeHtml(rec.homework || "")}</textarea></div>
@@ -11285,6 +11319,7 @@ ${canCopy ? `<div class="lp-copy-row"><button type="button" class="btn-link-inli
 // com o mesmo estado dela: "given", ou "pending" se ainda vai ser avaliada.
 function saveTodayNotes(x, date, taught, homework){
 const s = x.student;
+if (!todayRecordOf(x, date) && new Date() < lessonEnd(date, x.time, s)) return setNoteDraft(x, date, taught, homework);
 let rec = todayRecordOf(x, date);
 if (!rec) {
 if (!taught && !homework) return false;
@@ -11306,7 +11341,7 @@ const x = itemOf(box);
 if (x && saveTodayNotes(x, date, box.querySelector(".lp-taught").value.trim(), box.querySelector(".lp-homework").value.trim())) { flash(box, "Salvo ✓"); refreshStudentSheet(); }
 };
 boxes.forEach(box => {
-box.querySelectorAll("textarea").forEach(t => t.addEventListener("change", () => save(box)));
+box.querySelectorAll("textarea").forEach(t => { t.addEventListener("change", () => save(box)); t.addEventListener("input", () => { clearTimeout(box._t); box._t = setTimeout(() => save(box), 1500); }); });
 const copy = box.querySelector(".lp-copy");
 if (copy) copy.onclick = () => {
 const text = box.querySelector(".lp-taught").value.trim();
@@ -15452,6 +15487,8 @@ const st = { noClass:false, reason:null, withMakeup:false, values:{} };
 activeCriteria().forEach(c => { st.values[c.key] = 0; });
 states.push(st);
 const prevHw = getLastHomework(s, isoFromBr(group.date));
+// O que foi anotado durante a aula (8.22) já vem preenchido.
+const preNotes = (s.lessons || []).find(l => l.date === group.date && (entry.makeupId ? l.makeupId === entry.makeupId : !l.makeupId)) || {};
 
 const div = document.createElement("div");
 div.className = "eval-popup-student";
@@ -15464,8 +15501,8 @@ div.innerHTML = `
 ${prevHw ? `<div class="prev-homework"><span class="lesson-note-label">Para casa da aula anterior (${prevHw.date})</span>${escapeHtml(prevHw.homework)}</div>` : ""}
 <div class="reason-slot"></div>
 <div class="eval-criteria-wrap"></div>
-<button type="button" class="notes-toggle">+ Anotações da aula (opcional)</button>
-<div class="notes-slot" style="display:none">${notesEditorHTML({})}</div>
+<button type="button" class="notes-toggle">${preNotes.taught || preNotes.homework ? "− Esconder anotações" : "+ Anotações da aula (opcional)"}</button>
+<div class="notes-slot"${preNotes.taught || preNotes.homework ? "" : ' style="display:none"'}>${notesEditorHTML(preNotes)}</div>
 `;
 container.appendChild(div);
 
@@ -15537,9 +15574,11 @@ if (currentPage === "students") renderStudents();
 }
 
 openPage(currentPage);
+if (!studentMode) flushNoteDrafts();
 checkForLessonEvaluations();
 setInterval(() => {
 if (studentMode) return;
+flushNoteDrafts();
 renderHome();
 if (!document.getElementById("evalPopupModal").classList.contains("show")) checkForLessonEvaluations();
 checkLessonReminders();
