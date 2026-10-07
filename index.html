@@ -1452,6 +1452,8 @@ label.goal-check{flex:1;width:auto;height:auto;border:none;border-radius:0;displ
 .chord-title{text-align:center;font-size:2rem;font-weight:800;color:var(--heading)}
 .chord-notes{display:flex;justify-content:center;flex-wrap:wrap;gap:0.5rem;margin:0.5rem 0 0.75rem}
 .chord-notes span{display:flex;flex-direction:column;align-items:center;min-width:2.75rem;padding:0.375rem 0.5rem;border-radius:var(--radius-sm);background:var(--glass-inset);border:0.0625rem solid var(--hairline);font-weight:800;color:var(--text)}
+.hf-chord{display:flex;flex-direction:column;align-items:center;min-width:2.75rem;padding:0.375rem 0.5rem;border-radius:var(--radius-sm);background:var(--glass-inset);border:0.0625rem solid var(--glass-border-soft);color:var(--text);font:inherit;font-weight:750;cursor:pointer}
+.hf-chord small{font-size:0.6875rem;color:var(--muted);font-weight:600}
 .chord-notes small{font-size:0.6875rem;color:var(--muted);font-weight:600}
 .chord-shapes{display:flex;justify-content:center;flex-wrap:wrap;gap:0.5rem}
 .chord-svg{width:7.5rem;height:auto}
@@ -3512,7 +3514,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.20";
+const APP_VERSION = "8.21";
 // ===================== App instalável (8.4) =====================
 // Service worker (sw.js), aviso de versão nova, faixa "Sem internet", botão "Instalar o app",
 // atalhos do ícone (?p=...) e botão voltar do celular fechando modal/menu no app instalado.
@@ -6464,18 +6466,20 @@ else if (!(sh.barre && f === sh.barre)) s += `<circle cx="${x}" cy="${y0 + (f - 
 return s + `</svg>`;
 }
 // Teclado de 2 oitavas com as notas marcadas.
+// 8.21: uma mão só, na posição fundamental — cada nota marcada uma vez, subindo a partir da
+// tônica (sem repetir a nota na outra oitava, sem inversão). pcs vem como tônica + intervalo.
 function keyboardSVG(pcs, rootPc, flats){
 const whites = [0,2,4,5,7,9,11], blacks = { 1: 0, 3: 1, 6: 3, 8: 4, 10: 5 };
-const ww = 22, W = ww * 14, H = 96, set = new Set(pcs.map(p => ((p % 12) + 12) % 12));
+const ww = 22, W = ww * 14, H = 96, set = new Set(pcs.filter(p => p >= 0 && p < 24));
 let s = `<svg class="kb-svg" viewBox="0 0 ${W} ${H + 18}" role="img" aria-label="Teclado">`;
 for (let o = 0; o < 2; o++) whites.forEach((pc, i) => {
-const x = (o * 7 + i) * ww, on = set.has(pc);
+const x = (o * 7 + i) * ww, on = set.has(o * 12 + pc);
 s += `<rect x="${x}" y="0" width="${ww}" height="${H}" class="kb-w${on ? (pc === rootPc ? " root" : " on") : ""}"/>`;
 if (on) s += `<text x="${x + ww / 2}" y="${H + 14}" text-anchor="middle" class="kb-lbl">${pcName(pc, flats)}</text>`;
 });
 for (let o = 0; o < 2; o++) Object.entries(blacks).forEach(([pc, after]) => {
 pc = Number(pc);
-const x = (o * 7 + after + 1) * ww - 7, on = set.has(pc);
+const x = (o * 7 + after + 1) * ww - 7, on = set.has(o * 12 + pc);
 s += `<rect x="${x}" y="0" width="14" height="${H * 0.6}" class="kb-b${on ? (pc === rootPc ? " root" : " on") : ""}"/>`;
 if (on) s += `<text x="${x + 7}" y="${H + 14}" text-anchor="middle" class="kb-lbl">${pcName(pc, flats)}</text>`;
 });
@@ -6518,6 +6522,26 @@ function chordParse(k){ const m = /^([A-G]#?)(.*)$/.exec(k); return m ? { root: 
 function chordsOn(){ if (demoMode === "demo") return null; const v = demoMode === "view" ? (viewAsRef && viewAsRef.chordsOn) : (stuCur && stuCur.view && stuCur.view.chords); return new Set(Array.isArray(v) ? v : []); }
 function chordFree(key){ const on = chordsOn(); return !on || on.has(key); }
 function chordSortKey(k){ const p = chordParse(k); return p ? KEY_ROOTS.findIndex(r => r[0] === p.root) * 20 + CHORD_TYPES.findIndex(c => c[0] === p.type) : 999; }
+// Campo harmônico (8.21): tríades empilhando terças da própria escala, com o grau em algarismo
+// romano (maiúsculo = maior, minúsculo = menor, ° diminuto, + aumentado). Pentatônicas e blues não
+// têm campo próprio: usam o da escala de onde vêm (maior ou menor natural, mesma tônica).
+const HF_PARENT = { penta: "maior", pentam: "menor", blues: "menor" };
+const HF_ROMAN = ["I", "II", "III", "IV", "V", "VI", "VII"];
+function harmonicField(scaleKey, rootPc, rootName){
+const key = HF_PARENT[scaleKey] || scaleKey, ivs = SCALE_TYPES.find(x => x[0] === key)[2];
+const names = spellScale(rootName, rootPc, ivs, false).names;
+return ivs.map((iv, d) => {
+const third = (ivs[(d + 2) % 7] - iv + 12) % 12, fifth = (ivs[(d + 4) % 7] - iv + 12) % 12;
+const q = third === 4 && fifth === 7 ? ["", ""] : third === 3 && fifth === 7 ? ["m", ""] : third === 3 && fifth === 6 ? ["°", "°"] : third === 4 && fifth === 8 ? ["+", "+"] : ["", ""];
+const roman = (third === 4 ? HF_ROMAN[d] : HF_ROMAN[d].toLowerCase()) + q[1];
+return { name: names[d] + q[0], roman, notes: [0, third, fifth].map(x => rootPc + iv + x) };
+});
+}
+function harmonicFieldHTML(scaleKey, rootPc, ivs, names){
+const field = harmonicField(scaleKey, rootPc, names[0]), parent = HF_PARENT[scaleKey];
+return `<div class="chord-notes hf-notes">${field.map((c, i) => `<button type="button" class="hf-chord" data-hf="${i}" aria-label="Ouvir ${escapeHtml(c.name)}">${escapeHtml(c.name)}<small>${escapeHtml(c.roman)}</small></button>`).join("")}</div>
+${parent ? `<div class="rules-small" style="margin:-0.25rem 0 0.75rem;text-align:center">Campo harmônico da escala ${parent === "maior" ? "maior" : "menor natural"} de ${escapeHtml(ptSpelled(names[0]))}, de onde vem esta escala.</div>` : ""}`;
+}
 function chordsHTML(){
 const t = chordTool, on = chordsOn(), view = demoMode === "view", isChord = t.mode === "chord", isGuitar = t.view === "guitar";
 const myChords = on ? [...on].filter(k => k.startsWith("c:")).map(k => k.slice(2)).filter(k => { const p = chordParse(k); return p && CHORD_TYPES.some(c => c[0] === p.type); }).sort((a, b) => chordSortKey(a) - chordSortKey(b)) : null;
@@ -6529,7 +6553,7 @@ if (isChord && !full) { if (!myChords.includes(t.sel)) t.sel = myChords[0] || nu
 if (!isChord && !full) { if (!myScales.some(x => x[0] === t.scale)) t.scale = (myScales[0] || [])[0]; if (t.scale && !scaleOk(t.scale, t.root)) t.root = (KEY_ROOTS.find(([r]) => scaleOk(t.scale, r)) || KEY_ROOTS[0])[0]; }
 // 8.20: escala liberada só em alguns tons (matéria "Escala maior de Dó") mostra só esses tons.
 const myRoots = !isChord && !full && t.scale ? KEY_ROOTS.filter(([r]) => scaleOk(t.scale, r)) : KEY_ROOTS;
-let html = stuCard("", `<div class="reason-chips"><button type="button" class="filter-chip${isChord ? " selected" : ""}" data-cmode="chord">Acordes</button><button type="button" class="filter-chip${!isChord ? " selected" : ""}" data-cmode="scale">Escalas</button></div>
+let html = stuCard("", `<div class="reason-chips"><button type="button" class="filter-chip${isChord ? " selected" : ""}" data-cmode="chord">Acordes</button><button type="button" class="filter-chip${!isChord ? " selected" : ""}" data-cmode="scale">Escalas e Campo Harmônico</button></div>
 ${view ? `<div class="flats-row" id="flatsHold" role="button" tabindex="0"><span>Bemol entre parênteses (ex.: C# (Db))</span><span class="stu-status ${stuFlatsOn() ? "ok" : "off"}">${stuFlatsOn() ? "Liberado" : "Não liberado"}</span></div>` : ""}
 ${isChord ? (full ? `<div class="field"><label>Tom</label><div class="reason-chips key-chips">${KEY_ROOTS.map(([n]) => `<button type="button" class="filter-chip${t.root === n ? " selected" : ""}" data-croot="${n}">${escapeHtml(noteLabel(n))}</button>`).join("")}</div></div>
 <div class="field"><label>Tipo de acorde</label><div class="reason-chips">${CHORD_TYPES.map(([k, l]) => `<button type="button" class="filter-chip${t.type === k ? " selected" : ""}${on && !on.has("c:" + chordKeyOf(t.root, k)) ? " locked" : ""}" data-ctype="${k}">${l}</button>`).join("")}</div></div>`
@@ -6548,7 +6572,7 @@ const key = isChord ? chordKeyOf(t.root, t.type) : t.scale;
 const locked = on && (isChord ? !on.has("c:" + key) : !scaleOk(key, t.root));
 const title = isChord ? key : `${noteLabel(t.root)} ${def[1].toLowerCase()}`;
 let draw = "";
-if (t.view === "keys") draw = `<div class="kb-wrap">${keyboardSVG(pcs, pc, spell)}</div>`;
+if (t.view === "keys") draw = `<div class="kb-wrap">${keyboardSVG(isChord ? pcs : pcs.concat([pc + 12]), pc, spell)}</div>`;
 else if (isChord && isGuitar) {
 const all = guitarShapes(t.root, pc, t.type), mine = full || chordTuning() !== "guitar" ? all : all.filter(sh => on.has(`f:${key}@${sh.id}`));
 const shapes = mine.length ? mine : all.slice(0, 1);
@@ -6557,7 +6581,7 @@ draw += `<div class="fb-wrap">${fretboardSVG(chordTuning(), pcs, pc, spell)}</di
 } else draw = `<div class="fb-wrap">${fretboardSVG(chordTuning(), pcs, pc, spell)}</div>`;
 html += stuCard("", `<div class="chord-head${locked && view ? " locked" : ""}" id="chordHold"${view ? ` role="button" tabindex="0"` : ""}><div class="chord-title">${escapeHtml(title)}</div>${view ? `<span class="stu-status ${locked ? "off" : "ok"}">${locked ? "Não liberado" : "Liberado"}</span>` : ""}</div>
 ${view ? `<div class="rules-small">Segure o dedo no nome${isChord && isGuitar ? " ou numa forma" : ""} para liberar ou tirar.</div>` : ""}
-<div class="chord-notes">${names.map(n => `<span>${escapeHtml(n)}<small>${escapeHtml(ptSpelled(n))}</small></span>`).join("")}</div>
+${isChord ? `<div class="chord-notes">${names.map(n => `<span>${escapeHtml(n)}<small>${escapeHtml(ptSpelled(n))}</small></span>`).join("")}</div>` : harmonicFieldHTML(t.scale, pc, def[2], names)}
 ${sp.alt ? `<div class="rules-small" style="margin:0.25rem 0 0.75rem">Tom com dobrado sustenido (##). Na prática costuma-se escrever como ${escapeHtml(sp.alt[0])}${isChord ? escapeHtml(t.type) : " " + escapeHtml(def[1].toLowerCase())}: ${escapeHtml(sp.alt.join(" "))}.</div>` : ""}
 ${tuningChipsHTML()}
 ${draw}
@@ -6601,6 +6625,7 @@ main.querySelectorAll("[data-ctuning]").forEach(b => b.onclick = () => { tuner.m
 const pc = KEY_ROOTS.find(r => r[0] === t.root)[1], key = chordKeyOf(t.root, t.type);
 const playShape = id => { const sh = guitarShapes(t.root, pc, t.type).find(x => x.id === id); if (!sh) return; toolsStopAudio(); synthChord(shapeMidis(sh), getAudioCtx().currentTime + 0.05, 2.4, { strum: 0.035, vol: 0.3 }); };
 main.querySelectorAll("[data-shape]").forEach(b => b.onclick = () => playShape(b.dataset.shape));
+main.querySelectorAll("[data-hf]").forEach(b => b.onclick = () => { const c = harmonicField(t.scale, pc, t.root)[Number(b.dataset.hf)]; if (!c) return; toolsStopAudio(); synthChord(c.notes.map(n => 48 + n), getAudioCtx().currentTime + 0.05, 2, { strum: 0.03, vol: 0.28 }); });
 const play = main.querySelector("#chordPlay");
 if (play) play.onclick = () => {
 const ctx = getAudioCtx(), now = ctx.currentTime + 0.05;
