@@ -2064,6 +2064,24 @@ body.pdf-open{overflow:hidden}
 .empty-teach .btn-historico,.empty-teach .save{align-self:flex-start;padding:0.625rem 1rem;border-radius:var(--radius-pill);font-weight:700}
 .empty-teach.slim{padding:0.75rem 0.875rem;font-size:0.8125rem}
 .empty-acts{display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.375rem}
+/* Escola (8.23) */
+.school-head{margin-bottom:1rem}
+.school-name{font-size:1.125rem;font-weight:800;color:var(--heading)}
+.school-key{font-size:0.8125rem;color:var(--text-2);margin-top:0.25rem;display:flex;flex-wrap:wrap;gap:0.25rem 0.625rem;align-items:center}
+.school-key b{color:var(--text);letter-spacing:.06em}
+.school-months{margin:0.25rem 0 1rem}
+.school-acts{display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center}
+.school-acts .save,.school-acts .btn-historico{padding:0.5rem 0.875rem;border-radius:var(--radius-pill);font-weight:700;font-size:0.8125rem}
+.school-time{font-weight:800;font-variant-numeric:tabular-nums;min-width:3rem;color:var(--heading)}
+.school-team{display:grid;grid-template-columns:repeat(auto-fit,minmax(16rem,1fr));gap:0.75rem;margin-bottom:1rem}
+.school-teacher{display:flex;flex-direction:column;gap:0.5rem}
+.school-t-name{font-size:1rem;font-weight:800;color:var(--text)}
+.school-lines{display:flex;flex-direction:column;gap:0.25rem;font-size:0.8125rem;color:var(--text-2)}
+.school-lines b{color:var(--text)}
+.school-lines i{font-style:normal;color:var(--muted)}
+.school-pay{display:flex;justify-content:space-between;gap:0.5rem;align-items:baseline;padding-top:0.5rem;border-top:0.0625rem solid var(--hairline);font-size:0.8125rem;color:var(--text-2)}
+.school-pay b{font-size:1rem;color:#4ade80}
+.school-warn{font-size:0.75rem;color:#fb923c}
 .chart-empty-hint{flex-basis:100%;font-size:0.8125rem;line-height:1.5;color:var(--text-2);padding:0.5rem 0.625rem;border-radius:var(--radius-sm);background:rgba(47,211,242,.06);margin-top:0.5rem}
 /* 8.16: sino de notificações do professor (no lugar da bolinha de perfil do cabeçalho) */
 .notif-pop{position:fixed;z-index:60;width:min(22rem,calc(100vw - 1.5rem));max-height:calc(100vh - 6rem);overflow:auto;overscroll-behavior:contain;padding:0.875rem;border-radius:var(--radius-lg);border:0.0625rem solid var(--glass-border);background:var(--glass-fill-strong);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:var(--edge-light),0 1rem 2.5rem rgba(0,0,0,.45)}
@@ -2104,6 +2122,7 @@ body.pdf-open{overflow:hidden}
 <canvas id="ribbonGlowCanvas" aria-hidden="true"></canvas>
 <svg style="display:none" aria-hidden="true">
 <defs>
+<g id="icon-school"><path d="M3 21h18"/><path d="M5 21V9l7-5 7 5v12"/><path d="M10 21v-5h4v5"/><path d="M10 11h4"/></g>
 <g id="icon-home"><path d="M3 11.5L12 4l9 7.5"/><path d="M5.5 10v9.5a1 1 0 0 0 1 1H10v-6h4v6h3.5a1 1 0 0 0 1-1V10"/></g>
 <g id="icon-calendar"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 9.5h17"/><path d="M8 3v4"/><path d="M16 3v4"/></g>
 <g id="icon-target"><circle cx="12" cy="12" r="8.25"/><circle cx="12" cy="12" r="4.25"/><circle cx="12" cy="12" r="0.75" fill="currentColor" stroke="none"/></g>
@@ -2154,6 +2173,7 @@ body.pdf-open{overflow:hidden}
 <div id="authChoice" style="display:none">
 <div class="entry-big">
 <button type="button" class="entry-btn" id="entryTeacher"><b>Sou professor</b><span>Entrar ou criar minha conta de professor</span></button>
+<button type="button" class="entry-btn" id="entrySchool"><b>Sou dono de escola</b><span>Minha escola tem professores. Continuo com tudo de professor</span></button>
 <button type="button" class="entry-btn" id="entryStudent"><b>Entrar como aluno</b><span>Aluno ou responsável, com a chave do professor</span></button>
 </div>
 </div>
@@ -2437,6 +2457,11 @@ body.pdf-open{overflow:hidden}
 </div>
 </main>
 
+<main id="schoolPage" style="display:none">
+<div class="page-title-bar" style="margin-top:0"><h2 class="page-title-text" id="schoolTitle">Escola<button type="button" class="help-icon" data-help="Painel do dono da escola: os números de cada professor no mês, as aulas de hoje de todos e quanto pagar a cada um. Cada professor manda os números do próprio app (alunos, aulas, faltas e valores); observações, avaliações e anotações das aulas não aparecem aqui.">!</button></h2></div>
+<div id="schoolBody"></div>
+</main>
+
 <main id="evolutionStatsPage" style="display:none">
 <div class="page-title-bar" style="margin-top:0"><h2 class="page-title-text">Estatísticas<button type="button" class="help-icon" data-help="Os números mais importantes do seu trabalho, calculados com os seus alunos e com os gráficos de Evolução. Crescimento e médias usam os últimos 12 meses. A seta verde (para cima) ou vermelha (para baixo) compara com 3 meses atrás.">!</button></h2></div>
 <div id="statsBody"></div>
@@ -2566,6 +2591,11 @@ body.pdf-open{overflow:hidden}
 <div class="settings-row"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-info"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Versão do app</div></div><span class="settings-row-value" id="valVersao"></span></div>
 </div>
 
+<div class="settings-group-label">Escola</div>
+<div class="settings-card">
+<div class="settings-row" id="rowSchool"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-school"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Escola</div><div class="settings-row-sub" id="subSchool">Criar sua escola ou entrar na escola onde você dá aula</div></div><span class="settings-row-value" id="valSchool"></span><span class="settings-row-chevron">›</span></div>
+</div>
+
 <div class="settings-group-label">App do aluno</div>
 <div class="settings-card">
 <div class="settings-row" id="rowStudentKey"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-user"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Chave para alunos</div><div class="settings-row-sub">Seus alunos pedem pra entrar no app com ela</div></div><span class="settings-row-value" id="valStudentKey"></span><span class="settings-row-chevron">›</span></div>
@@ -2594,6 +2624,7 @@ body.pdf-open{overflow:hidden}
 <button class="nav-item active" data-page="home"><span class="nav-item-row"><svg class="nav-icon" viewBox="0 0 24 24"><use href="#icon-home"/></svg>Início</span></button>
 <button class="nav-item" data-page="agenda"><span class="nav-item-row"><svg class="nav-icon" viewBox="0 0 24 24"><use href="#icon-calendar"/></svg>Agenda</span></button>
 <button class="nav-item" data-page="goals"><span class="nav-item-row"><svg class="nav-icon" viewBox="0 0 24 24"><use href="#icon-target"/></svg>Metas</span></button>
+<button class="nav-item" data-page="school" id="navSchool" style="display:none"><span class="nav-item-row"><svg class="nav-icon" viewBox="0 0 24 24"><use href="#icon-school"/></svg>Escola<span class="nav-badge" id="navSchoolBadge" style="display:none"></span></span></button>
 
 <div class="nav-group collapsed">
 <button class="nav-group-title" onclick="toggleNavGroup(this)">
@@ -3514,7 +3545,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.22";
+const APP_VERSION = "8.23";
 // ===================== App instalável (8.4) =====================
 // Service worker (sw.js), aviso de versão nova, faixa "Sem internet", botão "Instalar o app",
 // atalhos do ícone (?p=...) e botão voltar do celular fechando modal/menu no app instalado.
@@ -4712,7 +4743,7 @@ return roleResolving.p;
 }
 async function resolveAppRoleNow(user){
 const uid = user.id, entry = readEntry();
-if (entry.role === "teacher") { saveRole(uid, "teacher"); writeEntry(null); return "teacher"; }
+if (entry.role === "teacher") { if (entry.school === "owner") schoolSetIntent(uid); saveRole(uid, "teacher"); writeEntry(null); return "teacher"; }
 if (entry.role === "student") { saveRole(uid, "student"); writeEntry({ role: null }); return "student"; }
 const known = readRoles()[uid];
 if (known) return known;
@@ -4761,6 +4792,13 @@ applyAuthMode();
 authCardParts("authForm");
 document.getElementById("authStuBack").style.display = "block";
 document.getElementById("authSubtitle").textContent = "Entre pra acessar seus dados.";
+}
+// Dono de escola (8.23): entra como professor (continua com tudo de professor) e, depois do
+// login e da configuração inicial, o app pede o nome da escola.
+function showSchoolOwnerLogin(){
+showTeacherLogin();
+writeEntry({ role: "teacher", school: "owner" });
+document.getElementById("authSubtitle").textContent = "Entre ou crie sua conta. Depois você dá o nome da escola.";
 }
 function stuEntryHTML(html, subtitle){
 authCardParts("stuEntry");
@@ -9219,6 +9257,7 @@ appSettings.onboarded = true;
 if (!appSettings.onb) appSettings.onb = {};
 saveAppSettings();
 document.getElementById("onboardingGate").classList.add("hidden");
+setTimeout(schoolAskCreateIfIntent, 400);
 renderHome();
 renderSettingsSummary();
 renderInstrumentSelectOptions();
@@ -9335,6 +9374,7 @@ document.getElementById("authSubmitBtn").disabled = false;
 };
 
 document.getElementById("entryTeacher").onclick = showTeacherLogin;
+document.getElementById("entrySchool").onclick = showSchoolOwnerLogin;
 document.getElementById("entryStudent").onclick = () => { writeEntry({ role: "student" }); stuEntryKind(); };
 document.getElementById("authStuBack").onclick = () => { const e = readEntry(); if (e.role === "student") stuEntryKind(); else { writeEntry(null); showEntryChoice(); } };
 document.getElementById("rowStudentKey").onclick = openStudentKey;
@@ -9377,6 +9417,7 @@ await pullCloudData();
 hideAuthGate();
 if (!appSettings.onboarded) showOnboarding();
 inboxStart();
+schoolStart();
 } else {
 authCurrentUser = null;
 authMode = "login";
@@ -9864,7 +9905,7 @@ holiday:          { label:"Feriado/férias",          short:"Feriado/férias" },
 // Remarcada: a aula mudou de dia pelo "Remarcar" (não é falta; não aparece no seletor de motivo).
 rescheduled:      { label:"Remarcada",               short:"Remarcada", pick:false }
 };
-function saveStudents(){ localStorage.setItem("jp_students_v5", JSON.stringify(students)); }
+function saveStudents(){ localStorage.setItem("jp_students_v5", JSON.stringify(students)); try { schoolDirty(); } catch(e) {} }
 // Grava (ou atualiza) o registro de uma aula da linha do tempo, seja ela virtual ou já salva.
 function upsertLessonRecord(student, entry, fields){
 if (!student.lessons) student.lessons = [];
@@ -14589,14 +14630,14 @@ function openPage(page){
 if (bulkSel && page !== "students") cancelBulk();
 currentPage = page;
 sessSet("jp_active_page", page);
-["homePage","agendaPage","goalsPage","studentsPage","announcementsPage","evaluationPage","evolutionFinancialPage","evolutionQuantitativePage","evolutionStatsPage","studentsPerformancePage","plannerPage","settingsPage"].forEach(id => {
+["homePage","agendaPage","goalsPage","schoolPage","studentsPage","announcementsPage","evaluationPage","evolutionFinancialPage","evolutionQuantitativePage","evolutionStatsPage","studentsPerformancePage","plannerPage","settingsPage"].forEach(id => {
 document.getElementById(id).style.display = (id.replace("Page","")===page) ? "block" : "none"
 });
 
 document.getElementById("dateLabel").textContent = {
 home:"Início", agenda:"Agenda", goals:"Metas", students:"Alunos", evaluation:"Avaliação",
 evolutionFinancial:"Evolução Financeira", evolutionQuantitative:"Evolução Quantitativa", evolutionStats:"Estatísticas",
-studentsPerformance:"Desempenho", planner:"Organização de Aulas", settings:"Configurações", announcements:"Avisos"
+studentsPerformance:"Desempenho", planner:"Organização de Aulas", settings:"Configurações", announcements:"Avisos", school:"Escola"
 }[page] || "Início";
 
 document.querySelector("header").style.display = (page==="settings") ? "none" : "";
@@ -14627,6 +14668,7 @@ else if(page==="evolutionStats") renderStats();
 else if(page.startsWith("evolution")) renderEvolution();
 else if(page==="studentsPerformance") renderStudentsPerformance();
 else if(page==="announcements") renderAnnouncementsPage();
+else if(page==="school") renderSchoolPage();
 else if(page==="planner") renderPlanner();
 else if(page==="settings" && typeof renderSettingsSummary==="function") renderSettingsSummary();
 try { teacherBellUpdate(); } catch(e) {}
@@ -14654,6 +14696,7 @@ const SETTINGS_FOLDERS = [
 { id: "valores", icon: "dollar", title: "Valores e metas", sub: "Valores padrões, meta de crescimento, gráficos", rows: ["rowValoresPadrao", "rowGrowthGoal", "rowChartsStart"] },
 { id: "aval", icon: "star", title: "Avaliações e níveis", sub: "Níveis, critérios e frequência", rows: ["rowNiveis", "rowCriterios", "rowEvalFreq"] },
 { id: "msg", icon: "message", title: "Mensagens e lembretes", sub: "Mensagens prontas, avisos e notificações no celular", rows: ["rowMensagens", "rowPushTeacher", "rowLembrete", "rowLessonReminder", "rowAvalPendente"] },
+{ id: "escola", icon: "school", title: "Escola", sub: "Dono de escola ou professor de uma escola", rows: ["rowSchool"] },
 { id: "aluno", icon: "user", title: "App do aluno", sub: "Chave para alunos e conteúdo", rows: ["rowStudentKey", "rowStudentContent"] },
 { id: "dados", icon: "save", title: "Dados e backup", sub: "Exportar, importar, restaurar", rows: ["rowExportarDados", "rowBackupReminder", "rowRestoreSnapshot", "rowImportarDados", "rowApagarDados"] },
 { id: "conta", icon: "logout", title: "Conta", sub: "Nuvem, entrar como aluno, sair, excluir conta", rows: ["rowCloudSync", "rowStudentMode", "rowSairConta", "rowDeleteAccount"] },
@@ -15623,6 +15666,7 @@ document.getElementById("valVersao").textContent = APP_VERSION;
 document.getElementById("rowInstallApp").style.display = pwaCanInstall() ? "" : "none";
 document.getElementById("valStudentKey").textContent = appSettings.studentCode || "";
 document.getElementById("valStudentContent").textContent = studentContentLabel();
+try { schoolRowUpdate(); } catch(e) {}
 document.getElementById("settingsProfileName").textContent = appSettings.profile.name;
 renderProfessorTier();
 renderProfileAvatarInto(document.getElementById("settingsProfileAvatar"));
@@ -17396,6 +17440,7 @@ function teacherNotifItems(){
 const out = [];
 const add = (icon, html, go, warn) => out.push({ icon, html, go, warn });
 const toHome = id => () => { openPage("home"); setTimeout(() => { const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }, 60); };
+try { if (schoolIsOwner() && schoolPendingN) add("user", `${schoolPendingN} professor${schoolPendingN > 1 ? "es pedindo" : " pedindo"} para entrar na escola`, () => openPage("school"), true); } catch(e) {}
 try { const n = pendingJoins().length + inbox.requests.length; if (n) add("user", `${n} pedido${n > 1 ? "s" : ""} de aluno esperando resposta`, toHome("studentInboxBox"), true); } catch(e) {}
 try {
 let late = 0; students.filter(s => s.active !== false && paysMe(s)).forEach(s => unpaidMonths(s).forEach(k => { if (isPastDue(s, k)) late++; }));
@@ -17522,6 +17567,565 @@ closeHelpBubble();
 });
 document.addEventListener("scroll", closeHelpBubble, true);
 window.addEventListener("resize", closeHelpBubble);
+// ===================== Escola com vários professores (8.23) =====================
+// O dono da escola continua sendo professor (tudo de professor fica igual). A escola é uma
+// organização "school" no Supabase; cada professor entra com a chave da escola e o dono aceita.
+// Cada professor ativo manda um resumo calculado no próprio app (school_reports): alunos,
+// aulas dadas, horas, faltas, cancelamentos, valores e as aulas dos próximos 7 dias. Nunca
+// vão observações, objetivos, avaliações nem anotações. Sem o SQL da 8.23, nada disso aparece.
+// "var" de propósito: saveStudents() chama schoolDirty() já durante o carregamento.
+var school = null;          // { org_id, name, owner, status, code, member_id, pay_rule, owner_name, since } ou null
+var schoolLoaded = false;   // perguntou ao servidor nesta abertura
+var schoolMissing = false;  // falta o SQL da 8.23 no Supabase
+var schoolTimer = null, schoolPubSig = "", schoolPubAt = 0, schoolCheckedAt = 0;
+var schoolPanel = null;     // painel do dono: { members, reports: Map, at }
+var schoolPendingN = 0;     // pedidos de professores esperando o dono
+var schoolMonth = null;     // mês escolhido no painel
+var SCHOOL_CACHE_KEY = "jp_school_v1";        // só no aparelho (não vai pra nuvem)
+var SCHOOL_INTENT_KEY = "jp_school_intent_v1"; // escolheu "Sou dono de escola" na entrada
+var PAY_RULE_LABEL = { lesson: "Por aula dada", hour: "Por hora de aula", percent: "Porcentagem do faturamento dos alunos dele", fixed: "Valor fixo por mês" };
+
+function schoolCacheRead(){
+try { const c = JSON.parse(localStorage.getItem(SCHOOL_CACHE_KEY) || "null"); return c && authCurrentUser && c.uid === authCurrentUser.id ? c.school : null; } catch(e) { return null; }
+}
+function schoolCacheWrite(v){ try { if (authCurrentUser) _nativeSetItem.call(localStorage, SCHOOL_CACHE_KEY, JSON.stringify({ uid: authCurrentUser.id, school: v })); } catch(e) {} }
+function schoolSetIntent(uid){ try { _nativeSetItem.call(localStorage, SCHOOL_INTENT_KEY, uid); } catch(e) {} }
+function schoolIntent(){ try { return authCurrentUser && localStorage.getItem(SCHOOL_INTENT_KEY) === authCurrentUser.id; } catch(e) { return false; } }
+function schoolClearIntent(){ try { localStorage.removeItem(SCHOOL_INTENT_KEY); } catch(e) {} }
+function schoolIsMissing(err){ const t = `${(err && err.code) || ""} ${(err && err.message) || ""}`; return /PGRST202|42883|could not find the function|does not exist|schema cache/i.test(t); }
+function schoolErrText(err){
+const m = String((err && err.message) || "");
+if (schoolIsMissing(err)) return "A parte de escola ainda não está ativa no servidor do app.";
+if (/fetch|network|Failed/i.test(m)) return "Sem conexão agora. Tente de novo daqui a pouco.";
+return m && m.length < 140 ? m : "Não deu certo agora. Tente de novo.";
+}
+function schoolIsOwner(){ return !!(school && school.owner); }
+function schoolActive(){ return !!(school && school.status === "active"); }
+
+async function schoolStart(){
+if (!supabaseClient || !authCurrentUser || studentMode) return;
+const c = schoolCacheRead();
+if (c) { school = c; schoolApplyNav(); }
+await schoolRefresh();
+if (schoolIsOwner()) await schoolLoadPending();
+schoolAskCreateIfIntent();
+if (schoolActive()) schoolPublishSoon(4000);
+}
+async function schoolRefresh(){
+if (!supabaseClient || !authCurrentUser) return false;
+const { data, error } = await supabaseClient.rpc("hi_my_school");
+schoolCheckedAt = Date.now();
+if (error) {
+if (schoolIsMissing(error)) { schoolMissing = true; schoolLoaded = true; school = null; schoolCacheWrite(null); }
+schoolApplyNav();
+return false;
+}
+schoolMissing = false; schoolLoaded = true;
+school = data || null;
+schoolCacheWrite(school);
+schoolApplyNav();
+return true;
+}
+async function schoolLoadPending(){
+const { data, error } = await supabaseClient.rpc("hi_school_members");
+if (error) return null;
+const list = Array.isArray(data) ? data : [];
+schoolPendingN = list.filter(m => m.status === "pending").length;
+schoolApplyNav();
+return list;
+}
+function schoolApplyNav(){
+const nav = document.getElementById("navSchool");
+if (nav) nav.style.display = schoolIsOwner() ? "" : "none";
+const b = document.getElementById("navSchoolBadge");
+if (b) { const n = schoolIsOwner() ? schoolPendingN : 0; b.textContent = n; b.style.display = n ? "" : "none"; }
+try { schoolRowUpdate(); } catch(e) {}
+try { teacherBellUpdate(); } catch(e) {}
+if (typeof currentPage !== "undefined" && currentPage === "school" && schoolLoaded && !schoolIsOwner()) { try { renderSchoolPage(); } catch(e) {} }
+}
+function schoolRowUpdate(){
+const v = document.getElementById("valSchool"), sub = document.getElementById("subSchool");
+if (!v || !sub) return;
+if (!school) { v.textContent = ""; sub.textContent = "Criar sua escola ou entrar na escola onde você dá aula"; return; }
+sub.textContent = school.name || "Escola";
+v.textContent = school.owner ? "Dono" : school.status === "pending" ? "Pedido enviado" : "Professor";
+}
+// Voltou pro app: confere se o pedido foi aceito e manda os números de novo se estiverem velhos.
+document.addEventListener("visibilitychange", () => {
+if (document.visibilityState !== "visible" || !authCurrentUser || studentMode || !schoolLoaded) return;
+if (Date.now() - schoolCheckedAt > 10 * 60000) schoolRefresh().then(() => { if (schoolIsOwner()) schoolLoadPending(); if (schoolActive()) schoolPublishSoon(3000); });
+else if (schoolActive() && Date.now() - schoolPubAt > 10 * 60000) schoolPublishSoon(3000);
+});
+
+// ---------- O que o professor manda para o dono ----------
+// Mesmo motor de aulas do app (linha do tempo de cada aluno). Aula em grupo conta uma vez só
+// (mesma data e horário); faltas e cancelamentos contam por aluno.
+function schoolStatsFor(keys){
+const todayIso = isoOf(new Date());
+const out = {};
+keys.forEach(k => out[k] = { slots: new Map(), studentLessons: 0, absences: 0, cancels: 0, revenue: 0, active: 0, joined: 0, left: 0 });
+students.forEach(s => {
+const given = {};
+getStudentTimeline(s).forEach(l => {
+const iso = isoFromBr(l.date), k = iso.slice(0, 7), o = out[k];
+if (!o || iso > todayIso) return;
+if (isNoClass(l)) {
+if (l.reason === "absent_notice" || l.reason === "absent_no_notice") o.absences++;
+else if (l.reason === "teacher_cancel") o.cancels++;
+return;
+}
+given[k] = (given[k] || 0) + 1;
+const mk = l.makeupId && (s.makeups || []).find(x => x.id === l.makeupId);
+const time = (mk && mk.time) || l.time || getStudentTimeFor(s, dateFromIso(iso).getDay());
+const key = iso + "|" + time;
+o.slots.set(key, Math.max(o.slots.get(key) || 0, getStudentDuration(s)));
+});
+keys.forEach(k => {
+const o = out[k], [y, m] = k.split("-").map(Number);
+const first = k + "-01", last = isoOf(new Date(y, m, 0)), endIso = last < todayIso ? last : todayIso;
+o.studentLessons += given[k] || 0;
+if (s.entry && String(s.entry).slice(0, 7) === k) o.joined++;
+if (s.active === false && s.exit && String(s.exit).slice(0, 7) === k) o.left++;
+const inMonth = (!s.entry || s.entry <= last) && (s.active !== false || (s.exit && s.exit >= first));
+if ((!s.entry || s.entry <= endIso) && (s.active !== false || (s.exit && s.exit > endIso))) o.active++;
+if (s.payTo === "none") return;
+const mode = billingMode(s);
+if (mode === "lesson") o.revenue += (given[k] || 0) * (Number(s.lessonPrice) || 0);
+else if (mode === "package") o.revenue += packageCharges(s).filter(c => String(c.ref).startsWith(k)).reduce((a, c) => a + Number(c.value || 0), 0);
+else if (inMonth) o.revenue += Number(studentMonthlyValue(s) || 0);
+});
+});
+const res = {};
+keys.forEach(k => {
+const o = out[k];
+const minutes = [...o.slots.values()].reduce((a, b) => a + b, 0);
+res[k] = { lessons: o.slots.size, minutes, studentLessons: o.studentLessons, absences: o.absences, cancels: o.cancels, revenue: Math.round(o.revenue * 100) / 100, active: o.active, joined: o.joined, left: o.left };
+});
+return res;
+}
+function schoolReportData(){
+const cur = currentMonthKey();
+const months = schoolStatsFor([addMonths(cur, -2), addMonths(cur, -1), cur]);
+const agenda = [];
+const base = new Date(); base.setHours(0, 0, 0, 0);
+for (let i = 0; i < 7; i++) {
+const d = new Date(base); d.setDate(d.getDate() + i);
+getLessonsOnDate(d).forEach(x => {
+const s = x.student, rec = x.record;
+let st = x.off ? "off" : "";
+if (rec && isNoClass(rec)) st = rec.reason || "noclass";
+const it = { d: isoOf(d), t: x.time, m: getStudentDuration(s), n: s.name || "", i: s.instrument || "", s: st };
+if (x.kind === "extra") it.x = 1;
+if (x.off && x.off.label) it.o = x.off.label;
+agenda.push(it);
+});
+}
+let lateN = 0, lateV = 0;
+students.filter(s => s.active !== false && paysMe(s)).forEach(s => unpaidMonths(s).forEach(k => { if (isPastDue(s, k)) { lateN++; lateV += Number(studentMonthlyValue(s) || 0); } }));
+const p = appSettings.profile || {};
+return { v: 1, name: p.name || "", full: p.fullName || "", active: students.filter(s => s.active !== false).length, late: { n: lateN, v: lateV }, months, agenda };
+}
+function schoolDirty(){ if (school && school.status === "active") schoolPublishSoon(60000); }
+function schoolPublishSoon(ms){ clearTimeout(schoolTimer); schoolTimer = setTimeout(schoolPublish, ms); }
+async function schoolPublish(force){
+if (!schoolActive() || !supabaseClient || !authCurrentUser || studentMode || demoMode) return false;
+let data;
+try { data = schoolReportData(); } catch(e) { console.warn("Escola: não consegui calcular o resumo", e); return false; }
+const sig = JSON.stringify(data);
+if (!force && sig === schoolPubSig && Date.now() - schoolPubAt < 30 * 60000) return true;
+const { error } = await supabaseClient.from("school_reports").upsert({ org_id: school.org_id, teacher_id: authCurrentUser.id, data }, { onConflict: "org_id,teacher_id" });
+if (error) { console.warn("Escola: não consegui mandar o resumo", error); return false; }
+schoolPubSig = sig; schoolPubAt = Date.now();
+return true;
+}
+// A cada hora o app reenvia (as aulas de hoje mudam de "prevista" para "dada" com o relógio do
+// dono, mas faltas e remarcações dependem do professor marcar).
+setInterval(() => { if (schoolActive() && document.visibilityState === "visible") schoolPublish(); }, 60 * 60000);
+
+// ---------- Pagamento do professor ----------
+function payRuleText(r){
+if (!r || !r.type) return "Sem regra de pagamento";
+const v = Number(r.value) || 0;
+if (r.type === "lesson") return `R$ ${moneyText(v)} por aula dada`;
+if (r.type === "hour") return `R$ ${moneyText(v)} por hora de aula`;
+if (r.type === "percent") return `${moneyText(v)}% do faturamento dos alunos dele`;
+if (r.type === "fixed") return `R$ ${moneyText(v)} fixo por mês`;
+return "Sem regra de pagamento";
+}
+function payFor(r, m){
+if (!r || !r.type || !m) return null;
+const v = Number(r.value) || 0;
+let x = 0;
+if (r.type === "lesson") x = (m.lessons || 0) * v;
+else if (r.type === "hour") x = (m.minutes || 0) / 60 * v;
+else if (r.type === "percent") x = (m.revenue || 0) * v / 100;
+else if (r.type === "fixed") x = v;
+else return null;
+return Math.round(x * 100) / 100;
+}
+function hoursText(min){
+const h = Math.floor((min || 0) / 60), m = Math.round((min || 0) % 60);
+if (!h && !m) return "0 h";
+return m ? `${h} h ${m} min` : `${h} h`;
+}
+function payCalcText(r, m){
+if (!r || !r.type || !m) return "";
+const v = Number(r.value) || 0;
+if (r.type === "lesson") return `${m.lessons} aula${m.lessons === 1 ? "" : "s"} × R$ ${moneyText(v)}`;
+if (r.type === "hour") return `${hoursText(m.minutes)} × R$ ${moneyText(v)}`;
+if (r.type === "percent") return `${moneyText(v)}% de R$ ${moneyText(m.revenue)}`;
+return "valor fixo";
+}
+
+// ---------- Configurações → Escola ----------
+document.getElementById("rowSchool").onclick = openSchoolSettings;
+async function openSchoolSettings(){
+const body = document.createElement("div");
+if (!supabaseClient || !authCurrentUser) {
+body.innerHTML = `<div class="field-hint" style="margin:0">A escola precisa da sua conta conectada à internet.</div>`;
+openQuickModal("Escola", "", body, null, "Fechar");
+return;
+}
+body.innerHTML = `<div class="field-hint" style="margin:0">Carregando…</div>`;
+openQuickModal("Escola", "", body, null, "Fechar");
+await schoolRefresh();
+if (!schoolLoaded) { body.innerHTML = `<div class="field-hint" style="margin:0">Sem conexão agora. Tente de novo daqui a pouco.</div>`; return; }
+if (schoolMissing) { body.innerHTML = `<div class="field-hint" style="margin:0">A parte de escola ainda não está ativa no servidor do app.</div>`; return; }
+const info = document.getElementById("quickLessonInfo");
+if (!school) {
+info.textContent = "Para quem tem uma escola com professores, ou dá aula numa escola que usa o Hi Teacher.";
+body.innerHTML = `<div class="entry-big">
+<button type="button" class="entry-btn" id="schOwn"><b>Sou dono de escola</b><span>Criar minha escola. Continuo com tudo de professor</span></button>
+<button type="button" class="entry-btn" id="schJoin"><b>Dou aula numa escola</b><span>Entrar com a chave da escola</span></button>
+</div>`;
+body.querySelector("#schOwn").onclick = openSchoolCreate;
+body.querySelector("#schJoin").onclick = openSchoolJoin;
+return;
+}
+if (school.status === "pending") {
+info.textContent = school.name;
+body.innerHTML = `<div class="key-state warn">Pedido enviado</div>
+<div class="field-hint">Assim que ${escapeHtml(school.owner_name || "o dono da escola")} aceitar, você entra na escola ${escapeHtml(school.name)}.</div>
+<button type="button" class="btn-historico" id="schCancel" style="width:100%;margin-top:0.75rem">Cancelar pedido</button>`;
+body.querySelector("#schCancel").onclick = () => schoolLeave("Cancelar o pedido para entrar na escola?");
+return;
+}
+if (!school.owner) {
+info.textContent = school.name;
+let est = "";
+try {
+const cur = currentMonthKey(), m = schoolStatsFor([cur])[cur], p = payFor(school.pay_rule, m);
+if (p !== null) est = `<div class="field-hint">Seu pagamento estimado em ${escapeHtml(monthLongLabel(cur))}: <b>R$ ${moneyText(p)}</b> (${escapeHtml(payCalcText(school.pay_rule, m))}).</div>`;
+} catch(e) {}
+body.innerHTML = `<div class="key-state ok">Você faz parte desta escola</div>
+<div class="field-hint">Dono: ${escapeHtml(school.owner_name || "—")}. Seus alunos e dados continuam com você. O dono vê os números do mês (alunos, aulas dadas, faltas e valores) e as suas aulas dos próximos dias. Observações, avaliações e anotações das aulas não vão para ele.</div>
+<div class="field-hint"><b>Regra de pagamento:</b> ${escapeHtml(payRuleText(school.pay_rule))}</div>${est}
+<button type="button" class="btn-historico" id="schSend" style="width:100%;margin-top:0.75rem">Mandar meus números agora</button>
+<button type="button" class="btn-historico" id="schLeave" style="width:100%;margin-top:0.5rem;color:#f87171">Sair da escola</button>`;
+body.querySelector("#schSend").onclick = async e => { e.target.textContent = "Mandando…"; const ok = await schoolPublish(true); e.target.textContent = ok ? "Enviado ✓" : "Não deu certo. Tente de novo."; };
+body.querySelector("#schLeave").onclick = () => schoolLeave(`Sair da escola ${school.name}? Seus alunos e dados continuam com você; o dono deixa de ver seus números.`);
+return;
+}
+info.textContent = school.name;
+body.innerHTML = `<div class="key-state ok">Você é o dono desta escola</div>
+<div class="field-hint">Você continua com tudo de professor. Os professores entram com a chave da escola e você aceita cada um no painel.</div>
+<div class="key-big" style="font-size:1.75rem">${escapeHtml(school.code || "")}</div>
+<div class="actions"><button class="cancel" id="schCopy">Copiar chave</button><button class="save" id="schPanel">Abrir painel</button></div>
+<button type="button" class="btn-historico" id="schRename" style="width:100%;margin-top:0.5rem">Mudar o nome da escola</button>`;
+body.querySelector("#schCopy").onclick = () => schoolCopyCode(school.code);
+body.querySelector("#schPanel").onclick = () => { closeQuickModal(); openPage("school"); };
+body.querySelector("#schRename").onclick = openSchoolRename;
+}
+async function schoolLeave(question){
+if (!confirm(question)) return;
+const { error } = await supabaseClient.rpc("hi_leave_school");
+if (error) { alert(schoolErrText(error)); return; }
+schoolPubSig = "";
+await schoolRefresh();
+closeQuickModal();
+showCloudWarning("Pronto.");
+}
+async function schoolCopyCode(code){
+try { await navigator.clipboard.writeText(code); showCloudWarning("Chave copiada: " + code); } catch(e) { prompt("Copie a chave:", code); }
+}
+function schoolInviteText(){
+return `Oi! Para entrar na escola ${school.name} no Hi Teacher: abra o app em ${location.origin + location.pathname}, vá em Configurações → Escola → Dou aula numa escola e use a chave ${school.code}.`;
+}
+function openSchoolCreate(){
+const body = document.createElement("div");
+body.innerHTML = `<div class="field"><label>Nome da escola</label><input type="text" id="schName" maxlength="80" placeholder="Ex.: Escola de Música Harmonia"></div>
+<div class="field-hint">Você continua com tudo de professor: seus alunos, aulas e cobranças ficam como estão. Depois é só passar a chave da escola para os professores.</div>
+<div class="auth-error" id="schErr"></div>`;
+openQuickModal("Criar minha escola", "", body, async () => {
+const name = body.querySelector("#schName").value.trim(), err = body.querySelector("#schErr");
+if (!name) { err.textContent = "Digite o nome da escola."; return; }
+const save = document.getElementById("quickLessonSave"); save.disabled = true;
+const { data, error } = await supabaseClient.rpc("hi_create_school", { p_name: name, p_display: (appSettings.profile && appSettings.profile.name) || "" });
+save.disabled = false;
+if (error) { err.textContent = schoolErrText(error); return; }
+schoolClearIntent();
+school = data; schoolCacheWrite(school); schoolApplyNav();
+closeQuickModal();
+schoolPublishSoon(1000);
+openPage("school");
+}, "Agora não", "Criar escola");
+setTimeout(() => body.querySelector("#schName").focus(), 50);
+}
+function openSchoolRename(){
+const body = document.createElement("div");
+body.innerHTML = `<div class="field"><label>Nome da escola</label><input type="text" id="schName" maxlength="80"></div><div class="auth-error" id="schErr"></div>`;
+body.querySelector("#schName").value = school.name || "";
+openQuickModal("Nome da escola", "", body, async () => {
+const name = body.querySelector("#schName").value.trim();
+if (!name) { body.querySelector("#schErr").textContent = "Digite o nome da escola."; return; }
+const { error } = await supabaseClient.rpc("hi_school_rename", { p_name: name });
+if (error) { body.querySelector("#schErr").textContent = schoolErrText(error); return; }
+await schoolRefresh();
+closeQuickModal();
+if (currentPage === "school") renderSchoolPage();
+});
+}
+function openSchoolJoin(){
+const body = document.createElement("div");
+body.innerHTML = `<div class="field"><label>Chave da escola</label><input type="text" id="schCode" placeholder="Ex.: ESC-12345" autocapitalize="characters"></div>
+<div id="schFound"></div><div class="auth-error" id="schErr"></div>`;
+let found = null;
+const input = body.querySelector("#schCode"), err = body.querySelector("#schErr"), box = body.querySelector("#schFound");
+const save = () => document.getElementById("quickLessonSave");
+const check = async () => {
+const code = input.value.trim().toUpperCase();
+err.textContent = ""; box.innerHTML = ""; found = null; save().textContent = "Conferir";
+if (!code) { err.textContent = "Digite a chave que o dono da escola passou."; return; }
+const { data, error } = await supabaseClient.rpc("hi_find_school", { p_code: code });
+if (error) { err.textContent = schoolErrText(error); return; }
+if (!data) { err.textContent = "Chave não encontrada. Confira com o dono da escola."; return; }
+found = { code, ...data };
+box.innerHTML = `<div class="key-state ok">${escapeHtml(data.name)}</div>
+<div class="field-hint">Dono: ${escapeHtml(data.owner_name || "—")}. Ao entrar, o dono vai ver os números do seu mês (alunos, aulas dadas, faltas e valores) e as suas aulas dos próximos dias, com nome e instrumento dos alunos. Observações, avaliações e anotações das aulas não vão para ele. Seus alunos e dados continuam com você.</div>`;
+save().textContent = "Pedir para entrar";
+};
+input.oninput = () => { if (found) { found = null; box.innerHTML = ""; save().textContent = "Conferir"; } };
+openQuickModal("Entrar numa escola", "Peça a chave da escola para o dono.", body, async () => {
+if (!found) return check();
+const { error } = await supabaseClient.rpc("hi_join_school", { p_code: found.code, p_display: (appSettings.profile && appSettings.profile.name) || "" });
+if (error) { err.textContent = schoolErrText(error); return; }
+await schoolRefresh();
+openSchoolSettings();
+}, "Cancelar", "Conferir");
+}
+// Escolheu "Sou dono de escola" na entrada: depois da configuração inicial, pede o nome da escola.
+function schoolAskCreateIfIntent(){
+if (!schoolIntent() || !schoolLoaded || studentMode) return;
+if (!document.getElementById("onboardingGate").classList.contains("hidden")) return;
+if (school) { schoolClearIntent(); return; }
+schoolClearIntent();
+if (schoolMissing) { showCloudWarning("A parte de escola ainda não está ativa no servidor do app. Você pode criar a escola depois em Configurações → Escola."); return; }
+openSchoolCreate();
+}
+
+// ---------- Painel do dono (página Escola) ----------
+var SCHOOL_REASON = { absent_notice: "Faltou (avisou)", absent_no_notice: "Faltou", teacher_cancel: "Cancelada", holiday: "Feriado/férias", rescheduled: "Remarcada", noclass: "Sem aula" };
+function schoolAgo(iso){
+const t = Date.parse(iso);
+if (!t) return "";
+const d = new Date(t), today = new Date(); today.setHours(0, 0, 0, 0);
+const hm = `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+if (d >= today) return `hoje às ${hm}`;
+const days = Math.round((today - new Date(d.getFullYear(), d.getMonth(), d.getDate())) / 86400000);
+return days === 1 ? `ontem às ${hm}` : `há ${days} dias`;
+}
+async function schoolLoadPanel(){
+const [mem, rep] = await Promise.all([
+supabaseClient.rpc("hi_school_members"),
+supabaseClient.from("school_reports").select("teacher_id,data,updated_at").eq("org_id", school.org_id)
+]);
+if (mem.error) throw mem.error;
+if (rep.error) throw rep.error;
+const members = Array.isArray(mem.data) ? mem.data : [];
+const reports = new Map((rep.data || []).map(r => [r.teacher_id, r]));
+schoolPendingN = members.filter(m => m.status === "pending").length;
+schoolPanel = { members, reports, at: Date.now() };
+schoolApplyNav();
+}
+async function renderSchoolPage(){
+const box = document.getElementById("schoolBody");
+if (!box) return;
+if (!schoolIsOwner()) {
+box.innerHTML = `<div class="empty-teach"><b>O painel da escola é do dono da escola.</b><span>Para criar a sua escola ou entrar na escola onde você dá aula, vá em Configurações → Escola.</span><button type="button" class="btn-historico" id="schGo">Abrir Escola</button></div>`;
+box.querySelector("#schGo").onclick = openSchoolSettings;
+return;
+}
+if (!schoolPanel) box.innerHTML = `<div class="stu-muted">Carregando…</div>`;
+try { await schoolLoadPanel(); }
+catch(e) {
+if (!schoolPanel) { box.innerHTML = `<div class="empty-teach"><b>Não consegui abrir o painel.</b><span>${escapeHtml(schoolErrText(e))}</span><button type="button" class="btn-historico" id="schRetry">Tentar de novo</button></div>`; box.querySelector("#schRetry").onclick = renderSchoolPage; return; }
+}
+schoolDrawPanel();
+}
+function schoolDrawPanel(){
+const box = document.getElementById("schoolBody");
+if (!box || !schoolPanel || currentPage !== "school") return;
+const cur = currentMonthKey(), keys = [cur, addMonths(cur, -1), addMonths(cur, -2)];
+if (!keys.includes(schoolMonth)) schoolMonth = cur;
+const me = authCurrentUser.id;
+const members = schoolPanel.members;
+const pending = members.filter(m => m.status === "pending");
+const team = members.filter(m => m.status === "active");
+// O dono vê os próprios números na hora (do aparelho), sem esperar o envio.
+const live = (() => { try { return { data: schoolReportData(), updated_at: new Date().toISOString(), live: true }; } catch(e) { return null; } })();
+const repOf = m => m.user_id === me && live ? live : schoolPanel.reports.get(m.user_id);
+const monthOf = m => { const r = repOf(m); return r && r.data && r.data.months ? r.data.months[schoolMonth] : null; };
+const nameOf = m => { const r = repOf(m); return (m.user_id === me ? "Você" : "") || m.display_name || (r && r.data && r.data.name) || "Professor"; };
+let tot = { active: 0, lessons: 0, minutes: 0, absences: 0, cancels: 0, revenue: 0, pay: 0, payN: 0 };
+team.forEach(m => {
+const x = monthOf(m);
+if (x) { tot.active += x.active || 0; tot.lessons += x.lessons || 0; tot.minutes += x.minutes || 0; tot.absences += x.absences || 0; tot.cancels += x.cancels || 0; tot.revenue += x.revenue || 0; }
+const p = payFor(m.pay_rule, x);
+if (p !== null) { tot.pay += p; tot.payN++; }
+});
+const card = (title, value, sub) => `<div class="kpi-card"><div class="kpi-title">${title}</div><div class="kpi-value">${value}</div>${sub ? `<div class="kpi-sub">${sub}</div>` : ""}</div>`;
+const isCur = schoolMonth === cur;
+let html = `<div class="school-head"><div class="school-name">${escapeHtml(school.name)}</div>
+<div class="school-key">Chave para professores: <b>${escapeHtml(school.code || "")}</b> <button type="button" class="btn-link-inline" id="schCopyK">Copiar</button> <button type="button" class="btn-link-inline" id="schShareK">Compartilhar</button> <button type="button" class="btn-link-inline" id="schNewK">Nova chave</button></div></div>`;
+if (pending.length) {
+html += `<div class="settings-group-label">Pedidos para entrar</div><div class="settings-card ann-list">${pending.map(m => `<div class="ann-row"><div class="ann-row-main"><div class="ann-row-title">${escapeHtml(m.display_name || "Professor")}</div><div class="ann-row-meta">Pediu ${escapeHtml(schoolAgo(m.created_at))}</div></div><div class="school-acts"><button type="button" class="save" data-sch-acc="${m.id}">Aceitar</button><button type="button" class="btn-historico" data-sch-rej="${m.id}">Recusar</button></div></div>`).join("")}</div>`;
+}
+html += `<div class="choice-chips school-months">${keys.map(k => `<button type="button" class="filter-chip${k === schoolMonth ? " selected" : ""}" data-sch-month="${k}" aria-pressed="${k === schoolMonth}">${escapeHtml(monthLongLabel(k))}${k === cur ? " (até hoje)" : ""}</button>`).join("")}</div>`;
+html += `<div class="kpi-grid stats-grid">
+${card("Professores", String(team.length), pending.length ? `${pending.length} pedido${pending.length === 1 ? "" : "s"} esperando` : "Contando você")}
+${card("Alunos ativos", String(tot.active), "Somando todos os professores")}
+${card("Aulas dadas", String(tot.lessons), `${hoursText(tot.minutes)} de aula${isCur ? " até hoje" : ""}. Aula em grupo conta uma vez.`)}
+${card("Faltas e cancelamentos", `${tot.absences} / ${tot.cancels}`, "Faltas de alunos / aulas canceladas pelo professor")}
+${card("Faturamento previsto", `R$ ${moneyText(Math.round(tot.revenue))}`, "Mensalidades, aulas avulsas e pacotes de todos os alunos (bolsa não entra)")}
+${card("A pagar aos professores", tot.payN ? `R$ ${moneyText(Math.round(tot.pay * 100) / 100)}` : "—", tot.payN ? `Pelas regras de ${tot.payN} professor${tot.payN === 1 ? "" : "es"}` : "Defina a regra de pagamento de cada professor abaixo")}
+</div>`;
+// Aulas de hoje de todos (das aulas que cada professor mandou).
+const todayIso = isoOf(new Date()), now = new Date();
+const todays = [];
+team.forEach(m => {
+const r = repOf(m);
+const list = (r && r.data && Array.isArray(r.data.agenda) ? r.data.agenda : []).filter(a => a.d === todayIso);
+const slots = new Map();
+list.forEach(a => { const k = a.t + "|" + (a.x ? "x" + a.n : ""); if (!slots.has(k)) slots.set(k, []); slots.get(k).push(a); });
+slots.forEach(arr => todays.push({ m, t: arr[0].t, arr }));
+});
+todays.sort((a, b) => a.t.localeCompare(b.t) || nameOf(a.m).localeCompare(nameOf(b.m)));
+html += `<div class="settings-group-label">Aulas de hoje</div>`;
+if (!todays.length) html += `<div class="empty-teach slim">Nenhuma aula hoje${team.length > 1 ? " entre os professores que já mandaram os números" : ""}.</div>`;
+else html += `<div class="settings-card ann-list">${todays.map(x => {
+const a0 = x.arr[0];
+const allOff = x.arr.every(a => a.s);
+let st, cls;
+if (allOff) { st = a0.s === "off" ? (a0.o || "Feriado/férias") : (SCHOOL_REASON[a0.s] || "Sem aula"); cls = "off"; }
+else {
+const [h, mi] = String(x.t).split(":").map(Number), start = new Date(); start.setHours(h || 0, mi || 0, 0, 0);
+const end = new Date(start.getTime() + (Number(a0.m) || 60) * 60000);
+if (now >= end) { st = "Dada"; cls = "completed"; } else if (now >= start) { st = "Agora"; cls = "ongoing"; } else { st = "Prevista"; cls = "upcoming"; }
+}
+const names = x.arr.map(a => escapeHtml(a.n) + (a.s && !allOff ? ` (${escapeHtml(a.s === "off" ? (a.o || "Feriado") : (SCHOOL_REASON[a.s] || "sem aula"))})` : "")).join(", ");
+const inst = [...new Set(x.arr.map(a => a.i).filter(Boolean))].join(", ");
+return `<div class="ann-row"><div class="school-time">${escapeHtml(x.t)}</div><div class="ann-row-main"><div class="ann-row-title">${names}</div><div class="ann-row-meta">${escapeHtml(nameOf(x.m))}${inst ? " · " + escapeHtml(inst) : ""}${x.arr.length > 1 ? " · turma" : ""}${a0.x ? " · aula extra" : ""}</div></div><span class="status ${cls}">${escapeHtml(st)}</span></div>`;
+}).join("")}</div>`;
+// Professores
+html += `<div class="settings-group-label">Professores</div><div class="school-team">${team.map(m => {
+const r = repOf(m), x = monthOf(m), p = payFor(m.pay_rule, x);
+const old = r && !r.live && Date.now() - Date.parse(r.updated_at) > 2 * 86400000;
+const upd = !r ? `<div class="school-warn">Ainda não mandou os números. Eles aparecem quando ${m.user_id === me ? "você" : "o professor"} abrir o app.</div>`
+: r.live ? `<div class="kpi-sub">Seus números, direto deste aparelho.</div>` : `<div class="${old ? "school-warn" : "kpi-sub"}">Números de ${escapeHtml(schoolAgo(r.updated_at))}${old ? ". Peça para ele abrir o app." : ""}</div>`;
+const lines = x ? `<div class="school-lines">
+<span>Alunos ativos <b>${x.active}</b>${x.joined || x.left ? ` <i>(+${x.joined} / −${x.left})</i>` : ""}</span>
+<span>Aulas dadas <b>${x.lessons}</b> <i>(${hoursText(x.minutes)})</i></span>
+<span>Faltas de alunos <b>${x.absences}</b></span>
+<span>Canceladas <b>${x.cancels}</b></span>
+<span>Faturamento previsto <b>R$ ${moneyText(Math.round(x.revenue))}</b></span>
+${isCur && r && r.data && r.data.late && r.data.late.n ? `<span>Em atraso <b>R$ ${moneyText(Math.round(r.data.late.v))}</b> <i>(${r.data.late.n})</i></span>` : ""}
+</div>` : (r ? `<div class="kpi-sub">Sem números deste mês.</div>` : "");
+const pay = `<div class="school-pay"><span>${escapeHtml(payRuleText(m.pay_rule))}</span>${p !== null ? `<b>R$ ${moneyText(p)}</b>` : ""}</div>`;
+return `<div class="kpi-card school-teacher"><div class="school-t-name">${escapeHtml(nameOf(m))}${m.role === "owner" ? ` <span class="status upcoming">Dono</span>` : ""}</div>${upd}${lines}${pay}
+<div class="school-acts"><button type="button" class="btn-historico" data-sch-rule="${m.id}">Regra de pagamento</button>${p !== null ? `<button type="button" class="btn-historico" data-sch-sum="${m.id}">Resumo do pagamento</button>` : ""}${m.role !== "owner" ? `<button type="button" class="btn-link-inline" data-sch-rem="${m.id}" style="color:#f87171">Tirar da escola</button>` : ""}</div></div>`;
+}).join("")}</div>`;
+if (team.length <= 1) html += `<div class="empty-teach slim">Para trazer os professores: passe a chave <b>${escapeHtml(school.code || "")}</b>. Cada um vai em Configurações → Escola → Dou aula numa escola, e o pedido aparece aqui para você aceitar.</div>`;
+box.innerHTML = html;
+const byId = id => members.find(m => m.id === id);
+box.querySelector("#schCopyK").onclick = () => schoolCopyCode(school.code);
+box.querySelector("#schShareK").onclick = async () => {
+const text = schoolInviteText();
+if (navigator.share) { try { await navigator.share({ text }); return; } catch(e) { if (e && e.name === "AbortError") return; } }
+window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+};
+box.querySelector("#schNewK").onclick = async () => {
+if (!confirm("Gerar uma chave nova? A chave atual para de funcionar para pedidos novos. Quem já está na escola continua.")) return;
+const { data, error } = await supabaseClient.rpc("hi_school_new_code");
+if (error) { alert(schoolErrText(error)); return; }
+school.code = data; schoolCacheWrite(school); schoolDrawPanel();
+};
+box.querySelectorAll("[data-sch-month]").forEach(b => b.onclick = () => { schoolMonth = b.dataset.schMonth; schoolDrawPanel(); });
+box.querySelectorAll("[data-sch-acc],[data-sch-rej]").forEach(b => b.onclick = async () => {
+const accept = !!b.dataset.schAcc, id = b.dataset.schAcc || b.dataset.schRej, m = byId(id);
+if (!accept && !confirm(`Recusar o pedido de ${m ? m.display_name || "este professor" : "este professor"}?`)) return;
+b.disabled = true;
+const { error } = await supabaseClient.rpc("hi_school_answer", { p_member: id, p_accept: accept });
+if (error) { b.disabled = false; alert(schoolErrText(error)); return; }
+renderSchoolPage();
+});
+box.querySelectorAll("[data-sch-rem]").forEach(b => b.onclick = async () => {
+const m = byId(b.dataset.schRem);
+if (!m || !confirm(`Tirar ${m.display_name || "este professor"} da escola? Ele continua com todos os alunos e dados dele; só some deste painel.`)) return;
+const { error } = await supabaseClient.rpc("hi_school_remove", { p_member: m.id });
+if (error) { alert(schoolErrText(error)); return; }
+renderSchoolPage();
+});
+box.querySelectorAll("[data-sch-rule]").forEach(b => b.onclick = () => openPayRule(byId(b.dataset.schRule), nameOf(byId(b.dataset.schRule))));
+box.querySelectorAll("[data-sch-sum]").forEach(b => b.onclick = () => { const m = byId(b.dataset.schSum); openPaySummary(m, nameOf(m), monthOf(m)); });
+}
+function openPayRule(m, name){
+if (!m) return;
+const r = m.pay_rule || {};
+const body = document.createElement("div");
+body.innerHTML = `<div class="field"><label>Como você paga ${escapeHtml(name === "Você" ? "você mesmo" : name)}</label><select id="prType"><option value="">Sem regra</option>${Object.entries(PAY_RULE_LABEL).map(([k, v]) => `<option value="${k}"${r.type === k ? " selected" : ""}>${v}</option>`).join("")}</select></div>
+<div class="field" id="prValBox"><label id="prValLabel">Valor</label><input type="number" id="prVal" min="0" step="0.01" inputmode="decimal"></div>
+<div class="field-hint" id="prHint"></div><div class="auth-error" id="prErr"></div>`;
+const type = body.querySelector("#prType"), val = body.querySelector("#prVal");
+if (r.value !== undefined) val.value = r.value;
+const upd = () => {
+const t = type.value;
+body.querySelector("#prValBox").style.display = t ? "" : "none";
+body.querySelector("#prValLabel").textContent = { lesson: "Valor por aula dada (R$)", hour: "Valor por hora de aula (R$)", percent: "Porcentagem (%)", fixed: "Valor por mês (R$)" }[t] || "Valor";
+body.querySelector("#prHint").textContent = { lesson: "Conta as aulas dadas no mês. Aula em grupo conta uma vez; falta e aula cancelada não contam.", hour: "Soma a duração das aulas dadas no mês (aula em grupo conta uma vez).", percent: "Sobre o faturamento previsto dos alunos dele no mês: mensalidades, aulas avulsas dadas e pacotes (bolsa não entra).", fixed: "O mesmo valor todo mês." }[t] || "Sem regra, o painel não calcula o pagamento deste professor.";
+};
+type.onchange = upd; upd();
+openQuickModal("Regra de pagamento", name, body, async () => {
+const t = type.value, v = Number(val.value);
+const err = body.querySelector("#prErr");
+if (t && (!(v >= 0) || val.value === "")) { err.textContent = "Digite o valor."; return; }
+if (t === "percent" && v > 100) { err.textContent = "A porcentagem vai até 100."; return; }
+const { error } = await supabaseClient.rpc("hi_school_set_pay", { p_member: m.id, p_rule: t ? { type: t, value: v } : {} });
+if (error) { err.textContent = schoolErrText(error); return; }
+closeQuickModal();
+renderSchoolPage();
+});
+}
+function schoolPayText(m, name, x){
+const p = payFor(m.pay_rule, x);
+const lines = [`Pagamento de ${monthLongLabel(schoolMonth)}${schoolMonth === currentMonthKey() ? " (até hoje)" : ""} · ${school.name}`, `Professor: ${name === "Você" ? (appSettings.profile.name || "") : name}`, "",
+`Aulas dadas: ${x.lessons} (${hoursText(x.minutes)})`, `Faltas de alunos: ${x.absences} · Aulas canceladas: ${x.cancels}`, `Alunos ativos: ${x.active}`];
+if (m.pay_rule && m.pay_rule.type === "percent") lines.push(`Faturamento previsto dos alunos: R$ ${moneyText(x.revenue)}`);
+lines.push("", `Regra: ${payRuleText(m.pay_rule)}`, `Cálculo: ${payCalcText(m.pay_rule, x)}`, `Total: R$ ${moneyText(p)}`);
+return lines.join("\n");
+}
+function openPaySummary(m, name, x){
+if (!m || !x) return;
+const text = schoolPayText(m, name, x);
+const body = document.createElement("div");
+body.innerHTML = `<div class="ms-preview"></div><div class="ms-actions"><button type="button" class="btn-historico" id="psShare">Compartilhar</button><button type="button" class="btn-historico" id="psCopy">Copiar texto</button></div>`;
+body.querySelector(".ms-preview").textContent = text;
+body.querySelector("#psCopy").onclick = async e => { const ok = await copyText(text); e.target.textContent = ok ? "Copiado ✓" : "Não deu pra copiar"; setTimeout(() => e.target.textContent = "Copiar texto", 2000); };
+body.querySelector("#psShare").onclick = async () => {
+if (navigator.share) { try { await navigator.share({ text }); return; } catch(e) { if (e && e.name === "AbortError") return; } }
+window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+};
+openQuickModal("Resumo do pagamento", name, body, null, "Fechar");
+}
 </script>
 <script>
 /* Fundo animado do app (WebGL2). Desenha em meia resolução e a ~30 fps: a imagem é só
