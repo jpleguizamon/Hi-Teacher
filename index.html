@@ -2082,6 +2082,15 @@ body.pdf-open{overflow:hidden}
 .school-pay{display:flex;justify-content:space-between;gap:0.5rem;align-items:baseline;padding-top:0.5rem;border-top:0.0625rem solid var(--hairline);font-size:0.8125rem;color:var(--text-2)}
 .school-pay b{font-size:1rem;color:#4ade80}
 .school-warn{font-size:0.75rem;color:#fb923c}
+.school-sec .month-sum span.stu-muted{font-weight:600;font-size:0.75rem;text-align:right}
+.school-sec-body .ann-row:last-child{border-bottom:0.0625rem solid var(--hairline)}
+.school-pad{padding:0.75rem 1rem}
+.school-pay-btn{cursor:pointer;font-family:inherit}
+.school-exp-form{display:flex;flex-wrap:wrap;gap:0.5rem}
+.school-exp-form input,.school-exp-form select{flex:1;min-width:6rem}
+.school-exp-form input#expName{flex:2;min-width:9rem}
+.school-conflict{border-color:rgba(251,146,60,.5)}
+.school-conflict b{color:#fb923c}
 .chart-empty-hint{flex-basis:100%;font-size:0.8125rem;line-height:1.5;color:var(--text-2);padding:0.5rem 0.625rem;border-radius:var(--radius-sm);background:rgba(47,211,242,.06);margin-top:0.5rem}
 /* 8.16: sino de notificações do professor (no lugar da bolinha de perfil do cabeçalho) */
 .notif-pop{position:fixed;z-index:60;width:min(22rem,calc(100vw - 1.5rem));max-height:calc(100vh - 6rem);overflow:auto;overscroll-behavior:contain;padding:0.875rem;border-radius:var(--radius-lg);border:0.0625rem solid var(--glass-border);background:var(--glass-fill-strong);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:var(--edge-light),0 1rem 2.5rem rgba(0,0,0,.45)}
@@ -2824,10 +2833,12 @@ body.pdf-open{overflow:hidden}
 <div class="field" id="fLevelField"><label>Nível</label>
 <select id="fLevel"></select>
 </div>
+<div class="field" id="fRoomField" style="display:none"><label>Sala</label><select id="fRoom"></select><div class="field-hint" id="fRoomHint"></div></div>
 <div style="display:flex;gap:10px">
 <div class="field" style="flex:1"><label>Data de entrada</label><input id="fEntry" type="date"></div>
 <div class="field" id="exitDateFieldWrapper" style="flex:1;display:none"><label>Data de saída</label><input id="fExit" type="date"></div>
 </div>
+<div class="field" id="exitReasonField" style="display:none"><label>Motivo da saída</label><select id="fExitReason"></select></div>
 <div class="field" id="fPaymentsField" style="display:none"><label id="fPaymentsLabel">Mensalidades pagas</label>
 <div class="pay-months" id="fPayMonths"></div>
 <div class="field-hint" id="fPaymentsHint" style="margin-top:0.375rem">Toque no mês pra marcar como pago ou não pago.</div>
@@ -3545,7 +3556,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.23";
+const APP_VERSION = "8.24";
 // ===================== App instalável (8.4) =====================
 // Service worker (sw.js), aviso de versão nova, faixa "Sem internet", botão "Instalar o app",
 // atalhos do ícone (?p=...) e botão voltar do celular fechando modal/menu no app instalado.
@@ -10193,6 +10204,7 @@ const themes = (s.themes || []).map(t => getThemeById(t.themeId)?.topic).filter(
 const acomp = sheetSection("Acompanhamento", [
 sheetPair("Entrada", s.entry ? (inactive ? formatDateShort(s.entry) : `${formatDateShort(s.entry)} · ${formatEntryDuration(s.entry, ref)} de casa`) : ""),
 inactive ? sheetPair("Saída", s.exit ? `${formatDateShort(s.exit)} · ficou ${formatEntryDuration(s.entry, s.exit)}` : "—") : "",
+inactive && s.exitReason ? sheetPair("Motivo da saída", exitReasonLabel(s) ) : "",
 sheetPair("Histórico desde", trackingStart(s) ? formatDateShort(trackingStart(s)) : ""),
 sheetPair("Faltas no mês", absenceSplit(s, `/${pad2(now.getMonth()+1)}/${now.getFullYear()}`)),
 sheetPair("Faltas no ano", absenceSplit(s, `/${now.getFullYear()}`)),
@@ -10231,7 +10243,9 @@ acts.innerHTML = `<button type="button" class="save" data-sheet-act="edit">Edita
 ${wa ? `<a class="wa-btn" href="${wa}" target="_blank" rel="noopener">WhatsApp${!whatsappLink(s.phone) ? " (resp.)" : ""}</a>` : ""}
 ${inactive ? "" : `<button type="button" class="btn-historico" data-sheet-act="extra">${s.lessonFrequency === "single" ? "+ Marcar aula" : "+ Marcar aula extra"}</button>`}
 <button type="button" class="btn-historico" data-sheet-act="summary">Resumo do mês</button>
-${appSettings.useLevels && s.level ? `<button type="button" class="btn-historico" data-sheet-act="cert">Certificado de nível</button>` : ""}`;
+${appSettings.useLevels && s.level ? `<button type="button" class="btn-historico" data-sheet-act="cert">Certificado de nível</button>` : ""}
+${!inactive && schoolCanTransfer() ? `<button type="button" class="btn-historico" data-sheet-act="transfer">Passar para outro professor</button>` : ""}`;
+{ const tr = acts.querySelector('[data-sheet-act="transfer"]'); if (tr) tr.onclick = () => openSchoolTransfer(s); }
 acts.querySelector('[data-sheet-act="summary"]').onclick = () => openMonthSummary(s);
 const certBtn = acts.querySelector('[data-sheet-act="cert"]'); if (certBtn) certBtn.onclick = () => issueCertificate(s);
 acts.querySelector('[data-sheet-act="edit"]').onclick = () => editFromSheet(s.id);
@@ -10496,6 +10510,7 @@ ${lessonNotesHTML(lesson)}
 <div class="history-actions"><button type="button" class="btn-edit-toggle btn-noclass btn-subtle">Não teve aula</button><button type="button" class="btn-edit-toggle btn-notes">${lesson.taught || lesson.homework ? "Editar anotações" : "Anotar a aula"}</button></div>`;
 attachNoClassButton(div, student, lesson, rerender);
 attachNotesToggle(div, student, lesson, rerender);
+try { attachSubButton(div, student, lesson, rerender); } catch(e) {}
 return div;
 }
 
@@ -10533,7 +10548,7 @@ attachNoClassButton(div, student, lesson, rerender);
 const skip = div.querySelector('.btn-skip-eval');
 if (skip) skip.onclick = () => { upsertLessonRecord(student, lesson, { status: "given", evalSkipped: true }); rerender(); };
 
-if (!isPending) { attachNotesToggle(div, student, lesson, rerender); return div; }
+if (!isPending) { attachNotesToggle(div, student, lesson, rerender); try { attachSubButton(div, student, lesson, rerender); } catch(e) {} return div; }
 
 const values = {};
 const wrap = div.querySelector('.eval-criteria-wrap');
@@ -10554,6 +10569,7 @@ if (notes.homework) fields.homework = notes.homework;
 upsertLessonRecord(student, lesson, fields);
 rerender();
 };
+try { attachSubButton(div, student, lesson, rerender); } catch(e) {}
 return div;
 }
 
@@ -12969,13 +12985,15 @@ function openBulkInactivate(){
 const list = bulkStudents();
 if (!list.length) return;
 const body = document.createElement("div");
-body.innerHTML = `<div class="field"><label>Data de saída (a mesma pra todos)</label><input type="date" class="bulk-exit" value="${isoOf(new Date())}"></div>`;
+body.innerHTML = `<div class="field"><label>Data de saída (a mesma pra todos)</label><input type="date" class="bulk-exit" value="${isoOf(new Date())}"></div>
+<div class="field"><label>Motivo da saída</label><select class="bulk-why">${exitReasonOptions("")}</select></div>`;
 openQuickModal(`Inativar ${list.length} aluno${list.length > 1 ? "s" : ""}`, list.map(x => x.name).join(", "), body, () => {
 const date = body.querySelector(".bulk-exit").value;
 if (!date) { alert("Escolha a data de saída."); return; }
 if (!confirm(`Inativar ${list.length} aluno${list.length > 1 ? "s" : ""} com saída em ${formatDateShort(date)}?`)) return;
-const snaps = snapshotFields(list, ["active", "exit"]);
-list.forEach(x => { x.active = false; x.exit = date; });
+const why = body.querySelector(".bulk-why").value;
+const snaps = snapshotFields(list, ["active", "exit", "exitReason"]);
+list.forEach(x => { x.active = false; x.exit = date; if (why) x.exitReason = why; });
 closeQuickModal();
 cancelBulk();
 afterBulkChange();
@@ -13723,6 +13741,12 @@ card("Alunos ativos", String(active.length), active.length ? `${active.length - 
 card("Média de permanência", statsMonthsText(avg(stayAll)), stayAll.length ? [stayAct.length ? `Ativos: ${statsMonthsText(avg(stayAct))}` : "", stayEx.length ? `Quem saiu ficou: ${statsMonthsText(avg(stayEx))}` : ""].filter(Boolean).join(" · ") : "Preencha a data de entrada dos alunos.", { now: stayAvgOn(todayIso), before: stayAvgOn(ago3Iso) }),
 growthCard("Crescimento de alunos", statsGrowth(stuSeries), "alunos", "Precisa de pelo menos 2 meses com alunos registrados.", { now: activeOn(todayIso).length, before: activeOn(ago3Iso).length }),
 card("Entradas e saídas", `+${joined} / −${left}`, `Nos últimos 12 meses. Saldo: ${joined - left > 0 ? "+" : ""}${joined - left}.`),
+(() => {
+const why = {};
+students.filter(s => s.active === false && s.exit && s.exit > yearAgo && s.exit <= todayIso).forEach(s => { const k = s.exitReason || ""; why[k] = (why[k] || 0) + 1; });
+const list = Object.entries(why).filter(([k]) => k).sort((a, b) => b[1] - a[1]), none = why[""] || 0;
+return card("Por que saíram", list.length ? escapeHtml(EXIT_REASONS[list[0][0]] || "Outro motivo") : "—", list.length ? list.map(([k, n]) => `${escapeHtml(EXIT_REASONS[k] || "Outro motivo")}: ${n}`).join(" · ") + (none ? ` · sem motivo: ${none}` : "") + ". Nos últimos 12 meses." : (left ? "Marque o motivo quando um aluno sair." : "Ninguém saiu nos últimos 12 meses."));
+})(),
 card("Continuam com você", base.length ? `${Math.round(stayed / base.length * 100)}%` : "—", base.length ? `${stayed} de ${base.length} alunos que você tinha há 1 ano ainda estão ativos.` : "Aparece quando houver alunos com mais de 1 ano.")
 ];
 // ---- Dinheiro ----
@@ -14801,8 +14825,10 @@ document.getElementById("fFormatSuggested").textContent = `Valor sugerido: R$ ${
 document.getElementById("fTime").onchange = updateModalFormatPreview;
 document.getElementById("fInstrument").onchange = updateModalFormatPreview;
 document.querySelectorAll(".day").forEach(b => {
-b.onclick = () => { b.classList.toggle("selected"); b.closest(".field")?.classList.remove("field-error"); renderTimesByDay(); updateModalFormatPreview(); };
+b.onclick = () => { b.classList.toggle("selected"); b.closest(".field")?.classList.remove("field-error"); renderTimesByDay(); updateModalFormatPreview(); try { schoolRoomCheck(); } catch(e) {} };
 });
+document.getElementById("fRoom").onchange = () => schoolRoomCheck();
+document.getElementById("fTime").addEventListener("change", () => { try { schoolRoomCheck(); } catch(e) {} });
 
 // Valores do formulário do aluno, pelos mesmos rótulos das pendências. Comparar com a foto
 // tirada ao abrir diz se a pessoa realmente mexeu naquele campo.
@@ -15216,6 +15242,9 @@ document.getElementById("fExit").value=s?.exit||"";
 document.getElementById("fEvalFreq").options[0].textContent = `Padrão (${(EVAL_FREQUENCIES[appSettings.evalFrequency] || "Toda aula").toLowerCase()})`;
 document.getElementById("fEvalFreq").value = s?.evalFrequency || "";
 document.getElementById("exitDateFieldWrapper").style.display = (s && s.active === false) ? "block" : "none";
+document.getElementById("exitReasonField").style.display = (s && s.active === false) ? "block" : "none";
+try { schoolRoomFieldOpen(s); } catch(e) {}
+document.getElementById("fExitReason").innerHTML = exitReasonOptions(s?.exitReason);
 
 if (s && s.value !== undefined && s.value !== getDefaultValueFor(s)) {
 valSelect.value = "outro";
@@ -15282,14 +15311,21 @@ const isActive = s.active !== false;
 btnToggle.textContent = isActive ? "Registrar Saída do Aluno (Inativar)" : "Reativar Aluno";
 btnToggle.className = `btn-toggle-status ${isActive?'':'reactivate'}`;
 btnToggle.onclick = () => {
+const apply = (why) => {
 s.active = !isActive;
 if (!s.active && !s.exit) { s.exit = new Date().toISOString().slice(0,10); }
+if (!s.active && why) s.exitReason = why;
+if (s.active) delete s.exitReason;
 if (!s.active) offerWaitlistFor(s);
-localStorage.setItem("jp_students_v5", JSON.stringify(students));
+saveStudents();
 document.getElementById("modalBg").classList.remove("show");
 renderStudents();
 renderHome();
 returnToSheet();
+};
+// Saída (8.24): pergunta o motivo antes (dá pra pular).
+if (isActive) { askExitReason(s.name, apply); return; }
+apply(null);
 };
 
 if(!isActive) {
@@ -15358,10 +15394,14 @@ paidMonth: currentObj?.paidMonth || null
 };
 delete obj.needsReview;
 
+if (document.getElementById("fRoomField").style.display !== "none") { const room = document.getElementById("fRoom").value; if (room) obj.room = room; else delete obj.room; }
 if (!isActive) {
 obj.exit = document.getElementById("fExit").value || currentObj?.exit || new Date().toISOString().slice(0,10);
+const why = document.getElementById("fExitReason").value;
+if (why) obj.exitReason = why; else delete obj.exitReason;
 } else {
 delete obj.exit;
+delete obj.exitReason;
 }
 
 // Começar histórico em: aluno novo que não mexeu no campo começa hoje (ou na entrada, se
@@ -16106,6 +16146,17 @@ updateModalFormatPreview();
 }
 // Aluno inativado: alguém da lista de espera queria aquele dia/horário? (horário até 1h de
 // diferença; sem horário de preferência vale o dia todo; sem dia vale qualquer dia)
+// ===== Motivo da saída (8.24) =====
+const EXIT_REASONS = { price: "Preço", schedule: "Horário", time: "Falta de tempo", interest: "Perdeu o interesse", moved: "Mudou de cidade", teacher: "Mudou de professor", health: "Saúde", school: "Foi para outra escola", other: "Outro motivo" };
+function exitReasonLabel(s){ return s && s.exitReason ? (EXIT_REASONS[s.exitReason] || "Outro motivo") + (s.exitNote ? ` (${s.exitNote})` : "") : ""; }
+function exitReasonOptions(cur){ return `<option value="">Não informar</option>` + Object.entries(EXIT_REASONS).map(([k, v]) => `<option value="${k}"${cur === k ? " selected" : ""}>${v}</option>`).join(""); }
+function askExitReason(name, done){
+const body = document.createElement("div");
+body.innerHTML = `<div class="choice-chips">${Object.entries(EXIT_REASONS).map(([k, v]) => `<button type="button" class="filter-chip" data-why="${k}">${v}</button>`).join("")}</div>
+<div class="field-hint" style="margin-top:0.625rem">Ajuda a ver, nas Estatísticas, por que os alunos saem.</div>`;
+body.querySelectorAll("[data-why]").forEach(b => b.onclick = () => { closeQuickModal(); done(b.dataset.why); });
+openQuickModal(`Por que ${firstName(name)} saiu?`, "", body, () => { closeQuickModal(); done(null); }, "Cancelar", "Pular");
+}
 function offerWaitlistFor(s){
 if (s.lessonFrequency === "single") return;
 waitlist().forEach(p => {
@@ -17249,13 +17300,19 @@ async function stuFetchAnnouncements(ids){
 try {
 const { data, error } = await supabaseClient.from("announcement_targets").select("id,student_id,read_at,announcement_id,announcements(id,title,body,created_at,expires_at)").in("student_id", ids);
 if (error) return [];
-return (data || []).filter(t => t.announcements).map(t => ({ tid: t.id, student_id: t.student_id, read_at: t.read_at, id: t.announcements.id, title: t.announcements.title, body: t.announcements.body, created_at: t.announcements.created_at, expires_at: t.announcements.expires_at }));
+const out = (data || []).filter(t => t.announcements).map(t => ({ tid: t.id, student_id: t.student_id, read_at: t.read_at, id: t.announcements.id, title: t.announcements.title, body: t.announcements.body, created_at: t.announcements.created_at, expires_at: t.announcements.expires_at }));
+// Avisos da escola (8.24): "lido" fica só no aparelho. Sem o SQL da 8.24, nada muda.
+try {
+const sn = await supabaseClient.rpc("hi_my_school_notices", { p_student_ids: ids });
+if (!sn.error && Array.isArray(sn.data)) { const rd = schoolReadSet(); sn.data.forEach(n => out.push({ tid: `school:${n.id}:${n.student_id}`, school: n.school || "escola", student_id: n.student_id, read_at: rd.has(n.id) ? "local" : null, id: n.id, title: n.title, body: n.body, created_at: n.created_at, expires_at: n.expires_at })); }
+} catch(e) {}
+return out;
 } catch(e) { return []; }
 }
 function stuAnns(){ return ((stuCur && stuCur.anns) || []).filter(a => !a.expires_at || Date.parse(a.expires_at) > Date.now()).sort((a, b) => String(b.created_at).localeCompare(String(a.created_at))); }
 function stuAnnCardsHTML(){
 const list = stuAnns().filter(a => !a.read_at).slice(0, 2);
-return list.map(a => `<div class="ann-card"><div class="ann-kicker"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-bell"/></svg>Aviso do professor</div><div class="ann-title">${escapeHtml(a.title)}</div><div class="ann-body">${escapeHtml(a.body)}</div><div class="ann-foot"><span class="stu-muted">${formatDateShort(String(a.created_at).slice(0, 10)).slice(0, 5)}</span><button type="button" class="btn-edit-toggle study-pill" data-ann-ok="${escapeHtml(a.tid)}">Entendi</button></div></div>`).join("");
+return list.map(a => `<div class="ann-card"><div class="ann-kicker"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-bell"/></svg>${a.school ? "Aviso da escola" : "Aviso do professor"}</div><div class="ann-title">${escapeHtml(a.title)}</div><div class="ann-body">${escapeHtml(a.body)}</div><div class="ann-foot"><span class="stu-muted">${formatDateShort(String(a.created_at).slice(0, 10)).slice(0, 5)}</span><button type="button" class="btn-edit-toggle study-pill" data-ann-ok="${escapeHtml(a.tid)}">Entendi</button></div></div>`).join("");
 }
 async function stuAnnRead(tid){
 const a = ((stuCur && stuCur.anns) || []).find(x => x.tid === tid);
@@ -17264,6 +17321,7 @@ if (demoMode === "view") { stuToast("Só visualização."); return; }
 a.read_at = new Date().toISOString();
 stuRender();
 if (demoMode) return;
+if (String(tid).startsWith("school:")) { schoolMarkRead([a.id]); return; }
 try { await supabaseClient.from("announcement_targets").update({ read_at: a.read_at }).eq("id", tid); } catch(e) {}
 try { const c = JSON.parse(localStorage.getItem(STU_CACHE_KEY) || "null"); if (c && Array.isArray(c.anns)) { const x = c.anns.find(y => y.tid === tid); if (x) { x.read_at = a.read_at; _nativeSetItem.call(localStorage, STU_CACHE_KEY, JSON.stringify(c)); } } } catch(e) {}
 }
@@ -17440,6 +17498,8 @@ function teacherNotifItems(){
 const out = [];
 const add = (icon, html, go, warn) => out.push({ icon, html, go, warn });
 const toHome = id => () => { openPage("home"); setTimeout(() => { const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }, 60); };
+try { if (schoolInboxList.length) add("user", `${schoolInboxList.length} aluno${schoolInboxList.length > 1 ? "s" : ""} ou interessado${schoolInboxList.length > 1 ? "s" : ""} mandado${schoolInboxList.length > 1 ? "s" : ""} para você pela escola`, openSchoolInbox, true); } catch(e) {}
+try { const u = schoolNoticeUnread(); if (u.length) add("bell", `Aviso da escola: ${escapeHtml(u[0].title)}${u.length > 1 ? ` (+${u.length - 1})` : ""}`, openSchoolNotices, true); } catch(e) {}
 try { if (schoolIsOwner() && schoolPendingN) add("user", `${schoolPendingN} professor${schoolPendingN > 1 ? "es pedindo" : " pedindo"} para entrar na escola`, () => openPage("school"), true); } catch(e) {}
 try { const n = pendingJoins().length + inbox.requests.length; if (n) add("user", `${n} pedido${n > 1 ? "s" : ""} de aluno esperando resposta`, toHome("studentInboxBox"), true); } catch(e) {}
 try {
@@ -17610,6 +17670,8 @@ await schoolRefresh();
 if (schoolIsOwner()) await schoolLoadPending();
 schoolAskCreateIfIntent();
 if (schoolActive()) schoolPublishSoon(4000);
+schoolStart824.at = Date.now();
+schoolStart824();
 }
 async function schoolRefresh(){
 if (!supabaseClient || !authCurrentUser) return false;
@@ -17663,12 +17725,12 @@ else if (schoolActive() && Date.now() - schoolPubAt > 10 * 60000) schoolPublishS
 function schoolStatsFor(keys){
 const todayIso = isoOf(new Date());
 const out = {};
-keys.forEach(k => out[k] = { slots: new Map(), studentLessons: 0, absences: 0, cancels: 0, revenue: 0, active: 0, joined: 0, left: 0 });
+keys.forEach(k => out[k] = { slots: new Map(), subs: new Map(), studentLessons: 0, absences: 0, cancels: 0, revenue: 0, active: 0, joined: 0, left: 0, why: {} });
 students.forEach(s => {
 const given = {};
 getStudentTimeline(s).forEach(l => {
 const iso = isoFromBr(l.date), k = iso.slice(0, 7), o = out[k];
-if (!o || iso > todayIso) return;
+if (!o || iso > todayIso || l.prevTeacher) return; // aula com o professor anterior (aluno passado de outro professor) não conta
 if (isNoClass(l)) {
 if (l.reason === "absent_notice" || l.reason === "absent_no_notice") o.absences++;
 else if (l.reason === "teacher_cancel") o.cancels++;
@@ -17678,6 +17740,12 @@ given[k] = (given[k] || 0) + 1;
 const mk = l.makeupId && (s.makeups || []).find(x => x.id === l.makeupId);
 const time = (mk && mk.time) || l.time || getStudentTimeFor(s, dateFromIso(iso).getDay());
 const key = iso + "|" + time;
+// Dada por substituto (8.24): conta para o colega, não para este professor.
+if (l.subBy && l.subBy.id) {
+if (!o.subs.has(l.subBy.id)) o.subs.set(l.subBy.id, { name: l.subBy.name || "", slots: new Map() });
+const sb = o.subs.get(l.subBy.id).slots; sb.set(key, Math.max(sb.get(key) || 0, getStudentDuration(s)));
+return;
+}
 o.slots.set(key, Math.max(o.slots.get(key) || 0, getStudentDuration(s)));
 });
 keys.forEach(k => {
@@ -17685,7 +17753,7 @@ const o = out[k], [y, m] = k.split("-").map(Number);
 const first = k + "-01", last = isoOf(new Date(y, m, 0)), endIso = last < todayIso ? last : todayIso;
 o.studentLessons += given[k] || 0;
 if (s.entry && String(s.entry).slice(0, 7) === k) o.joined++;
-if (s.active === false && s.exit && String(s.exit).slice(0, 7) === k) o.left++;
+if (s.active === false && s.exit && String(s.exit).slice(0, 7) === k) { o.left++; const w = s.exitReason || ""; o.why[w] = (o.why[w] || 0) + 1; }
 const inMonth = (!s.entry || s.entry <= last) && (s.active !== false || (s.exit && s.exit >= first));
 if ((!s.entry || s.entry <= endIso) && (s.active !== false || (s.exit && s.exit > endIso))) o.active++;
 if (s.payTo === "none") return;
@@ -17698,8 +17766,11 @@ else if (inMonth) o.revenue += Number(studentMonthlyValue(s) || 0);
 const res = {};
 keys.forEach(k => {
 const o = out[k];
+// Turma com substituto: a aula inteira vai para o substituto (não conta duas vezes).
+o.subs.forEach(x => x.slots.forEach((v, key) => o.slots.delete(key)));
 const minutes = [...o.slots.values()].reduce((a, b) => a + b, 0);
-res[k] = { lessons: o.slots.size, minutes, studentLessons: o.studentLessons, absences: o.absences, cancels: o.cancels, revenue: Math.round(o.revenue * 100) / 100, active: o.active, joined: o.joined, left: o.left };
+const subs = [...o.subs.entries()].map(([id, x]) => ({ id, name: x.name, lessons: x.slots.size, minutes: [...x.slots.values()].reduce((a, b) => a + b, 0) }));
+res[k] = { lessons: o.slots.size, minutes, studentLessons: o.studentLessons, absences: o.absences, cancels: o.cancels, revenue: Math.round(o.revenue * 100) / 100, active: o.active, joined: o.joined, left: o.left, why: o.why, subs };
 });
 return res;
 }
@@ -17715,6 +17786,7 @@ const s = x.student, rec = x.record;
 let st = x.off ? "off" : "";
 if (rec && isNoClass(rec)) st = rec.reason || "noclass";
 const it = { d: isoOf(d), t: x.time, m: getStudentDuration(s), n: s.name || "", i: s.instrument || "", s: st };
+if (s.room) it.r = s.room;
 if (x.kind === "extra") it.x = 1;
 if (x.off && x.off.label) it.o = x.off.label;
 agenda.push(it);
@@ -17723,7 +17795,18 @@ agenda.push(it);
 let lateN = 0, lateV = 0;
 students.filter(s => s.active !== false && paysMe(s)).forEach(s => unpaidMonths(s).forEach(k => { if (isPastDue(s, k)) { lateN++; lateV += Number(studentMonthlyValue(s) || 0); } }));
 const p = appSettings.profile || {};
-return { v: 1, name: p.name || "", full: p.fullName || "", active: students.filter(s => s.active !== false).length, late: { n: lateN, v: lateV }, months, agenda };
+// Alunos que pagam direto para a escola (8.24): o dono controla essas mensalidades no painel.
+// Só aqui vai o telefone (de quem paga), para o dono poder cobrar.
+const pay = students.filter(s => s.active !== false && s.payTo === "school" && billingMode(s) === "monthly").map(s => {
+const r = messageRecipient(s);
+const it = { k: String(s.id), n: s.name || "", v: Number(studentMonthlyValue(s) || 0) };
+if (s.dueDay) it.due = Number(s.dueDay);
+if (r) { it.pn = r.name; it.ph = r.phone; }
+return it;
+});
+let free = [];
+try { free = freeSlots().filter(x => x.slots.length).map(x => ({ d: x.d, s: x.slots })); } catch(e) {}
+return { v: 2, name: p.name || "", full: p.fullName || "", active: students.filter(s => s.active !== false).length, late: { n: lateN, v: lateV }, months, agenda, pay, free, inst: (appSettings.instruments || []).slice(0, 30) };
 }
 function schoolDirty(){ if (school && school.status === "active") schoolPublishSoon(60000); }
 function schoolPublishSoon(ms){ clearTimeout(schoolTimer); schoolTimer = setTimeout(schoolPublish, ms); }
@@ -17818,7 +17901,7 @@ const cur = currentMonthKey(), m = schoolStatsFor([cur])[cur], p = payFor(school
 if (p !== null) est = `<div class="field-hint">Seu pagamento estimado em ${escapeHtml(monthLongLabel(cur))}: <b>R$ ${moneyText(p)}</b> (${escapeHtml(payCalcText(school.pay_rule, m))}).</div>`;
 } catch(e) {}
 body.innerHTML = `<div class="key-state ok">Você faz parte desta escola</div>
-<div class="field-hint">Dono: ${escapeHtml(school.owner_name || "—")}. Seus alunos e dados continuam com você. O dono vê os números do mês (alunos, aulas dadas, faltas e valores) e as suas aulas dos próximos dias. Observações, avaliações e anotações das aulas não vão para ele.</div>
+<div class="field-hint">Dono: ${escapeHtml(school.owner_name || "—")}. Seus alunos e dados continuam com você. O dono vê os números do mês (alunos, aulas dadas, faltas e valores), as suas aulas dos próximos dias e, dos alunos que pagam direto para a escola, o valor e o telefone de quem paga. Observações, avaliações e anotações das aulas não vão para ele.</div>
 <div class="field-hint"><b>Regra de pagamento:</b> ${escapeHtml(payRuleText(school.pay_rule))}</div>${est}
 <button type="button" class="btn-historico" id="schSend" style="width:100%;margin-top:0.75rem">Mandar meus números agora</button>
 <button type="button" class="btn-historico" id="schLeave" style="width:100%;margin-top:0.5rem;color:#f87171">Sair da escola</button>`;
@@ -17901,7 +17984,7 @@ if (error) { err.textContent = schoolErrText(error); return; }
 if (!data) { err.textContent = "Chave não encontrada. Confira com o dono da escola."; return; }
 found = { code, ...data };
 box.innerHTML = `<div class="key-state ok">${escapeHtml(data.name)}</div>
-<div class="field-hint">Dono: ${escapeHtml(data.owner_name || "—")}. Ao entrar, o dono vai ver os números do seu mês (alunos, aulas dadas, faltas e valores) e as suas aulas dos próximos dias, com nome e instrumento dos alunos. Observações, avaliações e anotações das aulas não vão para ele. Seus alunos e dados continuam com você.</div>`;
+<div class="field-hint">Dono: ${escapeHtml(data.owner_name || "—")}. Ao entrar, o dono vai ver os números do seu mês (alunos, aulas dadas, faltas e valores) e as suas aulas dos próximos dias, com nome, instrumento e sala dos alunos. Dos alunos que pagam direto para a escola, vai também o valor e o telefone de quem paga, para a escola cobrar. Observações, avaliações e anotações das aulas não vão para ele. Seus alunos e dados continuam com você.</div>`;
 save().textContent = "Pedir para entrar";
 };
 input.oninput = () => { if (found) { found = null; box.innerHTML = ""; save().textContent = "Conferir"; } };
@@ -17944,7 +18027,15 @@ if (rep.error) throw rep.error;
 const members = Array.isArray(mem.data) ? mem.data : [];
 const reports = new Map((rep.data || []).map(r => [r.teacher_id, r]));
 schoolPendingN = members.filter(m => m.status === "pending").length;
-schoolPanel = { members, reports, at: Date.now() };
+schoolPanel = { members, reports, at: Date.now(), notices: [], sent: [] };
+if (school.v824) {
+const [nt, st] = await Promise.all([
+supabaseClient.from("school_notices").select("id,title,body,audience,expires_at,created_at").eq("org_id", school.org_id).order("created_at", { ascending: false }).limit(50),
+supabaseClient.rpc("hi_school_sent")
+]);
+if (!nt.error) schoolPanel.notices = nt.data || [];
+if (!st.error) { schoolPanel.sent = Array.isArray(st.data) ? st.data : []; schoolQueueSync(schoolPanel.sent); }
+}
 schoolApplyNav();
 }
 async function renderSchoolPage(){
@@ -17976,9 +18067,12 @@ const live = (() => { try { return { data: schoolReportData(), updated_at: new D
 const repOf = m => m.user_id === me && live ? live : schoolPanel.reports.get(m.user_id);
 const monthOf = m => { const r = repOf(m); return r && r.data && r.data.months ? r.data.months[schoolMonth] : null; };
 const nameOf = m => { const r = repOf(m); return (m.user_id === me ? "Você" : "") || m.display_name || (r && r.data && r.data.name) || "Professor"; };
+// Aulas que o professor deu como substituto (8.24): vêm dos números dos colegas.
+const covOf = m => { const c = { lessons: 0, minutes: 0 }; team.forEach(o => { if (o === m) return; const x = monthOf(o); ((x && x.subs) || []).forEach(sb => { if (sb.id === m.user_id) { c.lessons += sb.lessons || 0; c.minutes += sb.minutes || 0; } }); }); return c; };
+const effOf = m => { const x = monthOf(m), c = covOf(m); if (!x && !c.lessons) return null; const b = x || { lessons: 0, minutes: 0, studentLessons: 0, absences: 0, cancels: 0, revenue: 0, active: 0, joined: 0, left: 0 }; return { ...b, own: b.lessons, lessons: b.lessons + c.lessons, minutes: b.minutes + c.minutes, covered: c }; };
 let tot = { active: 0, lessons: 0, minutes: 0, absences: 0, cancels: 0, revenue: 0, pay: 0, payN: 0 };
 team.forEach(m => {
-const x = monthOf(m);
+const x = effOf(m);
 if (x) { tot.active += x.active || 0; tot.lessons += x.lessons || 0; tot.minutes += x.minutes || 0; tot.absences += x.absences || 0; tot.cancels += x.cancels || 0; tot.revenue += x.revenue || 0; }
 const p = payFor(m.pay_rule, x);
 if (p !== null) { tot.pay += p; tot.payN++; }
@@ -18010,6 +18104,7 @@ list.forEach(a => { const k = a.t + "|" + (a.x ? "x" + a.n : ""); if (!slots.has
 slots.forEach(arr => todays.push({ m, t: arr[0].t, arr }));
 });
 todays.sort((a, b) => a.t.localeCompare(b.t) || nameOf(a.m).localeCompare(nameOf(b.m)));
+html += schoolConflictsHTML(team, repOf, nameOf);
 html += `<div class="settings-group-label">Aulas de hoje</div>`;
 if (!todays.length) html += `<div class="empty-teach slim">Nenhuma aula hoje${team.length > 1 ? " entre os professores que já mandaram os números" : ""}.</div>`;
 else html += `<div class="settings-card ann-list">${todays.map(x => {
@@ -18024,17 +18119,21 @@ if (now >= end) { st = "Dada"; cls = "completed"; } else if (now >= start) { st 
 }
 const names = x.arr.map(a => escapeHtml(a.n) + (a.s && !allOff ? ` (${escapeHtml(a.s === "off" ? (a.o || "Feriado") : (SCHOOL_REASON[a.s] || "sem aula"))})` : "")).join(", ");
 const inst = [...new Set(x.arr.map(a => a.i).filter(Boolean))].join(", ");
-return `<div class="ann-row"><div class="school-time">${escapeHtml(x.t)}</div><div class="ann-row-main"><div class="ann-row-title">${names}</div><div class="ann-row-meta">${escapeHtml(nameOf(x.m))}${inst ? " · " + escapeHtml(inst) : ""}${x.arr.length > 1 ? " · turma" : ""}${a0.x ? " · aula extra" : ""}</div></div><span class="status ${cls}">${escapeHtml(st)}</span></div>`;
+return `<div class="ann-row"><div class="school-time">${escapeHtml(x.t)}</div><div class="ann-row-main"><div class="ann-row-title">${names}</div><div class="ann-row-meta">${escapeHtml(nameOf(x.m))}${inst ? " · " + escapeHtml(inst) : ""}${a0.r ? " · " + escapeHtml(a0.r) : ""}${x.arr.length > 1 ? " · turma" : ""}${a0.x ? " · aula extra" : ""}</div></div><span class="status ${cls}">${escapeHtml(st)}</span></div>`;
 }).join("")}</div>`;
 // Professores
 html += `<div class="settings-group-label">Professores</div><div class="school-team">${team.map(m => {
-const r = repOf(m), x = monthOf(m), p = payFor(m.pay_rule, x);
+const r = repOf(m), x = effOf(m), p = payFor(m.pay_rule, x);
+const whyTxt = x && x.why ? Object.entries(x.why).filter(([k]) => k).map(([k, n]) => `${EXIT_REASONS[k] || "Outro motivo"}${n > 1 ? " " + n : ""}`).join(", ") : "";
 const old = r && !r.live && Date.now() - Date.parse(r.updated_at) > 2 * 86400000;
 const upd = !r ? `<div class="school-warn">Ainda não mandou os números. Eles aparecem quando ${m.user_id === me ? "você" : "o professor"} abrir o app.</div>`
 : r.live ? `<div class="kpi-sub">Seus números, direto deste aparelho.</div>` : `<div class="${old ? "school-warn" : "kpi-sub"}">Números de ${escapeHtml(schoolAgo(r.updated_at))}${old ? ". Peça para ele abrir o app." : ""}</div>`;
 const lines = x ? `<div class="school-lines">
 <span>Alunos ativos <b>${x.active}</b>${x.joined || x.left ? ` <i>(+${x.joined} / −${x.left})</i>` : ""}</span>
 <span>Aulas dadas <b>${x.lessons}</b> <i>(${hoursText(x.minutes)})</i></span>
+${x.covered && x.covered.lessons ? `<span>Como substituto <b>${x.covered.lessons}</b> <i>(já somadas acima)</i></span>` : ""}
+${x.subs && x.subs.length ? `<span>Dadas por substituto <b>${x.subs.reduce((a, b) => a + b.lessons, 0)}</b> <i>(${escapeHtml(x.subs.map(b => b.name).filter(Boolean).join(", "))})</i></span>` : ""}
+${whyTxt ? `<span>Motivo das saídas <i>${escapeHtml(whyTxt)}</i></span>` : ""}
 <span>Faltas de alunos <b>${x.absences}</b></span>
 <span>Canceladas <b>${x.cancels}</b></span>
 <span>Faturamento previsto <b>R$ ${moneyText(Math.round(x.revenue))}</b></span>
@@ -18044,6 +18143,7 @@ const pay = `<div class="school-pay"><span>${escapeHtml(payRuleText(m.pay_rule))
 return `<div class="kpi-card school-teacher"><div class="school-t-name">${escapeHtml(nameOf(m))}${m.role === "owner" ? ` <span class="status upcoming">Dono</span>` : ""}</div>${upd}${lines}${pay}
 <div class="school-acts"><button type="button" class="btn-historico" data-sch-rule="${m.id}">Regra de pagamento</button>${p !== null ? `<button type="button" class="btn-historico" data-sch-sum="${m.id}">Resumo do pagamento</button>` : ""}${m.role !== "owner" ? `<button type="button" class="btn-link-inline" data-sch-rem="${m.id}" style="color:#f87171">Tirar da escola</button>` : ""}</div></div>`;
 }).join("")}</div>`;
+html += schoolExtrasHTML({ team, members, repOf, nameOf, effOf, tot, isCur });
 if (team.length <= 1) html += `<div class="empty-teach slim">Para trazer os professores: passe a chave <b>${escapeHtml(school.code || "")}</b>. Cada um vai em Configurações → Escola → Dou aula numa escola, e o pedido aparece aqui para você aceitar.</div>`;
 box.innerHTML = html;
 const byId = id => members.find(m => m.id === id);
@@ -18076,7 +18176,8 @@ if (error) { alert(schoolErrText(error)); return; }
 renderSchoolPage();
 });
 box.querySelectorAll("[data-sch-rule]").forEach(b => b.onclick = () => openPayRule(byId(b.dataset.schRule), nameOf(byId(b.dataset.schRule))));
-box.querySelectorAll("[data-sch-sum]").forEach(b => b.onclick = () => { const m = byId(b.dataset.schSum); openPaySummary(m, nameOf(m), monthOf(m)); });
+box.querySelectorAll("[data-sch-sum]").forEach(b => b.onclick = () => { const m = byId(b.dataset.schSum); openPaySummary(m, nameOf(m), effOf(m)); });
+schoolExtrasBind(box, { team, members, repOf, nameOf, effOf });
 }
 function openPayRule(m, name){
 if (!m) return;
@@ -18110,6 +18211,7 @@ const p = payFor(m.pay_rule, x);
 const lines = [`Pagamento de ${monthLongLabel(schoolMonth)}${schoolMonth === currentMonthKey() ? " (até hoje)" : ""} · ${school.name}`, `Professor: ${name === "Você" ? (appSettings.profile.name || "") : name}`, "",
 `Aulas dadas: ${x.lessons} (${hoursText(x.minutes)})`, `Faltas de alunos: ${x.absences} · Aulas canceladas: ${x.cancels}`, `Alunos ativos: ${x.active}`];
 if (m.pay_rule && m.pay_rule.type === "percent") lines.push(`Faturamento previsto dos alunos: R$ ${moneyText(x.revenue)}`);
+if (x.covered && x.covered.lessons) lines.push(`Aulas como substituto (já somadas): ${x.covered.lessons}`);
 lines.push("", `Regra: ${payRuleText(m.pay_rule)}`, `Cálculo: ${payCalcText(m.pay_rule, x)}`, `Total: R$ ${moneyText(p)}`);
 return lines.join("\n");
 }
@@ -18125,6 +18227,455 @@ if (navigator.share) { try { await navigator.share({ text }); return; } catch(e)
 window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
 };
 openQuickModal("Resumo do pagamento", name, body, null, "Fechar");
+}
+// ===================== Escola: salas, substituto, passar aluno, fila, mensalidades da escola, gastos e avisos (8.24) =====================
+// Precisa do SQL da 8.24 (school.v824). Sem ele, a escola da 8.23 continua igual.
+var schoolPeers = [];        // colegas da escola: [{ id, name, owner }]
+var schoolInboxList = [];    // alunos/interessados mandados para mim, esperando resposta
+var schoolNoticesT = [];     // avisos da escola para os professores
+var schoolBusy = null, schoolBusyAt = 0; // salas ocupadas pelos colegas
+var schoolOpenSecs = new Set();
+var SCHOOL_NOTICE_READ_KEY = "jp_school_notice_read_v1"; // só no aparelho
+function schoolV824(){ return !!(school && school.v824 && school.status === "active"); }
+function schoolRooms(){ return schoolV824() && Array.isArray(school.rooms) ? school.rooms : []; }
+function schoolReadSet(){ try { return new Set(JSON.parse(localStorage.getItem(SCHOOL_NOTICE_READ_KEY) || "[]")); } catch(e) { return new Set(); } }
+function schoolMarkRead(ids){ const r = schoolReadSet(); ids.forEach(i => r.add(i)); try { _nativeSetItem.call(localStorage, SCHOOL_NOTICE_READ_KEY, JSON.stringify([...r].slice(-300))); } catch(e) {} }
+function schoolUid(){ return "sch" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+// Ao abrir o app (e ao voltar pra ele): colegas, o que mandaram pra mim, respostas do que eu mandei e avisos.
+async function schoolStart824(){
+if (!schoolV824() || !supabaseClient || !authCurrentUser || studentMode || demoMode) return;
+try {
+const [pe, ib, st, nt] = await Promise.all([
+supabaseClient.rpc("hi_school_peers"),
+supabaseClient.rpc("hi_school_inbox"),
+supabaseClient.rpc("hi_school_sent"),
+schoolIsOwner() ? Promise.resolve({ data: [] }) : supabaseClient.from("school_notices").select("id,title,body,audience,expires_at,created_at").eq("org_id", school.org_id).order("created_at", { ascending: false }).limit(30)
+]);
+if (!pe.error) schoolPeers = Array.isArray(pe.data) ? pe.data : [];
+if (!ib.error) schoolInboxList = Array.isArray(ib.data) ? ib.data : [];
+if (!st.error) schoolApplySent(Array.isArray(st.data) ? st.data : []);
+if (!nt.error) schoolNoticesT = (nt.data || []).filter(n => !n.expires_at || Date.parse(n.expires_at) > Date.now());
+} catch(e) {}
+try { teacherBellUpdate(); } catch(e) {}
+}
+// Aluno que eu passei e o colega aceitou: fica inativo aqui (saída "Mudou de professor").
+function schoolApplySent(list){
+let changed = false;
+list.filter(t => t.kind === "student" && t.status === "accepted" && t.ref).forEach(t => {
+const s = students.find(x => String(x.id) === String(t.ref));
+if (!s || (s.movedTo && s.movedTo.tid === t.id)) return;
+s.movedTo = { tid: t.id, name: t.to_name || "", at: (t.answered_at || new Date().toISOString()).slice(0, 10) };
+if (s.active !== false) { s.active = false; s.exit = s.movedTo.at; s.exitReason = "teacher"; s.exitNote = `passou para ${t.to_name || "outro professor"}`; }
+changed = true;
+});
+if (changed) { saveStudents(); try { renderStudents(); renderHome(); } catch(e) {} }
+}
+document.addEventListener("visibilitychange", () => {
+if (document.visibilityState === "visible" && schoolV824() && Date.now() - (schoolStart824.at || 0) > 5 * 60000) { schoolStart824.at = Date.now(); schoolStart824(); }
+});
+
+// ---------- Recebidos (alunos passados por colegas e interessados encaminhados pelo dono) ----------
+function openSchoolInbox(){
+const body = document.createElement("div");
+const draw = () => {
+if (!schoolInboxList.length) { body.innerHTML = `<div class="field-hint" style="margin:0">Nada esperando resposta.</div>`; return; }
+body.innerHTML = `<div class="settings-card ann-list">${schoolInboxList.map(t => {
+const d = t.data || {}, isStu = t.kind === "student";
+const sub = isStu ? `${escapeHtml(t.from_name)} quer passar este aluno para você, com o histórico de aulas.${d.student && d.student.instrument ? " " + escapeHtml(d.student.instrument) + "." : ""}`
+: `Interessado encaminhado pela escola.${d.instrument ? " " + escapeHtml(d.instrument) + "." : ""}${d.prefer ? " Prefere: " + escapeHtml(d.prefer) + "." : ""}${d.trial ? ` Aula experimental: ${escapeHtml(formatDateShort(d.trial.d).slice(0, 5))}${d.trial.t ? " às " + escapeHtml(d.trial.t) : ""}.` : ""}${d.note ? " " + escapeHtml(d.note) : ""}`;
+return `<div class="ann-row"><div class="ann-row-main"><div class="ann-row-title">${escapeHtml(d.name || "Sem nome")}</div><div class="ann-row-body" style="-webkit-line-clamp:unset">${sub}</div>
+<div class="school-acts" style="margin-top:0.5rem"><button type="button" class="save" data-in-acc="${t.id}">${isStu ? "Aceitar aluno" : "Pôr na lista de espera"}</button><button type="button" class="btn-historico" data-in-rej="${t.id}">Recusar</button></div></div></div>`;
+}).join("")}</div>`;
+body.querySelectorAll("[data-in-acc],[data-in-rej]").forEach(b => b.onclick = async () => {
+const id = b.dataset.inAcc || b.dataset.inRej, accept = !!b.dataset.inAcc, t = schoolInboxList.find(x => x.id === id);
+if (!t) return;
+if (!accept && !confirm("Recusar?")) return;
+b.disabled = true;
+if (accept && !schoolAcceptLocal(t)) { b.disabled = false; return; }
+const { error } = await supabaseClient.rpc("hi_school_answer_transfer", { p_id: id, p_accept: accept });
+if (error) { b.disabled = false; alert(schoolErrText(error)); return; }
+schoolInboxList = schoolInboxList.filter(x => x.id !== id);
+teacherBellUpdate();
+draw();
+});
+};
+draw();
+openQuickModal("Recebidos da escola", "Alunos que colegas passaram para você e interessados que o dono encaminhou.", body, null, "Fechar");
+}
+function schoolAcceptLocal(t){
+const d = t.data || {};
+if (t.kind === "lead") {
+const notes = ["Encaminhado pela escola.", d.trial ? `Aula experimental: ${formatDateShort(d.trial.d)}${d.trial.t ? " às " + d.trial.t : ""}.` : "", d.prefer ? `Prefere: ${d.prefer}.` : "", d.note || ""].filter(Boolean).join(" ");
+const list = waitlist();
+list.push({ id: "wl" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), since: isoOf(new Date()), name: d.name || "Interessado", ...(d.phone ? { phone: d.phone } : {}), ...(d.instrument ? { instrument: d.instrument } : {}), notes });
+appSettings.waitlist = list;
+saveAppSettings();
+showCloudWarning(`${d.name || "Interessado"} entrou na sua lista de espera (Agenda → Lista de espera).`);
+return true;
+}
+const src = d.student;
+if (!src || !src.name) { alert("Os dados deste aluno vieram incompletos."); return false; }
+const today = isoOf(new Date());
+const s = JSON.parse(JSON.stringify(src));
+s.id = Date.now();
+s.active = true;
+s.trackingSince = today;
+s.fromTeacher = { name: t.from_name || "", at: today };
+s.lessons = (Array.isArray(s.lessons) ? s.lessons : []).map(l => ({ ...l, prevTeacher: t.from_name || "outro professor", status: l.status === "pending" ? "given" : l.status }));
+s.makeups = (Array.isArray(s.makeups) ? s.makeups : []).filter(m => m.status === "scheduled" && m.date >= today);
+if (s.level && !(appSettings.levels || []).length) delete s.level;
+students.push(s);
+saveStudents();
+try { renderStudents(); renderHome(); } catch(e) {}
+showCloudWarning(`${s.name} agora é seu aluno. O acesso dele ao app do aluno precisa ser liberado de novo com a sua chave.`);
+return true;
+}
+
+// ---------- Passar aluno para outro professor (ficha do aluno) ----------
+function schoolCanTransfer(){ return schoolV824() && schoolPeers.length > 0; }
+function openSchoolTransfer(s){
+const body = document.createElement("div");
+body.innerHTML = `<div class="field"><label>Para qual professor?</label><select id="trTo">${schoolPeers.map(p => `<option value="${p.id}">${escapeHtml(p.name)}${p.owner ? " (dono)" : ""}</option>`).join("")}</select></div>
+<div class="field-hint">Vão juntos o cadastro e o histórico de aulas (com as anotações). Quando o professor aceitar, ${escapeHtml(firstName(s.name))} fica inativo aqui com saída "Mudou de professor". Mensalidades pagas continuam com você.</div><div class="auth-error" id="trErr"></div>`;
+openQuickModal(`Passar ${firstName(s.name)} para outro professor`, "", body, async () => {
+const to = body.querySelector("#trTo").value;
+const copy = JSON.parse(JSON.stringify(s));
+["id", "needsReview", "charges", "paidMonths", "paidMonth", "paidDates", "noteDrafts", "movedTo", "exit", "exitReason", "exitNote", "fromTeacher", "practiceLog"].forEach(k => delete copy[k]);
+const { error } = await supabaseClient.rpc("hi_school_send", { p_to: to, p_kind: "student", p_data: { ref: String(s.id), name: s.name, student: copy } });
+if (error) { body.querySelector("#trErr").textContent = schoolErrText(error); return; }
+closeQuickModal();
+showCloudWarning(`Pedido enviado. ${firstName(s.name)} passa para o colega quando ele aceitar.`);
+}, "Cancelar", "Passar aluno");
+}
+
+// ---------- Substituto (histórico de aulas) ----------
+function attachSubButton(div, student, lesson, rerender){
+if (!schoolV824() || (!schoolPeers.length && !lesson.subBy)) return;
+const acts = div.querySelector(".history-actions");
+if (!acts) return;
+if (lesson.subBy) acts.insertAdjacentHTML("beforebegin", `<div class="noclass-makeup">Dada por substituto: ${escapeHtml(lesson.subBy.name || "colega")}</div>`);
+const b = document.createElement("button");
+b.type = "button"; b.className = "btn-edit-toggle btn-subtle"; b.textContent = lesson.subBy ? "Trocar substituto" : "Substituto";
+b.onclick = () => {
+const body = document.createElement("div");
+body.innerHTML = `<div class="field"><label>Quem deu esta aula?</label><select id="subWho"><option value="">Eu mesmo</option>${schoolPeers.map(p => `<option value="${p.id}"${lesson.subBy && lesson.subBy.id === p.id ? " selected" : ""}>${escapeHtml(p.name)}</option>`).join("")}</select></div>
+<div class="field-hint">Aula dada por um colega conta para o pagamento dele no painel da escola, não para o seu.</div>`;
+openQuickModal("Substituto", `${student.name} · ${lesson.date}`, body, () => {
+const id = body.querySelector("#subWho").value, p = schoolPeers.find(x => x.id === id);
+const fields = p ? { subBy: { id: p.id, name: p.name } } : {};
+if (lesson.virtual) { if (!p) { closeQuickModal(); return; } upsertLessonRecord(student, lesson, { status: lesson.status === "pending" ? "pending" : "given", ...fields }); }
+else { const rec = upsertLessonRecord(student, lesson, fields); if (!p) delete rec.subBy; }
+closeQuickModal();
+rerender();
+});
+};
+acts.insertBefore(b, acts.firstChild);
+}
+
+// ---------- Sala no cadastro do aluno ----------
+async function schoolLoadBusy(){
+if (!schoolV824()) return [];
+if (schoolBusy && Date.now() - schoolBusyAt < 5 * 60000) return schoolBusy;
+const { data, error } = await supabaseClient.rpc("hi_school_room_busy");
+schoolBusy = error ? [] : (Array.isArray(data) ? data : []);
+schoolBusyAt = Date.now();
+return schoolBusy;
+}
+function schoolRoomFieldOpen(s){
+const f = document.getElementById("fRoomField");
+if (!f) return;
+const rooms = schoolRooms();
+const cur = s && s.room;
+f.style.display = rooms.length || cur ? "" : "none";
+if (!rooms.length && !cur) return;
+const list = rooms.includes(cur) || !cur ? rooms : rooms.concat([cur]);
+document.getElementById("fRoom").innerHTML = `<option value="">Sem sala</option>` + list.map(r => `<option value="${escapeHtml(r)}"${r === cur ? " selected" : ""}>${escapeHtml(r)}</option>`).join("");
+document.getElementById("fRoomHint").textContent = "";
+schoolLoadBusy().then(schoolRoomCheck);
+}
+function schoolRoomCheck(){
+const hint = document.getElementById("fRoomHint");
+if (!hint) return;
+const room = document.getElementById("fRoom").value;
+if (!room) { hint.textContent = ""; return; }
+const days = [...document.querySelectorAll(".day.selected")].map(b => Number(b.dataset.day));
+const t = toMin(document.getElementById("fTime").value), cur = editingId ? students.find(x => x.id === editingId) : null;
+const dur = cur ? getStudentDuration(cur) : (Number(appSettings.lessonDuration) || 60);
+const hits = [];
+(schoolBusy || []).forEach(b => {
+if (b.r !== room || !days.includes(dateFromIso(b.d).getDay())) return;
+const a = toMin(b.t), e = a + (Number(b.m) || 60);
+if (t < e && t + dur > a) hits.push(`${b.name}, ${WEEKDAY_SHORT[dateFromIso(b.d).getDay()]} ${b.t}`);
+});
+students.filter(x => x.active !== false && x !== cur && x.room === room).forEach(x => studentDays(x).forEach(d => {
+if (!days.includes(d)) return;
+const a = toMin(getStudentTimeFor(x, d)), e = a + getStudentDuration(x);
+if (a !== t && t < e && t + dur > a) hits.push(`${sn(x)}, ${WEEKDAY_SHORT[d]} ${fromMin(a)}`);
+}));
+const uniq = [...new Set(hits)];
+hint.textContent = uniq.length ? `⚠ ${room} já está ocupada nesse horário: ${uniq.slice(0, 4).join(" · ")}` : "";
+hint.style.color = uniq.length ? "#fb923c" : "";
+}
+
+// ---------- Avisos da escola para os professores ----------
+function schoolNoticeUnread(){ const r = schoolReadSet(); return schoolNoticesT.filter(n => !r.has(n.id)); }
+function openSchoolNotices(){
+const body = document.createElement("div");
+body.innerHTML = schoolNoticesT.length ? `<div class="settings-card ann-list">${schoolNoticesT.map(n => `<div class="ann-row"><div class="ann-row-main"><div class="ann-row-title">${escapeHtml(n.title)}</div><div class="ann-row-body" style="-webkit-line-clamp:unset">${escapeHtml(n.body)}</div><div class="ann-row-meta">${formatDateShort(n.created_at.slice(0, 10))}</div></div></div>`).join("")}</div>` : `<div class="field-hint" style="margin:0">Nenhum aviso da escola.</div>`;
+schoolMarkRead(schoolNoticesT.map(n => n.id));
+openQuickModal(`Avisos da escola`, school ? school.name : "", body, null, "Fechar");
+teacherBellUpdate();
+}
+
+// ---------- Painel do dono: conflitos de sala ----------
+function schoolConflictsHTML(team, repOf, nameOf){
+if (!schoolV824() || !schoolRooms().length) return "";
+const items = [];
+team.forEach(m => { const r = repOf(m); ((r && r.data && r.data.agenda) || []).forEach(a => { if (a.r && !a.s) items.push({ ...a, who: nameOf(m), uid: m.user_id }); }); });
+const out = [], seen = new Set();
+for (let i = 0; i < items.length; i++) for (let j = i + 1; j < items.length; j++) {
+const a = items[i], b = items[j];
+if (a.d !== b.d || a.r !== b.r) continue;
+if (a.uid === b.uid && a.t === b.t) continue; // mesma turma
+const a1 = toMin(a.t), a2 = a1 + (Number(a.m) || 60), b1 = toMin(b.t), b2 = b1 + (Number(b.m) || 60);
+if (!(a1 < b2 && b1 < a2)) continue;
+const k = [a.d, a.r, a.uid, a.t, b.uid, b.t].join("|");
+if (seen.has(k)) continue; seen.add(k);
+out.push(`${escapeHtml(a.r)} · ${escapeHtml(formatDateShort(a.d).slice(0, 5))} · ${escapeHtml(a.t)} ${escapeHtml(a.who)} (${escapeHtml(firstName(a.n))}) e ${escapeHtml(b.t)} ${escapeHtml(b.who)} (${escapeHtml(firstName(b.n))})`);
+}
+if (!out.length) return "";
+return `<div class="empty-teach slim school-conflict"><b>⚠ Sala ocupada duas vezes nos próximos 7 dias</b>${out.slice(0, 10).map(x => `<span>${x}</span>`).join("")}</div>`;
+}
+
+// ---------- Painel do dono: seções extras ----------
+function schoolSec(id, title, info, inner){
+return `<details class="settings-card month-group school-sec" data-sch-sec="${id}"${schoolOpenSecs.has(id) ? " open" : ""}><summary class="month-sum"><span>${title}</span><span class="stu-muted">${info}</span><span class="settings-row-chevron" aria-hidden="true">›</span></summary><div class="month-body school-sec-body">${inner}</div></details>`;
+}
+function schoolMonthPaidSet(key){ const p = appSettings.schoolPaid || {}; return new Set(Object.keys(p).filter(k => (p[k] || []).includes(key))); }
+function schoolExpensesFor(key){ return (appSettings.schoolExpenses || []).filter(e => e.kind === "once" ? e.month === key : (e.from <= key && (!e.until || e.until >= key))); }
+function schoolExtrasHTML(ctx){
+if (!schoolV824()) return `<div class="empty-teach slim">Salas, fila da escola, mensalidades da escola, gastos e avisos aparecem depois de atualizar o servidor do app (versão 8.24).</div>`;
+const { team, repOf, nameOf, tot } = ctx, key = schoolMonth, cur = currentMonthKey();
+let html = "";
+// Mensalidades pagas direto à escola
+const rows = [];
+team.forEach(m => { const r = repOf(m); ((r && r.data && r.data.pay) || []).forEach(p => rows.push({ ...p, uid: m.user_id, who: nameOf(m), pk: `${m.user_id}:${p.k}` })); });
+rows.sort((a, b) => a.n.localeCompare(b.n));
+const paid = schoolMonthPaidSet(key);
+const [y, mo] = key.split("-").map(Number), today = new Date();
+const lateOf = p => !paid.has(p.pk) && (key < cur || (key === cur && p.due && today.getDate() > p.due));
+const got = rows.filter(p => paid.has(p.pk)).reduce((a, p) => a + p.v, 0), all = rows.reduce((a, p) => a + p.v, 0);
+const nLate = rows.filter(lateOf).length;
+html += schoolSec("pay", "Mensalidades pagas à escola", rows.length ? `R$ ${moneyText(got)} de R$ ${moneyText(all)}${nLate ? ` · ${nLate} atrasada${nLate > 1 ? "s" : ""}` : ""}` : "nenhuma",
+`<div class="field-hint school-pad">Alunos marcados pelo professor com "Mensalidade paga para: Escola". Toque para marcar como pago em ${escapeHtml(monthLongLabel(key))}.</div>
+<div class="school-pad"><div class="field" style="margin:0"><label>Pix da escola (vai na mensagem de cobrança)</label><input type="text" id="schPix" value="${escapeHtml(appSettings.schoolPix || "")}" placeholder="Chave Pix"></div></div>` +
+(rows.length ? rows.map(p => {
+const isPaid = paid.has(p.pk), late = lateOf(p);
+return `<div class="ann-row"><div class="ann-row-main"><div class="ann-row-title">${escapeHtml(p.n)}</div><div class="ann-row-meta">${escapeHtml(p.who)} · R$ ${moneyText(p.v)}${p.due ? ` · vence dia ${p.due}` : ""}</div></div><div class="school-acts">${!isPaid && p.ph ? `<button type="button" class="btn-link-inline" data-pay-wa="${escapeHtml(p.pk)}">Cobrar</button>` : ""}<button type="button" class="status ${isPaid ? "completed" : late ? "off" : "upcoming"} school-pay-btn" data-pay-tog="${escapeHtml(p.pk)}">${isPaid ? "Pago" : late ? "Atrasado" : "A pagar"}</button></div></div>`;
+}).join("") : `<div class="field-hint school-pad">Nenhum aluno paga direto para a escola agora.</div>`));
+// Gastos e lucro
+const exp = schoolExpensesFor(key), expSum = exp.reduce((a, e) => a + (Number(e.value) || 0), 0);
+const profit = tot.revenue - (tot.payN ? tot.pay : 0) - expSum;
+const profitTxt = `${profit < 0 ? "−" : ""}R$ ${moneyText(Math.abs(Math.round(profit)))}`;
+html += schoolSec("exp", "Gastos e lucro", `lucro previsto ${profitTxt}`,
+`<div class="school-lines school-pad">
+<span>Faturamento previsto (todos os professores) <b>R$ ${moneyText(Math.round(tot.revenue))}</b></span>
+<span>Pagamento dos professores <b>− R$ ${moneyText(Math.round(tot.payN ? tot.pay : 0))}</b>${tot.payN < ctx.team.length ? ` <i>(só quem tem regra)</i>` : ""}</span>
+<span>Gastos do mês <b>− R$ ${moneyText(Math.round(expSum))}</b></span>
+<span>Lucro previsto <b style="color:${profit >= 0 ? "#4ade80" : "#f87171"}">${profitTxt}</b></span></div>` +
+exp.map(e => `<div class="ann-row"><div class="ann-row-main"><div class="ann-row-title">${escapeHtml(e.name)}</div><div class="ann-row-meta">R$ ${moneyText(e.value)} · ${e.kind === "once" ? "só neste mês" : "todo mês"}</div></div><button type="button" class="btn-link-inline" data-exp-del="${e.id}" style="color:#f87171">${e.kind === "once" || e.from === key ? "Apagar" : "Parar a partir deste mês"}</button></div>`).join("") +
+`<div class="school-pad school-exp-form"><input type="text" id="expName" class="inline-input" placeholder="Ex.: Aluguel" maxlength="60"><input type="number" id="expVal" class="inline-input" placeholder="R$" min="0" step="0.01" inputmode="decimal"><select id="expKind" class="inline-input"><option value="monthly">Todo mês</option><option value="once">Só este mês</option></select><button type="button" class="btn-historico" id="expAdd">Adicionar</button></div>`);
+// Fila da escola e aula experimental
+const q = (appSettings.schoolQueue || []).filter(x => x.status !== "done" && x.status !== "gave_up");
+const stLabel = { waiting: "Esperando", sent: "Encaminhado", accepted: "Professor aceitou", rejected: "Professor recusou" };
+html += schoolSec("queue", "Fila da escola e aula experimental", q.length ? `${q.length} interessado${q.length > 1 ? "s" : ""}` : "vazia",
+(q.length ? q.map(x => {
+const sug = schoolSuggest(x, ctx);
+return `<div class="ann-row"><div class="ann-row-main"><div class="ann-row-title">${escapeHtml(x.name)} <span class="status ${x.status === "accepted" ? "completed" : x.status === "rejected" ? "off" : "upcoming"}">${stLabel[x.status] || "Esperando"}${x.to && x.status !== "waiting" ? " · " + escapeHtml(x.to.name) : ""}</span></div>
+<div class="ann-row-meta">${[x.instrument, x.prefer, x.trial ? `experimental ${formatDateShort(x.trial.d).slice(0, 5)}${x.trial.t ? " " + x.trial.t : ""}` : "", x.note].filter(Boolean).map(escapeHtml).join(" · ") || "Sem preferência"}</div>
+${x.status === "waiting" || x.status === "rejected" ? (sug.length ? `<div class="ann-row-meta">Sugestão: ${sug.map(s => `<b>${escapeHtml(s.name)}</b>${s.free ? " (" + escapeHtml(s.free) + ")" : ""}`).join(" · ")}</div>` : `<div class="ann-row-meta">Nenhum professor com esse instrumento e horário livre informado.</div>`) : ""}
+<div class="school-acts" style="margin-top:0.375rem">${x.status === "waiting" || x.status === "rejected" ? `<button type="button" class="btn-historico" data-q-send="${x.id}">Encaminhar</button>` : ""}${x.phone ? `<a class="btn-link-inline" href="${whatsappLink(x.phone)}" target="_blank" rel="noopener">WhatsApp</a>` : ""}<button type="button" class="btn-link-inline" data-q-done="${x.id}">${x.status === "accepted" ? "Concluir" : "Tirar da fila"}</button></div></div></div>`;
+}).join("") : `<div class="field-hint school-pad">Anote aqui quem procurou a escola. O app sugere o professor pelo instrumento e pelos horários livres dele, e você encaminha: o interessado cai na lista de espera do professor.</div>`) +
+`<div class="school-pad"><button type="button" class="btn-historico" id="qAdd" style="width:100%">+ Adicionar interessado</button></div>`);
+// Avisos da escola
+const ns = (schoolPanel.notices || []);
+const aud = { all: "alunos e professores", students: "só alunos", teachers: "só professores" };
+html += schoolSec("notices", "Avisos para a escola", ns.length ? `${ns.length} enviado${ns.length > 1 ? "s" : ""}` : "nenhum",
+ns.map(n => { const exp = n.expires_at && Date.parse(n.expires_at) <= Date.now(); return `<div class="ann-row"><div class="ann-row-main"><div class="ann-row-title">${escapeHtml(n.title)}${exp ? ` <span class="status off">Vencido</span>` : ""}</div><div class="ann-row-body">${escapeHtml(n.body)}</div><div class="ann-row-meta">${formatDateShort(n.created_at.slice(0, 10))} · ${aud[n.audience] || ""}${n.expires_at && !exp ? ` · até ${formatDateShort(n.expires_at.slice(0, 10)).slice(0, 5)}` : ""}</div></div><button type="button" class="btn-link-inline" data-n-del="${n.id}" style="color:#f87171">Apagar</button></div>`; }).join("") +
+`<div class="school-pad"><button type="button" class="btn-historico" id="nAdd" style="width:100%">+ Novo aviso para a escola</button><div class="field-hint">Aparece no Início do app dos alunos dos professores da escola e no sino dos professores.</div></div>`);
+// Salas
+const rooms = schoolRooms();
+html += schoolSec("rooms", "Salas", rooms.length ? rooms.map(escapeHtml).join(", ") : "nenhuma",
+`<div class="school-pad"><div class="instrument-tags">${rooms.map((r, i) => `<span class="instrument-tag">${escapeHtml(r)}<button type="button" class="tag-remove" data-room-del="${i}" aria-label="Tirar ${escapeHtml(r)}">×</button></span>`).join("")}</div>
+<div style="display:flex;gap:0.5rem;margin-top:0.5rem"><input type="text" id="roomNew" class="inline-input" placeholder="Ex.: Sala 1" maxlength="40" style="flex:1"><button type="button" class="btn-historico" id="roomAdd">Adicionar</button></div>
+<div class="field-hint">Cada professor escolhe a sala no cadastro do aluno. O app avisa quando duas aulas caem na mesma sala e hora.</div></div>`);
+return html;
+}
+// Sugestão de professor para um interessado: quem ensina o instrumento, com os horários livres.
+function schoolSuggest(x, ctx){
+const ins = String(x.instrument || "").trim().toLowerCase();
+const out = [];
+ctx.team.forEach(m => {
+const r = ctx.repOf(m), d = r && r.data;
+if (!d) return;
+const teaches = !ins || (d.inst || []).some(i => String(i).toLowerCase() === ins);
+if (!teaches) return;
+const free = (d.free || []).filter(f => f.s && f.s.length).map(f => `${WEEKDAY_SHORT[f.d]} ${f.s.slice(0, 3).map(fmtHour).join(", ")}`).slice(0, 3).join(" · ");
+out.push({ id: m.user_id, name: ctx.nameOf(m), free, n: (d.free || []).reduce((a, f) => a + (f.s || []).length, 0) });
+});
+return out.sort((a, b) => b.n - a.n).slice(0, 3);
+}
+function schoolQueueSync(sent){
+const q = appSettings.schoolQueue;
+if (!Array.isArray(q) || !q.length) return;
+let changed = false;
+q.forEach(x => {
+if (!x.tid) return;
+const t = sent.find(y => y.id === x.tid);
+if (!t) return;
+const st = t.status === "accepted" ? "accepted" : t.status === "rejected" ? "rejected" : t.status === "cancelled" ? "waiting" : "sent";
+if (x.status !== st && x.status !== "done" && x.status !== "gave_up") { x.status = st; changed = true; }
+});
+if (changed) saveAppSettings();
+}
+function schoolExtrasBind(box, ctx){
+if (!schoolV824()) return;
+box.querySelectorAll("[data-sch-sec]").forEach(d => d.addEventListener("toggle", () => { if (d.open) schoolOpenSecs.add(d.dataset.schSec); else schoolOpenSecs.delete(d.dataset.schSec); }));
+const key = schoolMonth;
+// Mensalidades da escola
+const pix = box.querySelector("#schPix");
+if (pix) pix.onchange = () => { appSettings.schoolPix = pix.value.trim() || undefined; saveAppSettings(); };
+box.querySelectorAll("[data-pay-tog]").forEach(b => b.onclick = () => {
+const pk = b.dataset.payTog, p = appSettings.schoolPaid || {}, list = new Set(p[pk] || []);
+if (list.has(key)) list.delete(key); else list.add(key);
+p[pk] = [...list].sort().slice(-36);
+if (!p[pk].length) delete p[pk];
+appSettings.schoolPaid = p; saveAppSettings(); schoolDrawPanel();
+});
+box.querySelectorAll("[data-pay-wa]").forEach(b => b.onclick = () => {
+const pk = b.dataset.payWa;
+let row = null;
+ctx.team.forEach(m => { const r = ctx.repOf(m); ((r && r.data && r.data.pay) || []).forEach(p => { if (`${m.user_id}:${p.k}` === pk) row = p; }); });
+if (!row || !row.ph) return;
+const text = `Olá, ${row.pn || firstName(row.n)}! A mensalidade de ${monthLongLabel(key)} de ${firstName(row.n)} na ${school.name} (R$ ${moneyText(row.v)}) ainda está em aberto.${appSettings.schoolPix ? ` Pix da escola: ${appSettings.schoolPix}.` : ""} Qualquer dúvida, é só falar.`;
+window.open(`${whatsappLink(row.ph)}?text=${encodeURIComponent(text)}`, "_blank");
+});
+// Gastos
+const add = box.querySelector("#expAdd");
+if (add) add.onclick = () => {
+const name = box.querySelector("#expName").value.trim(), v = Number(box.querySelector("#expVal").value), kind = box.querySelector("#expKind").value;
+if (!name || !(v > 0)) { alert("Digite o nome e o valor do gasto."); return; }
+const list = Array.isArray(appSettings.schoolExpenses) ? appSettings.schoolExpenses : [];
+list.push(kind === "once" ? { id: schoolUid(), name, value: v, kind, month: key } : { id: schoolUid(), name, value: v, kind: "monthly", from: key });
+appSettings.schoolExpenses = list; saveAppSettings(); schoolOpenSecs.add("exp"); schoolDrawPanel();
+};
+box.querySelectorAll("[data-exp-del]").forEach(b => b.onclick = () => {
+const list = Array.isArray(appSettings.schoolExpenses) ? appSettings.schoolExpenses : [], e = list.find(x => x.id === b.dataset.expDel);
+if (!e) return;
+if (e.kind === "once" || e.from === key) { if (!confirm(`Apagar "${e.name}"?`)) return; appSettings.schoolExpenses = list.filter(x => x !== e); }
+else { if (!confirm(`Parar "${e.name}" a partir de ${monthLongLabel(key)}? Os meses anteriores continuam com ele.`)) return; e.until = addMonths(key, -1); }
+saveAppSettings(); schoolDrawPanel();
+});
+// Fila
+const qa = box.querySelector("#qAdd");
+if (qa) qa.onclick = () => openQueueForm();
+box.querySelectorAll("[data-q-done]").forEach(b => b.onclick = () => {
+const x = (appSettings.schoolQueue || []).find(y => y.id === b.dataset.qDone);
+if (!x) return;
+if (x.status !== "accepted" && !confirm(`Tirar ${x.name} da fila?`)) return;
+x.status = x.status === "accepted" ? "done" : "gave_up";
+appSettings.schoolQueue = (appSettings.schoolQueue || []).filter(y => y.status !== "done" && y.status !== "gave_up" || Date.now() - Date.parse(y.at || 0) < 180 * 86400000);
+saveAppSettings(); schoolDrawPanel();
+});
+box.querySelectorAll("[data-q-send]").forEach(b => b.onclick = () => openQueueSend((appSettings.schoolQueue || []).find(y => y.id === b.dataset.qSend), ctx));
+// Avisos
+const na = box.querySelector("#nAdd");
+if (na) na.onclick = openSchoolNoticeForm;
+box.querySelectorAll("[data-n-del]").forEach(b => b.onclick = async () => {
+if (!confirm("Apagar este aviso? Ele some do app dos alunos e dos professores.")) return;
+const { error } = await supabaseClient.from("school_notices").delete().eq("id", b.dataset.nDel);
+if (error) { alert(schoolErrText(error)); return; }
+renderSchoolPage();
+});
+// Salas
+const saveRooms = async list => {
+const { error } = await supabaseClient.rpc("hi_school_set_rooms", { p_rooms: list });
+if (error) { alert(schoolErrText(error)); return; }
+school.rooms = list; schoolCacheWrite(school); schoolOpenSecs.add("rooms"); schoolDrawPanel();
+};
+const ra = box.querySelector("#roomAdd");
+if (ra) ra.onclick = () => {
+const v = box.querySelector("#roomNew").value.trim();
+if (!v) return;
+const list = schoolRooms().slice();
+if (list.some(r => r.toLowerCase() === v.toLowerCase())) { alert("Essa sala já está na lista."); return; }
+list.push(v); saveRooms(list);
+};
+box.querySelectorAll("[data-room-del]").forEach(b => b.onclick = () => {
+const list = schoolRooms().slice(), i = Number(b.dataset.roomDel);
+if (!confirm(`Tirar a sala "${list[i]}"? Os alunos que já estão nela continuam com o nome antigo até o professor trocar.`)) return;
+list.splice(i, 1); saveRooms(list);
+});
+}
+function openQueueForm(){
+const body = document.createElement("div");
+body.innerHTML = `<div class="field"><label>Nome</label><input type="text" id="qName" maxlength="80"></div>
+<div class="field"><label>Telefone (WhatsApp)</label><input type="tel" id="qPhone"></div>
+<div class="field"><label>Instrumento</label><input type="text" id="qInst" list="qInstList"><datalist id="qInstList"></datalist></div>
+<div class="field"><label>Dias e horários que prefere</label><input type="text" id="qPref" placeholder="Ex.: terça ou quinta à tarde"></div>
+<div class="field"><label>Observação</label><input type="text" id="qNote" placeholder="Ex.: 10 anos, nunca tocou"></div>`;
+const inst = new Set();
+(schoolPanel.members || []).forEach(m => { const r = schoolPanel.reports.get(m.user_id); ((r && r.data && r.data.inst) || []).forEach(i => inst.add(i)); });
+(appSettings.instruments || []).forEach(i => inst.add(i));
+body.querySelector("#qInstList").innerHTML = [...inst].map(i => `<option value="${escapeHtml(i)}">`).join("");
+openQuickModal("Interessado na escola", "", body, () => {
+const name = body.querySelector("#qName").value.trim();
+if (!name) { alert("Digite o nome."); return; }
+const x = { id: schoolUid(), status: "waiting", at: new Date().toISOString(), name };
+[["phone", "#qPhone"], ["instrument", "#qInst"], ["prefer", "#qPref"], ["note", "#qNote"]].forEach(([k, sel]) => { const v = body.querySelector(sel).value.trim(); if (v) x[k] = v; });
+appSettings.schoolQueue = (Array.isArray(appSettings.schoolQueue) ? appSettings.schoolQueue : []).concat([x]);
+saveAppSettings(); closeQuickModal(); schoolOpenSecs.add("queue"); schoolDrawPanel();
+});
+}
+function openQueueSend(x, ctx){
+if (!x) return;
+const sug = schoolSuggest(x, ctx), me = authCurrentUser.id;
+const others = ctx.team.filter(m => m.user_id !== me);
+if (!others.length && !sug.some(s => s.id === me)) { alert("Ainda não há professores na escola para encaminhar."); return; }
+const opts = ctx.team.map(m => ({ id: m.user_id, name: ctx.nameOf(m) })).sort((a, b) => (sug.findIndex(s => s.id === b.id) > -1) - (sug.findIndex(s => s.id === a.id) > -1));
+const body = document.createElement("div");
+body.innerHTML = `<div class="field"><label>Professor</label><select id="qsTo">${opts.map(o => `<option value="${o.id}">${escapeHtml(o.name)}${sug.some(s => s.id === o.id) ? " (sugestão)" : ""}</option>`).join("")}</select></div>
+<div style="display:flex;gap:10px"><div class="field" style="flex:1"><label>Aula experimental (opcional)</label><input type="date" id="qsDate"></div><div class="field" style="flex:1"><label>Horário</label><input type="time" id="qsTime"></div></div>
+<div class="field-hint">O interessado vai para a lista de espera do professor quando ele aceitar.</div><div class="auth-error" id="qsErr"></div>`;
+openQuickModal(`Encaminhar ${x.name}`, "", body, async () => {
+const to = body.querySelector("#qsTo").value, d = body.querySelector("#qsDate").value, t = body.querySelector("#qsTime").value;
+const name = (opts.find(o => o.id === to) || {}).name || "";
+if (to === me) {
+schoolAcceptLocal({ kind: "lead", data: { name: x.name, phone: x.phone, instrument: x.instrument, prefer: x.prefer, note: x.note, trial: d ? { d, t } : null } });
+x.status = "accepted"; x.to = { id: me, name: "Você" }; if (d) x.trial = { d, t };
+saveAppSettings(); closeQuickModal(); schoolDrawPanel(); return;
+}
+const data = { name: x.name, ...(x.phone ? { phone: x.phone } : {}), ...(x.instrument ? { instrument: x.instrument } : {}), ...(x.prefer ? { prefer: x.prefer } : {}), ...(x.note ? { note: x.note } : {}), ...(d ? { trial: { d, t } } : {}) };
+const { data: tid, error } = await supabaseClient.rpc("hi_school_send", { p_to: to, p_kind: "lead", p_data: data });
+if (error) { body.querySelector("#qsErr").textContent = schoolErrText(error); return; }
+x.status = "sent"; x.tid = tid; x.to = { id: to, name }; if (d) x.trial = { d, t };
+saveAppSettings(); closeQuickModal(); schoolDrawPanel();
+}, "Cancelar", "Encaminhar");
+}
+function openSchoolNoticeForm(){
+const body = document.createElement("div");
+body.innerHTML = `<div class="field"><label>Título</label><input type="text" id="snTitle" maxlength="120" placeholder="Ex.: Recital de fim de ano"></div>
+<div class="field"><label>Texto</label><textarea id="snBody" rows="4" maxlength="2000"></textarea></div>
+<div class="field"><label>Para quem</label><select id="snAud"><option value="all">Alunos e professores</option><option value="students">Só alunos</option><option value="teachers">Só professores</option></select></div>
+<div class="field"><label>Mostrar até (opcional)</label><input type="date" id="snUntil"></div><div class="auth-error" id="snErr"></div>`;
+openQuickModal("Aviso para a escola", school.name, body, async () => {
+const title = body.querySelector("#snTitle").value.trim(), text = body.querySelector("#snBody").value.trim(), until = body.querySelector("#snUntil").value;
+if (!title) { body.querySelector("#snErr").textContent = "Digite o título."; return; }
+const { error } = await supabaseClient.from("school_notices").insert({ org_id: school.org_id, title, body: text, audience: body.querySelector("#snAud").value, expires_at: until ? new Date(`${until}T23:59:59`).toISOString() : null });
+if (error) { body.querySelector("#snErr").textContent = schoolErrText(error); return; }
+closeQuickModal(); schoolOpenSecs.add("notices"); renderSchoolPage();
+}, "Cancelar", "Enviar aviso");
 }
 </script>
 <script>
