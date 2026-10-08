@@ -2090,6 +2090,16 @@ body.pdf-open{overflow:hidden}
 .school-sec .month-sum span.stu-muted{font-weight:600;font-size:0.75rem;text-align:right}
 .school-sec-body .ann-row:last-child{border-bottom:0.0625rem solid var(--hairline)}
 .school-pad{padding:0.75rem 1rem}
+.school-pay-months{display:flex;flex-wrap:wrap;gap:0.375rem;margin-top:0.375rem}
+.school-tcard{cursor:pointer}
+.school-key-card{text-align:center;padding:1.25rem 1rem;border-radius:var(--radius-lg);background:linear-gradient(145deg,rgba(47,211,242,.14),rgba(47,211,242,.03));border:0.0625rem solid var(--glass-border);margin-bottom:1rem}
+.school-key-label{font-size:0.6875rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.school-key-code{font-size:2rem;font-weight:800;letter-spacing:.06em;color:var(--accent);margin-top:0.375rem;font-variant-numeric:tabular-nums}
+.school-key-steps{display:flex;flex-direction:column;gap:0.375rem;font-size:0.8125rem;color:var(--text-2);margin-bottom:1rem}
+.school-hist{display:flex;flex-direction:column}
+.school-hist-row{display:flex;flex-wrap:wrap;align-items:baseline;gap:0.25rem 0.625rem;padding:0.5rem 0;border-bottom:0.0625rem solid var(--hairline);font-size:0.8125rem;color:var(--text-2)}
+.school-hist-row:last-child{border-bottom:0}
+.school-hist-row b{color:var(--text)}
 .sa-tools{display:flex;gap:0.5rem;align-items:center;margin-bottom:0.625rem}
 .sa-tools .student-picker-search{flex:1;margin:0}
 .sa-row{cursor:pointer}
@@ -2479,7 +2489,7 @@ body.pdf-open{overflow:hidden}
 </main>
 
 <main id="schoolPage" style="display:none">
-<div class="page-title-bar" style="margin-top:0"><h2 class="page-title-text" id="schoolTitle">Escola<button type="button" class="help-icon" data-help="Painel do dono da escola: os números de cada professor no mês, as aulas de hoje de todos e quanto pagar a cada um. Cada professor manda os números do próprio app (alunos, aulas, faltas e valores); observações, avaliações e anotações das aulas não aparecem aqui.">!</button></h2></div>
+<div class="page-title-bar" style="margin-top:0"><h2 class="page-title-text" id="schoolTitle">Escola<button type="button" class="help-icon" data-help="Parte do dono da escola. Cada professor manda os números do próprio app (alunos, aulas, faltas e valores); observações, avaliações e anotações das aulas não aparecem aqui.">!</button></h2><div class="icon-controls-group" id="schoolTitleActs"></div></div>
 <div id="schoolBody"></div>
 </main>
 
@@ -2649,9 +2659,10 @@ body.pdf-open{overflow:hidden}
 <div class="nav">
 <div class="nav-sec" id="navSchoolSec" style="display:none">
 <div class="nav-sec-label">Escola</div>
-<button class="nav-item" data-page="school"><span class="nav-item-row"><svg class="nav-icon" viewBox="0 0 24 24"><use href="#icon-school"/></svg>Painel da escola</span></button>
+<button class="nav-item" data-page="school"><span class="nav-item-row"><svg class="nav-icon" viewBox="0 0 24 24"><use href="#icon-home"/></svg>Início da escola</span></button>
 <button class="nav-item" data-page="schoolTeam"><span class="nav-item-row"><svg class="nav-icon" viewBox="0 0 24 24"><use href="#icon-user"/></svg>Professores<span class="nav-badge" id="navSchoolBadge" style="display:none"></span></span></button>
 <button class="nav-item" data-page="schoolMoney"><span class="nav-item-row"><svg class="nav-icon" viewBox="0 0 24 24"><use href="#icon-dollar"/></svg>Financeiro da escola</span></button>
+<button class="nav-item" data-page="schoolStats"><span class="nav-item-row"><svg class="nav-icon" viewBox="0 0 24 24"><use href="#icon-trending-up"/></svg>Estatísticas da escola</span></button>
 <div class="nav-group collapsed">
 <button class="nav-group-title" onclick="toggleNavGroup(this)">
 <span class="nav-item-row"><svg class="nav-icon" viewBox="0 0 24 24"><use href="#icon-clipboard"/></svg>Organização</span>
@@ -3598,7 +3609,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.25";
+const APP_VERSION = "8.26";
 // ===================== App instalável (8.4) =====================
 // Service worker (sw.js), aviso de versão nova, faixa "Sem internet", botão "Instalar o app",
 // atalhos do ícone (?p=...) e botão voltar do celular fechando modal/menu no app instalado.
@@ -14776,7 +14787,7 @@ document.getElementById("perfStudentSearch")?.addEventListener("input", renderPe
 let currentPage = sessGet("jp_active_page") || "home";
 if (currentPage === "tests") currentPage = "home"; // página de testes removida (8.16)
 
-var SCHOOL_PAGES = ["school", "schoolTeam", "schoolMoney", "schoolQueue", "schoolNotices", "schoolRooms"];
+var SCHOOL_PAGES = ["school", "schoolTeam", "schoolMoney", "schoolStats", "schoolQueue", "schoolNotices", "schoolRooms"];
 function toggleNavGroup(btn) {
 const group = btn.closest(".nav-group");
 group.classList.toggle("collapsed");
@@ -14796,7 +14807,7 @@ document.getElementById("dateLabel").textContent = {
 home:"Início", agenda:"Agenda", goals:"Metas", students:"Alunos", evaluation:"Avaliação",
 evolutionFinancial:"Evolução Financeira", evolutionQuantitative:"Evolução Quantitativa", evolutionStats:"Estatísticas",
 studentsPerformance:"Desempenho", planner:"Organização de Aulas", settings:"Configurações", announcements:"Avisos para os alunos", studentApp:"Liberar no app",
-school:"Painel da escola", schoolTeam:"Professores", schoolMoney:"Financeiro da escola", schoolQueue:"Fila e aula experimental", schoolNotices:"Avisos da escola", schoolRooms:"Salas"
+school:"Início da escola", schoolTeam:"Professores", schoolMoney:"Financeiro da escola", schoolStats:"Estatísticas da escola", schoolQueue:"Fila e aula experimental", schoolNotices:"Avisos da escola", schoolRooms:"Salas"
 }[page] || "Início";
 
 document.querySelector("header").style.display = (page==="settings") ? "none" : "";
@@ -17912,7 +17923,7 @@ return res;
 }
 function schoolReportData(){
 const cur = currentMonthKey();
-const months = schoolStatsFor([addMonths(cur, -2), addMonths(cur, -1), cur]);
+const months = schoolStatsFor(Array.from({ length: 12 }, (_, i) => addMonths(cur, i - 11))); // 12 meses (8.26) para o gráfico do Financeiro da escola
 const agenda = [];
 const base = new Date(); base.setHours(0, 0, 0, 0);
 for (let i = 0; i < 7; i++) {
@@ -17942,7 +17953,11 @@ return it;
 });
 let free = [];
 try { free = freeSlots().filter(x => x.slots.length).map(x => ({ d: x.d, s: x.slots })); } catch(e) {}
-return { v: 2, name: p.name || "", full: p.fullName || "", active: students.filter(s => s.active !== false).length, late: { n: lateN, v: lateV }, months, agenda, pay, free, inst: (appSettings.instruments || []).slice(0, 30) };
+// 8.26: aniversários da semana (sem o ano) e a lista dos alunos ativos (nome, instrumento, desde quando), para o Início e os Professores da escola.
+let bd = [];
+try { bd = upcomingBirthdays(7).map(x => ({ n: x.s.name || "", d: isoOf(x.date) })); } catch(e) {}
+const st = students.filter(s => s.active !== false).map(s => { const it = { n: s.name || "", i: s.instrument || "" }; if (s.entry) it.e = String(s.entry).slice(0, 7); return it; }).sort((a, b) => a.n.localeCompare(b.n));
+return { v: 3, name: p.name || "", full: p.fullName || "", active: students.filter(s => s.active !== false).length, late: { n: lateN, v: lateV }, months, agenda, pay, free, inst: (appSettings.instruments || []).slice(0, 30), bd, st };
 }
 function schoolDirty(){ if (school && school.status === "active") schoolPublishSoon(60000); }
 function schoolPublishSoon(ms){ clearTimeout(schoolTimer); schoolTimer = setTimeout(schoolPublish, ms); }
@@ -18174,7 +18189,7 @@ if (!st.error) { schoolPanel.sent = Array.isArray(st.data) ? st.data : []; schoo
 }
 schoolApplyNav();
 }
-var SCHOOL_PAGE_TITLE = { school: "Painel da escola", schoolTeam: "Professores", schoolMoney: "Financeiro da escola", schoolQueue: "Fila e aula experimental", schoolNotices: "Avisos da escola", schoolRooms: "Salas" };
+var SCHOOL_PAGE_TITLE = { school: "Início da escola", schoolTeam: "Professores", schoolMoney: "Financeiro da escola", schoolStats: "Estatísticas da escola", schoolQueue: "Fila e aula experimental", schoolNotices: "Avisos da escola", schoolRooms: "Salas" };
 async function renderSchoolPage(){
 const box = document.getElementById("schoolBody");
 if (!box) return;
@@ -18192,11 +18207,11 @@ if (!schoolPanel) { box.innerHTML = `<div class="empty-teach"><b>Não consegui a
 }
 schoolDrawPanel();
 }
-function schoolDrawPanel(){
-const box = document.getElementById("schoolBody");
-if (!box || !schoolPanel || !SCHOOL_PAGES.includes(currentPage)) return;
-const cur = currentMonthKey(), keys = [cur, addMonths(cur, -1), addMonths(cur, -2)];
-if (!keys.includes(schoolMonth)) schoolMonth = cur;
+// Páginas da escola (8.26): sem escolher mês; cada página mostra o mês de agora e, quando faz
+// sentido, os meses anteriores (gráfico do Financeiro, histórico de cada professor).
+function schoolCtx(){
+const cur = currentMonthKey();
+schoolMonth = cur;
 const me = authCurrentUser.id;
 const members = schoolPanel.members;
 const pending = members.filter(m => m.status === "pending");
@@ -18204,112 +18219,43 @@ const team = members.filter(m => m.status === "active");
 // O dono vê os próprios números na hora (do aparelho), sem esperar o envio.
 const live = (() => { try { return { data: schoolReportData(), updated_at: new Date().toISOString(), live: true }; } catch(e) { return null; } })();
 const repOf = m => m.user_id === me && live ? live : schoolPanel.reports.get(m.user_id);
-const monthOf = m => { const r = repOf(m); return r && r.data && r.data.months ? r.data.months[schoolMonth] : null; };
+const monthOf = (m, k) => { const r = repOf(m); return r && r.data && r.data.months ? r.data.months[k || cur] : null; };
 const nameOf = m => { const r = repOf(m); return (m.user_id === me ? "Você" : "") || m.display_name || (r && r.data && r.data.name) || "Professor"; };
 // Aulas que o professor deu como substituto (8.24): vêm dos números dos colegas.
-const covOf = m => { const c = { lessons: 0, minutes: 0 }; team.forEach(o => { if (o === m) return; const x = monthOf(o); ((x && x.subs) || []).forEach(sb => { if (sb.id === m.user_id) { c.lessons += sb.lessons || 0; c.minutes += sb.minutes || 0; } }); }); return c; };
-const effOf = m => { const x = monthOf(m), c = covOf(m); if (!x && !c.lessons) return null; const b = x || { lessons: 0, minutes: 0, studentLessons: 0, absences: 0, cancels: 0, revenue: 0, active: 0, joined: 0, left: 0 }; return { ...b, own: b.lessons, lessons: b.lessons + c.lessons, minutes: b.minutes + c.minutes, covered: c }; };
-let tot = { active: 0, lessons: 0, minutes: 0, absences: 0, cancels: 0, revenue: 0, pay: 0, payN: 0 };
+const covOf = (m, k) => { const c = { lessons: 0, minutes: 0 }; team.forEach(o => { if (o === m) return; const x = monthOf(o, k); ((x && x.subs) || []).forEach(sb => { if (sb.id === m.user_id) { c.lessons += sb.lessons || 0; c.minutes += sb.minutes || 0; } }); }); return c; };
+const effOf = (m, k) => { const x = monthOf(m, k), c = covOf(m, k); if (!x && !c.lessons) return null; const b = x || { lessons: 0, minutes: 0, studentLessons: 0, absences: 0, cancels: 0, revenue: 0, active: 0, joined: 0, left: 0 }; return { ...b, own: b.lessons, lessons: b.lessons + c.lessons, minutes: b.minutes + c.minutes, covered: c }; };
+const totFor = k => {
+const t = { active: 0, lessons: 0, minutes: 0, absences: 0, cancels: 0, revenue: 0, pay: 0, payN: 0, joined: 0, left: 0, has: false };
 team.forEach(m => {
-const x = effOf(m);
-if (x) { tot.active += x.active || 0; tot.lessons += x.lessons || 0; tot.minutes += x.minutes || 0; tot.absences += x.absences || 0; tot.cancels += x.cancels || 0; tot.revenue += x.revenue || 0; }
+const x = effOf(m, k);
+if (x) { t.has = true; t.active += x.active || 0; t.lessons += x.lessons || 0; t.minutes += x.minutes || 0; t.absences += x.absences || 0; t.cancels += x.cancels || 0; t.revenue += x.revenue || 0; t.joined += x.joined || 0; t.left += x.left || 0; }
 const p = payFor(m.pay_rule, x);
-if (p !== null) { tot.pay += p; tot.payN++; }
+if (p !== null) { t.pay += p; t.payN++; }
 });
-const card = (title, value, sub) => `<div class="kpi-card"><div class="kpi-title">${title}</div><div class="kpi-value">${value}</div>${sub ? `<div class="kpi-sub">${sub}</div>` : ""}</div>`;
-const isCur = schoolMonth === cur;
-const view = currentPage;
-let html = view !== "school" && view !== "schoolTeam" ? "" : `<div class="school-head"><div class="school-name">${escapeHtml(school.name)}</div>
-<div class="school-key">Chave para professores: <b>${escapeHtml(school.code || "")}</b> <button type="button" class="btn-link-inline" id="schCopyK">Copiar</button> <button type="button" class="btn-link-inline" id="schShareK">Compartilhar</button> <button type="button" class="btn-link-inline" id="schNewK">Nova chave</button></div></div>`;
-if (pending.length && view === "school") html += `<div class="empty-teach slim"><b>${pending.length} professor${pending.length === 1 ? " pedindo" : "es pedindo"} para entrar na escola.</b><button type="button" class="btn-historico" id="schGoTeam">Ver pedidos</button></div>`;
-if (pending.length && view === "schoolTeam") {
-html += `<div class="settings-group-label">Pedidos para entrar</div><div class="settings-card ann-list">${pending.map(m => `<div class="ann-row"><div class="ann-row-main"><div class="ann-row-title">${escapeHtml(m.display_name || "Professor")}</div><div class="ann-row-meta">Pediu ${escapeHtml(schoolAgo(m.created_at))}</div></div><div class="school-acts"><button type="button" class="save" data-sch-acc="${m.id}">Aceitar</button><button type="button" class="btn-historico" data-sch-rej="${m.id}">Recusar</button></div></div>`).join("")}</div>`;
+return t;
+};
+const tot = totFor(cur);
+return { cur, me, members, pending, team, repOf, monthOf, nameOf, covOf, effOf, totFor, tot, isCur: true };
 }
-if (["school", "schoolTeam", "schoolMoney"].includes(view)) html += `<div class="choice-chips school-months">${keys.map(k => `<button type="button" class="filter-chip${k === schoolMonth ? " selected" : ""}" data-sch-month="${k}" aria-pressed="${k === schoolMonth}">${escapeHtml(monthLongLabel(k))}${k === cur ? " (até hoje)" : ""}</button>`).join("")}</div>`;
-if (view === "schoolMoney") html += `<div class="kpi-grid stats-grid">
-${card("Faturamento previsto", `R$ ${moneyText(Math.round(tot.revenue))}`, "Mensalidades, aulas avulsas e pacotes de todos os alunos (bolsa não entra)")}
-${card("A pagar aos professores", tot.payN ? `R$ ${moneyText(Math.round(tot.pay * 100) / 100)}` : "—", tot.payN ? `Pelas regras de ${tot.payN} professor${tot.payN === 1 ? "" : "es"}` : "Defina a regra de pagamento de cada professor em Professores")}
-</div>`;
-if (view === "school") html += `<div class="kpi-grid stats-grid">
-${card("Professores", String(team.length), pending.length ? `${pending.length} pedido${pending.length === 1 ? "" : "s"} esperando` : "Contando você")}
-${card("Alunos ativos", String(tot.active), "Somando todos os professores")}
-${card("Aulas dadas", String(tot.lessons), `${hoursText(tot.minutes)} de aula${isCur ? " até hoje" : ""}. Aula em grupo conta uma vez.`)}
-${card("Faltas e cancelamentos", `${tot.absences} / ${tot.cancels}`, "Faltas de alunos / aulas canceladas pelo professor")}
-${card("Faturamento previsto", `R$ ${moneyText(Math.round(tot.revenue))}`, "Mensalidades, aulas avulsas e pacotes de todos os alunos (bolsa não entra)")}
-${card("A pagar aos professores", tot.payN ? `R$ ${moneyText(Math.round(tot.pay * 100) / 100)}` : "—", tot.payN ? `Pelas regras de ${tot.payN} professor${tot.payN === 1 ? "" : "es"}` : "Defina a regra de pagamento de cada professor em Professores")}
-</div>`;
-// Aulas de hoje de todos (das aulas que cada professor mandou).
-const todayIso = isoOf(new Date()), now = new Date();
-const todays = [];
-team.forEach(m => {
-const r = repOf(m);
-const list = (r && r.data && Array.isArray(r.data.agenda) ? r.data.agenda : []).filter(a => a.d === todayIso);
-const slots = new Map();
-list.forEach(a => { const k = a.t + "|" + (a.x ? "x" + a.n : ""); if (!slots.has(k)) slots.set(k, []); slots.get(k).push(a); });
-slots.forEach(arr => todays.push({ m, t: arr[0].t, arr }));
-});
-todays.sort((a, b) => a.t.localeCompare(b.t) || nameOf(a.m).localeCompare(nameOf(b.m)));
-if (view === "school") {
-html += schoolConflictsHTML(team, repOf, nameOf);
-html += `<div class="settings-group-label">Aulas de hoje</div>`;
-if (!todays.length) html += `<div class="empty-teach slim">Nenhuma aula hoje${team.length > 1 ? " entre os professores que já mandaram os números" : ""}.</div>`;
-else html += `<div class="settings-card ann-list">${todays.map(x => {
-const a0 = x.arr[0];
-const allOff = x.arr.every(a => a.s);
-let st, cls;
-if (allOff) { st = a0.s === "off" ? (a0.o || "Feriado/férias") : (SCHOOL_REASON[a0.s] || "Sem aula"); cls = "off"; }
-else {
-const [h, mi] = String(x.t).split(":").map(Number), start = new Date(); start.setHours(h || 0, mi || 0, 0, 0);
-const end = new Date(start.getTime() + (Number(a0.m) || 60) * 60000);
-if (now >= end) { st = "Dada"; cls = "completed"; } else if (now >= start) { st = "Agora"; cls = "ongoing"; } else { st = "Prevista"; cls = "upcoming"; }
-}
-const names = x.arr.map(a => escapeHtml(a.n) + (a.s && !allOff ? ` (${escapeHtml(a.s === "off" ? (a.o || "Feriado") : (SCHOOL_REASON[a.s] || "sem aula"))})` : "")).join(", ");
-const inst = [...new Set(x.arr.map(a => a.i).filter(Boolean))].join(", ");
-return `<div class="ann-row"><div class="school-time">${escapeHtml(x.t)}</div><div class="ann-row-main"><div class="ann-row-title">${names}</div><div class="ann-row-meta">${escapeHtml(nameOf(x.m))}${inst ? " · " + escapeHtml(inst) : ""}${a0.r ? " · " + escapeHtml(a0.r) : ""}${x.arr.length > 1 ? " · turma" : ""}${a0.x ? " · aula extra" : ""}</div></div><span class="status ${cls}">${escapeHtml(st)}</span></div>`;
-}).join("")}</div>`;
-html += schoolWhyHTML(team, effOf);
-}
-// Professores
-if (view === "schoolTeam") html += `<div class="settings-group-label">Professores</div><div class="school-team">${team.map(m => {
-const r = repOf(m), x = effOf(m), p = payFor(m.pay_rule, x);
-const whyTxt = x && x.why ? Object.entries(x.why).filter(([k]) => k).map(([k, n]) => `${EXIT_REASONS[k] || "Outro motivo"}${n > 1 ? " " + n : ""}`).join(", ") : "";
-const old = r && !r.live && Date.now() - Date.parse(r.updated_at) > 2 * 86400000;
-const upd = !r ? `<div class="school-warn">Ainda não mandou os números. Eles aparecem quando ${m.user_id === me ? "você" : "o professor"} abrir o app.</div>`
-: r.live ? `<div class="kpi-sub">Seus números, direto deste aparelho.</div>` : `<div class="${old ? "school-warn" : "kpi-sub"}">Números de ${escapeHtml(schoolAgo(r.updated_at))}${old ? ". Peça para ele abrir o app." : ""}</div>`;
-const lines = x ? `<div class="school-lines">
-<span>Alunos ativos <b>${x.active}</b>${x.joined || x.left ? ` <i>(+${x.joined} / −${x.left})</i>` : ""}</span>
-<span>Aulas dadas <b>${x.lessons}</b> <i>(${hoursText(x.minutes)})</i></span>
-${x.covered && x.covered.lessons ? `<span>Como substituto <b>${x.covered.lessons}</b> <i>(já somadas acima)</i></span>` : ""}
-${x.subs && x.subs.length ? `<span>Dadas por substituto <b>${x.subs.reduce((a, b) => a + b.lessons, 0)}</b> <i>(${escapeHtml(x.subs.map(b => b.name).filter(Boolean).join(", "))})</i></span>` : ""}
-${whyTxt ? `<span>Motivo das saídas <i>${escapeHtml(whyTxt)}</i></span>` : ""}
-<span>Faltas de alunos <b>${x.absences}</b></span>
-<span>Canceladas <b>${x.cancels}</b></span>
-<span>Faturamento previsto <b>R$ ${moneyText(Math.round(x.revenue))}</b></span>
-${isCur && r && r.data && r.data.late && r.data.late.n ? `<span>Em atraso <b>R$ ${moneyText(Math.round(r.data.late.v))}</b> <i>(${r.data.late.n})</i></span>` : ""}
-</div>` : (r ? `<div class="kpi-sub">Sem números deste mês.</div>` : "");
-const pay = `<div class="school-pay"><span>${escapeHtml(payRuleText(m.pay_rule))}</span>${p !== null ? `<b>R$ ${moneyText(p)}</b>` : ""}</div>`;
-return `<div class="kpi-card school-teacher"><div class="school-t-name">${escapeHtml(nameOf(m))}${m.role === "owner" ? ` <span class="status upcoming">Dono</span>` : ""}</div>${upd}${lines}${pay}
-<div class="school-acts"><button type="button" class="btn-historico" data-sch-rule="${m.id}">Regra de pagamento</button>${p !== null ? `<button type="button" class="btn-historico" data-sch-sum="${m.id}">Resumo do pagamento</button>` : ""}${m.role !== "owner" ? `<button type="button" class="btn-link-inline" data-sch-rem="${m.id}" style="color:#f87171">Tirar da escola</button>` : ""}</div></div>`;
-}).join("")}</div>`;
-if (view !== "school" && view !== "schoolTeam") html += schoolExtrasHTML({ team, members, repOf, nameOf, effOf, tot, isCur }, view);
-if (team.length <= 1 && view === "schoolTeam") html += `<div class="empty-teach slim">Para trazer os professores: passe a chave <b>${escapeHtml(school.code || "")}</b>. Cada um vai em Configurações → Escola → Dou aula numa escola, e o pedido aparece aqui para você aceitar.</div>`;
+function schoolDrawPanel(){
+const box = document.getElementById("schoolBody");
+if (!box || !schoolPanel || !SCHOOL_PAGES.includes(currentPage)) return;
+const ctx = schoolCtx(), view = currentPage;
+const acts = document.getElementById("schoolTitleActs");
+if (acts) acts.innerHTML = view === "schoolTeam" ? `<button class="icon-btn-ctrl" id="schInvite" title="Convidar professor" aria-label="Convidar professor">+</button>` : "";
+let html = "";
+if (view === "school") html = schoolHomeHTML(ctx);
+else if (view === "schoolTeam") html = schoolTeamHTML(ctx);
+else if (view === "schoolMoney") html = schoolMoneyHTML(ctx);
+else if (view === "schoolStats") html = schoolStatsHTML(ctx);
+else html = schoolExtrasHTML(ctx, view);
 box.innerHTML = html;
-const byId = id => members.find(m => m.id === id);
-const on = (sel, fn) => { const el = box.querySelector(sel); if (el) el.onclick = fn; };
-on("#schGoTeam", () => openPage("schoolTeam"));
-on("#schCopyK", () => schoolCopyCode(school.code));
-on("#schShareK", async () => {
-const text = schoolInviteText();
-if (navigator.share) { try { await navigator.share({ text }); return; } catch(e) { if (e && e.name === "AbortError") return; } }
-window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
-});
-on("#schNewK", async () => {
-if (!confirm("Gerar uma chave nova? A chave atual para de funcionar para pedidos novos. Quem já está na escola continua.")) return;
-const { data, error } = await supabaseClient.rpc("hi_school_new_code");
-if (error) { alert(schoolErrText(error)); return; }
-school.code = data; schoolCacheWrite(school); schoolDrawPanel();
-});
-box.querySelectorAll("[data-sch-month]").forEach(b => b.onclick = () => { schoolMonth = b.dataset.schMonth; schoolDrawPanel(); });
+const on = (root, sel, fn) => { const el = root && root.querySelector(sel); if (el) el.onclick = fn; };
+on(acts, "#schInvite", openSchoolInvite);
+on(box, "#schInvite2", openSchoolInvite);
+box.querySelectorAll("[data-sch-go]").forEach(b => b.onclick = () => openPage(b.dataset.schGo));
+box.querySelectorAll(".day-section").forEach(sec => sec.onclick = () => { box.querySelectorAll(".day-section").forEach(x => x.classList.remove("focused")); sec.classList.add("focused"); });
+const byId = id => ctx.members.find(m => m.id === id);
 box.querySelectorAll("[data-sch-acc],[data-sch-rej]").forEach(b => b.onclick = async () => {
 const accept = !!b.dataset.schAcc, id = b.dataset.schAcc || b.dataset.schRej, m = byId(id);
 if (!accept && !confirm(`Recusar o pedido de ${m ? m.display_name || "este professor" : "este professor"}?`)) return;
@@ -18318,16 +18264,234 @@ const { error } = await supabaseClient.rpc("hi_school_answer", { p_member: id, p
 if (error) { b.disabled = false; alert(schoolErrText(error)); return; }
 renderSchoolPage();
 });
-box.querySelectorAll("[data-sch-rem]").forEach(b => b.onclick = async () => {
-const m = byId(b.dataset.schRem);
-if (!m || !confirm(`Tirar ${m.display_name || "este professor"} da escola? Ele continua com todos os alunos e dados dele; só some deste painel.`)) return;
+box.querySelectorAll("[data-sch-t]").forEach(c => { const go = () => openSchoolTeacher(byId(c.dataset.schT), ctx); c.onclick = go; c.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } }; });
+if (view === "schoolMoney") schoolMoneyChart(ctx);
+if (view === "schoolStats") schoolStatsChart(ctx);
+schoolExtrasBind(box, ctx);
+}
+// Convidar professor: a chave da escola num cartão próprio (sai do meio da página).
+function openSchoolInvite(){
+const body = document.createElement("div");
+const draw = () => {
+body.innerHTML = `<div class="school-key-card"><div class="school-key-label">Chave da escola</div><div class="school-key-code">${escapeHtml(school.code || "")}</div></div>
+<div class="school-key-steps"><span><b>1.</b> Mande a chave para o professor.</span><span><b>2.</b> Ele vai em Configurações → Escola → Dou aula numa escola e digita a chave.</span><span><b>3.</b> O pedido aparece em Professores para você aceitar.</span></div>
+<div class="ms-actions"><button type="button" class="btn-historico" id="kShare">Mandar no WhatsApp</button><button type="button" class="btn-historico" id="kCopy">Copiar chave</button></div>
+<div style="text-align:center;margin-top:0.75rem"><button type="button" class="btn-link-inline" id="kNew">Gerar uma chave nova</button></div>`;
+body.querySelector("#kCopy").onclick = () => schoolCopyCode(school.code);
+body.querySelector("#kShare").onclick = async () => {
+const text = schoolInviteText();
+if (navigator.share) { try { await navigator.share({ text }); return; } catch(e) { if (e && e.name === "AbortError") return; } }
+window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+};
+body.querySelector("#kNew").onclick = async () => {
+if (!confirm("Gerar uma chave nova? A chave atual para de funcionar para pedidos novos. Quem já está na escola continua.")) return;
+const { data, error } = await supabaseClient.rpc("hi_school_new_code");
+if (error) { alert(schoolErrText(error)); return; }
+school.code = data; schoolCacheWrite(school); draw();
+};
+};
+draw();
+openQuickModal("Convidar professor", school.name || "", body, null, "Fechar");
+}
+function schoolPendingHTML(ctx){
+if (!ctx.pending.length) return "";
+return `<div class="settings-group-label">Pedidos para entrar</div><div class="settings-card ann-list">${ctx.pending.map(m => `<div class="ann-row"><div class="ann-row-main"><div class="ann-row-title">${escapeHtml(m.display_name || "Professor")}</div><div class="ann-row-meta">Pediu ${escapeHtml(schoolAgo(m.created_at))}</div></div><div class="school-acts"><button type="button" class="save" data-sch-acc="${m.id}">Aceitar</button><button type="button" class="btn-historico" data-sch-rej="${m.id}">Recusar</button></div></div>`).join("")}</div>`;
+}
+// Mensalidades pagas à escola em atraso (até 3 meses para trás), para o Início e o Financeiro.
+function schoolPayRows(ctx){
+const rows = [];
+ctx.team.forEach(m => { const r = ctx.repOf(m); ((r && r.data && r.data.pay) || []).forEach(p => rows.push({ ...p, uid: m.user_id, who: ctx.nameOf(m), pk: `${m.user_id}:${p.k}` })); });
+return rows.sort((a, b) => a.n.localeCompare(b.n));
+}
+function schoolPayLate(p, key){
+const cur = currentMonthKey(), paid = (appSettings.schoolPaid || {})[p.pk] || [];
+if (paid.includes(key)) return false;
+return key < cur || (key === cur && p.due && new Date().getDate() > p.due);
+}
+function schoolPayMonths(){ const cur = currentMonthKey(); return [addMonths(cur, -2), addMonths(cur, -1), cur]; }
+// ---------- Início da escola: o mesmo jeito do Início do professor, com as aulas de todos ----------
+function schoolHomeHTML(ctx){
+const { team, repOf, nameOf } = ctx;
+const now = new Date(), todayIso = isoOf(now);
+const months = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+const days = ["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"];
+// Aulas por dia: cada professor manda os próximos 7 dias.
+const byDay = new Map();
+team.forEach(m => {
+const r = repOf(m);
+((r && r.data && Array.isArray(r.data.agenda)) ? r.data.agenda : []).forEach(a => {
+if (a.d < todayIso) return;
+if (!byDay.has(a.d)) byDay.set(a.d, new Map());
+const k = m.user_id + "|" + a.t + "|" + (a.x ? "x" + a.n : "");
+const slots = byDay.get(a.d);
+if (!slots.has(k)) slots.set(k, { m, t: a.t, arr: [] });
+slots.get(k).arr.push(a);
+});
+});
+const today = byDay.get(todayIso) ? [...byDay.get(todayIso).values()] : [];
+const todayLive = today.filter(x => x.arr.some(a => !a.s));
+const nStu = new Set(todayLive.flatMap(x => x.arr.filter(a => !a.s).map(a => a.n))).size;
+const nTeach = new Set(todayLive.map(x => x.m.user_id)).size;
+const t = ctx.tot;
+let html = `<div class="home-greeting-text">${escapeHtml(school.name || "Escola")}</div>
+<div class="home-message"><div class="home-message-status">${todayLive.length ? `A escola tem ${todayLive.length} aula${todayLive.length > 1 ? "s" : ""} hoje, com ${nStu} aluno${nStu > 1 ? "s" : ""} e ${nTeach} professor${nTeach > 1 ? "es" : ""}.` : "Nenhuma aula na escola hoje."}</div>
+<div class="home-message-phrase">${team.length} professor${team.length === 1 ? "" : "es"} · ${t.active} aluno${t.active === 1 ? "" : "s"} ativo${t.active === 1 ? "" : "s"}</div></div>`;
+// O que pede atenção hoje.
+const att = [];
+if (ctx.pending.length) att.push(`<div class="ann-row"><div class="ann-row-main"><div class="ann-row-title">${ctx.pending.length} professor${ctx.pending.length > 1 ? "es pedindo" : " pedindo"} para entrar na escola</div></div><button type="button" class="btn-historico" data-sch-go="schoolTeam">Ver pedidos</button></div>`);
+if (schoolV824()) {
+const rows = schoolPayRows(ctx), late = rows.filter(p => schoolPayMonths().some(k => schoolPayLate(p, k)));
+if (late.length) att.push(`<div class="ann-row"><div class="ann-row-main"><div class="ann-row-title">${late.length} mensalidade${late.length > 1 ? "s" : ""} da escola em atraso</div><div class="ann-row-meta">${escapeHtml(late.slice(0, 4).map(p => firstName(p.n)).join(", "))}${late.length > 4 ? "…" : ""}</div></div><button type="button" class="btn-historico" data-sch-go="schoolMoney">Ver</button></div>`);
+const q = (appSettings.schoolQueue || []).filter(x => x.status === "waiting" || x.status === "rejected");
+if (q.length) att.push(`<div class="ann-row"><div class="ann-row-main"><div class="ann-row-title">${q.length} interessado${q.length > 1 ? "s" : ""} esperando professor</div></div><button type="button" class="btn-historico" data-sch-go="schoolQueue">Ver fila</button></div>`);
+}
+const old = team.filter(m => { const r = repOf(m); return !r || (!r.live && Date.now() - Date.parse(r.updated_at) > 2 * 86400000); });
+if (old.length) att.push(`<div class="ann-row"><div class="ann-row-main"><div class="ann-row-title">Números atrasados de ${escapeHtml(old.map(nameOf).join(", "))}</div><div class="ann-row-meta">As aulas deles aparecem aqui quando abrirem o app.</div></div></div>`);
+if (att.length) html += `<div class="settings-card ann-list" style="margin-bottom:1rem">${att.join("")}</div>`;
+html += schoolConflictsHTML(team, repOf, nameOf);
+// Próximos 3 dias com aula, com os mesmos cartões do Início do professor.
+const keys = [...byDay.keys()].sort().slice(0, 3);
+if (!keys.length) html += `<div class="empty-teach"><b>Nenhuma aula nos próximos dias.</b><span>${team.length > 1 ? "As aulas aparecem quando cada professor abrir o app." : "Traga os professores em Professores → + para ver as aulas de todos aqui."}</span></div>`;
+keys.forEach((iso, idx) => {
+const d = dateFromIso(iso), off = Math.round((d - dateFromIso(todayIso)) / 86400000);
+const suffix = off === 0 ? " (hoje)" : off === 1 ? " (amanhã)" : ` (daqui a ${off} dias)`;
+const list = [...byDay.get(iso).values()].sort((a, b) => a.t.localeCompare(b.t) || nameOf(a.m).localeCompare(nameOf(b.m)));
+html += `<section class="day-section${idx === 0 ? " focused" : ""}"><div class="day-head">${days[d.getDay()]}, ${d.getDate()} de ${months[d.getMonth()]}${suffix}</div>` + list.map(x => {
+const a0 = x.arr[0], allOff = x.arr.every(a => a.s);
+let st = "Em breve", cls = "upcoming";
+if (allOff) { st = a0.s === "off" ? (a0.o || "Feriado/férias") : (SCHOOL_REASON[a0.s] || "Sem aula"); cls = "off"; }
+else if (off === 0) {
+const [h, mi] = String(x.t).split(":").map(Number), start = new Date(); start.setHours(h || 0, mi || 0, 0, 0);
+const end = new Date(start.getTime() + Math.max(...x.arr.map(a => Number(a.m) || 60)) * 60000);
+if (now >= end) { st = "Dada"; cls = "completed"; } else if (now >= start) { st = "Andamento"; cls = "ongoing"; }
+}
+const names = x.arr.map(a => escapeHtml(a.n) + (a.s && !allOff ? ` (${escapeHtml(a.s === "off" ? (a.o || "Feriado") : (SCHOOL_REASON[a.s] || "sem aula"))})` : "")).join(", ");
+const inst = [...new Set(x.arr.map(a => a.i).filter(Boolean))].join(", ");
+const av = buildAvatarCluster(x.arr.map(a => ({ id: "", name: a.n })));
+return `<div class="card${allOff ? " is-off" : ""}"><div class="time">${escapeHtml(x.t)}</div>${av}<div class="info"><div class="name">${names}</div><div class="instrument">${escapeHtml(inst)}${x.arr.length > 1 ? " · grupo" : " · ind."}${a0.x ? " · aula extra" : ""}</div><div class="hw-line"><span class="hw-label">Professor:</span> ${escapeHtml(nameOf(x.m))}${a0.r ? ` · ${escapeHtml(a0.r)}` : ""}</div></div><div class="status ${cls}">${escapeHtml(st)}</div></div>`;
+}).join("") + `</section>`;
+});
+// Aniversários da semana (dos alunos de todos os professores).
+const bd = [];
+team.forEach(m => { const r = repOf(m); ((r && r.data && r.data.bd) || []).forEach(b => { if (b.d >= todayIso) bd.push({ ...b, who: nameOf(m) }); }); });
+bd.sort((a, b) => a.d.localeCompare(b.d) || a.n.localeCompare(b.n));
+const bdToday = bd.filter(b => b.d === todayIso), bdWeek = bd.filter(b => b.d !== todayIso && b.d <= isoOf(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 6)));
+if (bdToday.length || bdWeek.length) html += `<div class="settings-group-label" style="margin-top:1.5rem">Aniversários</div>` + bdToday.map(b => `<div class="bday-card"><span class="bday-emoji" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-cake"/></svg></span><div class="bday-title">Hoje: ${escapeHtml(b.n)} <span class="bday-sub">· aluno de ${escapeHtml(b.who)}</span></div></div>`).join("") + (bdWeek.length ? `<div class="bday-week">Esta semana: ${bdWeek.map(b => { const d = dateFromIso(b.d); return `${escapeHtml(b.n)} (${WEEKDAY_SHORT[d.getDay()].toLowerCase()}, ${pad2(d.getDate())}/${pad2(d.getMonth() + 1)})`; }).join(" · ")}</div>` : "");
+return html;
+}
+// ---------- Professores: cartões iguais aos de Meus Alunos ----------
+function schoolTeamHTML(ctx){
+const { team, repOf, nameOf, effOf, me } = ctx;
+let html = schoolPendingHTML(ctx);
+if (ctx.pending.length) html += `<div class="settings-group-label">Professores</div>`;
+html += `<div class="students-grid">${team.map(m => {
+const r = repOf(m), x = effOf(m), p = payFor(m.pay_rule, x), d = (r && r.data) || {};
+const inst = (Array.isArray(d.st) ? [...new Set(d.st.map(x => x.i).filter(Boolean))] : (d.inst || [])).join(", ");
+const row = (l, v, warn) => `<div class="stu-row"><span class="stu-label">${l}</span><span class="stu-value stu-value-wrap${warn ? " stu-value-warn" : ""}">${v}</span></div>`;
+const old = r && !r.live && Date.now() - Date.parse(r.updated_at) > 2 * 86400000;
+return `<div class="student-square school-tcard" data-sch-t="${m.id}" role="button" tabindex="0">
+<div class="stu-header"><div class="stu-photo-wrap"><div class="stu-photo">${initials(nameOf(m) === "Você" ? (appSettings.profile.name || "Você") : nameOf(m))}</div></div>
+<div class="stu-name-block"><div class="stu-name">${escapeHtml(nameOf(m))}</div><div class="stu-sub">${m.role === "owner" ? "Dono da escola" : "Professor"}</div></div></div>
+<div class="stu-fields">
+${inst ? row("Instrumentos", escapeHtml(inst)) : ""}
+${row("Alunos ativos", x ? `${x.active}${x.joined || x.left ? ` <i>(+${x.joined} / −${x.left})</i>` : ""}` : (r ? String(d.active || 0) : "—"))}
+${row("Aulas no mês", x ? `${x.lessons} · ${hoursText(x.minutes)}` : "—")}
+${row("Faltas no mês", x ? String(x.absences) : "—", x && x.absences >= 3)}
+${row("Faturamento", x ? `R$ ${moneyText(Math.round(x.revenue))}` : "—")}
+${d.late && d.late.n ? row("Em atraso", `R$ ${moneyText(Math.round(d.late.v))} (${d.late.n})`, true) : ""}
+${row("Pagamento", p !== null ? `R$ ${moneyText(p)}` : "Sem regra")}
+${row("Números", !r ? "Ainda não mandou" : r.live ? "Deste aparelho" : escapeHtml(schoolAgo(r.updated_at)), !r || old)}
+</div></div>`;
+}).join("")}</div>`;
+if (team.length <= 1) html += `<div class="empty-teach"><b>Traga os professores da escola.</b><span>Cada professor pede para entrar com a chave da escola, e você aceita aqui.</span><button type="button" class="btn-historico" id="schInvite2">Convidar professor</button></div>`;
+return html;
+}
+// Ficha do professor: mês de agora, meses anteriores, alunos e pagamento.
+function openSchoolTeacher(m, ctx){
+if (!m) return;
+const name = ctx.nameOf(m), r = ctx.repOf(m), d = (r && r.data) || {};
+const keys = Array.from({ length: 6 }, (_, i) => addMonths(ctx.cur, -i)).filter((k, i) => { const y = ctx.effOf(m, k); return y && (i === 0 || y.active || y.lessons || y.revenue); });
+const body = document.createElement("div");
+const x = ctx.effOf(m), p = payFor(m.pay_rule, x);
+const pair = (l, v, wide) => `<div class="sheet-pair${wide ? " wide" : ""}"><dt>${l}</dt><dd>${v}</dd></div>`;
+const stu = Array.isArray(d.st) ? d.st : null;
+body.innerHTML = `<section class="sheet-sec"><div class="sheet-sec-title">Este mês (até hoje)</div><dl class="sheet-grid">
+${x ? pair("Alunos ativos", x.active) + pair("Aulas dadas", `${x.lessons} (${hoursText(x.minutes)})`) + pair("Faltas de alunos", x.absences) + pair("Canceladas", x.cancels) + pair("Faturamento previsto", `R$ ${moneyText(Math.round(x.revenue))}`)
++ (x.covered && x.covered.lessons ? pair("Como substituto", `${x.covered.lessons} aula${x.covered.lessons > 1 ? "s" : ""}`) : "")
++ (x.subs && x.subs.length ? pair("Dadas por substituto", `${x.subs.reduce((a, b) => a + b.lessons, 0)} (${escapeHtml(x.subs.map(b => b.name).filter(Boolean).join(", "))})`) : "")
+: pair("Números", "Ainda não mandou", true)}
+${pair("Pagamento", `${escapeHtml(payRuleText(m.pay_rule))}${p !== null ? ` · <b>R$ ${moneyText(p)}</b>` : ""}`, true)}
+</dl></section>
+${keys.length > 1 ? `<section class="sheet-sec"><div class="sheet-sec-title">Meses anteriores</div><div class="school-hist">${keys.slice(1).map(k => { const y = ctx.effOf(m, k), py = payFor(m.pay_rule, y); return `<div class="school-hist-row"><b>${escapeHtml(monthLongLabel(k))}</b><span>${y.active} alunos · ${y.lessons} aulas (${hoursText(y.minutes)}) · R$ ${moneyText(Math.round(y.revenue))}${py !== null ? ` · pagar R$ ${moneyText(py)}` : ""}</span>${py !== null ? `<button type="button" class="btn-link-inline" data-ps="${k}">Resumo</button>` : ""}</div>`; }).join("")}</div></section>` : ""}
+${stu ? `<section class="sheet-sec"><div class="sheet-sec-title">Alunos (${stu.length})</div>${stu.length ? `<div class="school-hist">${stu.map(s => `<div class="school-hist-row"><b>${escapeHtml(s.n)}</b><span>${escapeHtml([s.i, s.e ? "desde " + monthLabel(s.e) : ""].filter(Boolean).join(" · "))}</span></div>`).join("")}</div>` : `<div class="stu-muted">Nenhum aluno ativo.</div>`}</section>` : ""}
+<div class="demo-actions"><button type="button" class="btn-historico" id="stRule">Regra de pagamento</button>${p !== null ? `<button type="button" class="btn-historico" id="stSum">Resumo do pagamento</button>` : ""}${m.role !== "owner" ? `<button type="button" class="btn-link-inline" id="stRem" style="color:#f87171">Tirar da escola</button>` : ""}</div>`;
+body.querySelector("#stRule").onclick = () => { closeQuickModal(); openPayRule(m, name); };
+const sum = body.querySelector("#stSum"); if (sum) sum.onclick = () => { closeQuickModal(); openPaySummary(m, name, x, ctx.cur); };
+body.querySelectorAll("[data-ps]").forEach(b => b.onclick = () => { closeQuickModal(); openPaySummary(m, name, ctx.effOf(m, b.dataset.ps), b.dataset.ps); });
+const rem = body.querySelector("#stRem");
+if (rem) rem.onclick = async () => {
+if (!confirm(`Tirar ${m.display_name || "este professor"} da escola? Ele continua com todos os alunos e dados dele; só some da escola.`)) return;
 const { error } = await supabaseClient.rpc("hi_school_remove", { p_member: m.id });
 if (error) { alert(schoolErrText(error)); return; }
-renderSchoolPage();
-});
-box.querySelectorAll("[data-sch-rule]").forEach(b => b.onclick = () => openPayRule(byId(b.dataset.schRule), nameOf(byId(b.dataset.schRule))));
-box.querySelectorAll("[data-sch-sum]").forEach(b => b.onclick = () => { const m = byId(b.dataset.schSum); openPaySummary(m, nameOf(m), effOf(m)); });
-schoolExtrasBind(box, { team, members, repOf, nameOf, effOf });
+closeQuickModal(); renderSchoolPage();
+};
+openQuickModal(name, r ? (r.live ? "Seus números, direto deste aparelho." : `Números de ${schoolAgo(r.updated_at)}`) : "", body, null, "Fechar");
+}
+// ---------- Financeiro da escola: igual à Evolução Financeira, somando todos os professores ----------
+function schoolYearSeries(ctx, fn){
+const y = new Date().getFullYear();
+return monthNamesShort.map((mo, i) => { const k = `${y}-${pad2(i + 1)}`; const t = ctx.totFor(k); return { month: mo, value: t.has && k <= ctx.cur ? Math.round(fn(t, k)) : 0 }; });
+}
+function schoolMoneyHTML(ctx){
+const series = schoolYearSeries(ctx, t => t.revenue);
+const vals = series.filter(x => x.value > 0);
+let max = null;
+series.forEach((x, i) => { if (x.value > 0 && (!max || x.value > max.value)) max = { ...x, i }; });
+const avg = vals.length ? Math.round(vals.reduce((a, b) => a + b.value, 0) / vals.length) : 0;
+const t = ctx.tot;
+const exp = schoolExpensesFor(ctx.cur).reduce((a, e) => a + (Number(e.value) || 0), 0);
+const profit = t.revenue - (t.payN ? t.pay : 0) - exp;
+const card = (title, value, sub) => `<div class="kpi-card"><div class="kpi-title">${title}</div><div class="kpi-value">${value}</div>${sub ? `<div class="kpi-sub">${sub}</div>` : ""}</div>`;
+let html = `<div class="kpi-grid">
+${card("Maior faturamento", max ? `R$ ${moneyText(max.value)}` : "R$ 0", max ? (max.i === new Date().getMonth() ? "Recorde este mês!" : `Em ${max.month}/${new Date().getFullYear()}`) : "Sem números ainda.")}
+${card("Média mensal", `R$ ${moneyText(avg)}`, "Considerando os meses com números")}
+${card("Faturamento deste mês", `R$ ${moneyText(Math.round(t.revenue))}`, "Previsto, de todos os professores (bolsa não entra)")}
+${card("Lucro previsto", `${profit < 0 ? "−" : ""}R$ ${moneyText(Math.abs(Math.round(profit)))}`, t.payN ? "Faturamento − professores − gastos" : "Defina a regra de pagamento em Professores")}
+</div>
+<div class="chart-card"><div class="chart-header"><div class="chart-period-badge">JAN - DEZ (${new Date().getFullYear()})</div><div class="chart-empty-hint"${vals.length ? ' style="display:none"' : ""}>O gráfico se monta com os números que cada professor manda do app.</div></div>
+<div class="line-chart-wrapper"><svg class="line-chart-svg" id="schFinSvg" viewBox="0 0 600 220"></svg></div></div>`;
+html += schoolExtrasHTML(ctx, "schoolMoney");
+return html;
+}
+// Meses antes do primeiro com números aparecem apagados (como o início dos gráficos do professor).
+function schoolChart(id, list, unit){ const first = list.findIndex(x => x.value > 0); try { renderGenericLineChart(id, list, [], unit, "#2FD3F2", first < 0 ? 0 : first, null); } catch(e) { console.warn(e); } }
+function schoolMoneyChart(ctx){
+schoolChart("schFinSvg", schoolYearSeries(ctx, t => t.revenue), "R$");
+}
+// ---------- Estatísticas da escola ----------
+function schoolStatsHTML(ctx){
+const t = ctx.tot, prev = ctx.totFor(addMonths(ctx.cur, -1));
+const card = (title, value, sub) => `<div class="kpi-card"><div class="kpi-title">${title}</div><div class="kpi-value">${value}</div>${sub ? `<div class="kpi-sub">${sub}</div>` : ""}</div>`;
+const was = v => prev.has ? `Mês passado: ${v}` : "";
+let html = `<div class="kpi-grid stats-grid">
+${card("Professores", String(ctx.team.length), ctx.pending.length ? `${ctx.pending.length} pedido${ctx.pending.length === 1 ? "" : "s"} esperando` : "Contando você")}
+${card("Alunos ativos", String(t.active), was(prev.active) || "Somando todos os professores")}
+${card("Entraram / saíram", `+${t.joined} / −${t.left}`, was(`+${prev.joined} / −${prev.left}`) || "Neste mês")}
+${card("Aulas dadas", String(t.lessons), `${hoursText(t.minutes)} até hoje. ${was(prev.lessons)}`)}
+${card("Faltas e cancelamentos", `${t.absences} / ${t.cancels}`, was(`${prev.absences} / ${prev.cancels}`) || "Faltas de alunos / aulas canceladas")}
+${card("Faturamento previsto", `R$ ${moneyText(Math.round(t.revenue))}`, was(`R$ ${moneyText(Math.round(prev.revenue))}`) || "Bolsa não entra")}
+</div>
+<div class="chart-card"><div class="chart-header"><div class="chart-period-badge">ALUNOS ATIVOS · JAN - DEZ (${new Date().getFullYear()})</div></div>
+<div class="line-chart-wrapper"><svg class="line-chart-svg" id="schStuSvg" viewBox="0 0 600 220"></svg></div></div>`;
+// Por que saíram: últimos 12 meses.
+const why = {};
+Array.from({ length: 12 }, (_, i) => addMonths(ctx.cur, -i)).forEach(k => ctx.team.forEach(m => { const x = ctx.monthOf(m, k); if (x && x.why) Object.entries(x.why).forEach(([w, n]) => { if (w) why[w] = (why[w] || 0) + n; }); }));
+const list = Object.entries(why).sort((a, b) => b[1] - a[1]);
+if (list.length) { const all = list.reduce((a, [, n]) => a + n, 0); html += `<div class="settings-group-label">Por que os alunos saíram (últimos 12 meses)</div><div class="settings-card school-sec-body"><div class="school-lines school-pad">${list.map(([k, n]) => `<span>${escapeHtml(EXIT_REASONS[k] || "Outro motivo")} <b>${n}</b> <i>(${Math.round(n * 100 / all)}%)</i></span>`).join("")}</div></div>`; }
+return html;
+}
+function schoolStatsChart(ctx){
+schoolChart("schStuSvg", schoolYearSeries(ctx, t => t.active), "alunos");
 }
 function openPayRule(m, name){
 if (!m) return;
@@ -18356,18 +18520,19 @@ closeQuickModal();
 renderSchoolPage();
 });
 }
-function schoolPayText(m, name, x){
+function schoolPayText(m, name, x, key){
+key = key || schoolMonth || currentMonthKey();
 const p = payFor(m.pay_rule, x);
-const lines = [`Pagamento de ${monthLongLabel(schoolMonth)}${schoolMonth === currentMonthKey() ? " (até hoje)" : ""} · ${school.name}`, `Professor: ${name === "Você" ? (appSettings.profile.name || "") : name}`, "",
+const lines = [`Pagamento de ${monthLongLabel(key)}${key === currentMonthKey() ? " (até hoje)" : ""} · ${school.name}`, `Professor: ${name === "Você" ? (appSettings.profile.name || "") : name}`, "",
 `Aulas dadas: ${x.lessons} (${hoursText(x.minutes)})`, `Faltas de alunos: ${x.absences} · Aulas canceladas: ${x.cancels}`, `Alunos ativos: ${x.active}`];
 if (m.pay_rule && m.pay_rule.type === "percent") lines.push(`Faturamento previsto dos alunos: R$ ${moneyText(x.revenue)}`);
 if (x.covered && x.covered.lessons) lines.push(`Aulas como substituto (já somadas): ${x.covered.lessons}`);
 lines.push("", `Regra: ${payRuleText(m.pay_rule)}`, `Cálculo: ${payCalcText(m.pay_rule, x)}`, `Total: R$ ${moneyText(p)}`);
 return lines.join("\n");
 }
-function openPaySummary(m, name, x){
+function openPaySummary(m, name, x, key){
 if (!m || !x) return;
-const text = schoolPayText(m, name, x);
+const text = schoolPayText(m, name, x, key);
 const body = document.createElement("div");
 body.innerHTML = `<div class="ms-preview"></div><div class="ms-actions"><button type="button" class="btn-historico" id="psShare">Compartilhar</button><button type="button" class="btn-historico" id="psCopy">Copiar texto</button></div>`;
 body.querySelector(".ms-preview").textContent = text;
@@ -18605,35 +18770,24 @@ return `<div class="settings-group-label school-sec-label"><span>${title}</span>
 }
 function schoolMonthPaidSet(key){ const p = appSettings.schoolPaid || {}; return new Set(Object.keys(p).filter(k => (p[k] || []).includes(key))); }
 function schoolExpensesFor(key){ return (appSettings.schoolExpenses || []).filter(e => e.kind === "once" ? e.month === key : (e.from <= key && (!e.until || e.until >= key))); }
-// Por que os alunos saíram, somando todos os professores no mês escolhido.
-function schoolWhyHTML(team, effOf){
-const why = {};
-team.forEach(m => { const x = effOf(m); if (x && x.why) Object.entries(x.why).forEach(([k, n]) => { if (k) why[k] = (why[k] || 0) + n; }); });
-const list = Object.entries(why).sort((a, b) => b[1] - a[1]);
-if (!list.length) return "";
-const all = list.reduce((a, [, n]) => a + n, 0);
-return `<div class="settings-group-label">Por que os alunos saíram</div><div class="settings-card school-sec-body"><div class="school-lines school-pad">${list.map(([k, n]) => `<span>${escapeHtml(EXIT_REASONS[k] || "Outro motivo")} <b>${n}</b> <i>(${Math.round(n * 100 / all)}%)</i></span>`).join("")}</div></div>`;
-}
 function schoolExtrasHTML(ctx, view){
 if (!schoolV824()) return `<div class="empty-teach slim">Salas, fila da escola, mensalidades da escola, gastos e avisos aparecem depois de atualizar o servidor do app (versão 8.24).</div>`;
 const { team, repOf, nameOf, tot } = ctx, key = schoolMonth, cur = currentMonthKey();
 const want = id => ({ pay: "schoolMoney", exp: "schoolMoney", queue: "schoolQueue", notices: "schoolNotices", rooms: "schoolRooms" })[id] === view;
 let html = "";
-// Mensalidades pagas direto à escola
-const rows = [];
-team.forEach(m => { const r = repOf(m); ((r && r.data && r.data.pay) || []).forEach(p => rows.push({ ...p, uid: m.user_id, who: nameOf(m), pk: `${m.user_id}:${p.k}` })); });
-rows.sort((a, b) => a.n.localeCompare(b.n));
-const paid = schoolMonthPaidSet(key);
-const [y, mo] = key.split("-").map(Number), today = new Date();
-const lateOf = p => !paid.has(p.pk) && (key < cur || (key === cur && p.due && today.getDate() > p.due));
-const got = rows.filter(p => paid.has(p.pk)).reduce((a, p) => a + p.v, 0), all = rows.reduce((a, p) => a + p.v, 0);
-const nLate = rows.filter(lateOf).length;
-if (want("pay")) html += schoolSec("pay", "Mensalidades pagas à escola", rows.length ? `R$ ${moneyText(got)} de R$ ${moneyText(all)}${nLate ? ` · ${nLate} atrasada${nLate > 1 ? "s" : ""}` : ""}` : "nenhuma",
-`<div class="field-hint school-pad">Alunos marcados pelo professor com "Mensalidade paga para: Escola". Toque para marcar como pago em ${escapeHtml(monthLongLabel(key))}.</div>
+// Mensalidades pagas direto à escola: os 3 últimos meses em cada aluno (toque para marcar pago).
+const rows = schoolPayRows(ctx), pm = schoolPayMonths();
+const paidCur = schoolMonthPaidSet(cur);
+const got = rows.filter(p => paidCur.has(p.pk)).reduce((a, p) => a + p.v, 0), all = rows.reduce((a, p) => a + p.v, 0);
+const nLate = rows.filter(p => pm.some(k => schoolPayLate(p, k))).length;
+if (want("pay")) html += schoolSec("pay", "Mensalidades pagas à escola", rows.length ? `${escapeHtml(monthLongLabel(cur))}: R$ ${moneyText(got)} de R$ ${moneyText(all)}${nLate ? ` · ${nLate} em atraso` : ""}` : "nenhuma",
+`<div class="field-hint school-pad">Alunos marcados pelo professor com "Mensalidade paga para: Escola". Toque no mês para marcar como pago.</div>
 <div class="school-pad"><div class="field" style="margin:0"><label>Pix da escola (vai na mensagem de cobrança)</label><input type="text" id="schPix" value="${escapeHtml(appSettings.schoolPix || "")}" placeholder="Chave Pix"></div></div>` +
 (rows.length ? rows.map(p => {
-const isPaid = paid.has(p.pk), late = lateOf(p);
-return `<div class="ann-row"><div class="ann-row-main"><div class="ann-row-title">${escapeHtml(p.n)}</div><div class="ann-row-meta">${escapeHtml(p.who)} · R$ ${moneyText(p.v)}${p.due ? ` · vence dia ${p.due}` : ""}</div></div><div class="school-acts">${!isPaid && p.ph ? `<button type="button" class="btn-link-inline" data-pay-wa="${escapeHtml(p.pk)}">Cobrar</button>` : ""}<button type="button" class="status ${isPaid ? "completed" : late ? "off" : "upcoming"} school-pay-btn" data-pay-tog="${escapeHtml(p.pk)}">${isPaid ? "Pago" : late ? "Atrasado" : "A pagar"}</button></div></div>`;
+const paidList = (appSettings.schoolPaid || {})[p.pk] || [], anyLate = pm.some(k => schoolPayLate(p, k));
+return `<div class="ann-row"><div class="ann-row-main"><div class="ann-row-title">${escapeHtml(p.n)}</div><div class="ann-row-meta">${escapeHtml(p.who)} · R$ ${moneyText(p.v)}${p.due ? ` · vence dia ${p.due}` : ""}</div>
+<div class="school-pay-months">${pm.map(k => { const isPaid = paidList.includes(k), late = schoolPayLate(p, k); return `<button type="button" class="status ${isPaid ? "completed" : late ? "off" : "upcoming"} school-pay-btn" data-pay-tog="${escapeHtml(p.pk)}" data-pay-k="${k}" aria-pressed="${isPaid}">${escapeHtml(monthLabel(k).split("/")[0])} · ${isPaid ? "pago" : late ? "atrasado" : "a pagar"}</button>`; }).join("")}</div></div>
+${anyLate && p.ph ? `<button type="button" class="btn-link-inline" data-pay-wa="${escapeHtml(p.pk)}">Cobrar</button>` : ""}</div>`;
 }).join("") : `<div class="field-hint school-pad">Nenhum aluno paga direto para a escola agora.</div>`));
 // Gastos e lucro
 const exp = schoolExpensesFor(key), expSum = exp.reduce((a, e) => a + (Number(e.value) || 0), 0);
@@ -18708,8 +18862,8 @@ const key = schoolMonth;
 const pix = box.querySelector("#schPix");
 if (pix) pix.onchange = () => { appSettings.schoolPix = pix.value.trim() || undefined; saveAppSettings(); };
 box.querySelectorAll("[data-pay-tog]").forEach(b => b.onclick = () => {
-const pk = b.dataset.payTog, p = appSettings.schoolPaid || {}, list = new Set(p[pk] || []);
-if (list.has(key)) list.delete(key); else list.add(key);
+const pk = b.dataset.payTog, k = b.dataset.payK || key, p = appSettings.schoolPaid || {}, list = new Set(p[pk] || []);
+if (list.has(k)) list.delete(k); else list.add(k);
 p[pk] = [...list].sort().slice(-36);
 if (!p[pk].length) delete p[pk];
 appSettings.schoolPaid = p; saveAppSettings(); schoolDrawPanel();
