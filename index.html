@@ -2090,6 +2090,10 @@ body.pdf-open{overflow:hidden}
 .school-sec .month-sum span.stu-muted{font-weight:600;font-size:0.75rem;text-align:right}
 .school-sec-body .ann-row:last-child{border-bottom:0.0625rem solid var(--hairline)}
 .school-pad{padding:0.75rem 1rem}
+.school-demo-bar{margin-bottom:1rem;border-color:rgba(251,191,36,.35)}
+.taught-themes{display:flex;flex-wrap:wrap;gap:0.375rem;margin-top:0.5rem;align-items:center}
+.taught-themes .filter-chip{font-size:0.75rem;padding:0.3125rem 0.625rem}
+.taught-pick{max-width:100%;font-size:0.75rem;padding:0.3125rem 0.5rem;border-radius:var(--radius-pill);background:var(--glass-inset);color:var(--text-2);border:0.0625rem solid var(--hairline)}
 .school-pay-months{display:flex;flex-wrap:wrap;gap:0.375rem;margin-top:0.375rem}
 .school-tcard{cursor:pointer}
 .school-key-card{text-align:center;padding:1.25rem 1rem;border-radius:var(--radius-lg);background:linear-gradient(145deg,rgba(47,211,242,.14),rgba(47,211,242,.03));border:0.0625rem solid var(--glass-border);margin-bottom:1rem}
@@ -2659,21 +2663,20 @@ body.pdf-open{overflow:hidden}
 <div class="nav">
 <div class="nav-sec" id="navSchoolSec" style="display:none">
 <div class="nav-sec-label">Escola</div>
-<button class="nav-item" data-page="school"><span class="nav-item-row"><svg class="nav-icon" viewBox="0 0 24 24"><use href="#icon-home"/></svg>Início da escola</span></button>
+<button class="nav-item" data-page="school"><span class="nav-item-row"><svg class="nav-icon" viewBox="0 0 24 24"><use href="#icon-home"/></svg>Início</span></button>
 <button class="nav-item" data-page="schoolTeam"><span class="nav-item-row"><svg class="nav-icon" viewBox="0 0 24 24"><use href="#icon-user"/></svg>Professores<span class="nav-badge" id="navSchoolBadge" style="display:none"></span></span></button>
-<button class="nav-item" data-page="schoolMoney"><span class="nav-item-row"><svg class="nav-icon" viewBox="0 0 24 24"><use href="#icon-dollar"/></svg>Financeiro da escola</span></button>
-<button class="nav-item" data-page="schoolStats"><span class="nav-item-row"><svg class="nav-icon" viewBox="0 0 24 24"><use href="#icon-trending-up"/></svg>Estatísticas da escola</span></button>
 <div class="nav-group collapsed">
 <button class="nav-group-title" onclick="toggleNavGroup(this)">
-<span class="nav-item-row"><svg class="nav-icon" viewBox="0 0 24 24"><use href="#icon-clipboard"/></svg>Organização</span>
+<span class="nav-item-row"><svg class="nav-icon" viewBox="0 0 24 24"><use href="#icon-trending-up"/></svg>Evolução</span>
 <span class="chevron">▾</span>
 </button>
 <div class="nav-sub">
-<button class="nav-item" data-page="schoolQueue">Fila e aula experimental</button>
-<button class="nav-item" data-page="schoolNotices">Avisos da escola</button>
-<button class="nav-item" data-page="schoolRooms">Salas</button>
+<button class="nav-item" data-page="schoolMoney">Evolução Financeira</button>
+<button class="nav-item" data-page="schoolQty">Evolução Quantitativa</button>
+<button class="nav-item" data-page="schoolStats">Estatísticas</button>
 </div>
 </div>
+<button class="nav-item" data-page="schoolNotices"><span class="nav-item-row"><svg class="nav-icon" viewBox="0 0 24 24"><use href="#icon-bell"/></svg>Avisos da escola</span></button>
 </div>
 
 <div class="nav-sec">
@@ -3609,7 +3612,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.26";
+const APP_VERSION = "8.27";
 // ===================== App instalável (8.4) =====================
 // Service worker (sw.js), aviso de versão nova, faixa "Sem internet", botão "Instalar o app",
 // atalhos do ícone (?p=...) e botão voltar do celular fechando modal/menu no app instalado.
@@ -10586,10 +10589,30 @@ if (lesson.taught && String(lesson.taught).trim()) parts.push(`<div class="lesso
 if (lesson.homework && String(lesson.homework).trim()) parts.push(`<div class="lesson-note"><span class="lesson-note-label">Para estudar em casa</span>${escapeHtml(lesson.homework)}</div>`);
 return parts.length ? `<div class="lesson-notes">${parts.join("")}</div>` : "";
 }
-function notesEditorHTML(lesson){
+// Temas do Organizador de Aulas para preencher "O que foi dado" com um toque (8.27):
+// primeiro os temas ligados ao aluno, depois os outros numa lista.
+function taughtThemesHTML(student){
+const mine = [], seen = new Set();
+((student && student.themes) || []).slice().reverse().forEach(a => { const t = getThemeById(a.themeId); if (t && t.topic && !seen.has(t.topic)) { seen.add(t.topic); mine.push(t.topic); } });
+const others = lessonPlans.map(p => p.topic).filter(t => t && !seen.has(t)).filter((t, i, a) => a.indexOf(t) === i).sort((a, b) => a.localeCompare(b));
+if (!mine.length && !others.length) return "";
+return `<div class="taught-themes">${mine.slice(0, 8).map(t => `<button type="button" class="filter-chip" data-taught-chip="${escapeHtml(t)}">+ ${escapeHtml(t)}</button>`).join("")}${others.length ? `<select class="taught-pick" aria-label="Tema do Organizador de Aulas"><option value="">${mine.length ? "Outro tema…" : "Tema do Organizador de Aulas…"}</option>${others.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join("")}</select>` : ""}</div>`;
+}
+function taughtAdd(el, text){
+const field = el.closest(".field"), ta = field && field.querySelector("textarea");
+if (!ta || !text) return;
+const cur = ta.value.trim();
+if (cur.split(/\s*,\s*/).includes(text)) return;
+ta.value = cur ? `${cur.replace(/[,;.\s]+$/, "")}, ${text}` : text;
+ta.dispatchEvent(new Event("input", { bubbles: true }));
+ta.dispatchEvent(new Event("change", { bubbles: true }));
+}
+document.addEventListener("click", e => { const b = e.target.closest("[data-taught-chip]"); if (b) { e.preventDefault(); e.stopPropagation(); taughtAdd(b, b.dataset.taughtChip); } }, true);
+document.addEventListener("change", e => { const sel = e.target.closest && e.target.closest(".taught-pick"); if (sel && sel.value) { taughtAdd(sel, sel.value); sel.value = ""; } });
+function notesEditorHTML(lesson, student){
 return `
 <div class="notes-editor">
-<div class="field"><label>O que foi dado</label><textarea rows="2" class="note-taught" placeholder="Ex.: escala de Dó maior, música X">${escapeHtml(lesson.taught || "")}</textarea></div>
+<div class="field"><label>O que foi dado</label><textarea rows="2" class="note-taught" placeholder="Ex.: escala de Dó maior, música X">${escapeHtml(lesson.taught || "")}</textarea>${taughtThemesHTML(student)}</div>
 <div class="field"><label>Para estudar em casa</label><textarea rows="2" class="note-homework" placeholder="Ex.: praticar a escala 10 min por dia">${escapeHtml(lesson.homework || "")}</textarea></div>
 </div>`;
 }
@@ -10677,7 +10700,7 @@ const isPending = lesson.status === "pending";
 const prevHw = isPending ? getLastHomework(student, isoFromBr(lesson.date)) : null;
 div.innerHTML = header(isPending ? `<span class="badge-not-evaluated">Aguardando avaliação</span>` : `<span class="badge-given">Aula dada</span>`) +
 (prevHw ? `<div class="prev-homework"><span class="lesson-note-label">Para casa da aula anterior (${prevHw.date})</span>${escapeHtml(prevHw.homework)}</div>` : "") +
-(isPending ? `<div class="eval-criteria-wrap"></div>${notesEditorHTML(lesson)}` : lessonNotesHTML(lesson)) +
+(isPending ? `<div class="eval-criteria-wrap"></div>${notesEditorHTML(lesson, student)}` : lessonNotesHTML(lesson)) +
 `<div class="reason-slot"></div>
 <div class="history-actions">
 <button type="button" class="btn-edit-toggle btn-noclass${lesson.virtual ? "" : " btn-subtle"}">Não teve aula</button>
@@ -10737,7 +10760,7 @@ if (!btn) return;
 btn.onclick = () => {
 if (div.querySelector('.notes-editor')) return;
 const holder = document.createElement('div');
-holder.innerHTML = notesEditorHTML(lesson) + `<div class="history-actions"><button type="button" class="cancel btn-notes-cancel">Cancelar</button><button type="button" class="save btn-notes-save">Salvar anotações</button></div>`;
+holder.innerHTML = notesEditorHTML(lesson, student) + `<div class="history-actions"><button type="button" class="cancel btn-notes-cancel">Cancelar</button><button type="button" class="save btn-notes-save">Salvar anotações</button></div>`;
 div.querySelector('.lesson-notes')?.remove();
 div.querySelector('.history-actions').replaceWith(holder);
 holder.querySelector('.btn-notes-cancel').onclick = () => rerender();
@@ -11508,7 +11531,7 @@ function todayNotesHTML(x, date, i, canCopy){
 const rec = todayRecordOf(x, date) || noteDraftOf(x, date) || {};
 return `<div class="lp-notes" data-lp-notes="${i}">
 <div class="lp-last-title">${new Date() < lessonEnd(date, x.time, x.student) ? "Anotações da aula (em andamento)" : "Anotações de hoje"}</div>
-<div class="field"><label>O que foi dado</label><textarea rows="2" class="lp-taught" placeholder="Ex.: escala de Dó maior, música X">${escapeHtml(rec.taught || "")}</textarea></div>
+<div class="field"><label>O que foi dado</label><textarea rows="2" class="lp-taught" placeholder="Ex.: escala de Dó maior, música X">${escapeHtml(rec.taught || "")}</textarea>${taughtThemesHTML(x.student)}</div>
 ${canCopy ? `<div class="lp-copy-row"><button type="button" class="btn-link-inline lp-copy">Copiar para todos</button></div>` : ""}
 <div class="field"><label>Para estudar em casa</label><textarea rows="2" class="lp-homework" placeholder="Ex.: praticar a escala 10 min por dia">${escapeHtml(rec.homework || "")}</textarea></div>
 <div class="lp-saved" aria-live="polite"></div>
@@ -14787,13 +14810,14 @@ document.getElementById("perfStudentSearch")?.addEventListener("input", renderPe
 let currentPage = sessGet("jp_active_page") || "home";
 if (currentPage === "tests") currentPage = "home"; // página de testes removida (8.16)
 
-var SCHOOL_PAGES = ["school", "schoolTeam", "schoolMoney", "schoolStats", "schoolQueue", "schoolNotices", "schoolRooms"];
+var SCHOOL_PAGES = ["school", "schoolTeam", "schoolMoney", "schoolQty", "schoolStats", "schoolNotices"];
 function toggleNavGroup(btn) {
 const group = btn.closest(".nav-group");
 group.classList.toggle("collapsed");
 }
 
 function openPage(page){
+if (page === "schoolQueue" || page === "schoolRooms") page = "school"; // páginas da 8.25 que saíram na 8.27
 if (bulkSel && page !== "students") cancelBulk();
 currentPage = page;
 sessSet("jp_active_page", page);
@@ -14807,7 +14831,7 @@ document.getElementById("dateLabel").textContent = {
 home:"Início", agenda:"Agenda", goals:"Metas", students:"Alunos", evaluation:"Avaliação",
 evolutionFinancial:"Evolução Financeira", evolutionQuantitative:"Evolução Quantitativa", evolutionStats:"Estatísticas",
 studentsPerformance:"Desempenho", planner:"Organização de Aulas", settings:"Configurações", announcements:"Avisos para os alunos", studentApp:"Liberar no app",
-school:"Início da escola", schoolTeam:"Professores", schoolMoney:"Financeiro da escola", schoolStats:"Estatísticas da escola", schoolQueue:"Fila e aula experimental", schoolNotices:"Avisos da escola", schoolRooms:"Salas"
+school:"Início", schoolTeam:"Professores", schoolMoney:"Evolução Financeira da escola", schoolQty:"Evolução Quantitativa da escola", schoolStats:"Estatísticas da escola", schoolNotices:"Avisos da escola"
 }[page] || "Início";
 
 document.querySelector("header").style.display = (page==="settings") ? "none" : "";
@@ -15732,7 +15756,7 @@ ${prevHw ? `<div class="prev-homework"><span class="lesson-note-label">Para casa
 <div class="reason-slot"></div>
 <div class="eval-criteria-wrap"></div>
 <button type="button" class="notes-toggle">${preNotes.taught || preNotes.homework ? "− Esconder anotações" : "+ Anotações da aula (opcional)"}</button>
-<div class="notes-slot"${preNotes.taught || preNotes.homework ? "" : ' style="display:none"'}>${notesEditorHTML(preNotes)}</div>
+<div class="notes-slot"${preNotes.taught || preNotes.homework ? "" : ' style="display:none"'}>${notesEditorHTML(preNotes, s)}</div>
 `;
 container.appendChild(div);
 
@@ -16199,11 +16223,13 @@ const wa = whatsappLink(p.phone);
 return `<div class="wl-item">
 <div><div class="wl-name">${escapeHtml(p.name)}</div>
 <div class="wl-sub">${waitlistPrefText(p) || "Sem preferência"}${p.since ? ` · desde ${formatDateShort(p.since).slice(0,5)}` : ""}</div>
-${p.notes ? `<div class="wl-notes">${escapeHtml(p.notes)}</div>` : ""}</div>
-<div class="wl-acts">${wa ? `<a class="wa-btn wa-mini" href="${wa}" target="_blank" rel="noopener">WhatsApp</a>` : ""}<button type="button" class="btn-edit-toggle" data-wl-convert="${p.id}">Virar aluno</button><button type="button" class="btn-link-inline" data-wl-edit="${p.id}">Editar</button><button type="button" class="makeup-dismiss" data-wl-del="${p.id}" aria-label="Tirar ${escapeHtml(p.name)} da lista">✕</button></div>
+${p.notes ? `<div class="wl-notes">${escapeHtml(p.notes)}</div>` : ""}
+${p.sentTo ? `<div class="wl-notes">Encaminhado para ${escapeHtml(p.sentTo.name || "outro professor")}, esperando resposta.</div>` : ""}</div>
+<div class="wl-acts">${wa ? `<a class="wa-btn wa-mini" href="${wa}" target="_blank" rel="noopener">WhatsApp</a>` : ""}<button type="button" class="btn-edit-toggle" data-wl-convert="${p.id}">Virar aluno</button>${schoolCanForward() && !p.sentTo ? `<button type="button" class="btn-link-inline" data-wl-send="${p.id}">Passar para professor</button>` : ""}<button type="button" class="btn-link-inline" data-wl-edit="${p.id}">Editar</button><button type="button" class="makeup-dismiss" data-wl-del="${p.id}" aria-label="Tirar ${escapeHtml(p.name)} da lista">✕</button></div>
 </div>`;
 }).join("") : `<div class="field-hint" style="margin:0">Ninguém na lista ainda. Anote aqui quem pediu horário e ainda não tem vaga.</div>`;
 box.querySelectorAll("[data-wl-convert]").forEach(b => b.onclick = () => waitlistToStudent(b.dataset.wlConvert));
+box.querySelectorAll("[data-wl-send]").forEach(b => b.onclick = () => openWaitlistSend(b.dataset.wlSend));
 box.querySelectorAll("[data-wl-edit]").forEach(b => b.onclick = () => openWaitlistForm(b.dataset.wlEdit));
 box.querySelectorAll("[data-wl-del]").forEach(b => b.onclick = () => {
 const p = waitlist().find(x => x.id === b.dataset.wlDel);
@@ -18062,13 +18088,16 @@ return;
 }
 info.textContent = school.name;
 body.innerHTML = `<div class="key-state ok">Você é o dono desta escola</div>
-<div class="field-hint">Você continua com tudo de professor. Os professores entram com a chave da escola e você aceita cada um no painel.</div>
-<div class="key-big" style="font-size:1.75rem">${escapeHtml(school.code || "")}</div>
-<div class="actions"><button class="cancel" id="schCopy">Copiar chave</button><button class="save" id="schPanel">Abrir painel</button></div>
-<button type="button" class="btn-historico" id="schRename" style="width:100%;margin-top:0.5rem">Mudar o nome da escola</button>`;
-body.querySelector("#schCopy").onclick = () => schoolCopyCode(school.code);
-body.querySelector("#schPanel").onclick = () => { closeQuickModal(); openPage("school"); };
+<div class="field-hint">Você continua com tudo de professor. Os professores entram com a chave da escola e você aceita cada um em Professores.</div>
+<button type="button" class="btn-historico" id="schInviteS" style="width:100%;margin-top:0.5rem">Convidar professor (chave da escola)</button>
+${schoolV824() ? `<button type="button" class="btn-historico" id="schRooms" style="width:100%;margin-top:0.5rem">Salas da escola${schoolRooms().length ? ` (${schoolRooms().length})` : ""}</button>` : ""}
+<button type="button" class="btn-historico" id="schRename" style="width:100%;margin-top:0.5rem">Mudar o nome da escola</button>
+<button type="button" class="btn-historico" id="schDemo" style="width:100%;margin-top:0.5rem">${schoolDemoOn() ? "Tirar os professores de exemplo" : "Ver com 5 professores de exemplo"}</button>
+<div class="field-hint">Os professores de exemplo aparecem só neste aparelho, para ver como fica a escola funcionando. Nada é salvo nem enviado.</div>`;
+body.querySelector("#schInviteS").onclick = () => { closeQuickModal(); openSchoolInvite(); };
+const rb = body.querySelector("#schRooms"); if (rb) rb.onclick = () => { closeQuickModal(); openSchoolRooms(); };
 body.querySelector("#schRename").onclick = openSchoolRename;
+body.querySelector("#schDemo").onclick = () => { schoolDemoSet(!schoolDemoOn()); closeQuickModal(); schoolPanel = null; openPage(schoolDemoOn() ? "school" : currentPage); };
 }
 async function schoolLeave(question){
 if (!confirm(question)) return;
@@ -18177,8 +18206,9 @@ if (mem.error) throw mem.error;
 if (rep.error) throw rep.error;
 const members = Array.isArray(mem.data) ? mem.data : [];
 const reports = new Map((rep.data || []).map(r => [r.teacher_id, r]));
-schoolPendingN = members.filter(m => m.status === "pending").length;
+schoolPendingN = members.filter(m => m.status === "pending").length + (schoolDemoOn() && !schoolDemoAccepted ? 1 : 0);
 schoolPanel = { members, reports, at: Date.now(), notices: [], sent: [] };
+if (schoolDemoOn()) schoolDemoAdd(schoolPanel);
 if (school.v824) {
 const [nt, st] = await Promise.all([
 supabaseClient.from("school_notices").select("id,title,body,audience,expires_at,created_at").eq("org_id", school.org_id).order("created_at", { ascending: false }).limit(50),
@@ -18189,12 +18219,14 @@ if (!st.error) { schoolPanel.sent = Array.isArray(st.data) ? st.data : []; schoo
 }
 schoolApplyNav();
 }
-var SCHOOL_PAGE_TITLE = { school: "Início da escola", schoolTeam: "Professores", schoolMoney: "Financeiro da escola", schoolStats: "Estatísticas da escola", schoolQueue: "Fila e aula experimental", schoolNotices: "Avisos da escola", schoolRooms: "Salas" };
+var SCHOOL_PAGE_TITLE = { school: "Início", schoolTeam: "Professores", schoolMoney: "Evolução Financeira", schoolQty: "Evolução Quantitativa", schoolStats: "Estatísticas", schoolNotices: "Avisos da escola" };
 async function renderSchoolPage(){
 const box = document.getElementById("schoolBody");
 if (!box) return;
 const t = document.getElementById("schoolTitle");
 if (t && t.firstChild && t.firstChild.nodeType === 3) t.firstChild.textContent = SCHOOL_PAGE_TITLE[currentPage] || "Escola";
+// O Início (da escola, como o do professor) não tem título.
+if (t && t.parentElement) t.parentElement.style.display = currentPage === "school" ? "none" : "";
 if (!schoolIsOwner()) {
 box.innerHTML = `<div class="empty-teach"><b>O painel da escola é do dono da escola.</b><span>Para criar a sua escola ou entrar na escola onde você dá aula, vá em Configurações → Escola.</span><button type="button" class="btn-historico" id="schGo">Abrir Escola</button></div>`;
 box.querySelector("#schGo").onclick = openSchoolSettings;
@@ -18247,17 +18279,19 @@ let html = "";
 if (view === "school") html = schoolHomeHTML(ctx);
 else if (view === "schoolTeam") html = schoolTeamHTML(ctx);
 else if (view === "schoolMoney") html = schoolMoneyHTML(ctx);
+else if (view === "schoolQty") html = schoolQtyHTML(ctx);
 else if (view === "schoolStats") html = schoolStatsHTML(ctx);
 else html = schoolExtrasHTML(ctx, view);
 box.innerHTML = html;
 const on = (root, sel, fn) => { const el = root && root.querySelector(sel); if (el) el.onclick = fn; };
 on(acts, "#schInvite", openSchoolInvite);
-on(box, "#schInvite2", openSchoolInvite);
 box.querySelectorAll("[data-sch-go]").forEach(b => b.onclick = () => openPage(b.dataset.schGo));
+on(box, "#schDemoOff", () => { schoolDemoSet(false); renderSchoolPage(); });
 box.querySelectorAll(".day-section").forEach(sec => sec.onclick = () => { box.querySelectorAll(".day-section").forEach(x => x.classList.remove("focused")); sec.classList.add("focused"); });
 const byId = id => ctx.members.find(m => m.id === id);
 box.querySelectorAll("[data-sch-acc],[data-sch-rej]").forEach(b => b.onclick = async () => {
 const accept = !!b.dataset.schAcc, id = b.dataset.schAcc || b.dataset.schRej, m = byId(id);
+if (m && m.demo) { schoolDemoAccepted = true; m.status = accept ? "active" : "gone"; schoolPendingN = schoolPanel.members.filter(x => x.status === "pending").length; schoolApplyNav(); schoolDrawPanel(); return; }
 if (!accept && !confirm(`Recusar o pedido de ${m ? m.display_name || "este professor" : "este professor"}?`)) return;
 b.disabled = true;
 const { error } = await supabaseClient.rpc("hi_school_answer", { p_member: id, p_accept: accept });
@@ -18266,8 +18300,55 @@ renderSchoolPage();
 });
 box.querySelectorAll("[data-sch-t]").forEach(c => { const go = () => openSchoolTeacher(byId(c.dataset.schT), ctx); c.onclick = go; c.onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } }; });
 if (view === "schoolMoney") schoolMoneyChart(ctx);
-if (view === "schoolStats") schoolStatsChart(ctx);
+if (view === "schoolQty") schoolStatsChart(ctx);
 schoolExtrasBind(box, ctx);
+}
+// ---------- Professores de exemplo (8.27) ----------
+// Só no aparelho: 5 professores de teste com alunos, aulas e números, para ver a escola funcionando.
+// Nada deles vai para a nuvem (as ações neles só mudam a tela).
+var SCHOOL_DEMO_KEY = "jp_school_demo_v1", schoolDemoRules = {}, schoolDemoAccepted = false;
+function schoolDemoOn(){ try { return localStorage.getItem(SCHOOL_DEMO_KEY) === "1"; } catch(e) { return false; } }
+function schoolDemoSet(on){ try { _nativeSetItem.call(localStorage, SCHOOL_DEMO_KEY, on ? "1" : "0"); } catch(e) {} schoolDemoRules = {}; schoolDemoAccepted = false; schoolPanel = null; }
+var SCHOOL_DEMO_TEACHERS = [
+{ name: "Marina Costa", inst: ["Piano", "Teclado"], rule: { type: "lesson", value: 60 }, days: [1, 3, 5], hours: ["14:00", "15:00", "16:00", "17:00"], price: 220 },
+{ name: "Rafael Souza", inst: ["Violão", "Guitarra"], rule: { type: "percent", value: 60 }, days: [2, 4], hours: ["09:00", "10:00", "18:00", "19:00"], price: 180 },
+{ name: "Bianca Lima", inst: ["Canto"], rule: { type: "hour", value: 55 }, days: [1, 2, 4], hours: ["13:00", "16:00", "18:30"], price: 200 },
+{ name: "Tiago Alves", inst: ["Bateria"], rule: { type: "lesson", value: 50 }, days: [3, 5, 6], hours: ["10:00", "11:00", "15:00"], price: 190 },
+{ name: "Helena Rocha", inst: ["Violino", "Musicalização"], rule: { type: "fixed", value: 1800 }, days: [1, 3, 6], hours: ["08:00", "09:00", "14:30"], price: 230 }
+];
+var SCHOOL_DEMO_NAMES = ["Alice Martins", "Bernardo Dias", "Carla Nunes", "Davi Ramos", "Elisa Prado", "Felipe Teixeira", "Gabriela Melo", "Heitor Campos", "Isabela Freitas", "João Pedro Lopes", "Laura Pinto", "Miguel Barros", "Nina Cardoso", "Otávio Reis", "Paula Moreira", "Rafaela Duarte", "Samuel Araújo", "Sofia Gomes", "Theo Castro", "Valentina Ribeiro", "Vitor Mendes", "Yasmin Correia", "Lucas Farias", "Manuela Azevedo", "Enzo Monteiro", "Cecília Viana", "Arthur Rezende", "Lívia Cunha", "Gustavo Batista", "Beatriz Santana"];
+function schoolDemoAdd(panel){
+const cur = currentMonthKey(), today = new Date(); today.setHours(0, 0, 0, 0);
+let ni = 0;
+SCHOOL_DEMO_TEACHERS.forEach((t, ti) => {
+const uid = "demo-u" + (ti + 1), id = "demo" + (ti + 1);
+const nStu = 4 + (ti * 3) % 5 + 2;
+const st = [];
+for (let i = 0; i < nStu; i++) {
+const n = SCHOOL_DEMO_NAMES[ni++ % SCHOOL_DEMO_NAMES.length];
+st.push({ n, i: t.inst[i % t.inst.length], e: addMonths(cur, -((i * 2 + ti) % 11)), d: t.days[i % t.days.length], h: t.hours[i % t.hours.length], pay: i % 4 === 1 });
+}
+const months = {};
+for (let k = 11; k >= 0; k--) {
+const key = addMonths(cur, -k), active = st.filter(x => x.e <= key).length;
+if (!active) continue;
+const factor = k === 0 ? Math.min(1, today.getDate() / 30) : 1;
+const lessons = Math.round(active * 4 * factor);
+const left = (k + ti) % 4 === 0 ? 1 : 0;
+months[key] = { lessons, minutes: lessons * 60, studentLessons: lessons, absences: (k + ti) % 3, cancels: (k + ti) % 5 === 0 ? 1 : 0, revenue: active * t.price, active, joined: st.filter(x => x.e === key).length, left, why: left ? { [["price", "schedule", "time", "moved"][(k + ti) % 4]]: 1 } : {}, subs: [] };
+}
+const agenda = [];
+for (let i = 0; i < 7; i++) {
+const d = new Date(today); d.setDate(d.getDate() + i);
+st.filter(x => x.d === d.getDay()).forEach((x, j) => agenda.push({ d: isoOf(d), t: x.h, m: 60, n: x.n, i: x.i, s: (i === 0 && j === 1 && ti === 2) ? "absent_notice" : "" }));
+}
+const bd = st.slice(0, 1).map((x, j) => { const d = new Date(today); d.setDate(d.getDate() + ((ti * 2 + j) % 7)); return { n: x.n, d: isoOf(d) }; });
+const pay = st.filter(x => x.pay).map((x, j) => ({ k: "p" + j, n: x.n, v: t.price, due: 10, pn: x.n, ph: "" }));
+const m = { id, user_id: uid, status: "active", role: "member", display_name: t.name, pay_rule: schoolDemoRules[id] || t.rule, created_at: new Date().toISOString(), demo: true };
+panel.members.push(m);
+panel.reports.set(uid, { teacher_id: uid, updated_at: new Date(Date.now() - (ti + 1) * 3600000).toISOString(), data: { v: 3, name: t.name, full: t.name, active: st.length, late: { n: ti % 3 === 0 ? 1 : 0, v: ti % 3 === 0 ? t.price : 0 }, months, agenda, pay, free: [], inst: t.inst, bd, st: st.map(x => ({ n: x.n, i: x.i, e: x.e })).sort((a, b) => a.n.localeCompare(b.n)) } });
+});
+if (!schoolDemoAccepted) panel.members.push({ id: "demo-p", user_id: "demo-up", status: "pending", role: "member", display_name: "Lucas Pereira (exemplo)", created_at: new Date(Date.now() - 2 * 3600000).toISOString(), demo: true });
 }
 // Convidar professor: a chave da escola num cartão próprio (sai do meio da página).
 function openSchoolInvite(){
@@ -18303,8 +18384,9 @@ const rows = [];
 ctx.team.forEach(m => { const r = ctx.repOf(m); ((r && r.data && r.data.pay) || []).forEach(p => rows.push({ ...p, uid: m.user_id, who: ctx.nameOf(m), pk: `${m.user_id}:${p.k}` })); });
 return rows.sort((a, b) => a.n.localeCompare(b.n));
 }
+function schoolPaidList(p){ const cur = currentMonthKey(); return String(p.pk).startsWith("demo-") ? schoolPayMonths().filter(k => k < cur) : ((appSettings.schoolPaid || {})[p.pk] || []); }
 function schoolPayLate(p, key){
-const cur = currentMonthKey(), paid = (appSettings.schoolPaid || {})[p.pk] || [];
+const cur = currentMonthKey(), paid = schoolPaidList(p);
 if (paid.includes(key)) return false;
 return key < cur || (key === cur && p.due && new Date().getDate() > p.due);
 }
@@ -18333,17 +18415,13 @@ const todayLive = today.filter(x => x.arr.some(a => !a.s));
 const nStu = new Set(todayLive.flatMap(x => x.arr.filter(a => !a.s).map(a => a.n))).size;
 const nTeach = new Set(todayLive.map(x => x.m.user_id)).size;
 const t = ctx.tot;
-let html = `<div class="home-greeting-text">${escapeHtml(school.name || "Escola")}</div>
+let html = (schoolDemoOn() ? `<div class="empty-teach slim school-demo-bar"><b>Exemplo: 5 professores de teste, só neste aparelho.</b><span>Nada deles é salvo nem enviado.</span><button type="button" class="btn-historico" id="schDemoOff">Tirar o exemplo</button></div>` : "") + `<div class="home-greeting-text">${escapeHtml(school.name || "Escola")}</div>
 <div class="home-message"><div class="home-message-status">${todayLive.length ? `A escola tem ${todayLive.length} aula${todayLive.length > 1 ? "s" : ""} hoje, com ${nStu} aluno${nStu > 1 ? "s" : ""} e ${nTeach} professor${nTeach > 1 ? "es" : ""}.` : "Nenhuma aula na escola hoje."}</div>
 <div class="home-message-phrase">${team.length} professor${team.length === 1 ? "" : "es"} · ${t.active} aluno${t.active === 1 ? "" : "s"} ativo${t.active === 1 ? "" : "s"}</div></div>`;
 // O que pede atenção hoje.
 const att = [];
 if (ctx.pending.length) att.push(`<div class="ann-row"><div class="ann-row-main"><div class="ann-row-title">${ctx.pending.length} professor${ctx.pending.length > 1 ? "es pedindo" : " pedindo"} para entrar na escola</div></div><button type="button" class="btn-historico" data-sch-go="schoolTeam">Ver pedidos</button></div>`);
 if (schoolV824()) {
-const rows = schoolPayRows(ctx), late = rows.filter(p => schoolPayMonths().some(k => schoolPayLate(p, k)));
-if (late.length) att.push(`<div class="ann-row"><div class="ann-row-main"><div class="ann-row-title">${late.length} mensalidade${late.length > 1 ? "s" : ""} da escola em atraso</div><div class="ann-row-meta">${escapeHtml(late.slice(0, 4).map(p => firstName(p.n)).join(", "))}${late.length > 4 ? "…" : ""}</div></div><button type="button" class="btn-historico" data-sch-go="schoolMoney">Ver</button></div>`);
-const q = (appSettings.schoolQueue || []).filter(x => x.status === "waiting" || x.status === "rejected");
-if (q.length) att.push(`<div class="ann-row"><div class="ann-row-main"><div class="ann-row-title">${q.length} interessado${q.length > 1 ? "s" : ""} esperando professor</div></div><button type="button" class="btn-historico" data-sch-go="schoolQueue">Ver fila</button></div>`);
 }
 const old = team.filter(m => { const r = repOf(m); return !r || (!r.live && Date.now() - Date.parse(r.updated_at) > 2 * 86400000); });
 if (old.length) att.push(`<div class="ann-row"><div class="ann-row-main"><div class="ann-row-title">Números atrasados de ${escapeHtml(old.map(nameOf).join(", "))}</div><div class="ann-row-meta">As aulas deles aparecem aqui quando abrirem o app.</div></div></div>`);
@@ -18377,6 +18455,8 @@ team.forEach(m => { const r = repOf(m); ((r && r.data && r.data.bd) || []).forEa
 bd.sort((a, b) => a.d.localeCompare(b.d) || a.n.localeCompare(b.n));
 const bdToday = bd.filter(b => b.d === todayIso), bdWeek = bd.filter(b => b.d !== todayIso && b.d <= isoOf(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 6)));
 if (bdToday.length || bdWeek.length) html += `<div class="settings-group-label" style="margin-top:1.5rem">Aniversários</div>` + bdToday.map(b => `<div class="bday-card"><span class="bday-emoji" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-cake"/></svg></span><div class="bday-title">Hoje: ${escapeHtml(b.n)} <span class="bday-sub">· aluno de ${escapeHtml(b.who)}</span></div></div>`).join("") + (bdWeek.length ? `<div class="bday-week">Esta semana: ${bdWeek.map(b => { const d = dateFromIso(b.d); return `${escapeHtml(b.n)} (${WEEKDAY_SHORT[d.getDay()].toLowerCase()}, ${pad2(d.getDate())}/${pad2(d.getMonth() + 1)})`; }).join(" · ")}</div>` : "");
+// Mensalidades pagas direto à escola, no fim (como as mensalidades no Início do professor).
+if (schoolV824() && schoolPayRows(ctx).length) html += `<div style="margin-top:1.5rem"></div>` + schoolExtrasHTML(ctx, "school");
 return html;
 }
 // ---------- Professores: cartões iguais aos de Meus Alunos ----------
@@ -18391,7 +18471,7 @@ const row = (l, v, warn) => `<div class="stu-row"><span class="stu-label">${l}</
 const old = r && !r.live && Date.now() - Date.parse(r.updated_at) > 2 * 86400000;
 return `<div class="student-square school-tcard" data-sch-t="${m.id}" role="button" tabindex="0">
 <div class="stu-header"><div class="stu-photo-wrap"><div class="stu-photo">${initials(nameOf(m) === "Você" ? (appSettings.profile.name || "Você") : nameOf(m))}</div></div>
-<div class="stu-name-block"><div class="stu-name">${escapeHtml(nameOf(m))}</div><div class="stu-sub">${m.role === "owner" ? "Dono da escola" : "Professor"}</div></div></div>
+<div class="stu-name-block"><div class="stu-name">${escapeHtml(nameOf(m))}</div><div class="stu-sub">${m.role === "owner" ? "Dono da escola" : m.demo ? "Professor de exemplo" : "Professor"}</div></div></div>
 <div class="stu-fields">
 ${inst ? row("Instrumentos", escapeHtml(inst)) : ""}
 ${row("Alunos ativos", x ? `${x.active}${x.joined || x.left ? ` <i>(+${x.joined} / −${x.left})</i>` : ""}` : (r ? String(d.active || 0) : "—"))}
@@ -18403,7 +18483,7 @@ ${row("Pagamento", p !== null ? `R$ ${moneyText(p)}` : "Sem regra")}
 ${row("Números", !r ? "Ainda não mandou" : r.live ? "Deste aparelho" : escapeHtml(schoolAgo(r.updated_at)), !r || old)}
 </div></div>`;
 }).join("")}</div>`;
-if (team.length <= 1) html += `<div class="empty-teach"><b>Traga os professores da escola.</b><span>Cada professor pede para entrar com a chave da escola, e você aceita aqui.</span><button type="button" class="btn-historico" id="schInvite2">Convidar professor</button></div>`;
+if (team.length <= 1) html += `<div class="empty-teach"><b>Traga os professores da escola.</b><span>Toque no + aqui em cima para mandar a chave da escola. Cada professor pede para entrar com ela, e você aceita aqui.</span></div>`;
 return html;
 }
 // Ficha do professor: mês de agora, meses anteriores, alunos e pagamento.
@@ -18429,7 +18509,8 @@ body.querySelector("#stRule").onclick = () => { closeQuickModal(); openPayRule(m
 const sum = body.querySelector("#stSum"); if (sum) sum.onclick = () => { closeQuickModal(); openPaySummary(m, name, x, ctx.cur); };
 body.querySelectorAll("[data-ps]").forEach(b => b.onclick = () => { closeQuickModal(); openPaySummary(m, name, ctx.effOf(m, b.dataset.ps), b.dataset.ps); });
 const rem = body.querySelector("#stRem");
-if (rem) rem.onclick = async () => {
+if (rem && m.demo) rem.onclick = () => alert("Professor de exemplo. Para tirar todos, vá em Configurações → Escola → Tirar os professores de exemplo.");
+else if (rem) rem.onclick = async () => {
 if (!confirm(`Tirar ${m.display_name || "este professor"} da escola? Ele continua com todos os alunos e dados dele; só some da escola.`)) return;
 const { error } = await supabaseClient.rpc("hi_school_remove", { p_member: m.id });
 if (error) { alert(schoolErrText(error)); return; }
@@ -18455,10 +18536,10 @@ const card = (title, value, sub) => `<div class="kpi-card"><div class="kpi-title
 let html = `<div class="kpi-grid">
 ${card("Maior faturamento", max ? `R$ ${moneyText(max.value)}` : "R$ 0", max ? (max.i === new Date().getMonth() ? "Recorde este mês!" : `Em ${max.month}/${new Date().getFullYear()}`) : "Sem números ainda.")}
 ${card("Média mensal", `R$ ${moneyText(avg)}`, "Considerando os meses com números")}
-${card("Faturamento deste mês", `R$ ${moneyText(Math.round(t.revenue))}`, "Previsto, de todos os professores (bolsa não entra)")}
+${card("Faturamento deste mês", `R$ ${moneyText(Math.round(t.revenue))}`, "Previsto, de todos os professores. Alunos bolsistas (que não pagam) não entram.")}
 ${card("Lucro previsto", `${profit < 0 ? "−" : ""}R$ ${moneyText(Math.abs(Math.round(profit)))}`, t.payN ? "Faturamento − professores − gastos" : "Defina a regra de pagamento em Professores")}
 </div>
-<div class="chart-card"><div class="chart-header"><div class="chart-period-badge">JAN - DEZ (${new Date().getFullYear()})</div><div class="chart-empty-hint"${vals.length ? ' style="display:none"' : ""}>O gráfico se monta com os números que cada professor manda do app.</div></div>
+<div class="chart-card"><div class="chart-header"><div class="chart-period-badge">JAN - DEZ (${new Date().getFullYear()})</div>${vals.length ? "" : `<div class="chart-empty-hint">O gráfico se monta com os números que cada professor manda do app.</div>`}</div>
 <div class="line-chart-wrapper"><svg class="line-chart-svg" id="schFinSvg" viewBox="0 0 600 220"></svg></div></div>`;
 html += schoolExtrasHTML(ctx, "schoolMoney");
 return html;
@@ -18479,16 +18560,28 @@ ${card("Alunos ativos", String(t.active), was(prev.active) || "Somando todos os 
 ${card("Entraram / saíram", `+${t.joined} / −${t.left}`, was(`+${prev.joined} / −${prev.left}`) || "Neste mês")}
 ${card("Aulas dadas", String(t.lessons), `${hoursText(t.minutes)} até hoje. ${was(prev.lessons)}`)}
 ${card("Faltas e cancelamentos", `${t.absences} / ${t.cancels}`, was(`${prev.absences} / ${prev.cancels}`) || "Faltas de alunos / aulas canceladas")}
-${card("Faturamento previsto", `R$ ${moneyText(Math.round(t.revenue))}`, was(`R$ ${moneyText(Math.round(prev.revenue))}`) || "Bolsa não entra")}
-</div>
-<div class="chart-card"><div class="chart-header"><div class="chart-period-badge">ALUNOS ATIVOS · JAN - DEZ (${new Date().getFullYear()})</div></div>
-<div class="line-chart-wrapper"><svg class="line-chart-svg" id="schStuSvg" viewBox="0 0 600 220"></svg></div></div>`;
+${card("Faturamento previsto", `R$ ${moneyText(Math.round(t.revenue))}`, was(`R$ ${moneyText(Math.round(prev.revenue))}`) || "Alunos bolsistas não entram")}
+</div>`;
 // Por que saíram: últimos 12 meses.
 const why = {};
 Array.from({ length: 12 }, (_, i) => addMonths(ctx.cur, -i)).forEach(k => ctx.team.forEach(m => { const x = ctx.monthOf(m, k); if (x && x.why) Object.entries(x.why).forEach(([w, n]) => { if (w) why[w] = (why[w] || 0) + n; }); }));
 const list = Object.entries(why).sort((a, b) => b[1] - a[1]);
 if (list.length) { const all = list.reduce((a, [, n]) => a + n, 0); html += `<div class="settings-group-label">Por que os alunos saíram (últimos 12 meses)</div><div class="settings-card school-sec-body"><div class="school-lines school-pad">${list.map(([k, n]) => `<span>${escapeHtml(EXIT_REASONS[k] || "Outro motivo")} <b>${n}</b> <i>(${Math.round(n * 100 / all)}%)</i></span>`).join("")}</div></div>`; }
 return html;
+}
+// ---------- Evolução Quantitativa da escola: alunos ativos de todos os professores ----------
+function schoolQtyHTML(ctx){
+const series = schoolYearSeries(ctx, t => t.active), y = new Date().getFullYear();
+const vals = series.filter(x => x.value > 0);
+let max = null;
+series.forEach((x, i) => { if (x.value > 0 && (!max || x.value > max.value)) max = { ...x, i }; });
+const card = (title, value, sub) => `<div class="kpi-card"><div class="kpi-title">${title}</div><div class="kpi-value">${value}</div>${sub ? `<div class="kpi-sub">${sub}</div>` : ""}</div>`;
+return `<div class="kpi-grid">
+${card("Mais alunos", max ? `${max.value} alunos` : "0 alunos", max ? (max.i === new Date().getMonth() ? "Pico no mês atual!" : `Em ${max.month}/${y}`) : "Sem números ainda.")}
+${card("Média de alunos", vals.length ? (vals.reduce((a, b) => a + b.value, 0) / vals.length).toFixed(1) : "0", "Considerando os meses com números")}
+</div>
+<div class="chart-card"><div class="chart-header"><div class="chart-period-badge">JAN - DEZ (${y})</div>${vals.length ? "" : `<div class="chart-empty-hint">O gráfico se monta com os números que cada professor manda do app.</div>`}</div>
+<div class="line-chart-wrapper"><svg class="line-chart-svg" id="schStuSvg" viewBox="0 0 600 220"></svg></div></div>`;
 }
 function schoolStatsChart(ctx){
 schoolChart("schStuSvg", schoolYearSeries(ctx, t => t.active), "alunos");
@@ -18514,6 +18607,7 @@ const t = type.value, v = Number(val.value);
 const err = body.querySelector("#prErr");
 if (t && (!(v >= 0) || val.value === "")) { err.textContent = "Digite o valor."; return; }
 if (t === "percent" && v > 100) { err.textContent = "A porcentagem vai até 100."; return; }
+if (m.demo) { m.pay_rule = t ? { type: t, value: v } : {}; schoolDemoRules[m.id] = m.pay_rule; closeQuickModal(); schoolDrawPanel(); return; }
 const { error } = await supabaseClient.rpc("hi_school_set_pay", { p_member: m.id, p_rule: t ? { type: t, value: v } : {} });
 if (error) { err.textContent = schoolErrText(error); return; }
 closeQuickModal();
@@ -18570,6 +18664,7 @@ schoolIsOwner() ? Promise.resolve({ data: [] }) : supabaseClient.from("school_no
 if (!pe.error) schoolPeers = Array.isArray(pe.data) ? pe.data : [];
 if (!ib.error) schoolInboxList = Array.isArray(ib.data) ? ib.data : [];
 if (!st.error) schoolApplySent(Array.isArray(st.data) ? st.data : []);
+if (schoolIsOwner()) schoolQueueMove();
 if (!nt.error) schoolNoticesT = (nt.data || []).filter(n => !n.expires_at || Date.parse(n.expires_at) > Date.now());
 } catch(e) {}
 try { teacherBellUpdate(); } catch(e) {}
@@ -18585,6 +18680,50 @@ if (s.active !== false) { s.active = false; s.exit = s.movedTo.at; s.exitReason 
 changed = true;
 });
 if (changed) { saveStudents(); try { renderStudents(); renderHome(); } catch(e) {} }
+// Interessado da lista de espera passado para um colega (8.27): aceito sai da minha lista;
+// recusado ou cancelado volta a ficar livre aqui.
+let wlChanged = false;
+list.filter(t => t.kind === "lead" && t.ref).forEach(t => {
+const p = waitlist().find(x => x.id === t.ref);
+if (!p || !p.sentTo || p.sentTo.tid !== t.id) return;
+if (t.status === "accepted") { appSettings.waitlist = waitlist().filter(x => x !== p); wlChanged = true; }
+else if (t.status === "rejected" || t.status === "cancelled") { delete p.sentTo; wlChanged = true; }
+});
+if (wlChanged) { saveAppSettings(); try { if (document.getElementById("waitlistModal").classList.contains("show")) renderWaitlist(); } catch(e) {} }
+}
+function schoolCanForward(){ try { return schoolIsOwner() && schoolV824() && schoolPeers.some(p => p.id !== authCurrentUser.id); } catch(e) { return false; } }
+function openWaitlistSend(id){
+const p = waitlist().find(x => x.id === id);
+if (!p) return;
+const me = authCurrentUser.id, peers = schoolPeers.filter(x => x.id !== me);
+const body = document.createElement("div");
+body.innerHTML = `<div class="field"><label>Professor</label><select id="wsTo">${peers.map(o => `<option value="${o.id}">${escapeHtml(o.name || "Professor")}</option>`).join("")}</select></div>
+<div style="display:flex;gap:10px"><div class="field" style="flex:1"><label>Aula experimental (opcional)</label><input type="date" id="wsDate"></div><div class="field" style="flex:1"><label>Horário</label><input type="time" id="wsTime"></div></div>
+<div class="field-hint">Vai para a lista de espera do professor quando ele aceitar, e aí sai da sua.</div><div class="auth-error" id="wsErr"></div>`;
+document.getElementById("waitlistModal").classList.remove("show");
+openQuickModal(`Passar ${p.name}`, "", body, async () => {
+const to = body.querySelector("#wsTo").value, d = body.querySelector("#wsDate").value, t = body.querySelector("#wsTime").value;
+const pref = [orderedDays(p.days || []).map(x => WEEKDAY_SHORT[x]).join(", "), p.time].filter(Boolean).join(" · ");
+const data = { name: p.name, ref: p.id, ...(p.phone ? { phone: p.phone } : {}), ...(p.instrument ? { instrument: p.instrument } : {}), ...(pref ? { prefer: pref } : {}), ...(p.notes ? { note: p.notes } : {}), ...(d ? { trial: { d, t } } : {}) };
+const { data: tid, error } = await supabaseClient.rpc("hi_school_send", { p_to: to, p_kind: "lead", p_data: data });
+if (error) { body.querySelector("#wsErr").textContent = schoolErrText(error); return; }
+p.sentTo = { tid, id: to, name: (peers.find(o => o.id === to) || {}).name || "", at: isoOf(new Date()) };
+saveAppSettings(); closeQuickModal(); openWaitlist();
+}, "Cancelar", "Passar");
+}
+// A fila da escola (8.24) saiu na 8.27: quem ainda esperava vai para a lista de espera da Agenda.
+function schoolQueueMove(){
+const q = appSettings.schoolQueue;
+if (!Array.isArray(q) || !q.some(x => x.status === "waiting" || x.status === "rejected")) return;
+const list = waitlist();
+q.forEach(x => {
+if (x.status !== "waiting" && x.status !== "rejected") return;
+const notes = [x.prefer ? `Prefere: ${x.prefer}.` : "", x.trial ? `Aula experimental: ${formatDateShort(x.trial.d)}${x.trial.t ? " às " + x.trial.t : ""}.` : "", x.note || ""].filter(Boolean).join(" ");
+const it = { id: "wl" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), since: String(x.at || new Date().toISOString()).slice(0, 10), name: x.name };
+if (x.phone) it.phone = x.phone; if (x.instrument) it.instrument = x.instrument; if (notes) it.notes = notes;
+list.push(it); x.status = "moved";
+});
+appSettings.waitlist = list; saveAppSettings();
 }
 document.addEventListener("visibilitychange", () => {
 if (document.visibilityState === "visible" && schoolV824() && Date.now() - (schoolStart824.at || 0) > 5 * 60000) { schoolStart824.at = Date.now(); schoolStart824(); }
@@ -18773,7 +18912,7 @@ function schoolExpensesFor(key){ return (appSettings.schoolExpenses || []).filte
 function schoolExtrasHTML(ctx, view){
 if (!schoolV824()) return `<div class="empty-teach slim">Salas, fila da escola, mensalidades da escola, gastos e avisos aparecem depois de atualizar o servidor do app (versão 8.24).</div>`;
 const { team, repOf, nameOf, tot } = ctx, key = schoolMonth, cur = currentMonthKey();
-const want = id => ({ pay: "schoolMoney", exp: "schoolMoney", queue: "schoolQueue", notices: "schoolNotices", rooms: "schoolRooms" })[id] === view;
+const want = id => ({ pay: "school", exp: "schoolMoney", notices: "schoolNotices" })[id] === view;
 let html = "";
 // Mensalidades pagas direto à escola: os 3 últimos meses em cada aluno (toque para marcar pago).
 const rows = schoolPayRows(ctx), pm = schoolPayMonths();
@@ -18784,7 +18923,7 @@ if (want("pay")) html += schoolSec("pay", "Mensalidades pagas à escola", rows.l
 `<div class="field-hint school-pad">Alunos marcados pelo professor com "Mensalidade paga para: Escola". Toque no mês para marcar como pago.</div>
 <div class="school-pad"><div class="field" style="margin:0"><label>Pix da escola (vai na mensagem de cobrança)</label><input type="text" id="schPix" value="${escapeHtml(appSettings.schoolPix || "")}" placeholder="Chave Pix"></div></div>` +
 (rows.length ? rows.map(p => {
-const paidList = (appSettings.schoolPaid || {})[p.pk] || [], anyLate = pm.some(k => schoolPayLate(p, k));
+const paidList = schoolPaidList(p), anyLate = pm.some(k => schoolPayLate(p, k));
 return `<div class="ann-row"><div class="ann-row-main"><div class="ann-row-title">${escapeHtml(p.n)}</div><div class="ann-row-meta">${escapeHtml(p.who)} · R$ ${moneyText(p.v)}${p.due ? ` · vence dia ${p.due}` : ""}</div>
 <div class="school-pay-months">${pm.map(k => { const isPaid = paidList.includes(k), late = schoolPayLate(p, k); return `<button type="button" class="status ${isPaid ? "completed" : late ? "off" : "upcoming"} school-pay-btn" data-pay-tog="${escapeHtml(p.pk)}" data-pay-k="${k}" aria-pressed="${isPaid}">${escapeHtml(monthLabel(k).split("/")[0])} · ${isPaid ? "pago" : late ? "atrasado" : "a pagar"}</button>`; }).join("")}</div></div>
 ${anyLate && p.ph ? `<button type="button" class="btn-link-inline" data-pay-wa="${escapeHtml(p.pk)}">Cobrar</button>` : ""}</div>`;
@@ -18801,30 +18940,12 @@ if (want("exp")) html += schoolSec("exp", "Gastos e lucro", `lucro previsto ${pr
 <span>Lucro previsto <b style="color:${profit >= 0 ? "#4ade80" : "#f87171"}">${profitTxt}</b></span></div>` +
 exp.map(e => `<div class="ann-row"><div class="ann-row-main"><div class="ann-row-title">${escapeHtml(e.name)}</div><div class="ann-row-meta">R$ ${moneyText(e.value)} · ${e.kind === "once" ? "só neste mês" : "todo mês"}</div></div><button type="button" class="btn-link-inline" data-exp-del="${e.id}" style="color:#f87171">${e.kind === "once" || e.from === key ? "Apagar" : "Parar a partir deste mês"}</button></div>`).join("") +
 `<div class="school-pad school-exp-form"><input type="text" id="expName" class="inline-input" placeholder="Ex.: Aluguel" maxlength="60"><input type="number" id="expVal" class="inline-input" placeholder="R$" min="0" step="0.01" inputmode="decimal"><select id="expKind" class="inline-input"><option value="monthly">Todo mês</option><option value="once">Só este mês</option></select><button type="button" class="btn-historico" id="expAdd">Adicionar</button></div>`);
-// Fila da escola e aula experimental
-const q = (appSettings.schoolQueue || []).filter(x => x.status !== "done" && x.status !== "gave_up");
-const stLabel = { waiting: "Esperando", sent: "Encaminhado", accepted: "Professor aceitou", rejected: "Professor recusou" };
-if (want("queue")) html += schoolSec("queue", "Fila da escola e aula experimental", q.length ? `${q.length} interessado${q.length > 1 ? "s" : ""}` : "vazia",
-(q.length ? q.map(x => {
-const sug = schoolSuggest(x, ctx);
-return `<div class="ann-row"><div class="ann-row-main"><div class="ann-row-title">${escapeHtml(x.name)} <span class="status ${x.status === "accepted" ? "completed" : x.status === "rejected" ? "off" : "upcoming"}">${stLabel[x.status] || "Esperando"}${x.to && x.status !== "waiting" ? " · " + escapeHtml(x.to.name) : ""}</span></div>
-<div class="ann-row-meta">${[x.instrument, x.prefer, x.trial ? `experimental ${formatDateShort(x.trial.d).slice(0, 5)}${x.trial.t ? " " + x.trial.t : ""}` : "", x.note].filter(Boolean).map(escapeHtml).join(" · ") || "Sem preferência"}</div>
-${x.status === "waiting" || x.status === "rejected" ? (sug.length ? `<div class="ann-row-meta">Sugestão: ${sug.map(s => `<b>${escapeHtml(s.name)}</b>${s.free ? " (" + escapeHtml(s.free) + ")" : ""}`).join(" · ")}</div>` : `<div class="ann-row-meta">Nenhum professor com esse instrumento e horário livre informado.</div>`) : ""}
-<div class="school-acts" style="margin-top:0.375rem">${x.status === "waiting" || x.status === "rejected" ? `<button type="button" class="btn-historico" data-q-send="${x.id}">Encaminhar</button>` : ""}${x.phone ? `<a class="btn-link-inline" href="${whatsappLink(x.phone)}" target="_blank" rel="noopener">WhatsApp</a>` : ""}<button type="button" class="btn-link-inline" data-q-done="${x.id}">${x.status === "accepted" ? "Concluir" : "Tirar da fila"}</button></div></div></div>`;
-}).join("") : `<div class="field-hint school-pad">Anote aqui quem procurou a escola. O app sugere o professor pelo instrumento e pelos horários livres dele, e você encaminha: o interessado cai na lista de espera do professor.</div>`) +
-`<div class="school-pad"><button type="button" class="btn-historico" id="qAdd" style="width:100%">+ Adicionar interessado</button></div>`);
 // Avisos da escola
 const ns = (schoolPanel.notices || []);
 const aud = { all: "alunos e professores", students: "só alunos", teachers: "só professores" };
 if (want("notices")) html += schoolSec("notices", "Avisos para a escola", ns.length ? `${ns.length} enviado${ns.length > 1 ? "s" : ""}` : "nenhum",
 ns.map(n => { const exp = n.expires_at && Date.parse(n.expires_at) <= Date.now(); return `<div class="ann-row"><div class="ann-row-main"><div class="ann-row-title">${escapeHtml(n.title)}${exp ? ` <span class="status off">Vencido</span>` : ""}</div><div class="ann-row-body">${escapeHtml(n.body)}</div><div class="ann-row-meta">${formatDateShort(n.created_at.slice(0, 10))} · ${aud[n.audience] || ""}${n.expires_at && !exp ? ` · até ${formatDateShort(n.expires_at.slice(0, 10)).slice(0, 5)}` : ""}</div></div><button type="button" class="btn-link-inline" data-n-del="${n.id}" style="color:#f87171">Apagar</button></div>`; }).join("") +
 `<div class="school-pad"><button type="button" class="btn-historico" id="nAdd" style="width:100%">+ Novo aviso para a escola</button><div class="field-hint">Aparece no Início do app dos alunos dos professores da escola e no sino dos professores.</div></div>`);
-// Salas
-const rooms = schoolRooms();
-if (want("rooms")) html += schoolSec("rooms", "Salas", rooms.length ? rooms.map(escapeHtml).join(", ") : "nenhuma",
-`<div class="school-pad"><div class="instrument-tags">${rooms.map((r, i) => `<span class="instrument-tag">${escapeHtml(r)}<button type="button" class="tag-remove" data-room-del="${i}" aria-label="Tirar ${escapeHtml(r)}">×</button></span>`).join("")}</div>
-<div style="display:flex;gap:0.5rem;margin-top:0.5rem"><input type="text" id="roomNew" class="inline-input" placeholder="Ex.: Sala 1" maxlength="40" style="flex:1"><button type="button" class="btn-historico" id="roomAdd">Adicionar</button></div>
-<div class="field-hint">Cada professor escolhe a sala no cadastro do aluno. O app avisa quando duas aulas caem na mesma sala e hora.</div></div>`);
 return html;
 }
 // Sugestão de professor para um interessado: quem ensina o instrumento, com os horários livres.
@@ -18862,7 +18983,9 @@ const key = schoolMonth;
 const pix = box.querySelector("#schPix");
 if (pix) pix.onchange = () => { appSettings.schoolPix = pix.value.trim() || undefined; saveAppSettings(); };
 box.querySelectorAll("[data-pay-tog]").forEach(b => b.onclick = () => {
-const pk = b.dataset.payTog, k = b.dataset.payK || key, p = appSettings.schoolPaid || {}, list = new Set(p[pk] || []);
+const pk = b.dataset.payTog, k = b.dataset.payK || key;
+if (pk.startsWith("demo-")) { alert("Aluno de exemplo: a marcação não é salva."); return; }
+const p = appSettings.schoolPaid || {}, list = new Set(p[pk] || []);
 if (list.has(k)) list.delete(k); else list.add(k);
 p[pk] = [...list].sort().slice(-36);
 if (!p[pk].length) delete p[pk];
@@ -18932,6 +19055,36 @@ const list = schoolRooms().slice(), i = Number(b.dataset.roomDel);
 if (!confirm(`Tirar a sala "${list[i]}"? Os alunos que já estão nela continuam com o nome antigo até o professor trocar.`)) return;
 list.splice(i, 1); saveRooms(list);
 });
+}
+// Salas da escola (8.27): saiu do menu e foi para Configurações → Escola (é configurado uma vez só).
+function openSchoolRooms(){
+const body = document.createElement("div");
+const draw = () => {
+const rooms = schoolRooms();
+body.innerHTML = `<div class="instrument-tags">${rooms.map((r, i) => `<span class="instrument-tag">${escapeHtml(r)}<button type="button" class="tag-remove" data-room-del="${i}" aria-label="Tirar ${escapeHtml(r)}">×</button></span>`).join("") || `<span class="stu-muted">Nenhuma sala ainda.</span>`}</div>
+<div style="display:flex;gap:0.5rem;margin-top:0.75rem"><input type="text" id="roomNew" class="inline-input" placeholder="Ex.: Sala 1" maxlength="40" style="flex:1"><button type="button" class="btn-historico" id="roomAdd">Adicionar</button></div>
+<div class="field-hint">Cada professor escolhe a sala no cadastro do aluno. O app avisa no Início quando duas aulas caem na mesma sala e hora.</div>`;
+const save = async list => {
+const { error } = await supabaseClient.rpc("hi_school_set_rooms", { p_rooms: list });
+if (error) { alert(schoolErrText(error)); return; }
+school.rooms = list; schoolCacheWrite(school); draw();
+};
+body.querySelector("#roomAdd").onclick = () => {
+const v = body.querySelector("#roomNew").value.trim();
+if (!v) return;
+const list = schoolRooms().slice();
+if (list.some(r => r.toLowerCase() === v.toLowerCase())) { alert("Essa sala já está na lista."); return; }
+list.push(v); save(list);
+};
+body.querySelector("#roomNew").onkeydown = e => { if (e.key === "Enter") { e.preventDefault(); body.querySelector("#roomAdd").click(); } };
+body.querySelectorAll("[data-room-del]").forEach(b => b.onclick = () => {
+const list = schoolRooms().slice(), i = Number(b.dataset.roomDel);
+if (!confirm(`Tirar a sala "${list[i]}"? Os alunos que já estão nela continuam com o nome antigo até o professor trocar.`)) return;
+list.splice(i, 1); save(list);
+});
+};
+draw();
+openQuickModal("Salas da escola", school.name || "", body, null, "Fechar");
 }
 function openQueueForm(){
 const body = document.createElement("div");
