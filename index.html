@@ -3612,7 +3612,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.27";
+const APP_VERSION = "8.28";
 // ===================== App instalável (8.4) =====================
 // Service worker (sw.js), aviso de versão nova, faixa "Sem internet", botão "Instalar o app",
 // atalhos do ícone (?p=...) e botão voltar do celular fechando modal/menu no app instalado.
@@ -3731,7 +3731,10 @@ const out = [...document.querySelectorAll(".modal-bg")].filter(m => m.classList.
 return out;
 }
 function closeTopLayer(){
-const layers = openLayers(), el = layers[layers.length - 1];
+const layers = openLayers();
+closeLayer(layers[layers.length - 1]);
+}
+function closeLayer(el){
 if (!el) return;
 if (el.id === "sidebar") return closeMenu();
 if (el.id === "stuSidebar") return closeStuMenu();
@@ -3759,6 +3762,57 @@ if (layerState.raf) return;
 if (!list.some(m => m.target.classList && (m.target.classList.contains("modal-bg") || m.target.classList.contains("sidebar")))) return;
 layerState.raf = requestAnimationFrame(layerSync);
 }).observe(document.body, { subtree: true, attributes: true, attributeFilter: ["class", "style"] });
+});
+
+// ---------- Tocar fora de uma janela fecha (8.28) ----------
+// Se algo foi mudado dentro dela, pergunta antes: salvar, não salvar ou continuar editando.
+const modalDirty = new WeakSet();
+function modalClean(el){ if (el) modalDirty.delete(el); }
+function modalMarkDirty(e){
+const t = e.target;
+if (!t || !t.closest) return;
+if (t.type === "search" || /search|busca/i.test(t.className || "") || /search|busca/i.test(t.id || "")) return;
+const m = t.closest(".modal-bg");
+if (m && m.id !== "unsavedModal") modalDirty.add(m);
+}
+document.addEventListener("input", modalMarkDirty, true);
+document.addEventListener("change", modalMarkDirty, true);
+// Janela que acabou de abrir começa "sem alterações".
+new MutationObserver(list => list.forEach(m => {
+const el = m.target;
+if (el.classList && el.classList.contains("modal-bg") && el.classList.contains("show") && !String(m.oldValue || "").split(/\s+/).includes("show")) modalDirty.delete(el);
+})).observe(document.documentElement, { subtree: true, attributes: true, attributeFilter: ["class"], attributeOldValue: true });
+function modalVisibleBtn(m, sel){ return [...m.querySelectorAll(sel)].reverse().find(b => b.offsetParent !== null && !b.disabled) || null; }
+function modalCloseOutside(m){
+if (["sidebar", "stuSidebar", "studentSheetModal", "quickLessonModal", "makeupModal", "historyModal"].includes(m.id)) return closeLayer(m);
+const btn = modalVisibleBtn(m, ".actions .cancel, .close-btn-inline, [aria-label='Fechar'], .modal-close, button.cancel");
+if (btn) btn.click(); else m.classList.remove("show");
+if (m.classList.contains("show")) m.classList.remove("show");
+}
+function askUnsaved(m){
+let box = document.getElementById("unsavedModal");
+if (!box) {
+box = document.createElement("div");
+box.className = "modal-bg"; box.id = "unsavedModal"; box.style.zIndex = "80";
+box.innerHTML = `<div class="modal" style="max-width:22rem"><h2>Alterações não salvas</h2><div class="field-hint" style="margin-bottom:1rem">Você mudou algo nesta janela. Quer salvar antes de sair?</div>
+<div class="actions" style="flex-wrap:wrap"><button class="cancel" id="unsavedDrop">Não salvar</button><button class="save" id="unsavedSave">Salvar</button></div>
+<button type="button" class="btn-link-inline" id="unsavedBack" style="display:block;margin:0.75rem auto 0">Continuar editando</button></div>`;
+document.body.appendChild(box);
+}
+const save = modalVisibleBtn(m, ".actions .save, button.save");
+box.querySelector("#unsavedSave").style.display = save ? "" : "none";
+box.querySelector("#unsavedSave").onclick = () => { box.classList.remove("show"); save.click(); };
+box.querySelector("#unsavedDrop").onclick = () => { box.classList.remove("show"); modalDirty.delete(m); modalCloseOutside(m); };
+box.querySelector("#unsavedBack").onclick = () => box.classList.remove("show");
+box.classList.add("show");
+}
+let modalDownOn = null;
+document.addEventListener("pointerdown", e => { modalDownOn = e.target; }, true);
+document.addEventListener("click", e => {
+const m = e.target;
+if (!m.classList || !m.classList.contains("modal-bg") || !m.classList.contains("show") || modalDownOn !== m) return;
+if (m.id === "unsavedModal") { m.classList.remove("show"); return; }
+if (modalDirty.has(m) && modalVisibleBtn(m, ".actions .save, button.save")) askUnsaved(m); else modalCloseOutside(m);
 });
 
 const BACKUP_EVERY = { weekly: 7, biweekly: 15, monthly: 30, never: 0 };
@@ -11600,6 +11654,7 @@ const save = document.getElementById("quickLessonSave");
 save.style.display = onSave ? "" : "none";
 save.onclick = onSave;
 document.getElementById("quickLessonModal").classList.add("show");
+try { modalClean(document.getElementById("quickLessonModal")); } catch(e) {}
 }
 function closeQuickModal(){ document.getElementById("quickLessonModal").classList.remove("show"); }
 document.getElementById("quickLessonCancel").onclick = closeQuickModal;
@@ -17872,6 +17927,12 @@ return list;
 function schoolApplyNav(){
 const nav = document.getElementById("navSchoolSec");
 if (nav) nav.style.display = schoolIsOwner() ? "" : "none";
+// Dono e professor têm uma agenda só (8.28): para o dono, a Agenda fica na parte Escola, logo abaixo do Início.
+const ag = document.querySelector('#sidebar .nav-item[data-page="agenda"]');
+if (ag && nav) {
+const home = schoolIsOwner() ? nav.querySelector('.nav-item[data-page="school"]') : document.querySelector('#sidebar .nav-item[data-page="home"]');
+if (home && home.nextElementSibling !== ag) home.after(ag);
+}
 const b = document.getElementById("navSchoolBadge");
 if (b) { const n = schoolIsOwner() ? schoolPendingN : 0; b.textContent = n; b.style.display = n ? "" : "none"; }
 try { schoolRowUpdate(); } catch(e) {}
@@ -18205,6 +18266,7 @@ supabaseClient.from("school_reports").select("teacher_id,data,updated_at").eq("o
 if (mem.error) throw mem.error;
 if (rep.error) throw rep.error;
 const members = Array.isArray(mem.data) ? mem.data : [];
+schoolDemoAuto = members.filter(m => m.status === "active").length <= 1;
 const reports = new Map((rep.data || []).map(r => [r.teacher_id, r]));
 schoolPendingN = members.filter(m => m.status === "pending").length + (schoolDemoOn() && !schoolDemoAccepted ? 1 : 0);
 schoolPanel = { members, reports, at: Date.now(), notices: [], sent: [] };
@@ -18307,7 +18369,9 @@ schoolExtrasBind(box, ctx);
 // Só no aparelho: 5 professores de teste com alunos, aulas e números, para ver a escola funcionando.
 // Nada deles vai para a nuvem (as ações neles só mudam a tela).
 var SCHOOL_DEMO_KEY = "jp_school_demo_v1", schoolDemoRules = {}, schoolDemoAccepted = false;
-function schoolDemoOn(){ try { return localStorage.getItem(SCHOOL_DEMO_KEY) === "1"; } catch(e) { return false; } }
+// Sem escolha feita, o exemplo aparece enquanto a escola não tem outros professores de verdade (8.28).
+var schoolDemoAuto = false;
+function schoolDemoOn(){ let v = null; try { v = localStorage.getItem(SCHOOL_DEMO_KEY); } catch(e) {} return v === "1" ? true : v === "0" ? false : schoolDemoAuto; }
 function schoolDemoSet(on){ try { _nativeSetItem.call(localStorage, SCHOOL_DEMO_KEY, on ? "1" : "0"); } catch(e) {} schoolDemoRules = {}; schoolDemoAccepted = false; schoolPanel = null; }
 var SCHOOL_DEMO_TEACHERS = [
 { name: "Marina Costa", inst: ["Piano", "Teclado"], rule: { type: "lesson", value: 60 }, days: [1, 3, 5], hours: ["14:00", "15:00", "16:00", "17:00"], price: 220 },
@@ -18483,7 +18547,6 @@ ${row("Pagamento", p !== null ? `R$ ${moneyText(p)}` : "Sem regra")}
 ${row("Números", !r ? "Ainda não mandou" : r.live ? "Deste aparelho" : escapeHtml(schoolAgo(r.updated_at)), !r || old)}
 </div></div>`;
 }).join("")}</div>`;
-if (team.length <= 1) html += `<div class="empty-teach"><b>Traga os professores da escola.</b><span>Toque no + aqui em cima para mandar a chave da escola. Cada professor pede para entrar com ela, e você aceita aqui.</span></div>`;
 return html;
 }
 // Ficha do professor: mês de agora, meses anteriores, alunos e pagamento.

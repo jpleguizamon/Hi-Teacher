@@ -382,6 +382,13 @@ Ajustes pedidos pelo Jp depois da 8.25:
 - Professores de exemplo: 5 professores de teste (com alunos, aulas, números de 12 meses e mensalidades) e um pedido para entrar, só no aparelho (`jp_school_demo_v1`). Nada deles vai para a nuvem; mudar a regra ou aceitar o pedido só muda a tela.
 - "O que foi dado" (anotações da aula e avaliação) mostra os temas ligados ao aluno como botões e uma lista com os outros temas do Organizador de Aulas; tocar acrescenta o título no texto.
 
+## Janelas e escola (8.28)
+
+- Tocar fora de qualquer janela (pop-up) fecha e volta para a página. Se algo foi mudado dentro dela e ela tem botão de salvar, aparece "Alterações não salvas" com Salvar, Não salvar e Continuar editando. Campos de busca não contam como alteração.
+- Dono de escola tem uma agenda só: o botão Agenda sai da parte Professor e vai para a parte Escola, logo abaixo do Início.
+- Os professores de exemplo aparecem sozinhos enquanto a escola não tem outros professores de verdade. Quem tira o exemplo (ou liga de novo) em Configurações → Escola ou no Início da escola fica com a escolha.
+- Professores: saiu o cartão "Traga os professores" do fim da página; convidar é só pelo +.
+
 ## App Android (APK) — 8.15
 
 O app continua sendo o mesmo site; o APK é só uma "casca" oficial em volta dele (padrão **Trusted Web Activity**, gerado com o `bubblewrap`). Serve para resolver uma coisa que o navegador não deixa mudar: **instalado pela tela inicial, a notificação sempre mostra `jpleguizamon.github.io`**. Pelo APK, a notificação sai limpa, como a de qualquer app.
