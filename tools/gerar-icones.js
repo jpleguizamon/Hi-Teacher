@@ -1,8 +1,8 @@
 // Gera os ícones do app instalável (pasta icons/) a partir do símbolo da logo
-// (icons/logo-mark.svg: o "hi" da logo, em branco).
+// (icons/logo-mark.svg: a coruja do app, em ciano).
 // Como rodar (na pasta do repositório, com Node e Playwright):
 //   node tools/gerar-icones.js
-// Fundo preto #05060B com brilho azul e o "hi" branco centralizado (o favicon também, pra aparecer em aba clara).
+// Fundo preto #05060B com brilho azul e a coruja ciano centralizada (o favicon também, pra aparecer em aba clara).
 const fs = require("fs");
 const path = require("path");
 let chromium;
@@ -14,11 +14,11 @@ const outDir = path.join(root, "icons");
 
 // size: lado do PNG; markW: tamanho do símbolo em relação ao lado.
 const ICONS = [
-  { file: "icon-192.png", size: 192, markW: 0.56 },
-  { file: "icon-512.png", size: 512, markW: 0.56 },
-  { file: "icon-maskable-512.png", size: 512, markW: 0.46 },   // área segura do ícone "maskable"
-  { file: "apple-touch-icon.png", size: 180, markW: 0.56 },
-  { file: "favicon-32.png", size: 32, markW: 0.78 }
+  { file: "icon-192.png", size: 192, markW: 0.66 },
+  { file: "icon-512.png", size: 512, markW: 0.66 },
+  { file: "icon-maskable-512.png", size: 512, markW: 0.54 },   // área segura do ícone "maskable"
+  { file: "apple-touch-icon.png", size: 180, markW: 0.66 },
+  { file: "favicon-32.png", size: 32, markW: 0.9 }
 ];
 
 (async () => {

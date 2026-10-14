@@ -46,7 +46,8 @@ Tema escuro único (não tem modo claro). A identidade visual é **azul e preto*
 
 - **Inter** (via stack de sistema `Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`) — fonte de toda a interface, inclusive da saudação da Home (não é carregada de fora, usa a instalada no sistema ou a mais próxima). Números de tabela/KPI/horário usam `tabular-nums`.
 - A **Fraunces** itálica que era usada só na saudação "Olá, [nome]" foi removida no redesign glass (o briefing pediu tipografia sans-serif limpa); o `<link>` do Google Fonts saiu junto, então o app não carrega mais nenhuma fonte externa.
-- **Logo "Hi Teacher"** (8.15.1, escolhida pelo dono depois de várias rodadas): só letras, sem símbolo. "hi teacher" em minúsculas, fonte Nunito 800 (arredondada, amigável); "hi" em branco e "teacher" no ciano do app (`#2FD3F2`, o mesmo `--accent` dos botões e destaques); pingo do i normal, da própria fonte. Nada de música nem bichos na logo (pedido do dono). A logo vai embutida como `data:image/png;base64` no HTML (tela de login, cabeçalho e barra lateral). Os ícones do app (inclusive os do APK Android, que usa os mesmos `icons/`) são o "hi" branco sobre o fundo preto com brilho azul; o símbolo fica em `icons/logo-mark.svg`.
+- **Logo "Hi Teacher"** (8.15.1, escolhida pelo dono depois de várias rodadas): "hi teacher" em minúsculas, fonte Nunito 800 (arredondada, amigável); "hi" em branco e "teacher" no ciano do app (`#2FD3F2`, o mesmo `--accent` dos botões e destaques); pingo do i normal, da própria fonte. Nada de música na logo: o app é para professores em geral. A logo vai embutida como `data:image/png;base64` no HTML (tela de login, cabeçalho e barra lateral).
+- **Coruja do app** (8.29, pedido do dono): símbolo do Hi Teacher. Coruja de traço ciano (`#2FD3F2`), com orelhinhas, sobrancelha em "M", bico reto, olhos fechados sorrindo (arquinhos), corpo oval simétrico e um poleiro reto embaixo. Inspirada no ícone do projeto no Claude, mas redesenhada (corpo simétrico, olhos sorrindo) para ficar própria. Fica em `icons/logo-mark.svg` (ícones do app e do APK, sobre o fundo preto com brilho azul) e no sprite do HTML como `<symbol id="brand-owl">` (cor `currentColor`, classe `.brand-owl` com brilho ciano). Aparece acima da logo na tela de login (`.auth-owl`), ao lado da logo na barra lateral do professor e do aluno (`.side-owl`) e no cabeçalho (`.header-owl`, dentro de `.header-brand`). Nada de música nela.
 
 ## Estrutura das páginas
 
@@ -388,6 +389,11 @@ Ajustes pedidos pelo Jp depois da 8.25:
 - Dono de escola tem uma agenda só: o botão Agenda sai da parte Professor e vai para a parte Escola, logo abaixo do Início.
 - Os professores de exemplo aparecem sozinhos enquanto a escola não tem outros professores de verdade. Quem tira o exemplo (ou liga de novo) em Configurações → Escola ou no Início da escola fica com a escolha.
 - Professores: saiu o cartão "Traga os professores" do fim da página; convidar é só pelo +.
+
+## Coruja (8.29)
+
+- Ícone novo do app: a coruja ciano no fundo preto (antes era o "hi" branco). Vale para o app instalado, o favicon e o APK (que precisa ser gerado de novo para mudar o ícone no celular; `appVersionName` 8.29, `appVersionCode` 2).
+- A coruja também aparece dentro do app: em cima da logo no login, ao lado da logo no menu lateral (professor e aluno) e no cabeçalho.
 
 ## App Android (APK) — 8.15
 
