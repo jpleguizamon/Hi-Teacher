@@ -2,7 +2,7 @@
 // (icons/logo-mark.svg: a coruja do app, em ciano).
 // Como rodar (na pasta do repositório, com Node e Playwright):
 //   node tools/gerar-icones.js
-// Fundo preto #05060B com brilho azul e a coruja ciano centralizada (o favicon também, pra aparecer em aba clara).
+// Fundo preto #05060B liso (sem brilho) e a coruja de linhas ciano centralizada (o favicon também, pra aparecer em aba clara).
 const fs = require("fs");
 const path = require("path");
 let chromium;
@@ -14,11 +14,11 @@ const outDir = path.join(root, "icons");
 
 // size: lado do PNG; markW: tamanho do símbolo em relação ao lado.
 const ICONS = [
-  { file: "icon-192.png", size: 192, markW: 0.66 },
-  { file: "icon-512.png", size: 512, markW: 0.66 },
-  { file: "icon-maskable-512.png", size: 512, markW: 0.54 },   // área segura do ícone "maskable"
-  { file: "apple-touch-icon.png", size: 180, markW: 0.66 },
-  { file: "favicon-32.png", size: 32, markW: 0.9 }
+  { file: "icon-192.png", size: 192, markW: 0.64 },
+  { file: "icon-512.png", size: 512, markW: 0.64 },
+  { file: "icon-maskable-512.png", size: 512, markW: 0.5 },   // área segura do ícone "maskable"
+  { file: "apple-touch-icon.png", size: 180, markW: 0.64 },
+  { file: "favicon-32.png", size: 32, markW: 0.92 }
 ];
 
 (async () => {
@@ -33,12 +33,7 @@ const ICONS = [
       const S = ic.size;
       const c = document.createElement("canvas"); c.width = c.height = S;
       const x = c.getContext("2d");
-      if (!ic.bare) {
-        x.fillStyle = "#05060B"; x.fillRect(0, 0, S, S);
-        const g = x.createRadialGradient(S * 0.5, S * 0.45, S * 0.05, S * 0.5, S * 0.5, S * 0.7);
-        g.addColorStop(0, "rgba(47,180,242,0.35)"); g.addColorStop(0.5, "rgba(30,98,224,0.14)"); g.addColorStop(1, "rgba(5,6,11,0)");
-        x.fillStyle = g; x.fillRect(0, 0, S, S);
-      }
+      if (!ic.bare) { x.fillStyle = "#05060B"; x.fillRect(0, 0, S, S); }
       const w = S * ic.markW;
       x.imageSmoothingQuality = "high";
       x.drawImage(img, (S - w) / 2, (S - w) / 2, w, w);

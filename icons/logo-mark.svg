@@ -1,6 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="40 30 400 400" width="512" height="512" fill="none" stroke="#2FD3F2" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"><title>Hi Teacher</title>
-<path d="M110 175 A130 130 0 0 1 370 175 A130 130 0 0 1 110 175"/>
-<path d="M84 58 Q92 98 122 110 M396 58 Q388 98 358 110"/>
-<path d="M124 128 Q150 84 200 88 Q234 94 240 138 Q246 94 280 88 Q330 84 356 128"/><path d="M240 138 V212"/>
-<path d="M162 190 Q182 164 202 190 M278 190 Q298 164 318 190"/>
-<path d="M110 175 C104 290 130 380 170 400 M370 175 C376 290 350 380 310 400"/><path d="M58 400 H422"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="25 50 490 490" width="512" height="512" fill="none" stroke="#2FD3F2" color="#2FD3F2" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"><title>Hi Teacher</title><ellipse cx="270" cy="208" rx="146" ry="118"/><path d="M136 200 Q154 140 212 138 Q252 138 270 164 Q288 138 328 138 Q386 140 404 200"/><path d="M132 72 Q134 110 172 118 M408 72 Q406 110 368 118"/><path d="M178 230 Q205 198 232 230 M308 230 Q335 198 362 230"/><path d="M252 250 H288 L270 280 Z" fill="currentColor" stroke-width="10"/><path d="M150 318 C100 372 108 462 212 506 M390 318 C440 372 432 462 328 506"/><path d="M150 334 C200 372 206 440 180 474 M390 334 C340 372 334 440 360 474"/><path d="M238 490 V512 M302 490 V512"/><path d="M116 517 H424"/></svg>
