@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A coruja do Hi Teacher em traço branco (o Android pinta o ícone pequeno de uma cor só). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="490" android:viewportHeight="490">
+    <group android:translateX="-25" android:translateY="-50">
+        <path android:strokeColor="#FFFFFFFF" android:strokeWidth="30" android:strokeLineCap="round" android:strokeLineJoin="round"
+            android:pathData="M124,208 A146,118 0 1,0 416,208 A146,118 0 1,0 124,208 Z" />
+        <path android:strokeColor="#FFFFFFFF" android:strokeWidth="30" android:strokeLineCap="round" android:strokeLineJoin="round"
+            android:pathData="M136,200 Q154,140 212,138 Q252,138 270,164 Q288,138 328,138 Q386,140 404,200 M132,72 Q134,110 172,118 M408,72 Q406,110 368,118 M178,230 Q205,198 232,230 M308,230 Q335,198 362,230 M150,318 C100,372 108,462 212,506 M390,318 C440,372 432,462 328,506 M150,334 C200,372 206,440 180,474 M390,334 C340,372 334,440 360,474 M238,490 V512 M302,490 V512 M116,517 H424" />
+        <path android:fillColor="#FFFFFFFF" android:pathData="M252,250 H288 L270,280 Z" />
+    </group>
+</vector>

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "814143721685",
+    "project_id": "hi-teacher-21782",
+    "storage_bucket": "hi-teacher-21782.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:814143721685:android:d9d936909a6caa7597d25c",
+        "android_client_info": {
+          "package_name": "io.github.jpleguizamon.hiteacher"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBbVg6gP-7ETIXzGEYbqQxan9WcJL8YfC0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

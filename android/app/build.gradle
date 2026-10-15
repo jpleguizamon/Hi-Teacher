@@ -1,0 +1,37 @@
+plugins {
+    id "com.android.application"
+    id "com.google.gms.google-services"
+}
+
+android {
+    namespace "io.github.jpleguizamon.hiteacher"
+    compileSdk 35
+
+    defaultConfig {
+        // Nunca muda: é o nome interno do app no celular e no Firebase.
+        applicationId "io.github.jpleguizamon.hiteacher"
+        minSdk 24
+        targetSdk 35
+        // Ao gerar o app de novo, subir os dois (o versionCode tem de ser sempre maior).
+        versionCode 3
+        versionName "8.31"
+    }
+
+    buildFeatures { buildConfig true }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation platform("com.google.firebase:firebase-bom:33.7.0")
+    implementation "com.google.firebase:firebase-messaging"
+    implementation "androidx.core:core:1.13.1"
+}

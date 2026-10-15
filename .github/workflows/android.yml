@@ -1,0 +1,32 @@
+# Gera o app Android (pasta android/) sem assinatura e deixa o arquivo na versão "android-build"
+# dos Releases. A assinatura é feita fora daqui, com a chave do dono (ela nunca entra no repositório).
+name: App Android
+on:
+  push:
+    branches: [main]
+    paths: ["android/**", ".github/workflows/android.yml"]
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: android-build
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Gerar o app
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
+      - name: Publicar o arquivo sem assinatura
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp android/app/build/outputs/apk/release/app-release-unsigned.apk hi-teacher-unsigned.apk
+          gh release view android-build >/dev/null 2>&1 || gh release create android-build --prerelease --title "App Android (sem assinatura)" --notes "Arquivo gerado automaticamente. Precisa ser assinado com a chave do dono antes de instalar."
+          gh release upload android-build hi-teacher-unsigned.apk --clobber

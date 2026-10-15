@@ -1,21 +1,13 @@
-# A chave de assinatura NUNCA entra no repositório (é pública). Guardada fora, pelo dono.
+# A chave de assinatura NUNCA entra no repositório (ele é público).
 *.keystore
 *.jks
 senha*.txt
 
-# Tudo abaixo é gerado pelo bubblewrap/gradle a partir do twa-manifest.json
-app/
-gradle/
+# Gerado pelo gradle
 .gradle/
 build/
-gradlew
-gradlew.bat
-build.gradle
-settings.gradle
-gradle.properties
+app/build/
 local.properties
-manifest-checksum.txt
-store_icon.png
 *.apk
 *.aab
 *.idsig
