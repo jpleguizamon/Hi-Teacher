@@ -2124,6 +2124,15 @@ body.pdf-open{overflow:hidden}
 .school-conflict b{color:#fb923c}
 .chart-empty-hint{flex-basis:100%;font-size:0.8125rem;line-height:1.5;color:var(--text-2);padding:0.5rem 0.625rem;border-radius:var(--radius-sm);background:rgba(47,211,242,.06);margin-top:0.5rem}
 /* 8.16: sino de notificações do professor (no lugar da bolinha de perfil do cabeçalho) */
+.day-sum-list{margin:0 0 0.25rem;padding-left:1.1rem;display:grid;gap:0.35rem}
+.day-sum-row{padding:0.6rem 0;border-bottom:0.0625rem solid var(--glass-border)}
+.day-sum-row:last-of-type{border-bottom:0}
+.day-sum-note{margin-top:0.25rem;font-size:0.875rem}
+.day-sum-note span{color:var(--muted)}
+.day-sum-total{display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;margin-bottom:0.75rem}
+.day-sum-total div{display:grid;gap:0.15rem;padding:0.6rem;border-radius:var(--radius-md,0.75rem);border:0.0625rem solid var(--glass-border);text-align:center}
+.day-sum-total b{font-size:1.125rem}
+.day-sum-total span{font-size:0.75rem;color:var(--muted)}
 .notif-pop{position:fixed;z-index:60;width:min(22rem,calc(100vw - 1.5rem));max-height:calc(100vh - 6rem);overflow:auto;overscroll-behavior:contain;padding:0.875rem;border-radius:var(--radius-lg);border:0.0625rem solid var(--glass-border);background:var(--glass-fill-strong);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:var(--edge-light),0 1rem 2.5rem rgba(0,0,0,.45)}
 .notif-pop[hidden]{display:none}
 .notif-pop-title{font-size:0.9375rem;font-weight:750;color:var(--heading);margin:0 0 0.625rem}
@@ -3618,7 +3627,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.31";
+const APP_VERSION = "8.32";
 // ===================== App instalável (8.4) =====================
 // Service worker (sw.js), aviso de versão nova, faixa "Sem internet", botão "Instalar o app",
 // atalhos do ícone (?p=...) e botão voltar do celular fechando modal/menu no app instalado.
@@ -3686,6 +3695,8 @@ if (pwaStandalone()) document.documentElement.classList.add("standalone");
 try {
 const q = new URLSearchParams(location.search), p = q.get("p");
 if (!p) return;
+// Resumo do dia (8.32): abre depois que o app carregar.
+if (p === "dia" || p === "resumo") sessionStorage.setItem("jp_open_summary", p);
 const map = { inicio: ["home", "home"], agenda: ["agenda", "lessons"], aulas: ["agenda", "lessons"], avisos: ["announcements", "home"], financeiro: ["home", "money"] }[p];
 if (map) { sessionStorage.setItem("jp_active_page", map[0]); sessionStorage.setItem("jp_stu_active_page", map[1]); }
 q.delete("p");
@@ -5463,6 +5474,7 @@ document.getElementById("demoInstr").onchange = e => demoSwitchInstrument(e.targ
 stuFeatureHold();
 let stuRenderedTab = null;
 function stuRender(){
+setTimeout(() => { try { hiAppSchedule(); } catch(e) {} }, 500);
 if (stuTab === "pthistory") stuTab = "progress";
 if (!STU_PAGES[stuTab] || !stuPageAllowed(stuTab)) stuTab = "home";
 stuApplyTools();
@@ -9684,6 +9696,7 @@ hideAuthGate();
 if (!appSettings.onboarded) showOnboarding();
 inboxStart();
 schoolStart();
+setTimeout(() => { try { hiAppSchedule(); daySummaryAuto(); } catch(e) {} }, 1500);
 } else {
 authCurrentUser = null;
 authMode = "login";
@@ -17513,7 +17526,7 @@ if (!authCurrentUser || demoMode || !supabaseClient) return;
 try { supabaseClient.functions.invoke(PUSH_FN, { body: { type, id: String(id || "") } }).catch(() => {}); } catch(e) {}
 }
 var PUSH_TYPES = {
-teacher: [["absence", "Aluno avisou que vai faltar"], ["payment", "Aluno avisou que pagou"], ["join", "Pedido de entrada novo"], ["change", "Pedido de alteração de dados"], ["resched", "Pedido de remarcação ou reposição"]],
+teacher: [["absence", "Aluno avisou que vai faltar"], ["payment", "Aluno avisou que pagou"], ["join", "Pedido de entrada novo"], ["change", "Pedido de alteração de dados"], ["resched", "Pedido de remarcação ou reposição"], ["school", "Escola: aviso novo, aluno passado para você, pedido para entrar"]],
 student: [["lesson", "Aula cancelada, remarcada ou reposição marcada"], ["answer", "Resposta do professor a um recado"], ["announcement", "Aviso do professor"], ["late", "Mensalidade em atraso (no máximo 1 por semana)"]]
 };
 async function pushPrefsLoad(){ try { const { data } = await supabaseClient.from("notify_prefs").select("prefs").eq("user_id", authCurrentUser.id).maybeSingle(); return (data && data.prefs) || {}; } catch(e) { return {}; } }
@@ -17539,7 +17552,9 @@ ${st === "install" ? `<div class="push-hint">No iPhone, as notificações só fu
 <div class="settings-group-label" style="margin-top:1rem">O que avisar</div>
 ${PUSH_TYPES[student ? "student" : "teacher"].map(([k, l]) => `<div class="toggle-field"><label>${l}</label><label class="switch"><input type="checkbox" data-pp="${k}" ${prefs[k] === false ? "" : "checked"}><span class="switch-slider"></span></label></div>`).join("")}
 <div class="toggle-field"><label>Não enviar das 22h às 7h (o aviso continua no app)</label><label class="switch"><input type="checkbox" id="ppQuiet" ${quiet ? "checked" : ""}><span class="switch-slider"></span></label></div>
+${pushLocalHTML(student)}
 <div class="auth-error" id="pushErr"></div>`;
+pushLocalBind(body, student);
 const err = body.querySelector("#pushErr");
 const go = (id, fn) => { const b = body.querySelector(id); if (b) b.onclick = async () => { b.disabled = true; err.textContent = ""; try { await fn(); } catch(e) { err.textContent = e.denied ? "Permissão negada. Veja acima como liberar." : (e.message || "Não deu certo. Tente de novo."); } b.disabled = false; draw(); }; };
 go("#pushOn", () => pushEnable(role));
@@ -17568,6 +17583,27 @@ body.querySelector("#ppQuiet").onchange = async e => { const p = await pushPrefs
 };
 draw();
 }
+// Lembretes e resumos marcados no celular (8.32): liga/desliga na mesma janela.
+function pushLocalHTML(student){
+const sw = (k, label, on) => `<div class="toggle-field"><label>${label}</label><label class="switch"><input type="checkbox" data-loc="${k}" ${on ? "checked" : ""}><span class="switch-slider"></span></label></div>`;
+const hint = hiAppCanSchedule() ? "" : `<div class="field-hint">${HI_APP ? "Atualize o app Hi Teacher do Android para receber estes avisos." : "Com o app fechado, só chegam no app Android do Hi Teacher."}</div>`;
+if (student) return HI_APP ? `<div class="settings-group-label" style="margin-top:1rem">Lembretes da aula</div>${sw("stuRemind", "Avisar 10 h, 5 h e 2 h antes da aula", localStorage.getItem(STU_REMIND_KEY) !== "off")}${hint}` : "";
+const c = notifCfg();
+return `<div class="settings-group-label" style="margin-top:1rem">Lembretes e resumos do dia</div>
+${sw("reminderBefore", "Aula começando (no tempo do “Lembrete antes da aula”)", !!c.reminderBefore)}
+${sw("lessonEnd", "Aula terminou: lembrar de registrar", c.lessonEnd)}
+${sw("dayStart", "Resumo ao começar o dia", c.dayStart)}
+${sw("dayEnd", "Resumo do fim do dia (aulas dadas, quanto rendeu e o que foi passado)", c.dayEnd)}
+<div class="field-hint">Os resumos usam o horário de trabalho de Configurações → Dias úteis (sem horário cadastrado: 8h e 21h nos dias com aula).</div>${hint}`;
+}
+function pushLocalBind(body, student){
+body.querySelectorAll("[data-loc]").forEach(cb => cb.onchange = () => {
+const k = cb.dataset.loc;
+if (k === "stuRemind") { if (cb.checked) localStorage.removeItem(STU_REMIND_KEY); else _nativeSetItem.call(localStorage, STU_REMIND_KEY, "off"); }
+else { appSettings.notifications = Object.assign({}, appSettings.notifications, { [k]: cb.checked }); saveAppSettings(); }
+hiAppSchedule();
+});
+}
 // Convite discreto, uma vez, depois de uma ação em que faz sentido (nunca ao abrir o app).
 async function pushInvite(role){
 if (demoMode || !authCurrentUser || !pushSupported()) return;
@@ -17585,6 +17621,7 @@ setTimeout(() => el.remove(), 15000);
 // Tocar numa notificação com o app aberto: o service worker pede pra abrir a página certa.
 // (8.31) O app Android chama hiAppOpenPage quando a pessoa toca no aviso com o app aberto.
 function hiAppOpenPage(p){
+if (p === "dia" || p === "resumo") { try { if (!studentMode) openDaySummary(p === "dia" ? "start" : "end"); } catch(x) {} return; }
 const map = { inicio: ["home", "home"], agenda: ["agenda", "lessons"], aulas: ["agenda", "lessons"], avisos: ["announcements", "home"], financeiro: ["home", "money"] }[p];
 if (!map) return;
 try { if (studentMode && !demoMode) { startStudentMode(true); stuOpenPage(map[1]); } else if (!studentMode) openPage(map[0]); } catch(x) {}
@@ -17620,6 +17657,163 @@ const u = map.of(s);
 if (linked.has(u) && unpaidMonths(s).some(key => isPastDue(s, key))) pushNotify("late", u);
 });
 }
+
+// ---------- Lembretes e resumos marcados no celular (8.32) ----------
+// No app Android, o site manda ao app a lista dos avisos dos próximos 14 dias e o próprio
+// celular avisa na hora, mesmo com o app fechado e sem internet. A lista é refeita quando os
+// dados mudam (e a cada minuto com o app aberto). No navegador não há lista; os resumos do
+// dia aparecem só dentro do app (uma vez por dia, ao abrir depois do horário).
+// Professor: aula começando (minutos de "Lembrete antes da aula"), aula terminou (registrar),
+// resumo ao começar o dia e resumo do fim do dia (horário de trabalho de Dias úteis).
+// Aluno/responsável: lembrete da aula 10 h, 5 h e 2 h antes.
+var HI_SCHED_DAYS = 14, hiSchedLast = "";
+var STU_REMIND_KEY = "jp_stu_remind_v1";
+var STU_REMIND_HOURS = [10, 5, 2];
+function notifCfg(){ return Object.assign({ lessonEnd: true, dayStart: true, dayEnd: true }, appSettings.notifications || {}); }
+function hiAppCanSchedule(){ return !!(HI_APP && typeof HI_APP.schedule === "function"); }
+function dayAt(d, hhmm){ const x = new Date(d); x.setHours(0, 0, 0, 0); x.setMinutes(toMin(hhmm)); return x; }
+// Horário de trabalho do dia (Dias úteis). Sem horário cadastrado: 08:00–21:00 nos dias com aula.
+function workSpan(d){ const w = (appSettings.workHours || {})[d.getDay()]; return w && w.start && w.end ? w : { start: "08:00", end: "21:00", guess: true }; }
+// Aulas que acontecem no dia (sem feriado/férias e sem cancelamento já registrado).
+function dayLessons(d){ return getLessonsOnDate(d).filter(x => !x.off && !(x.record && isNoClass(x.record))); }
+// Quanto a aula rende: avulsa = valor da aula; pacote = valor ÷ aulas do pacote; mensal =
+// mensalidade ÷ aulas do aluno no mês (reposição de aluno mensal não soma, já está paga).
+function lessonValueEstimate(s, d, kind){
+if (s.payTo === "none") return 0;
+const mode = billingMode(s);
+if (mode === "lesson") return Number(s.lessonPrice) || 0;
+if (mode === "package") return Number(s.packageSize) > 0 ? (Number(s.packagePrice) || 0) / Number(s.packageSize) : 0;
+if (kind === "extra") return 0;
+const v = Number(studentMonthlyValue(s)) || 0;
+if (!v) return 0;
+let n = 0;
+const x = new Date(d.getFullYear(), d.getMonth(), 1);
+while (x.getMonth() === d.getMonth()) { if (isRegularLessonDate(s, x)) n++; x.setDate(x.getDate() + 1); }
+return n ? v / n : 0;
+}
+function namesList(arr, max){ const n = arr.length; return n <= max ? arr.join(", ") : `${arr.slice(0, max).join(", ")} e mais ${n - max}`; }
+// Texto do resumo da manhã de um dia (aulas, eventos, aniversários, mensalidades que vencem).
+function dayStartLines(d){
+const lines = [], iso = isoOf(d), offset = Math.round((dayAt(d, "00:00") - dayAt(new Date(), "00:00")) / 86400000);
+const ls = dayLessons(d);
+if (ls.length) lines.push(`${ls.length} aula${ls.length > 1 ? "s" : ""}, a primeira às ${ls[0].time}`);
+try { getAgendaEventsForDate(iso).filter(e => e.title).forEach(e => lines.push(`Evento: ${e.title}`)); } catch(e) {}
+try { const b = upcomingBirthdays(offset + 1).filter(x => x.inDays === offset); if (b.length) lines.push(`Aniversário: ${namesList(b.map(x => firstName(sn(x.s))), 3)}`); } catch(e) {}
+try {
+const key = iso.slice(0, 7);
+const due = students.filter(s => s.active !== false && paysMe(s) && billingMode(s) === "monthly" && Number(s.dueDay) === d.getDate() && unpaidMonths(s).includes(key));
+if (due.length) lines.push(`${due.length} mensalidade${due.length > 1 ? "s vencem" : " vence"} hoje`);
+} catch(e) {}
+return lines;
+}
+function teacherSchedItems(){
+const cfg = notifCfg(), out = [], now = Date.now(), base = new Date();
+for (let i = 0; i < HI_SCHED_DAYS; i++) {
+const d = new Date(base); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + i);
+const iso = isoOf(d), ls = dayLessons(d), groups = {};
+ls.forEach(x => (groups[x.time] ??= []).push(x));
+Object.keys(groups).forEach(time => {
+const g = groups[time], who = namesList(g.map(x => firstName(sn(x.student))), 3), start = lessonStart(d, time).getTime();
+if (cfg.reminderBefore) (cfg.reminders || []).forEach(r => {
+const off = r.unit === "hour" ? r.value * 60 : r.value;
+if (off > 0) out.push({ id: `ls|${iso}|${time}|${off}`, at: start - off * 60000, title: `Aula em ${off >= 60 && off % 60 === 0 ? off / 60 + " h" : off + " min"}`, body: `${time} · ${who}`, page: "inicio" });
+});
+if (cfg.lessonEnd && !g.every(x => x.record && x.record.status && x.record.status !== "pending")) {
+const end = Math.max(...g.map(x => lessonEnd(d, time, x.student).getTime()));
+out.push({ id: `le|${iso}|${time}`, at: end, title: "Aula terminou", body: `Registre a aula das ${time} (${who})`, page: "inicio" });
+}
+});
+const span = workSpan(d), hasWork = !span.guess || ls.length;
+if (cfg.dayStart && hasWork) {
+const lines = dayStartLines(d);
+if (lines.length) out.push({ id: `ds|${iso}`, at: dayAt(d, span.start).getTime(), title: "Bom dia! Seu dia hoje", body: lines.join(" · "), page: "dia" });
+}
+if (cfg.dayEnd && ls.length) {
+const total = ls.reduce((a, x) => a + lessonValueEstimate(x.student, d, x.kind), 0);
+out.push({ id: `de|${iso}`, at: dayAt(d, span.end).getTime(), title: "Resumo do dia", body: `${ls.length} aula${ls.length > 1 ? "s" : ""}${total ? ` · cerca de R$ ${moneyText(Math.round(total))}` : ""} · toque para ver o que foi passado`, page: "resumo" });
+}
+}
+return out.filter(x => x.at > now + 30000).sort((a, b) => a.at - b.at).slice(0, 400);
+}
+function stuSchedItems(){
+if (localStorage.getItem(STU_REMIND_KEY) === "off" || !stu || !stuCur) return [];
+const out = [], now = Date.now(), orig = stuCur;
+try {
+stu.students.forEach(item => {
+stuApplyContext(item);
+const who = item.tp && item.tp.display_name ? ` com ${item.tp.display_name}` : "";
+const kid = stu.students.length > 1 ? `${firstName(item.s.name)}: ` : "";
+stuUpcoming(HI_SCHED_DAYS).forEach(x => {
+if (x.off || (x.record && isNoClass(x.record))) return;
+const r = stuAbsenceReq(x.key);
+if (r && (r.status === "pending" || r.status === "accepted")) return;
+const start = lessonStart(x.date, x.time).getTime();
+STU_REMIND_HOURS.forEach(h => out.push({ id: `sr|${item.link.id}|${x.key}|${h}`, at: start - h * 3600000, title: `${kid}aula em ${h} horas`, body: `${WEEKDAY_FULL[x.date.getDay()][0].toUpperCase() + WEEKDAY_FULL[x.date.getDay()].slice(1)}, ${pad2(x.date.getDate())}/${pad2(x.date.getMonth() + 1)} às ${x.time}${who}`, page: "aulas" }));
+});
+});
+} finally { stuApplyContext(orig); }
+return out.filter(x => x.at > now + 30000).sort((a, b) => a.at - b.at).slice(0, 400);
+}
+function hiAppSchedule(){
+if (!hiAppCanSchedule()) return;
+let items = [];
+try { if (authCurrentUser && !demoMode) items = studentMode ? stuSchedItems() : teacherSchedItems(); } catch(e) { console.warn("Lembretes do celular:", e); return; }
+const s = JSON.stringify(items);
+if (s === hiSchedLast) return;
+hiSchedLast = s;
+try { HI_APP.schedule(s); } catch(e) {}
+}
+setInterval(hiAppSchedule, 60000);
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") hiAppSchedule(); });
+
+// Resumo do dia (professor): "start" = o que vem hoje; "end" = o que aconteceu, quanto rendeu
+// e o que foi passado. Abre ao tocar no aviso e, uma vez por dia, ao abrir o app depois do
+// começo (ou do fim) do horário de trabalho.
+function openDaySummary(kind, d){
+if (studentMode || demoMode) return;
+d = d || new Date();
+const body = document.createElement("div");
+const ls = dayLessons(d), all = getLessonsOnDate(d);
+if (kind === "start") {
+const lines = dayStartLines(d);
+body.innerHTML = `${lines.length ? `<ul class="day-sum-list">${lines.map(l => `<li>${escapeHtml(l)}</li>`).join("")}</ul>` : `<div class="stu-muted">Nada marcado para hoje.</div>`}
+${ls.length ? `<div class="settings-group-label" style="margin-top:1rem">Aulas</div>${ls.map(x => `<div class="day-sum-row"><b>${escapeHtml(x.time)}</b> ${escapeHtml(sn(x.student))}${x.kind === "extra" ? " · reposição" : ""}</div>`).join("")}` : ""}`;
+openQuickModal("Seu dia hoje", `${WEEKDAY_FULL[d.getDay()]}, ${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}`, body, null, "Fechar");
+return;
+}
+const now = new Date();
+let given = 0, total = 0, missed = 0;
+const rows = all.map(x => {
+const rec = x.record, s = x.student, end = lessonEnd(d, x.time, s);
+let st, val = 0;
+if (x.off) st = `Sem aula · ${x.off.label}`;
+else if (rec && isNoClass(rec)) { st = cardReasonText(s, rec); missed++; }
+else if (end > now) st = "Ainda vai acontecer";
+else { st = "Dada"; given++; val = lessonValueEstimate(s, d, x.kind); total += val; }
+const notes = rec ? [rec.taught && `<div class="day-sum-note"><span>O que foi dado:</span> ${escapeHtml(rec.taught)}</div>`, rec.homework && `<div class="day-sum-note"><span>Para casa:</span> ${escapeHtml(rec.homework)}</div>`].filter(Boolean).join("") : "";
+return `<div class="day-sum-row"><div><b>${escapeHtml(x.time)}</b> ${escapeHtml(sn(s))} <span class="stu-muted">· ${escapeHtml(st)}${val ? ` · R$ ${moneyText(Math.round(val * 100) / 100)}` : ""}</span></div>${notes || (st === "Dada" ? `<div class="day-sum-note stu-muted">Sem anotação da aula.</div>` : "")}</div>`;
+});
+body.innerHTML = `<div class="day-sum-total"><div><b>${given}</b><span>aula${given === 1 ? "" : "s"} dada${given === 1 ? "" : "s"}</span></div><div><b>R$ ${moneyText(Math.round(total))}</b><span>gerados</span></div><div><b>${missed}</b><span>falta${missed === 1 ? "" : "s"} ou cancelamento${missed === 1 ? "" : "s"}</span></div></div>
+${rows.length ? rows.join("") : `<div class="stu-muted">Nenhuma aula hoje.</div>`}
+<div class="field-hint" style="margin-top:0.75rem">Aluno mensal: a mensalidade dividida pelas aulas dele no mês. Avulso e pacote: o valor de cada aula.</div>`;
+openQuickModal("Resumo do dia", `${WEEKDAY_FULL[d.getDay()]}, ${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}`, body, null, "Fechar");
+}
+var DAY_SUM_KEY = "jp_day_summary_v1";
+function daySummaryAuto(){
+if (studentMode || demoMode || !authCurrentUser) return;
+if (document.querySelector(".modal-bg.show")) return;   // não atropela outra janela (ex.: avaliação)
+const asked = sessionStorage.getItem("jp_open_summary");
+if (asked) { sessionStorage.removeItem("jp_open_summary"); openDaySummary(asked === "dia" ? "start" : "end"); return; }
+const cfg = notifCfg(), d = new Date(), iso = isoOf(d), span = workSpan(d);
+if (span.guess && !dayLessons(d).length) return;
+let seen = {};
+try { seen = JSON.parse(localStorage.getItem(DAY_SUM_KEY) || "{}"); } catch(e) {}
+if (seen.d !== iso) seen = { d: iso };
+const mark = k => { seen[k] = 1; _nativeSetItem.call(localStorage, DAY_SUM_KEY, JSON.stringify(seen)); };
+if (cfg.dayEnd && !seen.end && d >= dayAt(d, span.end)) { mark("end"); mark("start"); if (dayLessons(d).length) openDaySummary("end", d); return; }
+if (cfg.dayStart && !seen.start && d >= dayAt(d, span.start) && d < dayAt(d, span.end)) { mark("start"); if (dayStartLines(d).length) openDaySummary("start", d); }
+}
+setInterval(daySummaryAuto, 30000);
 
 // ---------- Avisos para os alunos ----------
 // Aluno: avisos que valem (o servidor só devolve os dele). Sem o SQL da 8.14: lista vazia.
@@ -18333,6 +18527,7 @@ if (!found) return check();
 const { error } = await supabaseClient.rpc("hi_join_school", { p_code: found.code, p_display: (appSettings.profile && appSettings.profile.name) || "" });
 if (error) { err.textContent = schoolErrText(error); return; }
 await schoolRefresh();
+if (school && school.status === "pending") pushNotify("school_join", school.member_id);
 openSchoolSettings();
 }, "Cancelar", "Conferir");
 }
@@ -18869,6 +19064,7 @@ const pref = [orderedDays(p.days || []).map(x => WEEKDAY_SHORT[x]).join(", "), p
 const data = { name: p.name, ref: p.id, ...(p.phone ? { phone: p.phone } : {}), ...(p.instrument ? { instrument: p.instrument } : {}), ...(pref ? { prefer: pref } : {}), ...(p.notes ? { note: p.notes } : {}), ...(d ? { trial: { d, t } } : {}) };
 const { data: tid, error } = await supabaseClient.rpc("hi_school_send", { p_to: to, p_kind: "lead", p_data: data });
 if (error) { body.querySelector("#wsErr").textContent = schoolErrText(error); return; }
+pushNotify("school_transfer", tid);
 p.sentTo = { tid, id: to, name: (peers.find(o => o.id === to) || {}).name || "", at: isoOf(new Date()) };
 saveAppSettings(); closeQuickModal(); openWaitlist();
 }, "Cancelar", "Passar");
@@ -18958,8 +19154,9 @@ openQuickModal(`Passar ${firstName(s.name)} para outro professor`, "", body, asy
 const to = body.querySelector("#trTo").value;
 const copy = JSON.parse(JSON.stringify(s));
 ["id", "needsReview", "charges", "paidMonths", "paidMonth", "paidDates", "noteDrafts", "movedTo", "exit", "exitReason", "exitNote", "fromTeacher", "practiceLog"].forEach(k => delete copy[k]);
-const { error } = await supabaseClient.rpc("hi_school_send", { p_to: to, p_kind: "student", p_data: { ref: String(s.id), name: s.name, student: copy } });
+const { data: tid, error } = await supabaseClient.rpc("hi_school_send", { p_to: to, p_kind: "student", p_data: { ref: String(s.id), name: s.name, student: copy } });
 if (error) { body.querySelector("#trErr").textContent = schoolErrText(error); return; }
+pushNotify("school_transfer", tid);
 closeQuickModal();
 showCloudWarning(`Pedido enviado. ${firstName(s.name)} passa para o colega quando ele aceitar.`);
 }, "Cancelar", "Passar aluno");
@@ -19289,6 +19486,7 @@ saveAppSettings(); closeQuickModal(); schoolDrawPanel(); return;
 const data = { name: x.name, ...(x.phone ? { phone: x.phone } : {}), ...(x.instrument ? { instrument: x.instrument } : {}), ...(x.prefer ? { prefer: x.prefer } : {}), ...(x.note ? { note: x.note } : {}), ...(d ? { trial: { d, t } } : {}) };
 const { data: tid, error } = await supabaseClient.rpc("hi_school_send", { p_to: to, p_kind: "lead", p_data: data });
 if (error) { body.querySelector("#qsErr").textContent = schoolErrText(error); return; }
+pushNotify("school_transfer", tid);
 x.status = "sent"; x.tid = tid; x.to = { id: to, name }; if (d) x.trial = { d, t };
 saveAppSettings(); closeQuickModal(); schoolDrawPanel();
 }, "Cancelar", "Encaminhar");
@@ -19302,8 +19500,9 @@ body.innerHTML = `<div class="field"><label>Título</label><input type="text" id
 openQuickModal("Aviso para a escola", school.name, body, async () => {
 const title = body.querySelector("#snTitle").value.trim(), text = body.querySelector("#snBody").value.trim(), until = body.querySelector("#snUntil").value;
 if (!title) { body.querySelector("#snErr").textContent = "Digite o título."; return; }
-const { error } = await supabaseClient.from("school_notices").insert({ org_id: school.org_id, title, body: text, audience: body.querySelector("#snAud").value, expires_at: until ? new Date(`${until}T23:59:59`).toISOString() : null });
+const { data: sn, error } = await supabaseClient.from("school_notices").insert({ org_id: school.org_id, title, body: text, audience: body.querySelector("#snAud").value, expires_at: until ? new Date(`${until}T23:59:59`).toISOString() : null }).select("id").single();
 if (error) { body.querySelector("#snErr").textContent = schoolErrText(error); return; }
+if (sn && sn.id) pushNotify("school_notice", sn.id);
 closeQuickModal(); schoolOpenSecs.add("notices"); renderSchoolPage();
 }, "Cancelar", "Enviar aviso");
 }

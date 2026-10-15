@@ -174,6 +174,33 @@ export async function plan(db: DB, uid: string, type: string, id: string): Promi
     if (s.teacher_id !== uid) return denied;
     return { recipients: await linkedUsers(db, [s.id]), title: "Mensalidade em atraso", body: "Confira o financeiro", url: "./?p=financeiro", pref: "late", dedupe: `late:${s.id}`, weekly: true };
   }
+  // Escola (8.32): aviso novo para os professores, aluno/interessado passado, pedido para entrar.
+  if (type === "school_notice") {
+    const { data: n } = await db.from("school_notices").select("id, org_id, title, audience").eq("id", id).maybeSingle();
+    if (!n) return notFound;
+    const { data: o } = await db.from("organizations").select("id, owner_id").eq("id", n.org_id).maybeSingle();
+    if (!o || o.owner_id !== uid) return denied;
+    if (n.audience === "students") return { error: "Aviso só para alunos", status: 422 };
+    const { data: mem } = await db.from("org_members").select("user_id").eq("org_id", n.org_id).eq("status", "active").neq("user_id", uid);
+    return { recipients: (mem ?? []).map((m: { user_id: string }) => ({ user_id: m.user_id })), title: "Aviso da escola", body: String(n.title || "Novo aviso"), url: "./?p=inicio", pref: "school", dedupe: `school_notice:${n.id}` };
+  }
+  if (type === "school_transfer") {
+    const { data: t } = await db.from("school_transfers").select("id, from_id, to_id, kind, status").eq("id", id).maybeSingle();
+    if (!t) return notFound;
+    if (t.from_id !== uid) return denied;
+    if (t.status !== "pending") return { error: "Envio não está pendente", status: 409 };
+    const body = t.kind === "lead" ? "A escola mandou um interessado para você." : "Um aluno foi passado para você. Toque para aceitar.";
+    return { recipients: [{ user_id: t.to_id }], title: "Escola", body, url: "./?p=inicio", pref: "school", dedupe: `school_transfer:${t.id}` };
+  }
+  if (type === "school_join") {
+    const { data: m } = await db.from("org_members").select("id, org_id, user_id, status, display_name").eq("id", id).maybeSingle();
+    if (!m) return notFound;
+    if (m.user_id !== uid) return denied;
+    if (m.status !== "pending") return { error: "Pedido não está pendente", status: 409 };
+    const { data: o } = await db.from("organizations").select("owner_id").eq("id", m.org_id).maybeSingle();
+    if (!o) return notFound;
+    return { recipients: [{ user_id: o.owner_id }], title: "Escola", body: `${m.display_name ? firstName(m.display_name) : "Um professor"} pediu para entrar na escola`, url: "./?p=inicio", pref: "school", dedupe: `school_join:${m.id}` };
+  }
   return { error: "Tipo de evento desconhecido", status: 400 };
 }
 
