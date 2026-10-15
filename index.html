@@ -3618,13 +3618,62 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.30";
+const APP_VERSION = "8.31";
 // ===================== App instalável (8.4) =====================
 // Service worker (sw.js), aviso de versão nova, faixa "Sem internet", botão "Instalar o app",
 // atalhos do ícone (?p=...) e botão voltar do celular fechando modal/menu no app instalado.
 // Tudo protegido por try/catch: se algo falhar, o app segue como no navegador.
 const PWA = { reg: null, waiting: null, prompt: null, userAsked: false, checked: 0 };
-function pwaStandalone(){ try { return (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true; } catch(e) { return false; } }
+// App Android próprio (8.31): o site aberto na janela do próprio app, sem Chrome. Lá dentro
+// existe window.HiTeacherApp (avisos pelo Firebase, compartilhar, salvar arquivo, abrir links fora).
+const HI_APP = (function(){ try { return window.HiTeacherApp && JSON.parse(window.HiTeacherApp.info()) ? window.HiTeacherApp : null; } catch(e) { return null; } })();
+const hiAppCbs = {};
+window.__hiAppDone = (id, r) => { const f = hiAppCbs[id]; delete hiAppCbs[id]; if (f) f(r || {}); };
+function hiAppCall(method){ return new Promise(res => { const id = "c" + Date.now() + Math.random().toString(36).slice(2, 7); hiAppCbs[id] = res; HI_APP[method](id); }); }
+function hiAppInfo(){ try { return JSON.parse(HI_APP.info()); } catch(e) { return {}; } }
+function hiB64(blob){ return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1] || ""); r.onerror = rej; r.readAsDataURL(blob); }); }
+if (HI_APP) (function(){
+try {
+// Compartilhar (texto ou arquivo) pela folha do Android.
+const share = async d => {
+d = d || {};
+const f = d.files && d.files[0];
+if (f) { if (!HI_APP.shareFile(f.name || "arquivo", f.type || "", await hiB64(f), d.text || "")) throw new Error("share"); return; }
+HI_APP.shareText([d.text, d.url].filter(Boolean).join("\n"), d.title || "");
+};
+Object.defineProperty(navigator, "share", { value: share, configurable: true });
+Object.defineProperty(navigator, "canShare", { value: () => true, configurable: true });
+// Baixar arquivo gerado no app (backup, recibo, agenda): vai pra pasta Downloads.
+const click = HTMLAnchorElement.prototype.click;
+HTMLAnchorElement.prototype.click = function(){
+if (this.hasAttribute("download") && /^(blob|data):/.test(this.href)) {
+const name = this.getAttribute("download") || "arquivo";
+fetch(this.href).then(r => r.blob()).then(async b => HI_APP.saveFile(name, b.type || "", await hiB64(b))).catch(() => {});
+return;
+}
+return click.call(this);
+};
+// window.open: link de fora (WhatsApp, etc.) abre no app certo; janela em branco vira uma tela por cima.
+window.open = function(url){
+if (url) { try { const u = new URL(url, location.href); if (u.origin === location.origin && u.pathname.startsWith("/Hi-Teacher")) { location.assign(u.href); return window; } HI_APP.openExternal(u.href); } catch(e) {} return null; }
+const box = document.createElement("div");
+box.style.cssText = "position:fixed;inset:0;z-index:2147483000;background:#000";
+const fr = document.createElement("iframe");
+fr.style.cssText = "border:0;width:100%;height:100%";
+const x = document.createElement("button");
+x.type = "button"; x.textContent = "✕"; x.setAttribute("aria-label", "Fechar");
+x.style.cssText = "position:absolute;top:0.75rem;right:0.75rem;width:2.75rem;height:2.75rem;border-radius:50%;border:0;background:rgba(255,255,255,0.15);color:#fff;font-size:1.25rem";
+const close = () => { box.remove(); window.removeEventListener("popstate", close); };
+x.onclick = () => history.back();
+box.append(fr, x);
+document.body.appendChild(box);
+history.pushState({ hiOverlay: 1 }, "");
+window.addEventListener("popstate", close);
+return fr.contentWindow;
+};
+} catch(e) { console.warn("App Android: ajustes do site falharam.", e); }
+})();
+function pwaStandalone(){ if (HI_APP) return true; try { return (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true; } catch(e) { return false; } }
 function isStandalone(){ return pwaStandalone(); }
 function pwaIsIOS(){ return /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1); }
 // iPhone fora do Safari (Chrome, Instagram, WhatsApp, Facebook…): não dá pra instalar dali.
@@ -9621,6 +9670,7 @@ return;
 }
 if (session && session.user) {
 authCurrentUser = session.user;
+pushAppRefresh();
 document.getElementById("valContaEmail").textContent = session.user.email || "";
 if (studentMode) { startStudentMode(true); return; }
 authCardParts("authLoading");
@@ -17377,11 +17427,17 @@ location.reload();
 var PUSH_FN = "send-push";
 var PUSH_INVITE_KEY = "jp_push_invite_v1";
 var pushKeyCache = null;
-function pushSupported(){ return "serviceWorker" in navigator && "PushManager" in window && "Notification" in window; }
-function pushNeedsInstall(){ return pwaIsIOS() && !pwaStandalone(); }
+// App Android (8.31): o aparelho é registrado com o código do Firebase, guardado como um
+// "endereço" com este começo (a função send-push reconhece e manda pelo Firebase).
+var PUSH_APP_PREFIX = "https://fcm.googleapis.com/hi-teacher-app/";
+var PUSH_APP_KEY = "jp_app_push_v1";
+function pushAppSaved(){ try { return JSON.parse(localStorage.getItem(PUSH_APP_KEY) || "null"); } catch(e) { return null; } }
+function pushSupported(){ if (HI_APP) return true; return "serviceWorker" in navigator && "PushManager" in window && "Notification" in window; }
+function pushNeedsInstall(){ return !HI_APP && pwaIsIOS() && !pwaStandalone(); }
 function pushReg(){ return Promise.race([navigator.serviceWorker.ready, new Promise((_, rej) => setTimeout(() => rej(new Error("sem service worker")), 4000))]); }
 async function pushSub(){ if (!pushSupported()) return null; try { return await (await pushReg()).pushManager.getSubscription(); } catch(e) { return null; } }
 async function pushState(){
+if (HI_APP) { if (hiAppInfo().notif === "denied") return "denied"; return pushAppSaved() ? "on" : "off"; }
 if (pushNeedsInstall()) return "install";
 if (!pushSupported()) return "unsupported";
 if (Notification.permission === "denied") return "denied";
@@ -17389,7 +17445,7 @@ return (await pushSub()) ? "on" : "off";
 }
 async function pushStateText(){
 const st = await pushState();
-return { on: "Ligadas neste aparelho", off: "Desligadas neste aparelho", denied: "Bloqueadas no navegador", install: "Instale o app para receber", unsupported: "Este navegador não recebe notificações" }[st];
+return { on: "Ligadas neste aparelho", off: "Desligadas neste aparelho", denied: HI_APP ? "Bloqueadas no celular" : "Bloqueadas no navegador", install: "Instale o app para receber", unsupported: "Este navegador não recebe notificações" }[st];
 }
 function b64urlToBytes(s){ const p = "=".repeat((4 - s.length % 4) % 4), b = atob((s + p).replace(/-/g, "+").replace(/_/g, "/")); return Uint8Array.from(b, c => c.charCodeAt(0)); }
 async function pushPublicKey(){
@@ -17398,8 +17454,31 @@ const { data, error } = await supabaseClient.functions.invoke(PUSH_FN, { method:
 if (error || !data || !data.publicKey) throw new Error("Notificações ainda não configuradas no servidor.");
 return (pushKeyCache = data.publicKey);
 }
+async function pushAppRegister(role, token){
+const old = pushAppSaved();
+const { error } = await supabaseClient.rpc("hi_push_subscribe", { p_endpoint: PUSH_APP_PREFIX + token, p_p256dh: "fcm", p_auth: "fcm", p_role: role, p_label: "Android (app)" });
+if (error) throw new Error(isMissingFnError(error) ? "Falta rodar o SQL da versão 8.14 no Supabase." : "Não consegui registrar este aparelho. Tente de novo.");
+if (old && old.token && old.token !== token) { try { await supabaseClient.from("push_subscriptions").delete().eq("endpoint", PUSH_APP_PREFIX + old.token); } catch(e) {} }
+_nativeSetItem.call(localStorage, PUSH_APP_KEY, JSON.stringify({ role, token, user: authCurrentUser.id }));
+}
+// Ao abrir o app já logado: se os avisos estavam ligados, confere se o código do Firebase mudou.
+var pushAppChecked = false;
+async function pushAppRefresh(){
+if (!HI_APP || pushAppChecked || !authCurrentUser || demoMode) return;
+pushAppChecked = true;
+const saved = pushAppSaved();
+if (!saved || saved.user !== authCurrentUser.id || hiAppInfo().notif !== "granted") return;
+try { const r = await hiAppCall("enablePush"); if (r.token && r.token !== saved.token) await pushAppRegister(saved.role, r.token); } catch(e) {}
+}
 async function pushEnable(role){
 if (!authCurrentUser) throw new Error("Entre na sua conta para ativar.");
+if (HI_APP) {
+const r = await hiAppCall("enablePush");
+if (r.perm !== "granted") throw Object.assign(new Error("denied"), { denied: true });
+if (!r.token) throw new Error("Não consegui falar com o Firebase. Confira a internet e tente de novo.");
+await pushAppRegister(role, r.token);
+return;
+}
 const perm = Notification.permission === "granted" ? "granted" : await Notification.requestPermission();
 if (perm !== "granted") throw Object.assign(new Error("denied"), { denied: true });
 const key = await pushPublicKey();
@@ -17416,6 +17495,12 @@ const { error } = await supabaseClient.rpc("hi_push_subscribe", { p_endpoint: j.
 if (error) { await sub.unsubscribe().catch(() => {}); throw new Error(isMissingFnError(error) ? "Falta rodar o SQL da versão 8.14 no Supabase." : "Não consegui registrar este aparelho. Tente de novo."); }
 }
 async function pushDisable(quiet){
+if (HI_APP) {
+const saved = pushAppSaved(), token = (saved && saved.token) || HI_APP.cachedToken();
+try { localStorage.removeItem(PUSH_APP_KEY); } catch(e) {}
+if (authCurrentUser && token) { try { await supabaseClient.from("push_subscriptions").delete().eq("endpoint", PUSH_APP_PREFIX + token); } catch(e) { if (!quiet) throw e; } }
+return;
+}
 const sub = await pushSub();
 if (!sub) return;
 const endpoint = sub.endpoint;
@@ -17447,6 +17532,7 @@ const stateLine = { on: "ligadas", off: "desligadas", denied: "bloqueadas", inst
 body.innerHTML = `<div class="push-state"><span>Notificações neste aparelho:</span> <b class="${st === "on" ? "ok" : ""}">${stateLine}</b></div>
 ${st === "install" ? `<div class="push-hint">No iPhone, as notificações só funcionam com o app instalado na tela de início (iOS 16.4 ou mais novo).</div><button type="button" class="save push-btn" id="pushInstall">Como instalar o app</button>`
 : st === "unsupported" ? `<div class="push-hint">Este navegador não recebe notificações. No Android use o Chrome; no computador, Chrome, Edge ou Firefox.</div>`
+: st === "denied" && HI_APP ? `<div class="push-hint">As notificações do Hi Teacher estão desligadas no celular. Toque abaixo, ligue as notificações e volte aqui.</div><button type="button" class="save push-btn" id="pushAppSettings">Abrir configurações</button><button type="button" class="btn-historico push-btn" id="pushRetry">Já liguei</button>`
 : st === "denied" ? `<div class="push-hint">As notificações foram bloqueadas neste navegador. Para liberar: toque no cadeado (ou nos três pontinhos) ao lado do endereço → Permissões / Configurações do site → Notificações → Permitir. Depois volte aqui.</div><button type="button" class="btn-historico push-btn" id="pushRetry">Já liberei</button>`
 : st === "on" ? `<div class="push-acts"><button type="button" class="btn-historico" id="pushTest">Enviar notificação de teste</button><button type="button" class="cancel" id="pushOff">Desligar neste aparelho</button></div>`
 : `<button type="button" class="save push-btn" id="pushOn">Ativar notificações</button>`}
@@ -17465,14 +17551,17 @@ if (error || !data) throw new Error("A função send-push não respondeu. Confir
 if (data.sent) { stuToastOr("Teste enviado. Deve chegar em alguns segundos."); return; }
 // Diagnóstico (8.14.1): diz o que falhou.
 const f = (data.failures || [])[0] || {};
-const msg = data.vapid === false ? "Faltam as chaves VAPID nos segredos da função (Edge Functions → Secrets)."
+const msg = HI_APP && data.fcm === false ? "Falta a chave do Firebase nos segredos da função (Edge Functions → Secrets → FCM_SERVICE_ACCOUNT)."
+: data.vapid === false && !HI_APP ? "Faltam as chaves VAPID nos segredos da função (Edge Functions → Secrets)."
 : data.dbError ? `A função não conseguiu ler o banco: ${data.dbError}`
 : data.removed ? "Este aparelho não estava mais válido e foi removido. Toque em \"Ativar notificações\" de novo."
 : !data.devices ? "Este aparelho não ficou registrado. Toque em \"Desligar neste aparelho\" e depois em \"Ativar notificações\"."
+: (f.code === 401 || f.code === 403) && HI_APP ? "O Firebase recusou a chave. Confira o segredo FCM_SERVICE_ACCOUNT no Supabase (o arquivo inteiro, sem cortar)."
 : f.code === 401 || f.code === 403 ? "O serviço de notificações recusou as chaves: a VAPID_PRIVATE_KEY não combina com a VAPID_PUBLIC_KEY. Confira os segredos no Supabase (sem espaços), depois toque em Desligar e Ativar de novo."
 : `O serviço de notificações respondeu erro ${f.code || "?"}${f.msg ? ` (${f.msg})` : ""}.`;
 throw new Error(msg);
 });
+const appSet = body.querySelector("#pushAppSettings"); if (appSet) appSet.onclick = () => HI_APP.openNotifSettings();
 const inst = body.querySelector("#pushInstall"); if (inst) inst.onclick = () => { closeQuickModal(); pwaInstall(); };
 body.querySelectorAll("[data-pp]").forEach(cb => cb.onchange = async () => { const p = await pushPrefsLoad(); p[cb.dataset.pp] = cb.checked; await pushPrefsSave(p); });
 body.querySelector("#ppQuiet").onchange = async e => { const p = await pushPrefsLoad(); p.quiet = e.target.checked; await pushPrefsSave(p); };
@@ -17494,12 +17583,16 @@ getToastStack().appendChild(el);
 setTimeout(() => el.remove(), 15000);
 }
 // Tocar numa notificação com o app aberto: o service worker pede pra abrir a página certa.
-if ("serviceWorker" in navigator) navigator.serviceWorker.addEventListener("message", e => {
-const m = e.data || {};
-if (m.type !== "open-page" || !m.p) return;
-const map = { inicio: ["home", "home"], agenda: ["agenda", "lessons"], aulas: ["agenda", "lessons"], avisos: ["announcements", "home"], financeiro: ["home", "money"] }[m.p];
+// (8.31) O app Android chama hiAppOpenPage quando a pessoa toca no aviso com o app aberto.
+function hiAppOpenPage(p){
+const map = { inicio: ["home", "home"], agenda: ["agenda", "lessons"], aulas: ["agenda", "lessons"], avisos: ["announcements", "home"], financeiro: ["home", "money"] }[p];
 if (!map) return;
 try { if (studentMode && !demoMode) { startStudentMode(true); stuOpenPage(map[1]); } else if (!studentMode) openPage(map[0]); } catch(x) {}
+}
+window.hiAppOpenPage = hiAppOpenPage;
+if ("serviceWorker" in navigator) navigator.serviceWorker.addEventListener("message", e => {
+const m = e.data || {};
+if (m.type === "open-page" && m.p) hiAppOpenPage(m.p);
 });
 
 // Professor: aula cancelada/remarcada ou reposição marcada que acabou de subir pra nuvem →

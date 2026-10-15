@@ -1,4 +1,4 @@
-// Hi Teacher 8.14 — envio de notificações no celular (push).
+// Hi Teacher 8.14 (+ app Android 8.31) — envio de notificações no celular (push).
 //
 // O app NÃO diz para quem enviar: manda só o tipo do evento e o id do registro. Esta função
 // confere no banco quem é o autor (pelo login) e calcula sozinha quem recebe:
@@ -11,8 +11,12 @@
 // Limite: 30 envios por minuto por pessoa. Aparelho que o serviço de push diz que não existe
 // mais (404/410) é removido.
 //
+// App Android próprio (8.31): o aparelho com o app instalado é guardado com o código do Firebase
+// (endereço começando com FCM_PREFIX) e recebe pelo Firebase; o resto continua pelo push do navegador.
+//
 // Segredos (Supabase → Edge Functions → Secrets): VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY e
-// VAPID_SUBJECT (ex.: mailto:seu-email). SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY o Supabase
+// VAPID_SUBJECT (ex.: mailto:seu-email); para o app Android, FCM_SERVICE_ACCOUNT (o arquivo da
+// "conta de serviço" do Firebase, inteiro). SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY o Supabase
 // já fornece sozinho. Passo a passo no HI-TEACHER.md, seção 8.14.
 import webpush from "npm:web-push@3.6.7";
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
@@ -22,7 +26,49 @@ const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const VAPID_PUBLIC = Deno.env.get("VAPID_PUBLIC_KEY") ?? "";
 const VAPID_PRIVATE = Deno.env.get("VAPID_PRIVATE_KEY") ?? "";
 const VAPID_SUBJECT = Deno.env.get("VAPID_SUBJECT") ?? "mailto:contato@hiteacher.app";
+const FCM_SA = Deno.env.get("FCM_SERVICE_ACCOUNT") ?? "";
 const RATE_PER_MIN = 30;
+export const FCM_PREFIX = "https://fcm.googleapis.com/hi-teacher-app/";
+
+// ---------- Firebase (app Android) ----------
+const b64url = (b: Uint8Array | string) => btoa(typeof b === "string" ? b : String.fromCharCode(...b)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+let fcmAuth: { token: string; exp: number; project: string } | null = null;
+async function fcmAccess(): Promise<{ token: string; project: string }> {
+  if (fcmAuth && fcmAuth.exp > Date.now() + 60_000) return fcmAuth;
+  if (!FCM_SA) throw Object.assign(new Error("Falta a chave do Firebase (FCM_SERVICE_ACCOUNT) nos segredos da função"), { statusCode: 500 });
+  const sa = JSON.parse(FCM_SA);
+  const now = Math.floor(Date.now() / 1000);
+  const head = b64url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
+  const claim = b64url(JSON.stringify({ iss: sa.client_email, scope: "https://www.googleapis.com/auth/firebase.messaging", aud: "https://oauth2.googleapis.com/token", iat: now, exp: now + 3600 }));
+  const der = Uint8Array.from(atob(String(sa.private_key).replace(/-----[^-]+-----/g, "").replace(/\s+/g, "")), (c) => c.charCodeAt(0));
+  const key = await crypto.subtle.importKey("pkcs8", der, { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" }, false, ["sign"]);
+  const sig = new Uint8Array(await crypto.subtle.sign("RSASSA-PKCS1-v1_5", key, new TextEncoder().encode(`${head}.${claim}`)));
+  const res = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer", assertion: `${head}.${claim}.${b64url(sig)}` }),
+  });
+  const j = await res.json().catch(() => ({}));
+  if (!res.ok || !j.access_token) throw Object.assign(new Error(`Firebase recusou a chave: ${j.error_description ?? j.error ?? res.status}`), { statusCode: 401 });
+  fcmAuth = { token: j.access_token, exp: Date.now() + (Number(j.expires_in) || 3600) * 1000, project: sa.project_id };
+  return fcmAuth;
+}
+// Manda só dados: o próprio app monta a notificação (título, texto e a página que abre ao tocar).
+export async function sendFcm(endpoint: string, payload: string): Promise<{ statusCode: number }> {
+  const { token, project } = await fcmAccess();
+  const p = JSON.parse(payload);
+  const page = /[?&]p=([a-z]+)/.exec(String(p.url ?? ""))?.[1] ?? "";
+  const res = await fetch(`https://fcm.googleapis.com/v1/projects/${project}/messages:send`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ message: { token: endpoint.slice(FCM_PREFIX.length), data: { title: String(p.title ?? ""), body: String(p.body ?? ""), page, tag: String(p.tag ?? "") }, android: { priority: "HIGH", ttl: "86400s" } } }),
+  });
+  if (res.ok) return { statusCode: res.status };
+  const body = await res.text();
+  // Aparelho que desinstalou o app ou trocou de código: o Firebase diz UNREGISTERED (404).
+  const gone = res.status === 404 || /UNREGISTERED|registration-token-not-registered/.test(body);
+  throw Object.assign(new Error(body.slice(0, 200)), { statusCode: gone ? 410 : res.status, body: body.slice(0, 200) });
+}
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -202,7 +248,7 @@ export async function handle(req: Request, deps: { db: DB; send: (sub: any, payl
   if (p.dedupe && type !== "test") await db.from("push_log").insert({ sender: uid, kind: "sent", ref: p.dedupe, sent, created_at: now.toISOString() });
   if (logRow) await db.from("push_log").update({ sent }).eq("id", logRow.id);
   // No teste, devolve o diagnóstico pro app explicar o que deu errado.
-  if (type === "test") return json(200, { ok: true, sent, removed, devices, failures, dbError, vapid: !!(VAPID_PUBLIC && VAPID_PRIVATE) });
+  if (type === "test") return json(200, { ok: true, sent, removed, devices, failures, dbError, vapid: !!(VAPID_PUBLIC && VAPID_PRIVATE), fcm: !!FCM_SA });
   return json(200, { ok: true, sent, removed });
 }
 
@@ -213,6 +259,7 @@ if (import.meta.main) {
     db: admin,
     // deno-lint-ignore no-explicit-any
     send: (sub: any, payload: string) => {
+      if (String(sub.endpoint).startsWith(FCM_PREFIX)) return sendFcm(sub.endpoint, payload);
       if (!VAPID_PUBLIC || !VAPID_PRIVATE) return Promise.reject(Object.assign(new Error("Faltam as chaves VAPID nos segredos da função"), { statusCode: 500 }));
       return webpush.sendNotification(sub, payload, { TTL: 86400, urgency: "normal" });
     },
