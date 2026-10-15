@@ -45,6 +45,7 @@ public class AppBridge {
         try {
             o.put("version", BuildConfig.VERSION_NAME);
             o.put("notif", notifState());
+            o.put("sched", true);
         } catch (Exception ignored) {}
         return o.toString();
     }
@@ -92,6 +93,10 @@ public class AppBridge {
             done(cb, o.toString());
         });
     }
+
+    /** Avisos marcados no celular (lista dos próximos dias, em JSON). */
+    @JavascriptInterface
+    public void schedule(String json) { Scheduler.save(act, json); }
 
     /** Último código do aparelho conhecido (para desligar sem perguntar ao Firebase). */
     @JavascriptInterface

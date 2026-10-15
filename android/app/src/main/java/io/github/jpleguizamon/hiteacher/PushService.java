@@ -21,7 +21,7 @@ import java.util.Map;
  * com o nome e o ícone do Hi Teacher. Tocar abre o app na página certa.
  */
 public class PushService extends FirebaseMessagingService {
-    static final String CHANNEL = "avisos";
+    static final String CHANNEL = "avisos", CHANNEL_REMIND = "lembretes";
 
     @Override
     public void onNewToken(@NonNull String token) {
@@ -34,19 +34,20 @@ public class PushService extends FirebaseMessagingService {
         Map<String, String> d = msg.getData();
         String title = d.get("title"), body = d.get("body"), page = d.get("page"), tag = d.get("tag");
         if (title == null && msg.getNotification() != null) { title = msg.getNotification().getTitle(); body = msg.getNotification().getBody(); }
-        show(this, title == null ? "Hi Teacher" : title, body == null ? "" : body, page, tag);
+        show(this, CHANNEL, title == null ? "Hi Teacher" : title, body == null ? "" : body, page, tag);
     }
 
-    static void show(Context c, String title, String body, String page, String tag) {
+    static void show(Context c, String channel, String title, String body, String page, String tag) {
         NotificationManager nm = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
-        if (Build.VERSION.SDK_INT >= 26 && nm.getNotificationChannel(CHANNEL) == null) {
-            nm.createNotificationChannel(new NotificationChannel(CHANNEL, "Avisos", NotificationManager.IMPORTANCE_HIGH));
+        if (Build.VERSION.SDK_INT >= 26 && nm.getNotificationChannel(channel) == null) {
+            boolean remind = CHANNEL_REMIND.equals(channel);
+            nm.createNotificationChannel(new NotificationChannel(channel, remind ? "Lembretes e resumos" : "Avisos", NotificationManager.IMPORTANCE_HIGH));
         }
         Intent open = new Intent(c, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         if (page != null) open.putExtra("page", page);
         int id = (tag == null ? title + body : tag).hashCode();
         PendingIntent pi = PendingIntent.getActivity(c, id, open, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
-        NotificationCompat.Builder b = new NotificationCompat.Builder(c, CHANNEL)
+        NotificationCompat.Builder b = new NotificationCompat.Builder(c, channel)
                 .setSmallIcon(R.drawable.ic_notification)
                 .setColor(0xFF2FD3F2)
                 .setContentTitle(title)
