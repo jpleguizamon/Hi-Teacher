@@ -1,8 +1,10 @@
 // Gera os ícones do app instalável (pasta icons/) a partir do símbolo da logo
-// (icons/logo-mark.svg: a coruja do app, em ciano).
+// e do APK Android (android/app/src/main/res/mipmap-*) a partir de icons/logo-mark.svg:
+// a coruja branca de óculos e capelo, asa ciano, dentro do círculo ciano (8.33).
 // Como rodar (na pasta do repositório, com Node e Playwright):
 //   node tools/gerar-icones.js
-// Fundo preto #05060B liso (sem brilho) e a coruja de linhas ciano centralizada (o favicon também, pra aparecer em aba clara).
+// Fundo preto #05060B liso (sem brilho) e a coruja centralizada. No Android, o "foreground" é sem fundo
+// (o fundo preto vem de @color/bg) e com margem, porque o celular corta o ícone em círculo/gota.
 const fs = require("fs");
 const path = require("path");
 let chromium;
@@ -20,6 +22,11 @@ const ICONS = [
   { file: "apple-touch-icon.png", size: 180, markW: 0.64 },
   { file: "favicon-32.png", size: 32, markW: 0.92 }
 ];
+const RES = path.join(root, "android", "app", "src", "main", "res");
+for (const [d, n] of [["mdpi", 48], ["hdpi", 72], ["xhdpi", 96], ["xxhdpi", 144], ["xxxhdpi", 192]]) {
+  ICONS.push({ dir: path.join(RES, "mipmap-" + d), file: "ic_launcher.png", size: n, markW: 0.86 });
+  ICONS.push({ dir: path.join(RES, "mipmap-" + d), file: "ic_launcher_foreground.png", size: n * 2.25, markW: 0.6, bare: true });
+}
 
 (async () => {
   const browser = await chromium.launch();
@@ -39,8 +46,9 @@ const ICONS = [
       x.drawImage(img, (S - w) / 2, (S - w) / 2, w, w);
       return c.toDataURL("image/png").split(",")[1];
     }, { svg, ic });
-    fs.writeFileSync(path.join(outDir, ic.file), Buffer.from(data, "base64"));
-    console.log("icons/" + ic.file);
+    const out = path.join(ic.dir || outDir, ic.file);
+    fs.writeFileSync(out, Buffer.from(data, "base64"));
+    console.log(path.relative(root, out));
   }
   await browser.close();
 })();
