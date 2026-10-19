@@ -437,6 +437,12 @@ Até a 8.30 o APK era uma "casca" TWA (bubblewrap) que abria o site **pelo Chrom
 - **Tempo de aula**: aluno ativo que completa 1, 2, 3... anos desde a entrada aparece no card de Aniversários do Início (hoje com "Parabenizar", e os da semana) e no sino. Mensagem pronta nova "Tempo de aula" (`classAnniversary`, com [anos]).
 - **Resumo do mês automático** (Conteúdo para os alunos, desligado no começo): o professor manda no `student_view` (`info.report`) o resumo do mês passado, o mesmo texto do "Resumo do mês"; aparece no Início do app do aluno/responsável até tocar em "Entendi" (`prefs["rp_" + mês]`). Só se o mês teve aula dada ou prática.
 
+## Revisão para o lançamento (8.36)
+- Texto que vem de outra pessoa passa por `plainText` / `plainDeep` (tira `<` `>`, troca `"` por `”`): nome no pedido de entrada e no pedido de mudar dados, ficha de matrícula, aluno ou interessado vindo de colega da escola, música pedida pelo aluno, nome digitado no cadastro. Ao abrir, nome de aluno ou tema já salvo com esses sinais é limpo. Os números que o colega manda pra escola viram número. Pedido de reposição com data/horário fora do formato é recusado.
+- Regra: todo texto de aluno, ficha ou colega que entra na tela vai com `escapeHtml`, e o que é salvo dessas fontes passa por `plainText`.
+- `supabase/schema-v8.36.sql` (o Jp precisa rodar): liberar o app só para conta que pediu entrada ao professor; limite de tentativas na chave da escola; notificações só para endereços do Google, Firefox, Windows e Apple.
+- Limpeza: o logo com texto virou arquivo (`icons/logo-text.png`, guardado pelo sw.js) em vez de três cópias dentro da página; saíram funções, desenhos de acordes, ícone e regras de estilo que nada usava mais.
+
 ## O que ainda falta / próximos passos
 
 - **App do aluno — ideias ainda não feitas (lista de set/2026)**: gravação enviada pelo próprio app com comentário do professor marcado no tempo (hoje vai pelo compartilhar do celular); cifras e partituras anexadas pelo professor (precisa de armazenamento de arquivos no Supabase); cadastro já completo pelo convite (hoje o link só preenche a chave; para interessados existe a ficha de matrícula da 8.35); lembrete de aula por notificação do celular (hoje é pela agenda .ics); mural da turma e avisos por turma; toques de IA (feedback da gravação, plano da semana a partir do resumo da aula, assistente de teoria).
