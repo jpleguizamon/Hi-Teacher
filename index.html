@@ -1288,6 +1288,21 @@ body.lead-open #authGate,body.lead-open #onboardingGate{display:none!important}
 .auth-toggle:hover{text-decoration:underline;text-underline-offset:0.2em}
 .auth-toggle:first-of-type{margin-top:1rem}
 .auth-loading{color:var(--muted);font-size:0.8125rem}
+.auth-splash-bar,.auth-splash-slow{display:none}
+/* Tela de carregamento em tela cheia (8.37) */
+#authGate.is-loading{background:radial-gradient(60rem 40rem at 50% 38%,rgba(47,211,242,.14),transparent 60%),radial-gradient(40rem 30rem at 50% 110%,rgba(47,211,242,.08),transparent 70%),var(--bg)}
+#authGate.is-loading .auth-card{background:none;border:none;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;width:min(20rem,100%);display:flex;flex-direction:column;align-items:center}
+#authGate.is-loading #authSubtitle{display:none}
+#authGate.is-loading .auth-owl{width:7.5rem;height:7.5rem;margin-bottom:1.25rem;filter:drop-shadow(0 0 1.5rem rgba(47,211,242,.45));animation:splashBreath 2.4s ease-in-out infinite}
+#authGate.is-loading .auth-logo-img{height:3.25rem;margin-bottom:2rem}
+#authGate.is-loading .auth-loading{font-size:0.9375rem;color:var(--text-2);font-weight:600}
+#authGate.is-loading .auth-splash-bar{display:block;width:10rem;height:0.25rem;margin:1rem auto 0;border-radius:var(--radius-pill);background:rgba(47,211,242,.15);overflow:hidden}
+#authGate.is-loading .auth-splash-bar span{display:block;width:40%;height:100%;border-radius:inherit;background:var(--accent);box-shadow:var(--glow-sm);animation:splashBar 1.3s ease-in-out infinite}
+#authGate.is-loading .auth-splash-slow{display:block;margin-top:1.5rem;font-size:0.75rem;color:var(--muted);line-height:1.45;opacity:0;animation:splashSlow .4s ease 12s forwards}
+@keyframes splashBreath{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+@keyframes splashBar{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
+@keyframes splashSlow{to{opacity:1}}
+@media (prefers-reduced-motion: reduce){#authGate.is-loading .auth-owl,#authGate.is-loading .auth-splash-bar span{animation:none}}
 .tb-migrate{display:flex;flex-direction:column;gap:0.625rem;text-align:left;color:var(--text);font-size:0.875rem;line-height:1.45}
 .tb-migrate p{margin:0}
 .tb-migrate .tb-migrate-hint{color:var(--muted);font-size:0.8125rem}
@@ -2175,7 +2190,7 @@ body.pdf-open{overflow:hidden}
 </div>
 </div>
 
-<div id="authGate">
+<div id="authGate" class="is-loading">
 <div class="auth-card">
 <svg class="brand-owl auth-owl" viewBox="0 0 512 512" aria-hidden="true"><use href="#brand-owl"/></svg><img class="auth-logo-img" src="icons/logo-text.png" alt="Hi Teacher">
 <p id="authSubtitle">Entre pra acessar seus dados.</p>
@@ -2186,7 +2201,7 @@ body.pdf-open{overflow:hidden}
 <button type="button" class="entry-btn" id="entryStudent"><b>Entrar como aluno</b><span>Aluno ou responsável, com a chave do professor</span></button>
 </div>
 </div>
-<div id="authForm">
+<div id="authForm" style="display:none">
 <div id="authFieldEmail" class="field"><label>Email</label><input type="email" id="authEmail" autocomplete="username"></div>
 <div id="authFieldPassword" class="field"><label>Senha</label><input type="password" id="authPassword" autocomplete="current-password"></div>
 <div id="authFieldConfirmPassword" class="field" style="display:none"><label>Confirmar senha</label><input type="password" id="authConfirmPassword" autocomplete="new-password"></div>
@@ -2199,7 +2214,9 @@ body.pdf-open{overflow:hidden}
 <button type="button" class="auth-toggle" id="authStuBack" style="display:none">Voltar</button>
 </div>
 <div id="stuEntry" style="display:none"></div>
-<div class="auth-loading" id="authLoading" style="display:none">Carregando seus dados…</div>
+<div class="auth-loading" id="authLoading">Carregando seus dados…</div>
+<div class="auth-splash-bar" aria-hidden="true"><span></span></div>
+<div class="auth-splash-slow">Está demorando? Confira a internet. Seus dados continuam guardados.</div>
 </div>
 </div>
 
@@ -3592,7 +3609,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.36";
+const APP_VERSION = "8.37";
 // ===================== App instalável (8.4) =====================
 // Service worker (sw.js), aviso de versão nova, faixa "Sem internet", botão "Instalar o app",
 // atalhos do ícone (?p=...) e botão voltar do celular fechando modal/menu no app instalado.
@@ -4617,6 +4634,7 @@ el.innerHTML = html;
 document.getElementById("authForm").style.display = "none";
 el.style.display = "block";
 showAuthGate("Hi Teacher 8.0");
+document.getElementById("authGate").classList.remove("is-loading");
 }
 function tbAskBackup(){
 return new Promise(resolve => {
@@ -4929,6 +4947,15 @@ el.querySelector("#roleOut").onclick = stuSignOut;
 function authCardParts(show){
 ["authChoice","authForm","authLoading","stuEntry"].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = id === show || (Array.isArray(show) && show.includes(id)) ? "block" : "none"; });
 document.getElementById("authStuBack").style.display = "none";
+authSplashSync();
+}
+// Tela de carregamento (8.37): enquanto só aparece o "Carregando…", o portão vira uma tela
+// cheia com a coruja, o nome e uma barrinha andando, em vez do cartão do login.
+function authSplashSync(){
+const g = document.getElementById("authGate"), l = document.getElementById("authLoading");
+if (!g || !l) return;
+const on = l.style.display !== "none" && !l.querySelector("*") && ["authChoice","authForm","stuEntry"].every(id => { const el = document.getElementById(id); return !el || el.style.display === "none"; });
+g.classList.toggle("is-loading", on);
 }
 function showEntryChoice(){
 authCardParts("authChoice");
@@ -9445,6 +9472,7 @@ return r.n ? r : null;
 function showAuthGate(subtitle){
 document.getElementById("authSubtitle").textContent = subtitle || "Entre pra acessar seus dados.";
 document.getElementById("authGate").classList.remove("hidden");
+authSplashSync();
 }
 function hideAuthGate(){
 document.getElementById("authGate").classList.add("hidden");
@@ -9536,6 +9564,7 @@ if (!supabaseClient && SUPABASE_CONFIGURED) {
 // A nuvem está configurada, mas a biblioteca de login não carregou (sem internet, ou o
 // arquivo foi aberto num visualizador que bloqueia scripts externos). Antes o app caía no
 // modo "só local" e abria o onboarding sem pedir login — parecia que o login tinha sumido.
+authCardParts("authForm");
 showAuthGate("Não foi possível conectar ao login.");
 ["authFieldEmail","authFieldPassword","authToggleBtn","authForgotBtn"].forEach(id => { document.getElementById(id).style.display = "none"; });
 document.getElementById("authError").textContent = "Verifique a internet. Se você abriu o arquivo por outro app (e-mail, WhatsApp, Drive, Claude...), abra o Hi Teacher direto no Chrome ou no Safari.";

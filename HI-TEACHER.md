@@ -443,6 +443,9 @@ Até a 8.30 o APK era uma "casca" TWA (bubblewrap) que abria o site **pelo Chrom
 - `supabase/schema-v8.36.sql` (o Jp precisa rodar): liberar o app só para conta que pediu entrada ao professor; limite de tentativas na chave da escola; notificações só para endereços do Google, Firefox, Windows e Apple.
 - Limpeza: o logo com texto virou arquivo (`icons/logo-text.png`, guardado pelo sw.js) em vez de três cópias dentro da página; saíram funções, desenhos de acordes, ícone e regras de estilo que nada usava mais.
 
+## Tela de carregamento (8.37)
+- Enquanto só aparece o "Carregando seus dados…", o portão do login (`#authGate.is-loading`) vira uma tela cheia com a coruja, o nome, uma barrinha andando e, depois de 12 s, o aviso "Está demorando?". `authSplashSync()` liga e desliga isso sozinho (chamado em `authCardParts` e `showAuthGate`). O app agora já abre nessa tela, em vez de mostrar o login por um instante.
+
 ## O que ainda falta / próximos passos
 
 - **App do aluno — ideias ainda não feitas (lista de set/2026)**: gravação enviada pelo próprio app com comentário do professor marcado no tempo (hoje vai pelo compartilhar do celular); cifras e partituras anexadas pelo professor (precisa de armazenamento de arquivos no Supabase); cadastro já completo pelo convite (hoje o link só preenche a chave; para interessados existe a ficha de matrícula da 8.35); lembrete de aula por notificação do celular (hoje é pela agenda .ics); mural da turma e avisos por turma; toques de IA (feedback da gravação, plano da semana a partir do resumo da aula, assistente de teoria).
