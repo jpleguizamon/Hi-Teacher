@@ -557,7 +557,24 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .bulk-top button{border:none;background:none;padding:0.25rem 0;color:var(--accent);font-weight:750;font-size:0.8125rem;cursor:pointer}
 .bulk-top .bulk-sep{color:var(--muted)}
 .bulk-actions{position:fixed;left:50%;bottom:1rem;transform:translateX(-50%);z-index:26;display:flex;gap:0.5rem;padding:0.5rem;border-radius:var(--radius-pill);border:0.0625rem solid var(--glass-border);background:var(--glass-fill-strong);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur);box-shadow:var(--shadow-sm)}
-.bulk-actions button{min-width:7rem;padding:0.6875rem 1rem;border-radius:var(--radius-pill);font-weight:750;font-size:0.8125rem}
+.bulk-actions button{min-width:6rem;padding:0.6875rem 1rem;border-radius:var(--radius-pill);font-weight:750;font-size:0.8125rem}
+/* 8.34: reajuste, resumo do imposto, contrato e ranking */
+.rz-preview,.tax-list{display:flex;flex-direction:column;margin-top:0.5rem;border-radius:var(--radius-sm);background:var(--glass-inset);border:0.0625rem solid var(--glass-border-soft);overflow:hidden}
+.rz-preview:empty{display:none}
+.rz-row{display:flex;justify-content:space-between;align-items:center;gap:0.75rem;padding:0.5rem 0.75rem;font-size:0.8125rem;border-bottom:0.0625rem solid var(--hairline)}
+.rz-row:last-child{border-bottom:0}
+.rz-row>span:first-child{display:flex;flex-direction:column;min-width:0}
+.rz-row>span:last-child{font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--heading)}
+.rz-row small{color:var(--muted);font-size:0.6875rem}
+.rz-row small.warn{color:var(--orange)}
+.contract-text{white-space:pre-wrap;max-height:55vh;overflow:auto;font-size:0.8125rem;line-height:1.55;padding:0.875rem;border-radius:var(--radius-sm);background:var(--glass-inset);border:0.0625rem solid var(--glass-border-soft)}
+.rank-row{display:flex;align-items:center;gap:0.625rem;padding:0.5rem 0.25rem;border-bottom:0.0625rem solid var(--hairline);font-size:0.875rem}
+.rank-row:last-of-type{border-bottom:0}
+.rank-row.me{color:var(--accent);font-weight:750}
+.rank-pos{width:2rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.rank-row.me .rank-pos{color:var(--accent)}
+.rank-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rank-min{font-variant-numeric:tabular-nums}
 #studentsPage.bulk-on{padding-bottom:5rem}
 .bulk-field .bulk-hint{font-size:0.6875rem;color:var(--muted);margin-top:0.25rem}
 .bulk-field .bulk-extra{margin-top:0.375rem}
@@ -2475,6 +2492,7 @@ body.pdf-open{overflow:hidden}
 <div class="set-month-info"><strong class="setMonthTitle">Fechar mês atual</strong><span class="setMonthDesc">Calculando alunos ativos...</span></div>
 <button class="btn-set-month act-set-month">Setar Mês</button>
 </div>
+<button type="button" class="btn-historico" id="btnTaxSummary" style="width:100%;margin-top:0.75rem">Resumo do ano para o imposto</button>
 </main>
 
 <main id="evolutionQuantitativePage" style="display:none">
@@ -2607,6 +2625,8 @@ body.pdf-open{overflow:hidden}
 <div class="settings-card">
 <div class="settings-row" id="rowInstrumentos"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-music"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Instrumentos que leciona<button type="button" class="help-icon" data-help="A lista de opções que aparece ao cadastrar um aluno. Adicione quantos instrumentos precisar — não tem limite.">!</button></div></div><span class="settings-row-value" id="valInstrumentos"></span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowValoresPadrao"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-dollar"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Valores padrões<button type="button" class="help-icon" data-help="Valores sugeridos automaticamente ao cadastrar um novo aluno, de acordo com o formato da aula (individual ou grupo).">!</button></div></div><span class="settings-row-value" id="valValoresPadrao">R$ 140</span><span class="settings-row-chevron">›</span></div>
+<div class="settings-row" id="rowPayRules"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-dollar"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Desconto e multa</div><div class="settings-row-sub">Desconto por pagar em dia, multa e juros no atraso</div></div><span class="settings-row-value" id="valPayRules">Nenhum</span><span class="settings-row-chevron">›</span></div>
+<div class="settings-row" id="rowContract"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-clipboard"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Modelo de contrato</div><div class="settings-row-sub">O texto que o app usa no contrato de cada aluno</div></div><span class="settings-row-value" id="valContract"></span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowDiasUteis"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-calendar"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Dias úteis<button type="button" class="help-icon" data-help="Os dias da semana em que você costuma dar aula. O cadastro de aluno novo começa sem nenhum dia marcado: os dias de cada aluno são escolhidos no cadastro dele.">!</button></div></div><span class="settings-row-value" id="valDiasUteis">Seg-Sex</span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowDuracao"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-clock"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Duração padrão da aula</div></div><span class="settings-row-value" id="valDuracao">60 min</span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowMakeupDeadline"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-clock"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Prazo para repor</div></div><span class="settings-row-value" id="valMakeupDeadline">30 dias</span><span class="settings-row-chevron">›</span></div>
@@ -2974,6 +2994,7 @@ body.pdf-open{overflow:hidden}
 <div class="field"><label>Telefone do responsável</label>
 <div class="input-with-action"><input id="fGuardianPhone" type="tel" inputmode="tel" placeholder="Ex.: (31) 98888-8888"><a class="wa-btn" id="fGuardianWa" target="_blank" rel="noopener" style="display:none">WhatsApp</a></div>
 </div>
+<div class="field"><label>CPF de quem paga (opcional)</label><input id="fPayerDoc" inputmode="numeric" maxlength="20" placeholder="Aparece no recibo, no contrato e no resumo do imposto"></div>
 <div class="field"><label>Local da aula</label>
 <select id="fLocationType">
 <option value="">Não informar</option>
@@ -3627,7 +3648,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.33";
+const APP_VERSION = "8.34";
 // ===================== App instalável (8.4) =====================
 // Service worker (sw.js), aviso de versão nova, faixa "Sem internet", botão "Instalar o app",
 // atalhos do ícone (?p=...) e botão voltar do celular fechando modal/menu no app instalado.
@@ -4167,7 +4188,7 @@ let tbV811 = false;
 function tbTables(){ return tbV811 ? TB_TABLES_BASE : TB_TABLES_BASE.filter(t => t !== "lesson_private"); }
 // Campos do aluno que o app do aluno usa (ficam em students). O resto (ex.: frequência de
 // avaliação, campos desconhecidos) vai pra student_private: só o professor lê.
-const TB_STUDENT_PUBLIC = new Set(["id","timesByDay","biweeklyStart","trackingSince","duration","locationType","locationDetail","phone","birthDate","guardianName","guardianPhone","dueDay","packageSize","packageStart","packagePrice","lessonPrice","format"]);
+const TB_STUDENT_PUBLIC = new Set(["valueOld","valueNext","payAdj","id","timesByDay","biweeklyStart","trackingSince","duration","locationType","locationDetail","phone","birthDate","guardianName","guardianPhone","dueDay","packageSize","packageStart","packagePrice","lessonPrice","format"]);
 const TB_TD_KEYS = CLOUD_SYNC_KEYS.filter(k => k !== "jp_students_v5");
 // [chave no aluno, coluna, tipo]. Valor de tipo diferente (ou null) vai pro "extra", sem perder nada.
 const TB_COLS = {
@@ -5343,7 +5364,8 @@ if (mode === "monthly") {
 const paid = getPaidMonths(s);
 billingMonths(s).slice().reverse().forEach(k => {
 const isPaid = paid.has(k);
-items.push({ kind: "month", key: k, ref: k, label: `Mensalidade de ${monthLabel(k)}`, value: studentMonthlyValue(s), paid: isPaid, late: !isPaid && isPastDue(s, k), due: Number(s.dueDay) > 0 ? `vence dia ${s.dueDay}` : "", paidDate: (s.paidDates || {})[k] || null });
+const q = isPaid ? null : payQuote(s, k);
+items.push({ kind: "month", key: k, ref: k, label: `Mensalidade de ${monthLabel(k)}`, value: isPaid ? paidMonthValue(s, k) : q.value, note: q ? q.note : "", detail: q ? q.detail || "" : "", paid: isPaid, late: !isPaid && isPastDue(s, k), due: Number(s.dueDay) > 0 ? `vence dia ${s.dueDay}` : "", paidDate: (s.paidDates || {})[k] || null });
 });
 } else if (mode === "lesson") {
 lessonCharges(s).slice().reverse().forEach(c => items.push({ ...c, key: c.ref, label: chargeLabel(c), late: false }));
@@ -5639,6 +5661,7 @@ if (!demoMode && pwaCanInstall() && Date.now() > Number(localStorage.getItem(INS
 <div class="song-acts"><button type="button" class="save" data-install>Como instalar</button><button type="button" class="btn-link-inline" data-install-later>Agora não</button></div>`);
 // Aviso do professor (8.14): no topo, até a pessoa tocar em "Entendi".
 html += stuAnnCardsHTML();
+html += stuContractCardHTML(false);
 html += `<div class="stu-days">${stuDaySections(up)}</div>`;
 // Estudo da semana (8.8): um card só, sem linhas separando. Lição de casa com o desafio junto,
 // a matéria numa linha e o recado do professor (dica + vídeo) no fim.
@@ -5941,7 +5964,7 @@ const items = stuPayItems().map((it, i) => ({ ...it, i }));
 const open = items.filter(it => !it.paid).sort((a, b) => (b.late - a.late));
 const paid = items.filter(it => it.paid);
 const total = open.reduce((a, it) => a + (Number(it.value) || 0), 0);
-const row = it => { const b = stuPayBadge(it); return `<button type="button" class="stu-lrow" data-pay="${it.i}"><span class="stu-lrow-main">${escapeHtml(it.label)}<small>R$ ${moneyText(it.value)}</small></span><span class="stu-status ${b.cls}">${escapeHtml(b.text)}</span><span class="settings-row-chevron" aria-hidden="true">›</span></button>`; };
+const row = it => { const b = stuPayBadge(it); return `<button type="button" class="stu-lrow" data-pay="${it.i}"><span class="stu-lrow-main">${escapeHtml(it.label)}<small>R$ ${moneyText(it.value)}${it.note ? ` · ${escapeHtml(it.note)}` : ""}</small></span><span class="stu-status ${b.cls}">${escapeHtml(b.text)}</span><span class="settings-row-chevron" aria-hidden="true">›</span></button>`; };
 let html = `<div class="money-hero${open.some(it => it.late) ? " late" : ""}"><span>Em aberto</span><b>R$ ${moneyText(total)}</b><small>${open.length ? `${open.length} ite${open.length === 1 ? "m" : "ns"} a pagar` : "Tudo em dia"}</small></div>`;
 if (open.length) html += `<div class="settings-group-label">A pagar</div><div class="settings-card lrow-card">${open.map(row).join("")}</div>`;
 if (paid.length) html += `<div class="settings-group-label">Pagos</div><div class="settings-card lrow-card">${paid.map(row).join("")}</div>`;
@@ -5955,7 +5978,7 @@ const items = stuPayItems(), it = items[i];
 if (!it) return;
 const pix = stuContent().pix || {}, r = stuPayReq(it.key), b = stuPayBadge(it);
 const body = document.createElement("div");
-body.innerHTML = `<div class="lp-student"><dl class="sheet-grid"><div class="sheet-pair"><dt>Valor</dt><dd>R$ ${moneyText(it.value)}</dd></div><div class="sheet-pair"><dt>Situação</dt><dd><span class="stu-status ${b.cls}">${escapeHtml(b.text)}</span></dd></div>${it.due && !it.paid ? `<div class="sheet-pair"><dt>Vencimento</dt><dd>${escapeHtml(it.due.replace(/^vence /, ""))}</dd></div>` : ""}${it.paidDate ? `<div class="sheet-pair"><dt>Pago em</dt><dd>${formatDateShort(it.paidDate)}</dd></div>` : ""}</dl>
+body.innerHTML = `<div class="lp-student"><dl class="sheet-grid"><div class="sheet-pair"><dt>Valor</dt><dd>R$ ${moneyText(it.value)}${it.detail ? `<br><small class="stu-muted">${escapeHtml(it.detail)}</small>` : ""}</dd></div><div class="sheet-pair"><dt>Situação</dt><dd><span class="stu-status ${b.cls}">${escapeHtml(b.text)}</span></dd></div>${it.due && !it.paid ? `<div class="sheet-pair"><dt>Vencimento</dt><dd>${escapeHtml(it.due.replace(/^vence /, ""))}</dd></div>` : ""}${it.paidDate ? `<div class="sheet-pair"><dt>Pago em</dt><dd>${formatDateShort(it.paidDate)}</dd></div>` : ""}</dl>
 ${!it.paid && r && r.status === "rejected" ? `<div class="lp-last lp-remind"><div class="lp-last-title">Professor</div><div class="lesson-note">${escapeHtml(r.response || "Ainda não recebeu")}</div></div>` : ""}
 <div class="lp-actions"><div class="qa-btns">${it.paid ? `<button type="button" class="save stu-online-mini" data-receipt="${i}">Recibo</button>` : r && r.status === "pending" ? `<button type="button" class="btn-edit-toggle" data-cancel-req="${r.id}">Cancelar aviso</button>` : `${pix.key && Number(it.value) > 0 ? `<button type="button" class="save stu-online-mini" data-pix="${i}">Pix copia e cola</button>` : ""}<button type="button" class="btn-edit-toggle" data-paid="${i}">Já paguei</button>`}</div></div></div>`;
 openQuickModal(it.label, "", body, null, "Fechar");
@@ -5985,11 +6008,13 @@ ${changes.length ? `<div class="stu-sub-list">${changes.map(r => `<div class="st
 + stuCard("Preferências", `<div class="toggle-field"><label>Modo criança (botões maiores e figurinhas)</label><label class="switch"><input type="checkbox" id="stuKid" ${stuKidMode() ? "checked" : ""}><span class="switch-slider"></span></label></div>
 ${pwaCanInstall() ? `<button type="button" class="btn-historico" id="stuInstall" style="width:100%;margin-top:0.75rem">Instalar o app</button>` : ""}`)
 + `<div class="settings-group-label">Agenda</div><div class="settings-card study-list ics-card" style="margin-bottom:1.25rem"><div class="settings-row study-row" id="stuIcs" role="button" tabindex="0"><span class="settings-row-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-calendar"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Colocar as aulas na agenda do celular</div><div class="settings-row-sub">Com lembrete 1 dia e 1 hora antes</div></div><span class="settings-row-chevron" aria-hidden="true">›</span></div></div>`
++ stuContractCardHTML(true)
 + stuPrivacyCardHTML()
 + (!demoMode && isTeacherToo(authCurrentUser.id) ? `<button type="button" class="btn-historico stu-logout" id="stuTeacherBtn">Voltar para o modo professor</button>` : "")
 + (demoMode ? "" : `<button type="button" class="cancel stu-logout" id="stuLogoutBtn">Sair da conta</button>`);
 }
 function stuBind(main){
+main.querySelectorAll("[data-contract-open]").forEach(b => b.onclick = stuOpenContract);
 main.querySelectorAll("[data-absent]").forEach(b => b.onclick = () => {
 const key = b.dataset.absent;
 const box = main.querySelector(`[data-absent-form="${CSS.escape(key)}"]`);
@@ -8182,6 +8207,7 @@ const mStart = new Date(); mStart.setDate(1); mStart.setHours(0,0,0,0);
 const month = practiceIn(d, mStart.getTime(), now + 1), wk = practiceIn(d, weekStartOf(new Date()).getTime(), now + 1);
 return stuCard("Esta semana e este mês", `<div class="stat-row"><div><b>${wk.days}</b><span>dia${wk.days === 1 ? "" : "s"} nesta semana</span></div><div><b>${streak}</b><span>dia${streak === 1 ? "" : "s"} seguidos</span></div><div><b>${minText(month.min)}</b><span>neste mês</span></div></div>
 <div class="stu-muted prog-total">${minText(total)} de prática no total</div>`)
++ stuRankingHTML(wk.min)
 + stuCard("Minutos por semana", weeklyBarsSVG(d))
 // 8.18: o histórico de prática (antes página própria) fica aqui embaixo.
 + (stuOff().has("pthistory") ? "" : `<div class="settings-group-label">Histórico de prática</div>` + ptHistoryHTML());
@@ -8614,6 +8640,8 @@ if (s.flatsOn) info.flats = true;
 if (Array.isArray(s.appOn) && s.appOn.length) info.on = s.appOn.filter(p => TOOL_PAGES.includes(p));
 if (s.parentPin && stContent().moneyAdultsOnly) { try { info.parentPin = pinHash(studentUuidMap().of(s), s.parentPin); } catch(e) {} }
 if (Array.isArray(s.certificates) && s.certificates.length) info.certificates = s.certificates.filter(c => c && c.level).map(c => ({ level: c.level, date: c.date }));
+if (s.contract && s.contract.text && s.contract.h) info.contract = { t: s.contract.text, h: s.contract.h, at: s.contract.at || "" };
+if (stContent().ranking && inbox.loaded) info.rank = rankInfoFor(s, weekRankingCached());
 return info;
 }
 function scheduleTeacherPublish(){ clearTimeout(tpTimer); tpTimer = setTimeout(teacherPublish, 2500); }
@@ -8764,7 +8792,7 @@ answerRequest(r, "accepted", resp);
 return;
 }
 if (r.type === "payment_notice") {
-if (p.kind === "month") setMonthPaid(s, p.key, true);
+if (p.kind === "month") setMonthPaid(s, p.key, true, tbIsoOk(String(r.created_at || "").slice(0, 10)) ? String(r.created_at).slice(0, 10) : undefined);
 else {
 const all = p.kind === "lesson" ? lessonCharges(s) : packageCharges(s);
 const c = all.find(x => x.ref === p.ref);
@@ -9258,6 +9286,8 @@ if (ev.length) out.events = ev;
 if (c.reschedOn) { out.resched = { on: true, minHours: Number(c.minHours ?? 24), maxMonth: Number(c.maxMonth ?? 2) }; out.openSlots = computeOpenSlots(); }
 if (c.evalView === "chart") out.evalView = "chart";
 if (c.moneyAdultsOnly) out.moneyAdultsOnly = true;
+if (appSettings.payRules) out.payRules = { ...appSettings.payRules };
+if (c.ranking) out.ranking = true;
 return out;
 }
 // Temas do Organizador ligados ao aluno (sem a nota de desempenho, que é só do professor).
@@ -9323,6 +9353,9 @@ ${events.length ? events.map(e => { const r = rsvps(e.id); return `<div class="j
 <div class="pt-manual-row"><div class="field"><label>Dia</label><select id="scSlotDay">${[1,2,3,4,5,6,0].map(d => `<option value="${d}">${WEEKDAY_NAMES[d]}</option>`).join("")}</select></div><div class="field"><label>Horário</label><input type="time" id="scSlotTime" value="14:00"></div></div>
 <div class="actions"><button class="cancel" id="scSlotAdd">Adicionar horário vago</button></div>
 <div class="field-hint">O aluno só vê os horários em que você não tem aula marcada, nas próximas 3 semanas, sem dizer de quem são as outras aulas. Você confirma cada pedido.</div>
+<div class="settings-group-label">Ranking</div>
+<div class="toggle-field"><label>Ranking de estudo da semana</label><label class="switch"><input type="checkbox" id="scRanking" ${c.ranking ? "checked" : ""}><span class="switch-slider"></span></label></div>
+<div class="field-hint">Aparece em "Minha prática" no app do aluno: quem mais praticou desde segunda, com o primeiro nome, a inicial do sobrenome e os minutos. Só entra quem marcou prática no app.</div>
 <div class="settings-group-label">Financeiro</div>
 <div class="toggle-field"><label>Financeiro só para alunos com 18 anos ou mais</label><label class="switch"><input type="checkbox" id="scMoneyAdult" ${c.moneyAdultsOnly ? "checked" : ""}><span class="switch-slider"></span></label></div>
 <div class="field-hint">Aluno menor (ou sem data de nascimento) só abre o Financeiro com a senha dos pais. Você cria a senha na ficha do aluno, em "App do aluno". Quem entra como responsável sempre vê.</div>
@@ -9375,6 +9408,7 @@ stContentSave({ evalCriteria: keys.length === crit.length ? undefined : keys });
 });
 on("#scThemes", e => stContentSave({ showThemes: e.target.checked || undefined }));
 on("#scMoneyAdult", e => stContentSave({ moneyAdultsOnly: e.target.checked || undefined }));
+on("#scRanking", e => { stContentSave({ ranking: e.target.checked || undefined }); try { teacherPublish(); } catch(x) {} });
 on("#scThemeImgs", e => stContentSave({ themeImages: e.target.checked || undefined }));
 };
 draw();
@@ -9382,7 +9416,7 @@ openQuickModal("Conteúdo para os alunos", "O que aparece no app do aluno além 
 }
 function studentContentLabel(){
 const c = stContent();
-const n = [c.pixKey, c.rules, c.reminder, c.tip || c.video || c.challenge, (c.events || []).length, c.reschedOn, c.showThemes].filter(Boolean).length;
+const n = [c.pixKey, c.rules, c.reminder, c.tip || c.video || c.challenge, (c.events || []).length, c.reschedOn, c.showThemes, c.ranking].filter(Boolean).length;
 return n ? `${n} ite${n === 1 ? "m" : "ns"}` : "";
 }
 
@@ -10453,13 +10487,16 @@ situation = sheetPair("Este mês", curText) + (late.length ? sheetPair("Meses at
 }
 const pkg = packageUsage(s);
 const rcv = receivables(s);
+const ctSt = contractStatus(s);
 const financeiro = sheetSection("Financeiro", [
 sheetPair(payLabel, s.payTo === "none" ? "Bolsa" : value),
 sheetPair("Paga para", payTo),
 sheetPair("Vencimento", Number(s.dueDay) > 0 && paysMe(s) ? `Dia ${s.dueDay}` : ""),
+mode === "monthly" && s.valueNext && s.valueNext.from ? sheetPair("Reajuste marcado", `R$ ${moneyText(s.valueNext.v)} a partir de ${monthLongLabel(s.valueNext.from)} <button type="button" class="btn-link-inline" data-raise-cancel>Desfazer</button>`, true) : "",
 situation,
 pkg ? sheetPair("Pacote", pkg.used >= pkg.size ? `<span class="warn">Terminou (${pkg.used} de ${pkg.size})</span>` : `${pkg.used} de ${pkg.size} aulas`) : "",
-rcv.length ? sheetPair("A receber", `<span class="warn">${rcv.map(c => `${escapeHtml(chargeLabel(c))} · R$ ${moneyText(c.value)}`).join("<br>")}</span>`, true) : ""
+rcv.length ? sheetPair("A receber", `<span class="warn">${rcv.map(c => `${escapeHtml(chargeLabel(c))} · R$ ${moneyText(c.value)}`).join("<br>")}</span>`, true) : "",
+ctSt ? sheetPair("Contrato", ctSt.html, true) : ""
 ]);
 
 // Acompanhamento
@@ -10500,6 +10537,7 @@ const riskHtml = risk.length ? `<div class="sheet-risk"><svg class="ui-icon" vie
 const body = document.getElementById("sheetBody");
 body.innerHTML = riskHtml + about + aulas + contato + financeiro + acomp + lastLessonsDotsHTML(s) + ultima + studyAtHomeHTML(s) + appAccessHTML(s);
 bindAppAccess(body, s);
+{ const rc = body.querySelector("[data-raise-cancel]"); if (rc) rc.onclick = () => { if (!confirm("Desfazer o reajuste marcado? O valor continua o de hoje.")) return; delete s.valueNext; saveStudents(); renderStudents(); refreshStudentSheet(); }; }
 body.querySelectorAll("[data-dot]").forEach(b => b.onclick = () => openHistoryAt(s.id, b.dataset.dot));
 body.querySelectorAll("[data-sheet-add]").forEach(b => b.onclick = () => editFromSheet(s.id, b.dataset.sheetAdd));
 
@@ -10511,10 +10549,14 @@ acts.innerHTML = `<button type="button" class="save" data-sheet-act="edit">Edita
 ${wa ? `<a class="wa-btn" href="${wa}" target="_blank" rel="noopener">WhatsApp${!whatsappLink(s.phone) ? " (resp.)" : ""}</a>` : ""}
 ${inactive ? "" : `<button type="button" class="btn-historico" data-sheet-act="extra">${s.lessonFrequency === "single" ? "+ Marcar aula" : "+ Marcar aula extra"}</button>`}
 <button type="button" class="btn-historico" data-sheet-act="summary">Resumo do mês</button>
+${mode === "monthly" && s.payTo !== "none" && !inactive ? `<button type="button" class="btn-historico" data-sheet-act="raise">Reajustar mensalidade</button>` : ""}
+${!inactive ? `<button type="button" class="btn-historico" data-sheet-act="contract">Contrato</button>` : ""}
 ${appSettings.useLevels && s.level ? `<button type="button" class="btn-historico" data-sheet-act="cert">Certificado de nível</button>` : ""}
 ${!inactive && schoolCanTransfer() ? `<button type="button" class="btn-historico" data-sheet-act="transfer">Passar para outro professor</button>` : ""}`;
 { const tr = acts.querySelector('[data-sheet-act="transfer"]'); if (tr) tr.onclick = () => openSchoolTransfer(s); }
 acts.querySelector('[data-sheet-act="summary"]').onclick = () => openMonthSummary(s);
+{ const b = acts.querySelector('[data-sheet-act="raise"]'); if (b) b.onclick = () => openRaiseModal([s]); }
+{ const b = acts.querySelector('[data-sheet-act="contract"]'); if (b) b.onclick = () => openContract(s); }
 const certBtn = acts.querySelector('[data-sheet-act="cert"]'); if (certBtn) certBtn.onclick = () => issueCertificate(s);
 acts.querySelector('[data-sheet-act="edit"]').onclick = () => editFromSheet(s.id);
 acts.querySelector('[data-sheet-act="history"]').onclick = () => openHistoryModal(s.id);
@@ -11945,6 +11987,7 @@ ${href ? `<a class="wa-btn wa-mini" href="${href}" target="_blank" rel="noopener
 }
 
 function renderHome(){
+try { applyDueRaises(); } catch(e) {}
 try { renderOnboarding(); } catch(e) {}
 renderStudentInbox();
 renderBirthdays();
@@ -12109,13 +12152,14 @@ const set = new Set(Array.isArray(s.paidMonths) ? s.paidMonths : []);
 if (s.paidMonth) set.add(s.paidMonth);
 return set;
 }
-function setMonthPaid(s, key, paid){
+function setMonthPaid(s, key, paid, onIso){
+notePayAdj(s, key, paid, onIso);
 const set = getPaidMonths(s);
 if (paid) set.add(key); else set.delete(key);
 s.paidMonths = [...set].sort();
 s.paidMonth = s.paidMonths.length ? s.paidMonths[s.paidMonths.length - 1] : null;
 // Data em que foi marcado como pago (usada no recibo).
-if (paid) (s.paidDates ??= {})[key] = isoOf(new Date());
+if (paid) (s.paidDates ??= {})[key] = onIso || isoOf(new Date());
 else if (s.paidDates) delete s.paidDates[key];
 }
 function isPaidThisMonth(s){ return getPaidMonths(s).has(currentMonthKey()); }
@@ -12139,7 +12183,424 @@ const cur = currentMonthKey();
 if (key < cur) return true;
 return key === cur && Number(s.dueDay) > 0 && new Date().getDate() > Number(s.dueDay);
 }
-function studentMonthlyValue(s){ return s.value !== undefined ? s.value : getDefaultValueFor(s); }
+// Reajuste com data (8.34). s.valueOld = [{ to: "AAAA-MM", v }]: valor que valeu até aquele mês
+// (inclusive). s.valueNext = { from: "AAAA-MM", v }: reajuste marcado para um mês que ainda não
+// chegou. Sem esses campos é como antes: o valor do cadastro vale para todos os meses.
+function studentMonthlyValue(s, key){
+const base = s.value !== undefined ? s.value : getDefaultValueFor(s);
+const k = typeof key === "string" && /^\d{4}-\d{2}$/.test(key) ? key : currentMonthKey();
+const nx = s.valueNext;
+if (nx && nx.from && k >= nx.from && isFinite(Number(nx.v))) return Number(nx.v);
+const hit = (Array.isArray(s.valueOld) ? s.valueOld : []).filter(o => o && o.to && k <= o.to && isFinite(Number(o.v))).sort((a, b) => a.to.localeCompare(b.to))[0];
+return hit ? Number(hit.v) : base;
+}
+function round2(v){ return Math.round((Number(v) || 0) * 100) / 100; }
+// Novo valor a partir do mês "from". Os meses antes dele ficam com o valor que já tinham.
+// Um reajuste marcado para depois (valueNext) é trocado pelo novo.
+function raiseStudentValue(s, newV, from){
+delete s.valueNext;
+const prevKey = addMonths(from, -1), prevV = Number(studentMonthlyValue(s, prevKey)) || 0;
+const old = (Array.isArray(s.valueOld) ? s.valueOld : []).filter(o => o && o.to && o.to < prevKey);
+old.push({ to: prevKey, v: prevV });
+s.valueOld = old.sort((a, b) => a.to.localeCompare(b.to));
+if (from <= currentMonthKey()) s.value = newV; else { if (s.value === undefined) s.value = prevV; s.valueNext = { from, v: newV }; }
+}
+// Quando chega o mês do reajuste marcado, ele vira o valor do cadastro.
+function applyDueRaises(){
+if (studentMode || demoMode) return;
+const cur = currentMonthKey();
+let n = 0;
+students.forEach(s => { const nx = s && s.valueNext; if (nx && nx.from && nx.from <= cur) { s.value = Number(nx.v); delete s.valueNext; n++; } });
+if (n) saveStudents();
+}
+function openRaiseModal(list){
+list = list.filter(s => s && billingMode(s) === "monthly" && s.payTo !== "none");
+if (!list.length) { alert("Reajuste vale para quem paga mensalidade. Nenhum dos alunos escolhidos paga por mês."); return; }
+const next = addMonths(currentMonthKey(), 1);
+const monthOpts = [-2, -1, 0, 1, 2, 3, 4, 5, 6].map(n => addMonths(currentMonthKey(), n)).map(k => `<option value="${k}"${k === next ? " selected" : ""}>${monthLongLabel(k)}</option>`).join("");
+const body = document.createElement("div");
+body.innerHTML = `<div class="field"><label>Como reajustar</label><select id="rzMode"><option value="pct">Aumentar em %</option><option value="add">Somar um valor (R$)</option><option value="set">Novo valor (R$)</option></select></div>
+<div class="field"><label id="rzAmountLbl">Porcentagem</label><input id="rzAmount" type="number" min="0" step="any" inputmode="decimal" placeholder="Ex.: 8"></div>
+<div class="field"><label>A partir de</label><select id="rzFrom">${monthOpts}</select></div>
+<div class="toggle-field"><label>Arredondar para real inteiro</label><label class="switch"><input type="checkbox" id="rzRound" checked><span class="switch-slider"></span></label></div>
+<div class="field-hint">Os meses antes dele continuam com o valor antigo, inclusive os que ainda não foram pagos. Se o aluno já tinha um reajuste marcado, este fica no lugar.</div>
+<div id="rzPreview" class="rz-preview"></div>`;
+const calc = s => {
+const mode = body.querySelector("#rzMode").value, a = Number(body.querySelector("#rzAmount").value), from = body.querySelector("#rzFrom").value;
+const old = Number(studentMonthlyValue(s, addMonths(from, -1))) || 0;
+if (!(a >= 0) || body.querySelector("#rzAmount").value === "") return { old, v: null };
+let v = mode === "pct" ? old * (1 + a / 100) : mode === "add" ? old + a : a;
+v = body.querySelector("#rzRound").checked ? Math.round(v) : round2(v);
+return { old, v };
+};
+const draw = () => {
+const mode = body.querySelector("#rzMode").value;
+body.querySelector("#rzAmountLbl").textContent = mode === "pct" ? "Porcentagem" : mode === "add" ? "Valor a somar (R$)" : "Novo valor (R$)";
+body.querySelector("#rzPreview").innerHTML = list.map(s => { const c = calc(s); return `<div class="rz-row"><span>${escapeHtml(sn(s))}</span><span>R$ ${moneyText(c.old)}${c.v !== null ? ` → <b>R$ ${moneyText(c.v)}</b>` : ""}</span></div>`; }).join("");
+};
+body.querySelectorAll("select,input").forEach(el => { el.oninput = draw; el.onchange = draw; });
+draw();
+openQuickModal(list.length > 1 ? `Reajustar ${list.length} mensalidades` : `Reajustar mensalidade · ${sn(list[0])}`, "Escolha o reajuste e o mês em que ele começa.", body, () => {
+const from = body.querySelector("#rzFrom").value;
+const vals = list.map(s => ({ s, ...calc(s) }));
+if (vals.some(x => x.v === null)) { alert("Digite o valor do reajuste."); return; }
+if (!confirm(`Novo valor a partir de ${monthLongLabel(from)} para ${list.length} aluno${list.length > 1 ? "s" : ""}. Confirmar?`)) return;
+const snaps = snapshotFields(list, ["value", "valueOld", "valueNext"]);
+vals.forEach(x => raiseStudentValue(x.s, x.v, from));
+closeQuickModal();
+if (bulkSel) cancelBulk();
+afterBulkChange();
+showUndoToast(`Reajuste marcado para ${monthLongLabel(from)}`, () => { restoreFields(snaps); afterBulkChange(); });
+}, "Cancelar", "Reajustar");
+}
+
+// Desconto e multa (8.34): appSettings.payRules = { disc, discType: "value"|"pct", discDay, fine,
+// interest }. Só para mensalidade. No aluno vem do professor (Conteúdo para os alunos). Quando
+// um mês é marcado como pago, a diferença fica em s.payAdj[mês], pra não mudar depois.
+function payRules(){ const r = studentMode ? stuContent().payRules : appSettings.payRules; return r && typeof r === "object" ? r : null; }
+function monthDayIso(key, day){ const [y, m] = key.split("-").map(Number); return `${key}-${pad2(Math.min(Math.max(1, day), new Date(y, m, 0).getDate()))}`; }
+function payQuote(s, key, onIso){
+const base = Number(studentMonthlyValue(s, key)) || 0, r = payRules();
+const out = { base, value: base, kind: "", note: "" };
+if (!r || !base) return out;
+const on = onIso || isoOf(new Date());
+const dDay = Number(r.discDay) > 0 ? Number(r.discDay) : Number(s.dueDay) > 0 ? Number(s.dueDay) : 0;
+if (Number(r.disc) > 0 && dDay && on <= monthDayIso(key, dDay)) {
+const d = r.discType === "pct" ? base * Number(r.disc) / 100 : Number(r.disc);
+out.value = Math.max(0, round2(base - d)); out.kind = "disc"; out.note = `com desconto até ${monthDayIso(key, dDay).slice(8)}/${key.slice(5)}`; out.detail = `Valor com desconto pagando até ${monthDayIso(key, dDay).slice(8)}/${key.slice(5)}. Depois, R$ ${moneyText(base)}.`;
+return out;
+}
+const due = Number(s.dueDay) > 0 ? monthDayIso(key, Number(s.dueDay)) : "";
+if (due && on > due && (Number(r.fine) > 0 || Number(r.interest) > 0)) {
+const days = Math.round((dateFromIso(on) - dateFromIso(due)) / 86400000);
+out.value = round2(base * (1 + (Number(r.fine) || 0) / 100) + base * (Number(r.interest) || 0) / 100 * days / 30);
+out.kind = "fine"; out.note = "com multa e juros"; out.detail = `Mensalidade de R$ ${moneyText(base)} com multa e juros de ${days} dia${days === 1 ? "" : "s"} de atraso (valor de hoje).`;
+}
+return out;
+}
+function paidMonthValue(s, key){ const a = s.payAdj ? Number(s.payAdj[key]) : 0; return round2((Number(studentMonthlyValue(s, key)) || 0) + (isFinite(a) ? a : 0)); }
+function notePayAdj(s, key, paid, onIso){
+const drop = () => { if (s.payAdj) { delete s.payAdj[key]; if (!Object.keys(s.payAdj).length) delete s.payAdj; } };
+if (!paid) return drop();
+const q = payQuote(s, key, onIso), diff = round2(q.value - q.base);
+if (diff) (s.payAdj ??= {})[key] = diff; else drop();
+}
+function payRulesLabel(){
+const r = appSettings.payRules || {};
+return [Number(r.disc) > 0 ? "Desconto" : "", Number(r.fine) > 0 || Number(r.interest) > 0 ? "Multa" : ""].filter(Boolean).join(" e ") || "Nenhum";
+}
+function openPayRules(){
+const r = appSettings.payRules || {};
+const body = document.createElement("div");
+body.innerHTML = `<div class="settings-group-label">Desconto por pagar em dia</div>
+<div class="pt-manual-row"><div class="field"><label>Desconto</label><input id="prDisc" type="number" min="0" step="any" inputmode="decimal" value="${Number(r.disc) > 0 ? r.disc : ""}" placeholder="Sem desconto"></div>
+<div class="field"><label>Em</label><select id="prDiscType"><option value="value">R$</option><option value="pct"${r.discType === "pct" ? " selected" : ""}>%</option></select></div></div>
+<div class="field"><label>Pagando até o dia</label><input id="prDiscDay" type="number" min="1" max="31" inputmode="numeric" value="${Number(r.discDay) > 0 ? r.discDay : ""}" placeholder="Vazio = até o vencimento do aluno"></div>
+<div class="settings-group-label">Atraso</div>
+<div class="pt-manual-row"><div class="field"><label>Multa (%)</label><input id="prFine" type="number" min="0" max="2" step="any" inputmode="decimal" value="${Number(r.fine) > 0 ? r.fine : ""}" placeholder="Ex.: 2"></div>
+<div class="field"><label>Juros ao mês (%)</label><input id="prInterest" type="number" min="0" max="10" step="any" inputmode="decimal" value="${Number(r.interest) > 0 ? r.interest : ""}" placeholder="Ex.: 1"></div></div>
+<div class="field-hint">Vale só para mensalidade. A multa e os juros contam a partir do dia de vencimento do aluno (quem não tem vencimento não paga multa). Pela lei do consumidor, a multa por atraso pode ser de no máximo 2%. Juros são contados por dia (1% ao mês = 0,033% por dia).<br>O valor certo já aparece na cobrança do WhatsApp, no app do aluno (com o Pix copia e cola) e no recibo. Pagamentos que você já marcou não mudam.</div>`;
+openQuickModal("Desconto e multa", "Para o pagamento da mensalidade.", body, () => {
+const num = id => { const v = Number(body.querySelector(id).value); return body.querySelector(id).value !== "" && isFinite(v) && v > 0 ? v : 0; };
+const disc = num("#prDisc"), discDay = Math.round(num("#prDiscDay")), fine = num("#prFine"), interest = num("#prInterest");
+if (fine > 2) { alert("A multa por atraso pode ser de no máximo 2%."); return; }
+if (discDay > 31) { alert("O dia precisa ser de 1 a 31."); return; }
+if (interest > 10) { alert("Juros acima de 10% ao mês não são aceitos."); return; }
+const type = body.querySelector("#prDiscType").value;
+if (type === "pct" && disc >= 100) { alert("O desconto precisa ser menor que 100%."); return; }
+const out = {};
+if (disc) { out.disc = disc; out.discType = type; if (discDay) out.discDay = discDay; }
+if (fine) out.fine = fine;
+if (interest) out.interest = interest;
+appSettings.payRules = Object.keys(out).length ? out : undefined;
+saveAppSettings();
+renderSettingsSummary();
+renderPendingPayments();
+try { scheduleTeacherPublish(); } catch(e) {}
+closeQuickModal();
+}, "Cancelar", "Salvar");
+}
+
+// ===== Resumo do ano para o imposto (8.34) =====
+// Soma o que foi marcado como pago, pelo dia em que foi marcado (mês pago sem data conta no
+// próprio mês). Bolsa e quem paga à escola ficam de fora.
+function taxYearData(year){
+const months = Array(12).fill(0), rows = [];
+students.forEach(s => {
+if (!s || typeof s !== "object" || !paysMe(s)) return;
+const per = Array(12).fill(0);
+const add = (iso, v) => { v = round2(v); if (!tbIsoOk(iso) || !v || Number(iso.slice(0, 4)) !== year) return; const m = Number(iso.slice(5, 7)) - 1; per[m] = round2(per[m] + v); months[m] = round2(months[m] + v); };
+getPaidMonths(s).forEach(k => { const d = (s.paidDates || {})[k]; add(tbIsoOk(d) ? d : `${k}-01`, paidMonthValue(s, k)); });
+(Array.isArray(s.charges) ? s.charges : []).forEach(c => {
+if (!c || !c.paid) return;
+const ref = String(c.ref || "").split("|")[0];
+add(tbIsoOk(c.paidDate) ? c.paidDate : c.date ? isoFromBr(c.date) : /^\d{2}\/\d{2}\/\d{4}$/.test(ref) ? isoFromBr(ref) : ref.slice(0, 10), Number(c.value) || 0);
+});
+const total = round2(per.reduce((a, v) => a + v, 0));
+if (total) rows.push({ s, per, total, payer: s.guardianName && isMinor(s) ? s.guardianName : s.name });
+});
+rows.sort((a, b) => a.s.name.localeCompare(b.s.name));
+return { months, rows, total: round2(months.reduce((a, v) => a + v, 0)) };
+}
+function taxCsv(year, d){
+const q = v => `"${String(v ?? "").replace(/"/g, '""')}"`, n = v => round2(v).toFixed(2).replace(".", ",");
+const MON = MONTH_FULL.map(m => m.charAt(0).toUpperCase() + m.slice(1));
+const p = appSettings.profile || {};
+const lines = [
+[q(`Resumo de recebimentos de ${year}`)],
+[q("Professor"), q(p.fullName || p.name || ""), q("CPF/CNPJ"), q(p.document || "")],
+[],
+[q("Mês"), q("Total recebido (R$)")],
+...MON.map((m, i) => [q(m), n(d.months[i])]),
+[q("Total do ano"), n(d.total)],
+[],
+[q("Aluno"), q("Quem paga"), q("CPF de quem paga"), ...MON.map(m => q(m.slice(0, 3))), q("Total")],
+...d.rows.map(r => [q(r.s.name), q(r.payer), q(r.s.payerDoc || ""), ...r.per.map(n), n(r.total)])
+];
+return "﻿" + lines.map(l => l.join(";")).join("\r\n");
+}
+function openTaxSummary(){
+const now = new Date(), cur = now.getFullYear();
+const years = new Set([cur, cur - 1]);
+students.forEach(s => { Object.values((s && s.paidDates) || {}).forEach(d => { if (tbIsoOk(d)) years.add(Number(d.slice(0, 4))); }); });
+let year = now.getMonth() <= 4 ? cur - 1 : cur;
+const body = document.createElement("div");
+const draw = () => {
+const d = taxYearData(year);
+body.innerHTML = `<div class="field"><label>Ano</label><select id="taxYear">${[...years].sort((a, b) => b - a).map(y => `<option value="${y}"${y === year ? " selected" : ""}>${y}</option>`).join("")}</select></div>
+<div class="money-hero"><span>Recebido em ${year}</span><b>R$ ${moneyText(d.total)}</b><small>${d.rows.length === 1 ? "1 aluno pagou" : `${d.rows.length} alunos pagaram`}</small></div>
+<div class="settings-group-label">Mês a mês</div>
+<div class="tax-list">${d.months.map((v, i) => `<div class="rz-row"><span>${MONTH_FULL[i].charAt(0).toUpperCase() + MONTH_FULL[i].slice(1)}</span><span>R$ ${moneyText(v)}</span></div>`).join("")}</div>
+${d.rows.length ? `<div class="settings-group-label">Por aluno</div><div class="tax-list">${d.rows.map(r => `<div class="rz-row"><span>${escapeHtml(r.s.name)}${r.payer !== r.s.name ? `<small>Paga: ${escapeHtml(r.payer)}</small>` : ""}${r.s.payerDoc ? `<small>CPF ${escapeHtml(r.s.payerDoc)}</small>` : `<small class="warn">Sem CPF de quem paga</small>`}</span><span>R$ ${moneyText(r.total)}</span></div>`).join("")}</div>` : ""}
+<div class="field-hint">Conta o que você marcou como pago no app, pelo dia em que marcou. Confira com o seu extrato antes de declarar. Serve para o carnê-leão (mês a mês) e para a declaração do ano. O CPF de quem paga fica no cadastro de cada aluno.</div>`;
+body.querySelector("#taxYear").onchange = e => { year = Number(e.target.value); draw(); };
+};
+draw();
+openQuickModal("Resumo do ano para o imposto", "Quanto você recebeu em cada mês e de cada aluno.", body, async () => {
+const d = taxYearData(year);
+if (!d.total) { alert(`Nenhum pagamento marcado em ${year}.`); return; }
+await shareBlob(new Blob([taxCsv(year, d)], { type: "text/csv" }), `hi-teacher-imposto-${year}.csv`, `Resumo de recebimentos de ${year}`);
+}, "Fechar", "Baixar planilha");
+}
+{ const b = document.getElementById("btnTaxSummary"); if (b) b.onclick = openTaxSummary; }
+
+// ===== Contrato de matrícula (8.34) =====
+// Modelo em appSettings.contractText (vazio = o padrão abaixo). O contrato de cada aluno fica em
+// s.contract = { text, h, at } e vai para o app do aluno pelo student_view. O aceite fica no
+// caderno do aluno (prefs["ct_" + h]); texto mudado = aceitar de novo.
+const CONTRACT_DEFAULT = `CONTRATO DE AULAS PARTICULARES
+
+PROFESSOR(A): [professor]
+CPF/CNPJ: [documento do professor]
+ALUNO(A): [aluno]
+RESPONSÁVEL: [responsável]
+CPF DE QUEM PAGA: [cpf de quem paga]
+
+1. AULAS. O(a) professor(a) dará aulas de [matéria] ao(à) aluno(a), [dias e horários], com [duração] minutos cada. Local: [local].
+
+2. PAGAMENTO. [pagamento]
+
+3. FALTAS, REPOSIÇÕES E FÉRIAS. [regras]
+
+4. INÍCIO E FIM. Este contrato começa em [início] e vale por tempo indeterminado. Qualquer uma das partes pode encerrá-lo avisando a outra com 30 dias de antecedência.
+
+5. ACEITE. Ao aceitar este contrato pelo app Hi Teacher, o(a) aluno(a) ou seu responsável declara que leu e concorda com estas condições.
+
+[cidade], [data].`;
+const CONTRACT_KEYS = ["professor", "documento do professor", "aluno", "responsável", "cpf de quem paga", "matéria", "dias e horários", "duração", "local", "pagamento", "regras", "início", "cidade", "data"];
+function contractHash(text){ return tbCyrb128(String(text)).slice(0, 2).map(n => n.toString(36)).join(""); }
+function contractPayText(s){
+if (s.payTo === "none") return "O(a) aluno(a) tem bolsa e não paga pelas aulas.";
+if (s.payTo === "school") return "O pagamento é feito diretamente à escola.";
+const mode = billingMode(s), r = appSettings.payRules || {}, pix = stContent().pixKey;
+let t;
+if (mode === "lesson") t = `O valor é de ${moneyFull(s.lessonPrice)} por aula dada.`;
+else if (mode === "package") t = `O valor é de ${moneyFull(s.packagePrice)} por pacote de ${s.packageSize} aulas, pago no início de cada pacote.`;
+else {
+t = `O valor é de ${moneyFull(studentMonthlyValue(s))} por mês${Number(s.dueDay) > 0 ? `, com vencimento todo dia ${s.dueDay}` : ""}.`;
+if (s.valueNext && s.valueNext.from) t += ` A partir de ${monthLongLabel(s.valueNext.from)}, o valor passa a ser de ${moneyFull(s.valueNext.v)}.`;
+if (Number(r.disc) > 0) t += ` Pagando até o dia ${Number(r.discDay) > 0 ? r.discDay : "do vencimento"}, há desconto de ${r.discType === "pct" ? `${String(r.disc).replace(".", ",")}%` : moneyFull(r.disc)}.`;
+if ((Number(r.fine) > 0 || Number(r.interest) > 0) && Number(s.dueDay) > 0) t += ` Depois do vencimento, ${[Number(r.fine) > 0 ? `há multa de ${String(r.fine).replace(".", ",")}%` : "", Number(r.interest) > 0 ? `juros de ${String(r.interest).replace(".", ",")}% ao mês` : ""].filter(Boolean).join(" e ")}.`;
+}
+if (pix) t += ` O pagamento pode ser feito por Pix, na chave ${pix}.`;
+return t;
+}
+function contractValues(s){
+const p = appSettings.profile || {}, loc = appSettings.location || {};
+const days = orderedDays(studentDays(s)).map(d => `${WEEKDAY_NAMES[d]} às ${getStudentTimeFor(s, d)}`);
+const daysText = s.lessonFrequency === "single" || !days.length ? "em dias e horários combinados entre as partes"
+: `${s.lessonFrequency === "biweekly" ? "a cada 15 dias" : "toda semana"} (${days.length > 1 ? days.slice(0, -1).join(", ") + " e " + days[days.length - 1] : days[0]})`;
+const place = s.locationType ? [LOCATION_TYPES[s.locationType] || "", s.locationDetail && !/^https?:\/\//i.test(s.locationDetail) ? s.locationDetail : ""].filter(Boolean).join(", ") : "";
+return {
+"professor": p.fullName || p.name || "", "documento do professor": p.document || "", "aluno": s.name || "",
+"responsável": s.guardianName || "", "cpf de quem paga": s.payerDoc || "", "matéria": s.instrument || p.subject || "",
+"dias e horários": daysText, "duração": String(getStudentDuration(s)), "local": place || "a combinar",
+"pagamento": contractPayText(s), "regras": stContent().rules || "Faltas, reposições e férias seguem o que for combinado entre as partes.",
+"início": longDate(s.entry && tbIsoOk(s.entry) ? s.entry : isoOf(new Date())), "cidade": [loc.city, loc.state].filter(Boolean).join(" – ") || "Local", "data": longDate(isoOf(new Date()))
+};
+}
+function renderContract(s){
+const vals = contractValues(s);
+const text = (appSettings.contractText || CONTRACT_DEFAULT).replace(/\[([^\]]+)\]/g, (m, k) => { const key = k.trim().toLowerCase(); return key in vals ? vals[key] : m; });
+// Linha de rótulo que ficou sem valor ("RESPONSÁVEL:") sai.
+return text.split("\n").filter(l => !/^[^:\n]{2,40}:\s*$/.test(l)).join("\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+function contractAcceptance(s){
+if (!s.contract || !s.contract.h) return null;
+const d = journalForStudent(s);
+return d ? jMap(d, "prefs")["ct_" + s.contract.h] || null : null;
+}
+function acceptText(a){ const d = new Date(a.at); return `${a.by ? escapeHtml(a.by) + ", " : ""}${formatDateShort(isoOf(d))} às ${pad2(d.getHours())}:${pad2(d.getMinutes())}`; }
+function contractStatus(s){
+if (!s.contract || !s.contract.text) return null;
+const a = contractAcceptance(s);
+if (a) return { ok: true, html: `<span class="ok">Aceito no app: ${acceptText(a)}</span>` };
+return { ok: false, html: studentLinked(s) ? `<span class="warn">Enviado em ${formatDateShort(String(s.contract.at).slice(0, 10))}. Esperando o aceite no app.</span>` : `Feito em ${formatDateShort(String(s.contract.at).slice(0, 10))} (o aluno ainda não usa o app)` };
+}
+function studentLinked(s){
+if (!studentAppOn() || !inbox.loaded) return false;
+const u = studentUuidMap().of(s);
+return (inbox.links || []).some(l => l.student_id === u);
+}
+async function drawContractImage(text, footer){
+const W = 1240, M = 90;
+const canvas = document.createElement("canvas"), ctx = canvas.getContext("2d");
+const font = (w, size) => `${w} ${size}px Inter, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif`;
+const paras = String(text).split("\n");
+const layout = [];
+ctx.font = font(500, 26);
+paras.forEach((p, i) => {
+if (!p.trim()) { layout.push({ gap: 20 }); return; }
+const title = i === 0;
+ctx.font = title ? font(800, 34) : font(500, 26);
+wrapCanvasText(ctx, p, W - 2 * M).forEach(l => layout.push({ l, title }));
+});
+const H = Math.min(16000, 160 + layout.reduce((a, x) => a + (x.gap || (x.title ? 50 : 38)), 0) + (footer ? 90 : 0) + 80);
+canvas.width = W; canvas.height = H;
+ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, W, H);
+ctx.fillStyle = "#1E88E5"; ctx.fillRect(0, 0, W, 10);
+let y = 110;
+layout.forEach(x => {
+if (x.gap) { y += x.gap; return; }
+ctx.fillStyle = "#0f172a"; ctx.font = x.title ? font(800, 34) : font(500, 26);
+ctx.textAlign = x.title ? "center" : "left";
+ctx.fillText(x.l, x.title ? W / 2 : M, y);
+y += x.title ? 50 : 38;
+});
+ctx.textAlign = "left";
+if (footer) { y += 40; ctx.fillStyle = "#15803d"; ctx.font = font(700, 24); ctx.fillText(footer, M, y); }
+ctx.textAlign = "center"; ctx.fillStyle = "#94a3b8"; ctx.font = font(500, 18); ctx.fillText("Contrato gerado pelo Hi Teacher", W / 2, H - 22);
+return canvas;
+}
+function openContract(s){
+const linked = studentLinked(s);
+const body = document.createElement("div");
+const st = contractStatus(s);
+body.innerHTML = `${st ? `<div class="field-hint" style="margin:0 0 0.75rem">${st.html}</div>` : ""}
+<div class="field"><label>Texto do contrato de ${escapeHtml(firstName(s.name))}</label><textarea id="ctText" rows="14" maxlength="12000">${escapeHtml(s.contract && s.contract.text ? s.contract.text : renderContract(s))}</textarea></div>
+<div class="qa-btns"><button type="button" class="btn-historico" id="ctReset">Usar o modelo de novo</button><button type="button" class="btn-historico" id="ctImg">Imagem</button><button type="button" class="btn-historico" id="ctCopy">Copiar texto</button></div>
+<div class="field-hint">${linked ? "Ao enviar, o contrato aparece no app do aluno para ele (ou o responsável) ler e aceitar. Se você mudar o texto depois, ele precisa aceitar de novo." : "Este aluno ainda não usa o app: mande a imagem ou o texto pelo WhatsApp. Quando ele entrar no app, o contrato salvo aparece lá para aceitar."} O modelo fica em Configurações → Valores e metas → Modelo de contrato.</div>`;
+const ta = body.querySelector("#ctText");
+body.querySelector("#ctReset").onclick = () => { if (ta.value.trim() !== renderContract(s) && !confirm("Trocar o texto pelo modelo com os dados de agora?")) return; ta.value = renderContract(s); };
+body.querySelector("#ctCopy").onclick = async () => { try { await navigator.clipboard.writeText(ta.value); showCloudWarning("Texto copiado."); } catch(e) { ta.select(); document.execCommand("copy"); } };
+body.querySelector("#ctImg").onclick = async () => {
+const a = s.contract && s.contract.text === ta.value.trim() ? contractAcceptance(s) : null;
+const canvas = await drawContractImage(ta.value.trim(), a ? `Aceito pelo app Hi Teacher: ${acceptText(a).replace(/&amp;/g, "&")}.` : "");
+const blob = await new Promise(r => canvas.toBlob(r, "image/png"));
+showImageModal(blob, `contrato-${stripAccents(s.name).toLowerCase().replace(/[^a-z0-9]+/g, "-")}.png`, "Contrato", `Contrato de aulas – ${s.name}`);
+};
+openQuickModal(`Contrato · ${sn(s)}`, "Feito com o modelo e os dados do aluno. Dá pra mudar o texto só para ele.", body, () => {
+const text = ta.value.trim();
+if (!text) { alert("O contrato está vazio."); return; }
+const h = contractHash(text);
+if (!(s.contract && s.contract.h === h)) {
+if (s.contract && contractAcceptance(s) && !confirm("O texto mudou. O aluno vai precisar aceitar de novo. Salvar?")) return;
+s.contract = { text, h, at: new Date().toISOString() };
+saveStudents();
+try { teacherPublish(); } catch(e) {}
+}
+closeQuickModal();
+refreshStudentSheet();
+showCloudWarning(linked ? "Contrato enviado para o app do aluno." : "Contrato salvo.");
+}, "Cancelar", linked ? "Enviar para o app" : "Salvar");
+}
+function openContractTemplate(){
+const body = document.createElement("div");
+body.innerHTML = `<div class="field"><label>Modelo</label><textarea id="ctTpl" rows="16" maxlength="12000">${escapeHtml(appSettings.contractText || CONTRACT_DEFAULT)}</textarea></div>
+<div class="field-hint">As palavras entre colchetes são trocadas pelos dados de cada aluno: ${CONTRACT_KEYS.map(k => `[${k}]`).join(", ")}. Linha de rótulo que ficar sem dado (por exemplo, "RESPONSÁVEL:" de aluno adulto) sai sozinha. As regras vêm de "Conteúdo para os alunos" e o pagamento usa o valor, o vencimento, o desconto e a multa de cada aluno.<br>Este modelo é um ponto de partida. Para um contrato com valor legal maior, peça para um advogado revisar.</div>
+<button type="button" class="btn-historico" id="ctTplReset" style="width:100%">Voltar ao modelo padrão</button>`;
+body.querySelector("#ctTplReset").onclick = () => { body.querySelector("#ctTpl").value = CONTRACT_DEFAULT; };
+openQuickModal("Modelo de contrato", "Usado quando você abre o contrato de um aluno.", body, () => {
+const v = body.querySelector("#ctTpl").value.trim();
+appSettings.contractText = v && v !== CONTRACT_DEFAULT ? v : undefined;
+saveAppSettings();
+renderSettingsSummary();
+closeQuickModal();
+}, "Cancelar", "Salvar");
+}
+// No app do aluno.
+function stuContract(){ const c = stuCur && (stuCur.view || {}).contract; return c && c.t && c.h ? c : null; }
+function stuContractAcc(){ const c = stuContract(); return c ? jMap(journal(), "prefs")["ct_" + c.h] || null : null; }
+function stuContractCardHTML(inProfile){
+const c = stuContract();
+if (!c) return "";
+const a = stuContractAcc();
+if (!inProfile && a) return "";
+if (!inProfile) return stuCard("Contrato", `<div class="stu-muted">O professor mandou o contrato das aulas para você ler e aceitar.</div><div class="actions"><button type="button" class="save" data-contract-open>Ler e aceitar</button></div>`);
+return stuCard("Contrato", `<div class="stu-muted">${a ? `Aceito em ${acceptText(a)}` : "Ainda não aceito"}</div><div class="actions"><button type="button" class="cancel" data-contract-open>${a ? "Ver contrato" : "Ler e aceitar"}</button></div>`);
+}
+function stuOpenContract(){
+const c = stuContract();
+if (!c) return;
+const a = stuContractAcc();
+const body = document.createElement("div");
+body.innerHTML = `<div class="contract-text">${escapeHtml(c.t)}</div>${a ? `<div class="stu-muted" style="margin-top:0.75rem">Aceito em ${acceptText(a)}.</div>` : `<label class="join-diff" style="margin-top:0.75rem"><input type="checkbox" id="ctAgree"> Li e concordo com o contrato</label>`}`;
+openQuickModal("Contrato das aulas", "", body, a ? null : () => {
+if (!body.querySelector("#ctAgree").checked) { alert("Marque \"Li e concordo\" para aceitar."); return; }
+const s = stuCur.s, guardian = stuCur.link && stuCur.link.role === "guardian";
+if (!jSet("prefs", "ct_" + c.h, { at: new Date().toISOString(), by: guardian ? (s.guardianName || "Responsável") : (s.name || ""), role: guardian ? "guardian" : "student" })) return;
+closeQuickModal();
+stuRender();
+stuToast("Contrato aceito. O professor já pode ver.");
+}, "Fechar", "Aceitar");
+}
+
+// ===== Ranking de estudo da semana (8.34) =====
+// Opcional (Conteúdo para os alunos). O professor monta com o caderno dos alunos e manda para
+// cada um pelo student_view: primeiro nome + inicial e os minutos desde segunda.
+let rankMemo = { at: 0, list: [] };
+function weekRankingCached(){ if (Date.now() - rankMemo.at > 5000) rankMemo = { at: Date.now(), list: weekRankingList() }; return rankMemo.list; }
+function weekRankingList(){
+if (!inbox.loaded) return [];
+const map = studentUuidMap(), from = weekStartOf(new Date()).getTime(), to = from + 7 * 86400000;
+const by = new Map();
+(inbox.journals || []).forEach(r => { const s = map.student(r.student_id); if (s && s.active !== false) by.set(s, journalMerge(by.get(s), r.data)); });
+const out = [];
+by.forEach((d, s) => { const m = practiceIn(d, from, to).min; if (m > 0) out.push({ s, m }); });
+return out.sort((a, b) => b.m - a.m || a.s.name.localeCompare(b.s.name));
+}
+function rankName(s){ const p = String(s.name || "").trim().split(/\s+/); return p.length > 1 ? `${p[0]} ${p[p.length - 1].charAt(0)}.` : p[0] || ""; }
+function rankInfoFor(s, list){
+const top = list.slice(0, 10).map(x => ({ n: rankName(x.s), m: x.m, ...(x.s === s ? { me: true } : {}) }));
+const i = list.findIndex(x => x.s === s);
+if (i >= 10) top.push({ n: rankName(s), m: list[i].m, me: true, pos: i + 1 });
+return { w: isoOf(weekStartOf(new Date())), list: top };
+}
+function stuRankingHTML(wkMin){
+if (!stuContent().ranking) return "";
+const r = (stuCur.view || {}).rank;
+const week = isoOf(weekStartOf(new Date()));
+let list = r && r.w === week && Array.isArray(r.list) ? r.list.map(x => ({ ...x })) : [];
+// Os meus minutos daqui do aparelho são os mais novos.
+const me = list.find(x => x.me);
+if (me) me.m = Math.max(Number(me.m) || 0, wkMin);
+else if (wkMin > 0) list.push({ n: "Você", m: wkMin, me: true });
+const pinned = list.find(x => x.pos);
+list = list.filter(x => !x.pos).sort((a, b) => b.m - a.m);
+if (pinned && !list.includes(pinned)) list.push(pinned);
+const rows = list.map((x, i) => `<div class="rank-row${x.me ? " me" : ""}"><span class="rank-pos">${x.pos || i + 1}º</span><span class="rank-name">${x.me ? "Você" : escapeHtml(x.n)}</span><span class="rank-min">${minText(x.m)}</span></div>`).join("");
+return stuCard("Ranking da semana", (rows || `<div class="stu-empty">Ninguém praticou nesta semana ainda. Comece você!</div>`) + `<div class="stu-muted" style="margin-top:0.5rem">Minutos praticados desde segunda, marcados no app. Atualiza quando o professor abre o app dele.</div>`);
+}
 
 // ===== Cobrança por tipo de aula =====
 // monthly = mensalidade (toda semana / quinzenal, como sempre foi); lesson = aula avulsa,
@@ -12233,7 +12694,7 @@ renderPendingPayments();
 }
 // Botão "Cobrar" (mensagem pronta no WhatsApp); some se o aluno não tem telefone.
 function chargeLink(s, key){
-const href = waMessageLink(s, "charge", { mes: monthLongLabel(key), valor: moneyText(studentMonthlyValue(s)) });
+const href = waMessageLink(s, "charge", { mes: monthLongLabel(key), valor: moneyText(payQuote(s, key).value) });
 return href ? `<a class="wa-btn wa-mini" href="${href}" target="_blank" rel="noopener" aria-label="Cobrar ${escapeHtml(s.name)} no WhatsApp">Cobrar</a>` : "";
 }
 function renderPendingPayments(){
@@ -12242,7 +12703,7 @@ if (!box) return;
 const cur = currentMonthKey();
 const rows = [];
 students.filter(s => s.active !== false && paysMe(s)).forEach(s => {
-unpaidMonths(s).forEach(key => rows.push({ s, key, late: isPastDue(s, key) }));
+unpaidMonths(s).forEach(key => rows.push({ s, key, late: isPastDue(s, key), q: payQuote(s, key) }));
 });
 if (rows.length === 0 && !allReceivables().length) { box.innerHTML = ""; bindReceivables(box); return; }
 rows.sort((a,b) => a.s.name.localeCompare(b.s.name) || a.key.localeCompare(b.key));
@@ -12258,7 +12719,7 @@ return `
 <button type="button" class="goal-check" data-mark-paid="${r.s.id}|${r.key}" aria-label="Marcar mensalidade de ${escapeHtml(r.s.name)} (${monthLabel(r.key)}) como paga"></button>
 <div class="goal-info">
 <div class="goal-title">${escapeHtml(sn(r.s))}</div>
-<div class="pay-meta"><span class="goal-period-badge">R$ ${studentMonthlyValue(r.s)}</span>${status}</div>
+<div class="pay-meta"><span class="goal-period-badge">R$ ${moneyText(r.q.value)}</span>${r.q.kind ? `<span class="pay-due">${r.q.kind === "disc" ? "com desconto" : "com multa e juros"}</span>` : ""}${status}</div>
 </div>
 ${chargeLink(r.s, r.key)}
 </div>`;
@@ -13188,9 +13649,9 @@ page.classList.toggle("bulk-on", !!bulkSel);
 if (!bulkSel) { actions.style.display = "none"; actions.innerHTML = ""; return; }
 actions.style.display = "flex";
 actions.innerHTML = bulkSel.mode === "active"
-? `<button type="button" class="save" data-bulk-act="edit">Editar</button><button type="button" class="cancel" data-bulk-act="inactivate">Inativar</button>`
+? `<button type="button" class="save" data-bulk-act="edit">Editar</button><button type="button" class="cancel" data-bulk-act="raise">Reajustar</button><button type="button" class="cancel" data-bulk-act="inactivate">Inativar</button>`
 : `<button type="button" class="save" data-bulk-act="reactivate">Reativar</button>`;
-actions.querySelectorAll("[data-bulk-act]").forEach(b => b.onclick = () => ({ edit: openBulkEdit, inactivate: openBulkInactivate, reactivate: bulkReactivate })[b.dataset.bulkAct]());
+actions.querySelectorAll("[data-bulk-act]").forEach(b => b.onclick = () => ({ edit: openBulkEdit, raise: () => openRaiseModal(bulkStudents()), inactivate: openBulkInactivate, reactivate: bulkReactivate })[b.dataset.bulkAct]());
 }
 // Guarda os campos que vão mudar (pra desfazer) e volta cada aluno como estava.
 function snapshotFields(list, keys){
@@ -13213,7 +13674,7 @@ const payToLbl = v => ({ school: "Escola", none: "Ninguém (bolsa)" })[v] || "Mi
 const locLbl = x => x ? `${LOCATION_TYPES[x.t] || "Não informado"}${x.d ? " · " + x.d : ""}` : "Não informado";
 const fields = [
 { key: "payTo", label: "Mensalidade paga para", opts: [["me", "Mim"], ["school", "Escola"], ["none", "Ninguém (bolsa)"]], hint: same(list.map(x => x.payTo || "me"), payToLbl) },
-{ key: "value", label: "Valor da mensalidade", opts: [["auto", "Automático (tabela de valores)"], ["set", "Valor:"]], input: { type: "number", min: 0, step: "any", ph: "Ex.: 150" }, hint: same(list.map(studentMonthlyValue), v => `R$ ${moneyText(v)}`) },
+{ key: "value", label: "Valor da mensalidade", opts: [["auto", "Automático (tabela de valores)"], ["set", "Valor:"]], input: { type: "number", min: 0, step: "any", ph: "Ex.: 150" }, hint: same(list.map(x => studentMonthlyValue(x)), v => `R$ ${moneyText(v)}`) },
 { key: "dueDay", label: "Vencimento", opts: [["clear", "Sem vencimento"], ["set", "Dia:"]], input: { type: "number", min: 1, max: 31, ph: "1 a 31" }, hint: same(list.map(x => x.dueDay || null), v => v ? `dia ${v}` : "sem vencimento") },
 { key: "duration", label: "Duração da aula", opts: [["clear", `Padrão (${appSettings.lessonDuration} min)`], ["set", "Minutos:"]], input: { type: "number", min: 5, max: 240, ph: "Ex.: 45" }, hint: same(list.map(x => x.duration || null), v => v ? `${v} min` : "padrão") },
 { key: "evalFrequency", label: "Avaliar este aluno", opts: [["", `Padrão (${(EVAL_FREQUENCIES[appSettings.evalFrequency] || "Toda aula").toLowerCase()})`], ...Object.entries(EVAL_FREQUENCIES)], hint: same(list.map(x => x.evalFrequency || ""), v => v ? EVAL_FREQUENCIES[v].toLowerCase() : "padrão") },
@@ -13363,7 +13824,7 @@ ${timeText !== "—" ? `<div class="stu-row"><span class="stu-label">Horário</s
 
 const tier = getLevelTier(s.level);
 const refDate = isInactive ? (s.exit || new Date().toISOString().slice(0,10)) : new Date().toISOString().slice(0,10);
-const monthlyValue = s.value !== undefined ? s.value : getDefaultValueFor(s);
+const monthlyValue = studentMonthlyValue(s);
 const lateMonths = (!isInactive && paysMe(s)) ? unpaidMonths(s).filter(k => isPastDue(s, k)).length : 0;
 const payLate = lateMonths > 0;
 const mode = billingMode(s);
@@ -13879,7 +14340,7 @@ return students.filter(s=>s.active!==false && s.payTo !== "none").reduce((acc, s
 const mode = billingMode(s);
 if (mode === "lesson") return acc + lessonCharges(s).filter(c => isoFromBr(c.date).startsWith(monthKey)).reduce((a, c) => a + Number(c.value || 0), 0);
 if (mode === "package") return acc + packageCharges(s).filter(c => String(c.ref).startsWith(monthKey)).reduce((a, c) => a + Number(c.value || 0), 0);
-return acc + (s.value !== undefined ? s.value : getDefaultValueFor(s));
+return acc + Number(studentMonthlyValue(s, monthKey) || 0);
 }, 0);
 }
 
@@ -14047,7 +14508,7 @@ const thisYear = sumYear(y), lastYear = sumYear(y - 1);
 const monthly = active.filter(s => paysMe(s) && s.payTo !== "none" && billingMode(s) === "monthly");
 const avgFee = monthly.length ? monthly.reduce((a, s) => a + Number(studentMonthlyValue(s) || 0), 0) / monthly.length : 0;
 let lateN = 0, lateV = 0;
-active.filter(paysMe).forEach(s => unpaidMonths(s).forEach(k => { if (isPastDue(s, k)) { lateN++; lateV += Number(studentMonthlyValue(s) || 0); } }));
+active.filter(paysMe).forEach(s => unpaidMonths(s).forEach(k => { if (isPastDue(s, k)) { lateN++; lateV += Number(studentMonthlyValue(s, k) || 0); } }));
 const dinheiro = [
 growthCard("Crescimento do faturamento", statsGrowth(earn), "R$", "Precisa de pelo menos 2 meses com faturamento.", earn.length ? { now: earn[earn.length - 1].value, before: valAt(earningsData, addMonths(earn[earn.length - 1].key, -3)) || -1 } : null),
 card("Faturamento médio", earn.length ? `R$ ${moneyText(Math.round(avgEarn))}` : "—", earn.length ? `Por mês, nos últimos 12 meses (${earn.length} ${earn.length === 1 ? "mês" : "meses"} com valor).` : "Ainda sem meses com faturamento.", (() => { const avg3 = (a, b) => { const v = earn.filter(x => x.key > a && x.key <= b); return v.length ? v.reduce((t, x) => t + x.value, 0) / v.length : -1; }; return { now: avg3(ago3, cur), before: avg3(addMonths(cur, -6), ago3) }; })()),
@@ -15012,7 +15473,7 @@ document.getElementById("settingsBackBtn").onclick = () => { if (settingsFolderC
 // as linhas de antes (os mesmos elementos, movidos pra dentro dela, então tudo continua igual).
 const SETTINGS_FOLDERS = [
 { id: "aulas", icon: "calendar", title: "Aulas e agenda", sub: "Instrumentos, duração, dias, reposição, férias, cidade", rows: ["rowInstrumentos", "rowDuracao", "rowDiasUteis", "rowMakeupDeadline", "rowFerias", "rowLocalizacao"] },
-{ id: "valores", icon: "dollar", title: "Valores e metas", sub: "Valores padrões, meta de crescimento, gráficos", rows: ["rowValoresPadrao", "rowGrowthGoal", "rowChartsStart"] },
+{ id: "valores", icon: "dollar", title: "Valores e metas", sub: "Valores padrões, desconto e multa, contrato, meta, gráficos", rows: ["rowValoresPadrao", "rowPayRules", "rowContract", "rowGrowthGoal", "rowChartsStart"] },
 { id: "aval", icon: "star", title: "Avaliações e níveis", sub: "Níveis, critérios e frequência", rows: ["rowNiveis", "rowCriterios", "rowEvalFreq"] },
 { id: "msg", icon: "message", title: "Mensagens e lembretes", sub: "Mensagens prontas, avisos e notificações no celular", rows: ["rowMensagens", "rowPushTeacher", "rowLembrete", "rowLessonReminder", "rowAvalPendente"] },
 { id: "escola", icon: "school", title: "Escola", sub: "Dono de escola ou professor de uma escola", rows: ["rowSchool"] },
@@ -15350,7 +15811,7 @@ img.src = src;
 });
 }
 async function drawReceipt(s, item){
-const W = 1240, H = 1000, M = 90;
+const W = 1240, H = s.payerDoc ? 1060 : 1000, M = 90;
 const canvas = document.createElement("canvas");
 canvas.width = W; canvas.height = H;
 const ctx = canvas.getContext("2d");
@@ -15382,6 +15843,7 @@ ctx.font = font(600, 24);
 const details = [
 ["Aluno", s.name],
 ...(s.guardianName ? [["Responsável", s.guardianName]] : []),
+...(s.payerDoc ? [["CPF de quem pagou", s.payerDoc]] : []),
 ["Referência", ref.charAt(0).toUpperCase() + ref.slice(1)],
 ["Valor", `${moneyFull(item.value)} (${valorPorExtenso(item.value)})`],
 ...(item.paidDate ? [["Data do pagamento", formatDateShort(item.paidDate)]] : [])
@@ -15478,7 +15940,7 @@ return paid ? `<div class="pay-item">${chip}<button type="button" class="pay-rec
 }).join("");
 wrap.querySelectorAll("[data-receipt-month]").forEach(b => b.onclick = () => {
 const k = b.dataset.receiptMonth;
-openReceipt(s, { kind: "month", key: k, value: studentMonthlyValue(s), paidDate: (s.paidDates || {})[k] || (getPaidMonths(s).has(k) ? null : isoOf(new Date())) });
+openReceipt(s, { kind: "month", key: k, value: getPaidMonths(s).has(k) ? paidMonthValue(s, k) : payQuote(s, k).value, paidDate: (s.paidDates || {})[k] || (getPaidMonths(s).has(k) ? null : isoOf(new Date())) });
 });
 wrap.querySelectorAll("[data-pay-month]").forEach(b => b.onclick = () => {
 const k = b.dataset.payMonth;
@@ -15570,6 +16032,7 @@ document.getElementById("fPhone").value = s?.phone || "";
 document.getElementById("fBirth").value = s?.birthDate || "";
 document.getElementById("fGuardianName").value = s?.guardianName || "";
 document.getElementById("fGuardianPhone").value = s?.guardianPhone || "";
+document.getElementById("fPayerDoc").value = s?.payerDoc || "";
 document.getElementById("fLocationType").value = s?.locationType || "";
 document.getElementById("fLocationDetail").value = s?.locationDetail || "";
 document.getElementById("fContactSection").open = !!(s && (s.phone || s.birthDate || s.guardianName || s.guardianPhone || s.locationType));
@@ -15723,6 +16186,7 @@ setOpt("phone", document.getElementById("fPhone").value.trim());
 setOpt("birthDate", document.getElementById("fBirth").value);
 setOpt("guardianName", document.getElementById("fGuardianName").value.trim());
 setOpt("guardianPhone", document.getElementById("fGuardianPhone").value.trim());
+setOpt("payerDoc", document.getElementById("fPayerDoc").value.trim());
 const locType = document.getElementById("fLocationType").value;
 setOpt("locationType", locType);
 setOpt("locationDetail", LOCATION_DETAIL[locType] ? document.getElementById("fLocationDetail").value.trim() : "");
@@ -15740,8 +16204,9 @@ if (changed) {
 obj.paidMonths = [...paidDraft].sort();
 obj.paidMonth = obj.paidMonths.length ? obj.paidMonths[obj.paidMonths.length - 1] : null;
 obj.paidDates = { ...(currentObj.paidDates || {}) };
-obj.paidMonths.forEach(k => { if (!before.has(k)) obj.paidDates[k] = isoOf(new Date()); });
+obj.paidMonths.forEach(k => { if (!before.has(k)) { obj.paidDates[k] = isoOf(new Date()); notePayAdj(obj, k, true); } });
 Object.keys(obj.paidDates).forEach(k => { if (!paidDraft.has(k)) delete obj.paidDates[k]; });
+[...before].forEach(k => { if (!paidDraft.has(k)) notePayAdj(obj, k, false); });
 }
 }
 // Valor por aula / do pacote (a mensalidade continua em "value").
@@ -16008,6 +16473,8 @@ renderProfileAvatarInto(document.getElementById("settingsProfileAvatar"));
 renderProfileAvatarInto(document.getElementById("headerAvatar"));
 document.getElementById("valInstrumentos").textContent = `${appSettings.instruments.length} instrumento${appSettings.instruments.length===1?'':'s'}`;
 document.getElementById("valValoresPadrao").textContent = `R$ ${appSettings.defaultValues.individual}`;
+document.getElementById("valPayRules").textContent = payRulesLabel();
+document.getElementById("valContract").textContent = appSettings.contractText ? "Seu texto" : "Padrão";
 document.getElementById("valDiasUteis").textContent = formatWorkDaysLabel();
 document.getElementById("valDuracao").textContent = `${appSettings.lessonDuration} min`;
 const lb = appSettings.lastBackupAt ? new Date(appSettings.lastBackupAt) : null;
@@ -17019,6 +17486,8 @@ if (typeof renderPerformance === "function") renderPerformance();
 };
 
 // --- Meta de crescimento mensal ---
+document.getElementById("rowPayRules").onclick = openPayRules;
+document.getElementById("rowContract").onclick = openContractTemplate;
 document.getElementById("rowGrowthGoal").onclick = () => {
 document.getElementById("growthGoalInput").value = appSettings.growthGoalPercent ?? "";
 document.getElementById("growthGoalModal").classList.add("show");
@@ -18287,7 +18756,7 @@ if (s.payTo === "none") return;
 const mode = billingMode(s);
 if (mode === "lesson") o.revenue += (given[k] || 0) * (Number(s.lessonPrice) || 0);
 else if (mode === "package") o.revenue += packageCharges(s).filter(c => String(c.ref).startsWith(k)).reduce((a, c) => a + Number(c.value || 0), 0);
-else if (inMonth) o.revenue += Number(studentMonthlyValue(s) || 0);
+else if (inMonth) o.revenue += Number(studentMonthlyValue(s, k) || 0);
 });
 });
 const res = {};
@@ -18320,7 +18789,7 @@ agenda.push(it);
 });
 }
 let lateN = 0, lateV = 0;
-students.filter(s => s.active !== false && paysMe(s)).forEach(s => unpaidMonths(s).forEach(k => { if (isPastDue(s, k)) { lateN++; lateV += Number(studentMonthlyValue(s) || 0); } }));
+students.filter(s => s.active !== false && paysMe(s)).forEach(s => unpaidMonths(s).forEach(k => { if (isPastDue(s, k)) { lateN++; lateV += Number(studentMonthlyValue(s, k) || 0); } }));
 const p = appSettings.profile || {};
 // Alunos que pagam direto para a escola (8.24): o dono controla essas mensalidades no painel.
 // Só aqui vai o telefone (de quem paga), para o dono poder cobrar.
