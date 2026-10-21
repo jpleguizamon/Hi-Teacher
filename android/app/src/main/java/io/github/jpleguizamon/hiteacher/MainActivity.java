@@ -106,13 +106,25 @@ public class MainActivity extends Activity {
 
     /** Toque numa notificação: abre a página certa (?p=inicio | aulas | avisos | financeiro). */
     static String urlFrom(Intent intent) {
+        String a = authReturn(intent);
+        if (a != null) return a;
         String p = intent != null ? intent.getStringExtra("page") : null;
         return p != null && p.matches("[a-z]{2,20}") ? HOME + "?p=" + p : HOME;
+    }
+
+    /** Volta do login com Google/Apple: hiteacher://auth?...#... vira o endereço do app com o mesmo final. */
+    static String authReturn(Intent intent) {
+        Uri d = intent != null ? intent.getData() : null;
+        if (d == null || !"hiteacher".equals(d.getScheme()) || !"auth".equals(d.getHost())) return null;
+        String q = d.getEncodedQuery(), f = d.getEncodedFragment();
+        return HOME + (q != null ? "?" + q : "") + (f != null ? "#" + f : "");
     }
 
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
+        String a = authReturn(intent);
+        if (a != null) { web.loadUrl(a); return; }
         String p = intent.getStringExtra("page");
         if (p == null || !p.matches("[a-z]{2,20}")) return;
         String u = web.getUrl();

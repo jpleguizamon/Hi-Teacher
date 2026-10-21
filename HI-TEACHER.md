@@ -446,6 +446,15 @@ Até a 8.30 o APK era uma "casca" TWA (bubblewrap) que abria o site **pelo Chrom
 ## Tela de carregamento (8.37)
 - Enquanto só aparece o "Carregando seus dados…", o portão do login (`#authGate.is-loading`) vira uma tela cheia com a coruja, o nome, uma barrinha andando e, depois de 12 s, o aviso "Está demorando?". `authSplashSync()` liga e desliga isso sozinho (chamado em `authCardParts` e `showAuthGate`). O app agora já abre nessa tela, em vez de mostrar o login por um instante.
 
+## Planos e login com Google (8.38)
+- Planos (`PLANS` no index.html): Grátis até 5 alunos ativos, Bronze até 20 (R$29), Prata até 50 (R$49, com contato direto com o desenvolvedor), Ouro até 100 (R$79), Escola sem limite (preço combinado). O aluno nunca paga. Todas as funções em todos os planos; o que muda é o limite de alunos ativos.
+- O plano fica no servidor (`supabase/schema-v8.38.sql`, tabela `teacher_plans`; só as funções mudam). Sem esse arquivo rodado, o app segue sem planos.
+- Teste grátis: 14 dias a partir do primeiro acesso com planos (contas antigas também ganham os 14 dias), tudo liberado. Depois do questionário inicial aparece "Bem-vindo… teste grátis de 14 dias" com os planos. Quando o teste acaba (ou o plano pago vence), a tela de planos abre e não fecha até escolher. Grátis com mais de 5 alunos: o professor marca quais 5 ficam ativos (os outros ficam inativos, nada é apagado).
+- Plano pago escolhido vira pedido: abre o e-mail do professor para combinar o pagamento com o Jp e o app libera por 3 dias. O Jp ativa em Configurações → Assinaturas (só ele vê; dono do app = tabela `app_admins`, o arquivo SQL põe o email profjpleguizamon@gmail.com). Ainda não há cobrança automática (Asaas/Mercado Pago fica para depois).
+- Limite: cadastrar, reativar, importar, aceitar pedido de entrada ou receber aluno da escola checa `planCanAdd`.
+- Nível no perfil: segue o plano ("🥈 Nível Prata · até 50 alunos", "Teste grátis · faltam X dias"). Sem planos ligados, continua o antigo (pelas metas).
+- Login com Google/Apple: os botões só aparecem se o provedor estiver ligado no Supabase (lido de /auth/v1/settings). Volta para o endereço do app; no app Android volta por `hiteacher://auth` (filtro novo no AndroidManifest, `authReturn` no MainActivity, versão 8.38 / versionCode 7). No questionário inicial o nome completo vem preenchido com o nome da conta Google.
+
 ## O que ainda falta / próximos passos
 
 - **App do aluno — ideias ainda não feitas (lista de set/2026)**: gravação enviada pelo próprio app com comentário do professor marcado no tempo (hoje vai pelo compartilhar do celular); cifras e partituras anexadas pelo professor (precisa de armazenamento de arquivos no Supabase); cadastro já completo pelo convite (hoje o link só preenche a chave; para interessados existe a ficha de matrícula da 8.35); lembrete de aula por notificação do celular (hoje é pela agenda .ics); mural da turma e avisos por turma; toques de IA (feedback da gravação, plano da semana a partir do resumo da aula, assistente de teoria).

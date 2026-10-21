@@ -30,6 +30,13 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- Volta do login com Google/Apple (8.38): o navegador abre hiteacher://auth#... -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="hiteacher" android:host="auth" />
+            </intent-filter>
         </activity>
 
         <service android:name=".PushService" android:exported="false">

@@ -1271,6 +1271,43 @@ body.lead-open #authGate,body.lead-open #onboardingGate{display:none!important}
 .cloud-bad{color:var(--orange)!important}
 #authGate.hidden{display:none}
 #onboardingGate{z-index:99}
+/* Planos (8.38): tela cheia por cima do app */
+#planGate{position:fixed;inset:0;z-index:98;overflow:auto;-webkit-overflow-scrolling:touch;background:radial-gradient(50rem 30rem at 50% 0%,rgba(47,211,242,.12),transparent 65%),var(--bg);padding:calc(1.5rem + var(--sat,0px)) 1rem calc(2rem + var(--sab,0px))}
+#planGate.hidden{display:none}
+#planGate:not(.hidden) ~ .app,#planGate:not(.hidden) ~ .sidebar,#planGate:not(.hidden) ~ .overlay{visibility:hidden}
+.plan-wrap{max-width:64rem;margin:0 auto;text-align:center}
+.plan-wrap h1{font-size:1.5rem;font-weight:800;color:var(--heading);letter-spacing:-0.02em;margin:0 0 0.5rem;text-wrap:balance}
+.plan-owl{width:4rem;height:4rem;margin:0 auto 0.875rem}
+.plan-lead{color:var(--text-2);font-size:0.9375rem;line-height:1.5;max-width:34rem;margin:0 auto 0.75rem}
+.plan-lead b{color:var(--accent)}
+.plan-count{font-size:0.8125rem;color:var(--muted);margin-bottom:1.25rem}
+.plan-count b{color:var(--text)}
+.plan-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(11.5rem,1fr));gap:0.75rem;text-align:left}
+.plan-card{position:relative;display:flex;flex-direction:column;gap:0.5rem;padding:1.125rem 1rem 1rem;border-radius:var(--radius-lg);border:0.0625rem solid var(--glass-border);background:var(--glass-inset)}
+.plan-card.best{border-color:var(--accent);box-shadow:var(--glow-sm)}
+.plan-card.cur{border-color:var(--accent-line);background:var(--accent-soft)}
+.plan-badge{position:absolute;top:-0.625rem;right:0.875rem;background:var(--accent);color:var(--accent-ink);font-size:0.625rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;padding:0.1875rem 0.5rem;border-radius:var(--radius-pill)}
+.plan-name{font-size:1.0625rem;font-weight:800;color:var(--heading)}
+.plan-card.tier-bronze .plan-name{color:#e3a469}.plan-card.tier-silver .plan-name{color:#cbd4dc}.plan-card.tier-gold .plan-name{color:#f3c04a}
+.plan-price{font-size:1.375rem;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums}
+.plan-perks{list-style:none;margin:0.25rem 0 0.5rem;padding:0;display:flex;flex-direction:column;gap:0.375rem;flex:1}
+.plan-perks li{font-size:0.8125rem;color:var(--text-2);line-height:1.4;padding-left:1.125rem;position:relative}
+.plan-perks li::before{content:"";position:absolute;left:0.125rem;top:0.4rem;width:0.4375rem;height:0.25rem;border-left:0.125rem solid var(--accent);border-bottom:0.125rem solid var(--accent);transform:rotate(-45deg)}
+.plan-card .save,.plan-card .btn-historico{width:100%;margin:0;white-space:normal;line-height:1.25}
+.plan-err{color:var(--danger);font-size:0.8125rem;min-height:1em;margin:0.75rem 0 0}
+.plan-foot{font-size:0.75rem;color:var(--muted);margin:0.5rem 0 1rem}
+.plan-wrap .actions{justify-content:center;max-width:24rem;margin:0 auto}
+.plan-pick{text-align:left;max-width:28rem;margin:0 auto}
+.plan-pick-row{display:flex;align-items:center;gap:0.625rem;padding:0.625rem 0.875rem;border-top:0.0625rem solid var(--hairline);font-size:0.875rem;color:var(--text);cursor:pointer}
+.plan-pick-row:first-child{border-top:none}
+.plan-pick-row input{width:1.125rem;height:1.125rem;accent-color:var(--accent)}
+.plan-adm-row{display:flex;flex-direction:column;gap:0.5rem;padding:0.75rem 0;border-top:0.0625rem solid var(--hairline)}
+.plan-adm-row:first-child{border-top:none;padding-top:0}
+.plan-adm-info{font-size:0.8125rem;color:var(--text-2);line-height:1.45}
+.plan-adm-info b{color:var(--text)}
+.plan-adm-info .plan-adm-req{color:var(--accent)}
+.plan-adm-acts{display:flex;gap:0.375rem;flex-wrap:wrap}
+.plan-adm-acts select{background:var(--glass-field);color:var(--text);border:0.0625rem solid var(--glass-border);border-radius:var(--radius-pill);padding:0.375rem 0.625rem;font:inherit;font-size:0.8125rem}
 #onboardingGate.hidden{display:none}
 .auth-card{
   width:min(24rem,100%);text-align:center;
@@ -1288,6 +1325,13 @@ body.lead-open #authGate,body.lead-open #onboardingGate{display:none!important}
 .auth-toggle:hover{text-decoration:underline;text-underline-offset:0.2em}
 .auth-toggle:first-of-type{margin-top:1rem}
 .auth-loading{color:var(--muted);font-size:0.8125rem}
+.social-btn{display:flex;align-items:center;justify-content:center;gap:0.625rem;width:100%;min-height:2.875rem;margin-bottom:0.625rem;border-radius:var(--radius-pill);border:0.0625rem solid var(--glass-border);background:#fff;color:#111;font:inherit;font-size:0.9375rem;font-weight:700;cursor:pointer}
+.social-btn#authApple{background:#000;color:#fff;border-color:rgba(255,255,255,.25)}
+.social-btn[hidden]{display:none}
+.social-btn svg{width:1.25rem;height:1.25rem;flex:none}
+.social-btn:focus-visible{outline:0.125rem solid var(--accent);outline-offset:0.125rem}
+.auth-or{display:flex;align-items:center;gap:0.75rem;margin:0.5rem 0 1rem;color:var(--muted);font-size:0.75rem}
+.auth-or::before,.auth-or::after{content:"";flex:1;height:0.0625rem;background:var(--hairline)}
 .auth-splash-bar,.auth-splash-slow{display:none}
 /* Tela de carregamento em tela cheia (8.37) */
 #authGate.is-loading{background:radial-gradient(60rem 40rem at 50% 38%,rgba(47,211,242,.14),transparent 60%),radial-gradient(40rem 30rem at 50% 110%,rgba(47,211,242,.08),transparent 70%),var(--bg)}
@@ -2202,6 +2246,11 @@ body.pdf-open{overflow:hidden}
 </div>
 </div>
 <div id="authForm" style="display:none">
+<div id="authSocial" style="display:none">
+<button type="button" class="social-btn" id="authGoogle" hidden><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Continuar com Google</button>
+<button type="button" class="social-btn" id="authApple" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M16.4 12.6c0-2.5 2-3.6 2.1-3.7-1.2-1.7-3-1.9-3.6-2-1.5-.2-3 .9-3.8.9-.8 0-2-.9-3.3-.9-1.7 0-3.3 1-4.2 2.5-1.8 3.1-.5 7.7 1.3 10.2.9 1.2 1.9 2.6 3.2 2.6 1.3-.1 1.8-.8 3.3-.8 1.6 0 2 .8 3.4.8 1.4 0 2.3-1.3 3.1-2.5 1-1.4 1.4-2.8 1.4-2.9 0 0-2.8-1.1-2.9-4.2zM13.9 5.2c.7-.9 1.2-2 1-3.2-1 0-2.3.7-3 1.6-.7.8-1.3 2-1.1 3.1 1.2.1 2.3-.6 3.1-1.5z"/></svg>Continuar com Apple</button>
+<div class="auth-or"><span>ou com e-mail</span></div>
+</div>
 <div id="authFieldEmail" class="field"><label>Email</label><input type="email" id="authEmail" autocomplete="username"></div>
 <div id="authFieldPassword" class="field"><label>Senha</label><input type="password" id="authPassword" autocomplete="current-password"></div>
 <div id="authFieldConfirmPassword" class="field" style="display:none"><label>Confirmar senha</label><input type="password" id="authConfirmPassword" autocomplete="new-password"></div>
@@ -2220,6 +2269,7 @@ body.pdf-open{overflow:hidden}
 </div>
 </div>
 
+<div id="planGate" class="hidden"></div>
 <div id="onboardingGate" class="hidden">
 <div class="auth-card" style="text-align:left;max-height:88vh;overflow:auto">
 <h1 style="text-align:center">Vamos configurar seu app</h1>
@@ -2640,6 +2690,8 @@ body.pdf-open{overflow:hidden}
 <div class="settings-group-label">Conta</div>
 <div class="settings-card">
 <div class="settings-row" id="rowCloudSync"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-upload"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Salvar na nuvem</div><div class="settings-row-sub" id="valCloudStatus">Conectando…</div></div><span class="settings-row-value" id="valCloudAction">Sincronizar</span></div>
+<div class="settings-row" id="rowMyPlan" style="display:none"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-target"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Meu plano</div><div class="settings-row-sub" id="valMyPlan"></div></div><span class="settings-row-chevron">›</span></div>
+<div class="settings-row" id="rowPlanAdmin" style="display:none"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-user"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Assinaturas</div><div class="settings-row-sub">Planos e pedidos dos professores (só você vê)</div></div><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowStudentMode"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-user"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Entrar como aluno/responsável</div><div class="settings-row-sub">Pra quem também é aluno ou responsável por um aluno</div></div><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowPushTeacher"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-bell"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Notificações no celular</div><div class="settings-row-sub" id="valPushTeacher">Avisos dos alunos mesmo com o app fechado</div></div><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowOnboarding"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-target"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Primeiros passos</div><div class="settings-row-sub">Mostrar de novo o passo a passo nas notificações</div></div><span class="settings-row-chevron">›</span></div>
@@ -3609,7 +3661,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.37";
+const APP_VERSION = "8.38";
 // ===================== App instalável (8.4) =====================
 // Service worker (sw.js), aviso de versão nova, faixa "Sem internet", botão "Instalar o app",
 // atalhos do ícone (?p=...) e botão voltar do celular fechando modal/menu no app instalado.
@@ -8823,6 +8875,7 @@ choose(`<div class="undo-q-title">Adicionar ${escapeHtml(j.student_name)} à sua
 <div class="actions"><button class="cancel" id="jnCancel">Cancelar</button><button class="save" id="jnOk">Confirmar</button></div>`);
 body.querySelector("#jnCancel").onclick = back;
 body.querySelector("#jnOk").onclick = async () => {
+if (!planCanAdd(1)) return;
 body.querySelector("#jnOk").disabled = true;
 const today = isoOf(new Date());
 const pend = ["dia da semana", "horário", "valor mensal"];
@@ -9479,7 +9532,7 @@ document.getElementById("authGate").classList.add("hidden");
 }
 
 function showOnboarding(){
-document.getElementById("onbFullName").value = appSettings.profile.fullName || "";
+document.getElementById("onbFullName").value = appSettings.profile.fullName || (authCurrentUser && authCurrentUser.user_metadata && String(authCurrentUser.user_metadata.full_name || authCurrentUser.user_metadata.name || "").slice(0, 80)) || "";
 document.getElementById("onbDisplayName").value = (appSettings.profile.name && appSettings.profile.name !== "Professor JP") ? appSettings.profile.name : "";
 document.getElementById("onbState").value = appSettings.location.state || "";
 document.getElementById("onbCity").value = appSettings.location.city || "";
@@ -9526,7 +9579,9 @@ appSettings.onboarded = true;
 if (!appSettings.onb) appSettings.onb = {};
 saveAppSettings();
 document.getElementById("onboardingGate").classList.add("hidden");
+const planWantsSchool = (() => { try { return !!schoolIntent(); } catch(e) { return false; } })();
 setTimeout(schoolAskCreateIfIntent, 400);
+if (!planWantsSchool) setTimeout(() => { try { const st = planState(); if (st && st.kind === "trial" && !appSettings.planTrialSeen) { appSettings.planTrialSeen = true; saveAppSettings(); openPlans(false, "welcome"); } } catch(e) {} }, 600);
 renderHome();
 renderSettingsSummary();
 renderInstrumentSelectOptions();
@@ -9548,6 +9603,36 @@ document.getElementById("authBackToLoginBtn").style.display = authMode === "rese
 const submitLabels = { login:"Entrar", signup:"Criar conta", reset:"Enviar link de recuperação", recovery:"Salvar nova senha" };
 document.getElementById("authSubmitBtn").textContent = submitLabels[authMode];
 document.getElementById("authToggleBtn").textContent = authMode === "login" ? "Ainda não tenho conta — criar conta" : "Já tenho conta — entrar";
+authSocialShow();
+}
+
+// Login com Google / Apple (8.38): só aparecem os botões que estão ligados no Supabase
+// (Authentication → Providers). No app Android o login abre no navegador e volta pelo
+// endereço hiteacher://auth; no site volta para o próprio endereço do app.
+let authProviders = null;
+async function authSocialLoad(){
+try {
+const r = await fetch(SUPABASE_URL + "/auth/v1/settings", { headers: { apikey: SUPABASE_ANON_KEY } });
+const j = await r.json();
+authProviders = (j && j.external) || {};
+} catch(e) { authProviders = {}; }
+authSocialShow();
+}
+function authSocialShow(){
+const box = document.getElementById("authSocial");
+if (!box) return;
+const on = p => !!(authProviders && authProviders[p]);
+document.getElementById("authGoogle").hidden = !on("google");
+document.getElementById("authApple").hidden = !on("apple");
+box.style.display = (on("google") || on("apple")) && (authMode === "login" || authMode === "signup") ? "block" : "none";
+}
+async function authSocial(provider){
+const errEl = document.getElementById("authError");
+errEl.textContent = ""; errEl.style.color = "";
+try {
+const { error } = await supabaseClient.auth.signInWithOAuth({ provider, options: { redirectTo: HI_APP ? "hiteacher://auth" : appLink() } });
+if (error) errEl.textContent = authErrorMessage(error);
+} catch(e) { errEl.textContent = authErrorMessage(e); }
 }
 
 // Erros do Supabase vêm em inglês e técnicos ("Failed to fetch"); traduz os mais comuns.
@@ -9648,6 +9733,8 @@ document.getElementById("entrySchool").onclick = showSchoolOwnerLogin;
 document.getElementById("entryStudent").onclick = () => { writeEntry({ role: "student" }); stuEntryKind(); };
 document.getElementById("authStuBack").onclick = () => { const e = readEntry(); if (e.role === "student") stuEntryKind(); else { writeEntry(null); showEntryChoice(); } };
 document.getElementById("rowStudentKey").onclick = openStudentKey;
+document.getElementById("rowMyPlan").onclick = () => openPlans(false);
+document.getElementById("rowPlanAdmin").onclick = openPlanAdmin;
 document.getElementById("rowStudentContent").onclick = openStudentContent;
 document.getElementById("rowInstallApp").onclick = pwaInstall;
 document.getElementById("rowStudentMode").onclick = () => { if (authCurrentUser && confirm("Abrir o modo aluno/responsável nesta conta? Seus dados de professor continuam salvos. Pra voltar: Perfil → Voltar para o modo professor.")) switchRole("student"); };
@@ -9665,6 +9752,9 @@ const row = document.getElementById("rowCloudSync");
 setTimeout(() => { row.scrollIntoView({ block: "center" }); row.classList.add("row-flash"); setTimeout(() => row.classList.remove("row-flash"), 1800); }, 80);
 };
 
+authSocialLoad();
+document.getElementById("authGoogle").onclick = () => authSocial("google");
+document.getElementById("authApple").onclick = () => authSocial("apple");
 supabaseClient.auth.onAuthStateChange(async (event, session) => {
 if (event === "PASSWORD_RECOVERY") {
 authMode = "recovery";
@@ -9687,6 +9777,7 @@ if (role === "student") { await startStudentMode(); return; }
 await pullCloudData();
 hideAuthGate();
 if (!appSettings.onboarded) showOnboarding();
+planStart();
 inboxStart();
 schoolStart();
 leadsStart();
@@ -9834,6 +9925,15 @@ document.getElementById("goalModal").classList.add("show");
 function renderProfessorTier(){
 const el = document.getElementById("profileTierLine");
 if (!el) return;
+// 8.38: com os planos ligados, o nível é o do plano (Bronze até 20 alunos, Prata até 50, Ouro até 100).
+const st = planState();
+if (st) {
+const t = st.kind === "paid" || st.kind === "pending" ? st.plan.tier : st.kind === "admin" ? "gold" : "none";
+const icon = { bronze: "🥉 ", silver: "🥈 ", gold: "🥇 " }[t] || "";
+el.textContent = st.kind === "paid" && st.plan.max !== Infinity ? `${icon}Nível ${st.plan.name} · até ${st.plan.max} alunos` : icon + planStatusText(st);
+el.className = `profile-tier-line tier-${t}`;
+return;
+}
 const total = goals.length;
 if (total === 0) { el.textContent = ""; el.className = "profile-tier-line"; return; }
 const done = goals.filter(g=>g.done).length;
@@ -9842,6 +9942,217 @@ const tier = ratio >= 0.66 ? "gold" : ratio >= 0.33 ? "silver" : "bronze";
 const labels = { bronze:"🥉 Nível Bronze", silver:"🥈 Nível Prata", gold:"🥇 Nível Ouro" };
 el.textContent = labels[tier];
 el.className = `profile-tier-line tier-${tier}`;
+}
+
+// ---------- Planos do professor (8.38) ----------
+// O plano vem do servidor (supabase/schema-v8.38.sql). Sem esse arquivo rodado, myPlan fica
+// null e o app segue como antes: sem planos e sem limite de alunos.
+// Teste grátis: 14 dias com tudo liberado. Depois o professor tem de escolher um plano.
+// Plano pago escolhido e ainda não confirmado: 3 dias de tolerância, com o limite do plano escolhido.
+const PLANS = [
+{ id: "free", name: "Grátis", max: 5, price: 0, tier: "none", perks: ["Até 5 alunos ativos", "Todas as funções do app", "App do aluno liberado"] },
+{ id: "bronze", name: "Bronze", max: 20, price: 29, tier: "bronze", perks: ["Até 20 alunos ativos", "Todas as funções do app", "Ajuda por e-mail"] },
+{ id: "silver", name: "Prata", max: 50, price: 49, tier: "silver", best: true, perks: ["Até 50 alunos ativos", "Todas as funções do app", "Contato direto com o desenvolvedor para pedir mudanças e novidades no app"] },
+{ id: "gold", name: "Ouro", max: 100, price: 79, tier: "gold", perks: ["Até 100 alunos ativos", "Todas as funções do app", "Contato direto com o desenvolvedor", "Seus pedidos de mudança entram na frente"] },
+{ id: "school", name: "Escola", max: Infinity, price: null, tier: "gold", perks: ["Alunos sem limite", "Vários professores e painel do dono da escola", "Contato direto com o desenvolvedor", "Preço combinado conforme o tamanho da escola"] }
+];
+const PLAN_PENDING_DAYS = 3;
+let myPlan = null, planGateOpen = false;
+function planById(id){ return PLANS.find(p => p.id === id) || null; }
+function planActiveCount(){ return students.filter(s => s && s.active !== false).length; }
+function planDaysBetween(a, b){ return Math.round((dateFromIso(b) - dateFromIso(a)) / 86400000); }
+function planState(){
+if (!myPlan || studentMode || demoMode) return null;
+const today = myPlan.today || isoOf(new Date());
+if (myPlan.admin) return { kind: "admin", plan: planById("school"), max: Infinity };
+const paid = planById(myPlan.plan);
+if (paid && paid.id !== "free" && myPlan.paid_until && myPlan.paid_until >= today) return { kind: "paid", plan: paid, max: paid.max, until: myPlan.paid_until, left: planDaysBetween(today, myPlan.paid_until) };
+const req = planById(myPlan.requested);
+if (req && req.id !== "free" && myPlan.requested_at && planDaysBetween(String(myPlan.requested_at).slice(0, 10), today) < PLAN_PENDING_DAYS) return { kind: "pending", plan: req, max: req.max };
+if (myPlan.plan === "free") return { kind: "free", plan: planById("free"), max: 5 };
+if (myPlan.plan === "trial" && myPlan.trial_until >= today) return { kind: "trial", plan: null, max: Infinity, left: planDaysBetween(today, myPlan.trial_until) };
+return { kind: "expired", plan: paid && paid.id !== "free" ? paid : null, wasPaid: !!(paid && paid.id !== "free" && myPlan.paid_until), requested: req, max: 5 };
+}
+function planPriceText(p){ return p.price === null ? "Preço combinado" : p.price === 0 ? "R$ 0" : `R$ ${p.price}/mês`; }
+function planStatusText(st){
+if (!st) return "";
+if (st.kind === "admin") return "Dono do app · sem limite";
+if (st.kind === "trial") return `Teste grátis · ${st.left === 0 ? "termina hoje" : st.left === 1 ? "falta 1 dia" : `faltam ${st.left} dias`}`;
+if (st.kind === "pending") return `Plano ${st.plan.name} · esperando o pagamento`;
+if (st.kind === "expired") return st.wasPaid ? "Plano vencido · escolha um plano" : "Teste grátis terminou · escolha um plano";
+const lim = st.plan.max === Infinity ? "alunos sem limite" : `até ${st.plan.max} alunos`;
+return `Plano ${st.plan.name} · ${lim}`;
+}
+async function planLoad(){
+if (studentMode || demoMode || !supabaseClient || !authCurrentUser) return;
+try {
+const { data, error } = await supabaseClient.rpc("hi_my_plan");
+if (error) { myPlan = null; return; }
+myPlan = data || null;
+} catch(e) { myPlan = null; }
+try { renderProfessorTier(); planRowRender(); } catch(e) {}
+}
+// Depois do login (e depois do questionário inicial): avisa do teste ou pede pra escolher o plano.
+async function planStart(){
+await planLoad();
+const st = planState();
+if (!st) return;
+if (st.kind === "expired") { openPlans(true); return; }
+if (!appSettings.onboarded) return;
+if (st.kind === "trial" && !appSettings.planTrialSeen) { appSettings.planTrialSeen = true; saveAppSettings(); openPlans(false, "welcome"); return; }
+if (st.kind === "paid" && st.left <= 3 && appSettings.planWarned !== myPlan.paid_until) { appSettings.planWarned = myPlan.paid_until; saveAppSettings(); showCloudWarning(`Seu plano ${st.plan.name} vence ${st.left === 0 ? "hoje" : st.left === 1 ? "amanhã" : `em ${st.left} dias`}. Para renovar: Configurações → Meu plano.`); }
+if (st.kind === "admin") planAdminNotice();
+}
+// Pode cadastrar mais "extra" alunos ativos? Se não, abre os planos e explica.
+function planCanAdd(extra){
+const st = planState();
+if (!st) return true;
+const n = planActiveCount();
+if (n + (extra || 1) <= st.max) return true;
+openPlans(st.kind === "expired", "limit");
+return false;
+}
+function planRowRender(){
+const row = document.getElementById("rowMyPlan"), adm = document.getElementById("rowPlanAdmin");
+const st = planState();
+if (row) { row.style.display = st ? "" : "none"; const v = document.getElementById("valMyPlan"); if (v) v.textContent = planStatusText(st); }
+if (adm) adm.style.display = st && st.kind === "admin" ? "" : "none";
+}
+function planDevContact(p){
+const subject = encodeURIComponent(`Hi Teacher: quero o plano ${p.name}`);
+const body = encodeURIComponent(`Olá! Quero ativar o plano ${p.name} (${planPriceText(p)}) no Hi Teacher.\n\nMeu e-mail no app: ${(authCurrentUser && authCurrentUser.email) || ""}\nAlunos ativos hoje: ${planActiveCount()}`);
+window.location.href = `mailto:${FEEDBACK_EMAIL}?subject=${subject}&body=${body}`;
+}
+// Tela dos planos. must = não dá pra fechar sem escolher (teste acabou ou plano venceu).
+function openPlans(must, why){
+const gate = document.getElementById("planGate");
+if (!gate) return;
+const st = planState() || { kind: "trial", left: 14, max: Infinity };
+const n = planActiveCount();
+const intro = why === "welcome"
+? `<h1>Bem-vindo ao Hi Teacher!</h1><p class="plan-lead">Você está no <b>teste grátis de 14 dias</b>, com tudo liberado e sem limite de alunos. Quando o teste acabar, você escolhe um dos planos abaixo.</p>`
+: must
+? `<h1>${st.wasPaid ? "Seu plano venceu" : "Seu teste grátis terminou"}</h1><p class="plan-lead">Para continuar usando o app, escolha um plano. Nada do que você já cadastrou se perde.${st.requested ? ` O pagamento do plano ${escapeHtml(st.requested.name)} ainda não foi confirmado.` : ""}</p>`
+: why === "limit"
+? `<h1>Limite de alunos</h1><p class="plan-lead">${st.kind === "free" || st.kind === "expired" ? "O plano Grátis vai até 5 alunos ativos." : `Seu plano ${escapeHtml((st.plan && st.plan.name) || "")} vai até ${st.max} alunos ativos.`} Para cadastrar mais, escolha um plano maior.</p>`
+: `<h1>Meu plano</h1><p class="plan-lead">${escapeHtml(planStatusText(st))}${st.kind === "paid" ? ` · pago até ${formatDateShort(st.until)}` : ""}</p>`;
+const cur = st.kind === "paid" || st.kind === "pending" || st.kind === "free" ? st.plan.id : null;
+const cards = PLANS.map(p => {
+const tooMany = p.max !== Infinity && n > p.max;
+const isCur = cur === p.id;
+const btn = isCur
+? `<button type="button" class="btn-historico" disabled>${st.kind === "pending" ? "Esperando o pagamento" : "Seu plano"}</button>`
+: tooMany
+? (p.id === "free" ? `<button type="button" class="btn-historico" data-plan-keep="5">Escolher 5 alunos</button>` : `<button type="button" class="btn-historico" disabled>Você tem ${n} alunos ativos</button>`)
+: `<button type="button" class="save" data-plan="${p.id}">${p.id === "free" ? "Usar o Grátis" : p.price === null ? "Falar com o desenvolvedor" : `Quero o ${escapeHtml(p.name)}`}</button>`;
+return `<div class="plan-card tier-${p.tier}${p.best ? " best" : ""}${isCur ? " cur" : ""}">${p.best ? `<span class="plan-badge">Mais escolhido</span>` : ""}
+<div class="plan-name">${escapeHtml(p.name)}</div><div class="plan-price">${escapeHtml(planPriceText(p))}</div>
+<ul class="plan-perks">${p.perks.map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul>${btn}</div>`;
+}).join("");
+gate.innerHTML = `<div class="plan-wrap"><svg class="brand-owl plan-owl" viewBox="0 0 512 512" aria-hidden="true"><use href="#brand-owl"/></svg>${intro}
+<div class="plan-count">Você tem <b>${n}</b> aluno${n === 1 ? "" : "s"} ativo${n === 1 ? "" : "s"}.</div>
+<div class="plan-grid">${cards}</div>
+<div class="plan-err" id="planErr"></div>
+<p class="plan-foot">O aluno nunca paga. Você pode trocar de plano quando quiser.</p>
+${must ? "" : `<div class="actions"><button type="button" class="cancel" id="planClose">${why === "welcome" ? "Começar o teste" : "Fechar"}</button></div>`}
+${must ? `<button type="button" class="auth-toggle" id="planOut">Sair da conta</button>` : ""}</div>`;
+gate.classList.remove("hidden");
+gate.scrollTop = 0;
+planGateOpen = true;
+const close = () => { gate.classList.add("hidden"); gate.innerHTML = ""; planGateOpen = false; };
+const c = gate.querySelector("#planClose"); if (c) c.onclick = close;
+const o = gate.querySelector("#planOut"); if (o) o.onclick = async () => { try { await supabaseClient.auth.signOut(); } catch(e) {} location.reload(); };
+const err = gate.querySelector("#planErr");
+gate.querySelectorAll("[data-plan]").forEach(b => b.onclick = async () => {
+const p = planById(b.dataset.plan);
+if (!p) return;
+if (p.id !== "free" && !confirm(p.price === null ? `Pedir o plano ${p.name}? Abre o seu e-mail para combinar o preço com o desenvolvedor.` : `Escolher o plano ${p.name} (${planPriceText(p)})? Abre o seu e-mail para combinar o pagamento. Enquanto isso, você usa o app normalmente por ${PLAN_PENDING_DAYS} dias.`)) return;
+b.disabled = true; err.textContent = "";
+try {
+const { data, error } = await supabaseClient.rpc("hi_choose_plan", { p_plan: p.id });
+if (error) { err.textContent = (error.message && !/function|schema/i.test(error.message)) ? error.message : "Não consegui salvar agora. Tente de novo."; b.disabled = false; return; }
+myPlan = data || myPlan;
+} catch(e) { err.textContent = "Sem internet. Tente de novo."; b.disabled = false; return; }
+renderProfessorTier(); planRowRender();
+close();
+if (p.id === "free") showCloudWarning("Pronto! Você está no plano Grátis (até 5 alunos ativos).");
+else { showCloudWarning(`Pedido do plano ${p.name} enviado. Assim que o pagamento for confirmado, ele fica ativo.`); planDevContact(p); }
+});
+const keep = gate.querySelector("[data-plan-keep]");
+if (keep) keep.onclick = () => planPickActive(5, () => openPlans(must, why));
+}
+// Grátis com mais de 5 alunos: o professor marca quais 5 continuam ativos; os outros ficam inativos
+// (nada é apagado, dá pra reativar depois).
+function planPickActive(max, back){
+const gate = document.getElementById("planGate");
+const list = students.filter(s => s && s.active !== false).sort((a, b) => String(a.name).localeCompare(String(b.name)));
+const keep = new Set(list.slice(0, max).map(s => String(s.id)));
+const draw = () => {
+gate.innerHTML = `<div class="plan-wrap"><h1>Quais alunos ficam ativos?</h1><p class="plan-lead">Marque até ${max}. Os outros ficam inativos: nada é apagado e você reativa quando quiser.</p>
+<div class="settings-card plan-pick">${list.map(s => `<label class="plan-pick-row"><input type="checkbox" data-pk="${escapeHtml(String(s.id))}"${keep.has(String(s.id)) ? " checked" : ""}><span>${escapeHtml(s.name)}</span></label>`).join("")}</div>
+<div class="plan-err" id="planErr"></div>
+<div class="actions"><button type="button" class="cancel" id="pkBack">Voltar</button><button type="button" class="save" id="pkOk">Usar o Grátis com ${keep.size}</button></div></div>`;
+gate.querySelectorAll("[data-pk]").forEach(c => c.onchange = () => { const id = c.dataset.pk; if (c.checked) { if (keep.size >= max) { c.checked = false; return; } keep.add(id); } else keep.delete(id); draw(); });
+gate.querySelector("#pkBack").onclick = back;
+gate.querySelector("#pkOk").onclick = async () => {
+const today = isoOf(new Date());
+list.forEach(s => { if (!keep.has(String(s.id))) { s.active = false; if (!s.exit) s.exit = today; s.exitReason = s.exitReason || "Plano grátis"; } });
+saveStudents();
+try { renderStudents(); renderHome(); } catch(e) {}
+const err = gate.querySelector("#planErr");
+try { await tbSyncNow(); } catch(e) {}
+const { data, error } = await supabaseClient.rpc("hi_choose_plan", { p_plan: "free" });
+if (error) { err.textContent = "Os alunos foram inativados, mas ainda não subiram para a nuvem. Espere um pouco e toque de novo."; return; }
+myPlan = data || myPlan;
+renderProfessorTier(); planRowRender();
+gate.classList.add("hidden"); gate.innerHTML = ""; planGateOpen = false;
+showCloudWarning("Pronto! Você está no plano Grátis.");
+};
+};
+draw();
+}
+// Dono do app: professores, planos e pedidos. "Ativar" marca o plano como pago por N meses.
+async function planAdminNotice(){
+try {
+const { data } = await supabaseClient.rpc("hi_admin_plans");
+const n = (data || []).filter(x => x.requested && x.requested !== "free").length;
+if (n) showCloudWarning(`${n} professor${n > 1 ? "es pediram" : " pediu"} um plano. Veja em Configurações → Assinaturas.`);
+} catch(e) {}
+}
+async function openPlanAdmin(){
+const body = document.createElement("div");
+body.innerHTML = `<div class="field-hint" style="margin:0">Carregando…</div>`;
+openQuickModal("Assinaturas", "Professores, planos e pedidos. Ativar = marcar como pago.", body, null, "Fechar");
+let list = [];
+try { const { data, error } = await supabaseClient.rpc("hi_admin_plans"); if (error) throw error; list = data || []; }
+catch(e) { body.innerHTML = `<div class="field-hint" style="margin:0">Não consegui carregar agora.</div>`; return; }
+const today = isoOf(new Date());
+const status = x => {
+const p = planById(x.plan);
+if (p && p.id !== "free" && x.paid_until && x.paid_until >= today) return `<span class="cloud-ok">${escapeHtml(p.name)} · pago até ${formatDateShort(x.paid_until)}</span>`;
+if (x.plan === "free") return "Grátis";
+if (x.plan === "trial" && x.trial_until && x.trial_until >= today) return `Teste até ${formatDateShort(x.trial_until)}`;
+if (x.plan === "trial" && !x.trial_until) return "Ainda não abriu os planos";
+return `<span class="cloud-bad">${p && p.id !== "free" ? `${escapeHtml(p.name)} vencido` : "Teste terminou"}</span>`;
+};
+const draw = () => {
+body.innerHTML = list.length ? list.map((x, i) => `<div class="plan-adm-row"><div class="plan-adm-info"><b>${escapeHtml(x.name || "")}</b><div>${escapeHtml(x.email || "")} · ${Number(x.students) || 0} aluno${Number(x.students) === 1 ? "" : "s"} ativo${Number(x.students) === 1 ? "" : "s"}</div><div>${status(x)}${x.requested ? ` · <b class="plan-adm-req">pediu ${escapeHtml((planById(x.requested) || {}).name || "")}</b>` : ""}</div></div>
+<div class="plan-adm-acts"><select data-ap="${i}">${PLANS.map(p => `<option value="${p.id}"${(x.requested || x.plan) === p.id ? " selected" : ""}>${escapeHtml(p.name)}</option>`).join("")}</select><select data-am="${i}"><option value="1">1 mês</option><option value="3">3 meses</option><option value="6">6 meses</option><option value="12">12 meses</option></select><button type="button" class="btn-historico" data-aok="${i}">Ativar</button></div></div>`).join("")
+: `<div class="field-hint" style="margin:0">Nenhum professor ainda.</div>`;
+body.querySelectorAll("[data-aok]").forEach(b => b.onclick = async () => {
+const i = Number(b.dataset.aok), x = list[i];
+const plan = body.querySelector(`[data-ap="${i}"]`).value, months = Number(body.querySelector(`[data-am="${i}"]`).value) || 1;
+const p = planById(plan);
+if (!confirm(plan === "free" ? `Passar ${x.name} para o plano Grátis?` : `Ativar o plano ${p.name} de ${x.name} por ${months} ${months === 1 ? "mês" : "meses"}?`)) return;
+b.disabled = true;
+const { error } = await supabaseClient.rpc("hi_admin_set_plan", { p_teacher: x.id, p_plan: plan, p_months: months });
+if (error) { alert("Não consegui salvar. Tente de novo."); b.disabled = false; return; }
+const { data } = await supabaseClient.rpc("hi_admin_plans");
+list = data || list;
+draw();
+});
+};
+draw();
 }
 
 // Lista padrão de instrumentos, usada só como semente pra quem está começando do zero
@@ -13568,6 +13879,7 @@ needsReview: needsReview.length ? needsReview : undefined,
 });
 });
 if (imported.length === 0) { errEl.textContent = "Nenhuma linha com nome válido encontrada."; return; }
+if (!planCanAdd(imported.filter(x => x.active !== false).length)) return;
 students = students.concat(imported);
 localStorage.setItem("jp_students_v5", JSON.stringify(students));
 document.getElementById("importModal").classList.remove("show");
@@ -13978,7 +14290,7 @@ showUndoToast(`${list.length} aluno${list.length > 1 ? "s" : ""} inativado${list
 }
 function bulkReactivate(){
 const list = bulkStudents();
-if (!list.length || !confirm(`Reativar ${list.length} aluno${list.length > 1 ? "s" : ""}?`)) return;
+if (!list.length || !planCanAdd(list.filter(x => x.active === false).length) || !confirm(`Reativar ${list.length} aluno${list.length > 1 ? "s" : ""}?`)) return;
 const snaps = snapshotFields(list, ["active", "exit"]);
 list.forEach(x => { x.active = true; delete x.exit; });
 cancelBulk();
@@ -16296,6 +16608,7 @@ const isActive = s.active !== false;
 btnToggle.textContent = isActive ? "Registrar Saída do Aluno (Inativar)" : "Reativar Aluno";
 btnToggle.className = `btn-toggle-status ${isActive?'':'reactivate'}`;
 btnToggle.onclick = () => {
+if (!isActive && !planCanAdd(1)) return;
 const apply = (why) => {
 s.active = !isActive;
 if (!s.active && !s.exit) { s.exit = new Date().toISOString().slice(0,10); }
@@ -16340,6 +16653,7 @@ document.getElementById("cancelBtn").onclick=()=>{ document.getElementById("moda
 document.getElementById("saveBtn").onclick=()=>{
 const name=plainText(document.getElementById("fName").value);
 if(!name){alert("Digite o nome.");return;}
+if (!editingId && !planCanAdd(1)) return;
 // Toda semana / quinzenal precisa de pelo menos um dia de aula.
 if (document.getElementById("fLessonFreq").value !== "single" && selectedModalDays().length === 0) {
 const daysField = document.getElementById("days").closest(".field");
@@ -19836,6 +20150,7 @@ s.fromTeacher = { name: t.from_name || "", at: today };
 s.lessons = (Array.isArray(s.lessons) ? s.lessons : []).map(l => ({ ...l, prevTeacher: t.from_name || "outro professor", status: l.status === "pending" ? "given" : l.status }));
 s.makeups = (Array.isArray(s.makeups) ? s.makeups : []).filter(m => m.status === "scheduled" && m.date >= today);
 if (s.level && !(appSettings.levels || []).length) delete s.level;
+if (!planCanAdd(1)) return false;
 students.push(s);
 saveStudents();
 try { renderStudents(); renderHome(); } catch(e) {}
