@@ -455,6 +455,9 @@ Até a 8.30 o APK era uma "casca" TWA (bubblewrap) que abria o site **pelo Chrom
 - Nível no perfil: segue o plano ("🥈 Nível Prata · até 50 alunos", "Teste grátis · faltam X dias"). Sem planos ligados, continua o antigo (pelas metas).
 - Login com Google/Apple: os botões só aparecem se o provedor estiver ligado no Supabase (lido de /auth/v1/settings). Volta para o endereço do app; no app Android volta por `hiteacher://auth` (filtro novo no AndroidManifest, `authReturn` no MainActivity, versão 8.38 / versionCode 7). No questionário inicial o nome completo vem preenchido com o nome da conta Google.
 
+## Login primeiro (8.39)
+- O app abre direto no login (com Google, se ligado). A escolha "Sou professor / Sou dono de escola / Sou aluno ou responsável" só aparece depois do login, e só para conta nova (sem dados de professor nem de aluno no servidor): `resolveAppRole` devolve "choose" e o app mostra `showEntryChoice`. Professor e dono de escola salvam o papel e recarregam; aluno segue para o "Sou aluno / Sou responsável" (com "Voltar" para a escolha e "Sair da conta"). Contas que já existem entram direto, como antes.
+
 ## O que ainda falta / próximos passos
 
 - **App do aluno — ideias ainda não feitas (lista de set/2026)**: gravação enviada pelo próprio app com comentário do professor marcado no tempo (hoje vai pelo compartilhar do celular); cifras e partituras anexadas pelo professor (precisa de armazenamento de arquivos no Supabase); cadastro já completo pelo convite (hoje o link só preenche a chave; para interessados existe a ficha de matrícula da 8.35); lembrete de aula por notificação do celular (hoje é pela agenda .ics); mural da turma e avisos por turma; toques de IA (feedback da gravação, plano da semana a partir do resumo da aula, assistente de teoria).

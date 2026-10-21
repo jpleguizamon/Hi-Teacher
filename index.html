@@ -2240,10 +2240,11 @@ body.pdf-open{overflow:hidden}
 <p id="authSubtitle">Entre pra acessar seus dados.</p>
 <div id="authChoice" style="display:none">
 <div class="entry-big">
-<button type="button" class="entry-btn" id="entryTeacher"><b>Sou professor</b><span>Entrar ou criar minha conta de professor</span></button>
+<button type="button" class="entry-btn" id="entryTeacher"><b>Sou professor</b><span>Organizar minhas aulas, alunos e pagamentos</span></button>
 <button type="button" class="entry-btn" id="entrySchool"><b>Sou dono de escola</b><span>Minha escola tem professores. Continuo com tudo de professor</span></button>
-<button type="button" class="entry-btn" id="entryStudent"><b>Entrar como aluno</b><span>Aluno ou responsável, com a chave do professor</span></button>
+<button type="button" class="entry-btn" id="entryStudent"><b>Sou aluno ou responsável</b><span>Ver as aulas com a chave do professor</span></button>
 </div>
+<button type="button" class="auth-toggle" id="entryOut">Sair da conta</button>
 </div>
 <div id="authForm" style="display:none">
 <div id="authSocial" style="display:none">
@@ -3661,7 +3662,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.38";
+const APP_VERSION = "8.39";
 // ===================== App instalável (8.4) =====================
 // Service worker (sw.js), aviso de versão nova, faixa "Sem internet", botão "Instalar o app",
 // atalhos do ícone (?p=...) e botão voltar do celular fechando modal/menu no app instalado.
@@ -4981,6 +4982,8 @@ if (!td.data && !ud.data) {
 const [links, joins] = await Promise.all([supabaseClient.from("student_links").select("id").eq("user_id", uid).limit(1), supabaseClient.rpc("hi_my_join_requests")]);
 if (bad(links) || bad(joins)) return null;
 if ((links.data || []).length > 0 || (joins.data || []).length > 0) role = "student";
+// 8.39: conta nova (sem dados de professor nem de aluno): a pessoa escolhe depois do login.
+else return "choose";
 }
 saveRole(uid, role);
 return role;
@@ -5009,25 +5012,26 @@ if (!g || !l) return;
 const on = l.style.display !== "none" && !l.querySelector("*") && ["authChoice","authForm","stuEntry"].every(id => { const el = document.getElementById(id); return !el || el.style.display === "none"; });
 g.classList.toggle("is-loading", on);
 }
-function showEntryChoice(){
-authCardParts("authChoice");
-document.getElementById("authSubtitle").textContent = "Como você quer entrar?";
-showAuthGate("Como você quer entrar?");
-}
-function showTeacherLogin(){
-writeEntry({ role: "teacher" });
+// 8.39: primeiro o login; a escolha (professor, escola ou aluno) vem depois, só para conta nova.
+function showLoginFirst(){
 authMode = "login";
 applyAuthMode();
 authCardParts("authForm");
-document.getElementById("authStuBack").style.display = "block";
-document.getElementById("authSubtitle").textContent = "Entre pra acessar seus dados.";
+showAuthGate("Entre ou crie sua conta.");
 }
-// Dono de escola (8.23): entra como professor (continua com tudo de professor) e, depois do
-// login e da configuração inicial, o app pede o nome da escola.
-function showSchoolOwnerLogin(){
-showTeacherLogin();
-writeEntry({ role: "teacher", school: "owner" });
-document.getElementById("authSubtitle").textContent = "Entre ou crie sua conta. Depois você dá o nome da escola.";
+function showEntryChoice(){
+authCardParts("authChoice");
+showAuthGate("Como você vai usar o app?");
+}
+function entryChoose(role, schoolOwner){
+const uid = authCurrentUser && authCurrentUser.id;
+if (!uid) { showLoginFirst(); return; }
+writeEntry({ role: null, school: null });
+if (role === "student") { saveRole(uid, "student"); startStudentMode(); return; }
+if (schoolOwner) schoolSetIntent(uid);
+saveRole(uid, "teacher");
+cloudReloading = true;
+location.reload();
 }
 function stuEntryHTML(html, subtitle){
 authCardParts("stuEntry");
@@ -5049,8 +5053,13 @@ const el = stuEntryHTML(`<div class="entry-big">
 </div><button type="button" class="auth-toggle" data-back>Voltar</button><a class="entry-legal" href="privacidade.html" target="_blank" rel="noopener">Política de Privacidade</a>`, "Entrar como aluno");
 el.querySelectorAll("[data-kind]").forEach(b => b.onclick = () => { writeEntry({ kind: b.dataset.kind }); if (authCurrentUser) stuEntryCode(); else stuEntryAuth(); });
 const back = el.querySelector("[data-back]");
-if (authCurrentUser) back.textContent = "Sair da conta";
-back.onclick = () => { if (authCurrentUser) stuSignOut(); else { writeEntry(null); showEntryChoice(); } };
+// 8.39: com a conta aberta, "Voltar" leva de novo à escolha (professor, escola ou aluno).
+back.onclick = () => {
+if (!authCurrentUser) { writeEntry(null); showLoginFirst(); return; }
+const r = readRoles(); delete r[authCurrentUser.id]; _nativeSetItem.call(localStorage, ROLE_KEY, JSON.stringify(r));
+writeEntry(null); cloudReloading = true; location.reload();
+};
+if (authCurrentUser) { const out = document.createElement("button"); out.type = "button"; out.className = "auth-toggle"; out.textContent = "Sair da conta"; out.onclick = stuSignOut; back.after(out); }
 }
 // A chave só é procurada com a conta já aberta (8.1.1), um toque por busca (cada busca
 // conta no limite de 10 a cada 10 minutos) e com tempo máximo de 10 s.
@@ -9728,9 +9737,10 @@ document.getElementById("authSubmitBtn").disabled = false;
 }
 };
 
-document.getElementById("entryTeacher").onclick = showTeacherLogin;
-document.getElementById("entrySchool").onclick = showSchoolOwnerLogin;
-document.getElementById("entryStudent").onclick = () => { writeEntry({ role: "student" }); stuEntryKind(); };
+document.getElementById("entryTeacher").onclick = () => entryChoose("teacher");
+document.getElementById("entrySchool").onclick = () => entryChoose("teacher", true);
+document.getElementById("entryStudent").onclick = () => entryChoose("student");
+document.getElementById("entryOut").onclick = stuSignOut;
 document.getElementById("authStuBack").onclick = () => { const e = readEntry(); if (e.role === "student") stuEntryKind(); else { writeEntry(null); showEntryChoice(); } };
 document.getElementById("rowStudentKey").onclick = openStudentKey;
 document.getElementById("rowMyPlan").onclick = () => openPlans(false);
@@ -9773,6 +9783,7 @@ showAuthGate();
 // Aluno/responsável (8.1): modo aluno, sem nada do professor (não sincroniza dados de professor).
 const role = await resolveAppRole(session.user);
 if (role === null) { showRoleRetry(); return; }
+if (role === "choose") { showEntryChoice(); return; }
 if (role === "student") { await startStudentMode(); return; }
 await pullCloudData();
 hideAuthGate();
@@ -9788,9 +9799,7 @@ authMode = "login";
 applyAuthMode();
 // Antes de entrar: "Sou professor" ou "Entrar como aluno" (a escolha fica guardada até o
 // login, inclusive se precisar confirmar o email).
-const entry = readEntry();
-if (entry.role === "student" && entry.kind) stuEntryAuth();
-else showEntryChoice();
+showLoginFirst();
 }
 });
 }
