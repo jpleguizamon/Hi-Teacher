@@ -458,6 +458,9 @@ Até a 8.30 o APK era uma "casca" TWA (bubblewrap) que abria o site **pelo Chrom
 ## Login primeiro (8.39)
 - O app abre direto no login (com Google, se ligado). A escolha "Sou professor / Sou dono de escola / Sou aluno ou responsável" só aparece depois do login, e só para conta nova (sem dados de professor nem de aluno no servidor): `resolveAppRole` devolve "choose" e o app mostra `showEntryChoice`. Professor e dono de escola salvam o papel e recarregam; aluno segue para o "Sou aluno / Sou responsável" (com "Voltar" para a escolha e "Sair da conta"). Contas que já existem entram direto, como antes.
 
+## Troca de conta no mesmo aparelho (8.40)
+- `cloudAccountGuard()` roda antes de qualquer sincronização: se os dados do aparelho são de outra conta (`jp_tables_meta_v1`/`jp_sync_meta_v1` com outro userId) e há alunos ou temas, pergunta. OK (recomendado) = guarda uma cópia em "Restaurar cópia do aparelho", limpa os dados do aparelho e recarrega com os desta conta. Cancelar = leva os dados para esta conta (como antes). Antes, numa conta nova, os alunos da outra conta subiam sem perguntar.
+
 ## O que ainda falta / próximos passos
 
 - **App do aluno — ideias ainda não feitas (lista de set/2026)**: gravação enviada pelo próprio app com comentário do professor marcado no tempo (hoje vai pelo compartilhar do celular); cifras e partituras anexadas pelo professor (precisa de armazenamento de arquivos no Supabase); cadastro já completo pelo convite (hoje o link só preenche a chave; para interessados existe a ficha de matrícula da 8.35); lembrete de aula por notificação do celular (hoje é pela agenda .ics); mural da turma e avisos por turma; toques de IA (feedback da gravação, plano da semana a partir do resumo da aula, assistente de teoria).

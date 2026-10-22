@@ -3662,7 +3662,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.39";
+const APP_VERSION = "8.40";
 // ===================== App instalável (8.4) =====================
 // Service worker (sw.js), aviso de versão nova, faixa "Sem internet", botão "Instalar o app",
 // atalhos do ícone (?p=...) e botão voltar do celular fechando modal/menu no app instalado.
@@ -4140,10 +4140,29 @@ document.body.appendChild(toast);
 setTimeout(() => toast.remove(), 9000);
 }
 
+// 8.40: entrou numa conta diferente da que deixou os dados neste aparelho. Antes, numa conta
+// nova, os alunos da outra conta subiam sem perguntar. Agora pergunta; o padrão é começar com
+// os dados desta conta (uma cópia do que estava no aparelho fica em "Restaurar cópia do aparelho").
+async function cloudAccountGuard(){
+const uid = authCurrentUser && authCurrentUser.id;
+if (!uid) return true;
+const prev = tbMeta().userId || readSyncMeta().userId || null;
+if (!prev || prev === uid) return true;
+const sum = dataSummary(k => localStorage.getItem(k));
+if (!sum.students && !sum.plans) return true;
+const fresh = confirm(`Este aparelho tem dados de outra conta (${sum.students} aluno${sum.students === 1 ? "" : "s"}).\n\nOK = usar só os dados desta conta (recomendado). Uma cópia do que está no aparelho fica guardada em Configurações → Dados e backup → Restaurar cópia do aparelho.\n\nCancelar = levar esses dados para esta conta.`);
+if (!fresh) return true;
+await saveDeviceSnapshot("Dados de outra conta (antes de trocar de conta)");
+CLOUD_SYNC_KEYS.forEach(k => localStorage.removeItem(k));
+[TB_META_KEY, TB_SHADOW_KEY, TB_QUEUE_KEY, TB_ORPHANS_KEY, SYNC_META_KEY].forEach(k => localStorage.removeItem(k));
+cloudReloading = true;
+location.reload();
+return false;
+}
 // Uma leitura da nuvem por vez (o login dispara duas; as duas aplicavam a nuvem juntas).
 let cloudPulling = null;
 function pullCloudData(){
-if (!cloudPulling) cloudPulling = cloudStart().finally(() => { cloudPulling = null; });
+if (!cloudPulling) cloudPulling = cloudAccountGuard().then(ok => ok ? cloudStart() : null).finally(() => { cloudPulling = null; });
 return cloudPulling;
 }
 async function pullCloudDataNow(){
