@@ -1301,6 +1301,22 @@ body.lead-open #authGate,body.lead-open #onboardingGate{display:none!important}
 .plan-pick-row{display:flex;align-items:center;gap:0.625rem;padding:0.625rem 0.875rem;border-top:0.0625rem solid var(--hairline);font-size:0.875rem;color:var(--text);cursor:pointer}
 .plan-pick-row:first-child{border-top:none}
 .plan-pick-row input{width:1.125rem;height:1.125rem;accent-color:var(--accent)}
+.ref-card{max-width:30rem;margin:0.5rem auto 1rem;text-align:left;padding:1rem;border-radius:var(--radius-lg);border:0.0625rem solid var(--accent-line);background:var(--accent-soft)}
+.ref-title{font-size:1rem;font-weight:800;color:var(--heading);margin-bottom:0.25rem}
+.ref-card p{font-size:0.8125rem;color:var(--text-2);line-height:1.45;margin:0 0 0.625rem}
+.ref-card p b{color:var(--accent)}
+.ref-link{font-size:0.75rem;color:var(--text);word-break:break-all;padding:0.5rem 0.625rem;border-radius:var(--radius-sm);background:var(--glass-inset);border:0.0625rem solid var(--hairline);margin-bottom:0.625rem}
+.ref-acts{display:flex;gap:0.5rem;flex-wrap:wrap}
+.ref-acts .save{text-decoration:none;display:inline-flex;align-items:center;justify-content:center;flex:1;min-width:10rem}
+.ref-acts .btn-historico{flex:1;min-width:8rem;margin:0}
+.ref-count{font-size:0.75rem;color:var(--text-2);margin-top:0.625rem}
+.adm-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr));gap:0.5rem;margin-bottom:0.875rem}
+.adm-stat{display:flex;flex-direction:column;align-items:flex-start;gap:0.125rem;text-align:left;padding:0.75rem;border-radius:var(--radius-md);border:0.0625rem solid var(--glass-border-soft);background:var(--glass-inset);color:var(--text);font:inherit;cursor:pointer}
+.adm-stat.on{border-color:var(--accent);box-shadow:var(--glow-sm)}
+.adm-stat b{font-size:1.25rem;font-weight:800;color:var(--heading);font-variant-numeric:tabular-nums}
+.adm-stat span{font-size:0.75rem;font-weight:700;color:var(--text-2)}
+.adm-stat em{font-style:normal;font-size:0.6875rem;color:var(--muted);line-height:1.35}
+.adm-filters{margin-bottom:0.5rem}
 .plan-adm-row{display:flex;flex-direction:column;gap:0.5rem;padding:0.75rem 0;border-top:0.0625rem solid var(--hairline)}
 .plan-adm-row:first-child{border-top:none;padding-top:0}
 .plan-adm-info{font-size:0.8125rem;color:var(--text-2);line-height:1.45}
@@ -2692,6 +2708,7 @@ body.pdf-open{overflow:hidden}
 <div class="settings-card">
 <div class="settings-row" id="rowCloudSync"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-upload"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Salvar na nuvem</div><div class="settings-row-sub" id="valCloudStatus">Conectando…</div></div><span class="settings-row-value" id="valCloudAction">Sincronizar</span></div>
 <div class="settings-row" id="rowMyPlan" style="display:none"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-target"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Meu plano</div><div class="settings-row-sub" id="valMyPlan"></div></div><span class="settings-row-chevron">›</span></div>
+<div class="settings-row" id="rowReferral" style="display:none"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-user"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Indique um professor</div><div class="settings-row-sub">Ganhe 1 mês grátis por indicação que assinar</div></div><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowPlanAdmin" style="display:none"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-user"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Assinaturas</div><div class="settings-row-sub">Planos e pedidos dos professores (só você vê)</div></div><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowStudentMode"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-user"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Entrar como aluno/responsável</div><div class="settings-row-sub">Pra quem também é aluno ou responsável por um aluno</div></div><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowPushTeacher"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-bell"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Notificações no celular</div><div class="settings-row-sub" id="valPushTeacher">Avisos dos alunos mesmo com o app fechado</div></div><span class="settings-row-chevron">›</span></div>
@@ -3662,7 +3679,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.40";
+const APP_VERSION = "8.41";
 // ===================== App instalável (8.4) =====================
 // Service worker (sw.js), aviso de versão nova, faixa "Sem internet", botão "Instalar o app",
 // atalhos do ícone (?p=...) e botão voltar do celular fechando modal/menu no app instalado.
@@ -9764,6 +9781,7 @@ document.getElementById("authStuBack").onclick = () => { const e = readEntry(); 
 document.getElementById("rowStudentKey").onclick = openStudentKey;
 document.getElementById("rowMyPlan").onclick = () => openPlans(false);
 document.getElementById("rowPlanAdmin").onclick = openPlanAdmin;
+document.getElementById("rowReferral").onclick = openReferral;
 document.getElementById("rowStudentContent").onclick = openStudentContent;
 document.getElementById("rowInstallApp").onclick = pwaInstall;
 document.getElementById("rowStudentMode").onclick = () => { if (authCurrentUser && confirm("Abrir o modo aluno/responsável nesta conta? Seus dados de professor continuam salvos. Pra voltar: Perfil → Voltar para o modo professor.")) switchRole("student"); };
@@ -10018,6 +10036,7 @@ const { data, error } = await supabaseClient.rpc("hi_my_plan");
 if (error) { myPlan = null; return; }
 myPlan = data || null;
 } catch(e) { myPlan = null; }
+try { await refApply(); } catch(e) {}
 try { renderProfessorTier(); planRowRender(); } catch(e) {}
 }
 // Depois do login (e depois do questionário inicial): avisa do teste ou pede pra escolher o plano.
@@ -10028,6 +10047,12 @@ if (!st) return;
 if (st.kind === "expired") { openPlans(true); return; }
 if (!appSettings.onboarded) return;
 if (st.kind === "trial" && !appSettings.planTrialSeen) { appSettings.planTrialSeen = true; saveAppSettings(); openPlans(false, "welcome"); return; }
+// 8.41: teste acabando. 3, 2 e 1 dia antes: aviso (uma vez por dia). No último dia: a tela dos planos.
+if (st.kind === "trial" && st.left <= 3 && appSettings.planTrialWarnedOn !== myPlan.today) {
+appSettings.planTrialWarnedOn = myPlan.today; saveAppSettings();
+if (st.left === 0) { openPlans(false, "trialEnd"); return; }
+showCloudWarning(`Seu teste grátis termina em ${st.left === 1 ? "1 dia" : `${st.left} dias`}. Escolha seu plano em Configurações → Meu plano.`);
+}
 if (st.kind === "paid" && st.left <= 3 && appSettings.planWarned !== myPlan.paid_until) { appSettings.planWarned = myPlan.paid_until; saveAppSettings(); showCloudWarning(`Seu plano ${st.plan.name} vence ${st.left === 0 ? "hoje" : st.left === 1 ? "amanhã" : `em ${st.left} dias`}. Para renovar: Configurações → Meu plano.`); }
 if (st.kind === "admin") planAdminNotice();
 }
@@ -10045,6 +10070,7 @@ const row = document.getElementById("rowMyPlan"), adm = document.getElementById(
 const st = planState();
 if (row) { row.style.display = st ? "" : "none"; const v = document.getElementById("valMyPlan"); if (v) v.textContent = planStatusText(st); }
 if (adm) adm.style.display = st && st.kind === "admin" ? "" : "none";
+const ref = document.getElementById("rowReferral"); if (ref) ref.style.display = st && myPlan.ref_code && st.kind !== "admin" ? "" : "none";
 }
 function planDevContact(p){
 const subject = encodeURIComponent(`Hi Teacher: quero o plano ${p.name}`);
@@ -10057,7 +10083,9 @@ const gate = document.getElementById("planGate");
 if (!gate) return;
 const st = planState() || { kind: "trial", left: 14, max: Infinity };
 const n = planActiveCount();
-const intro = why === "welcome"
+const intro = why === "trialEnd"
+? `<h1>Seu teste grátis termina hoje</h1><p class="plan-lead">Escolha um plano para continuar usando o app amanhã sem parar. Nada do que você cadastrou se perde.</p>`
+: why === "welcome"
 ? `<h1>Bem-vindo ao Hi Teacher!</h1><p class="plan-lead">Você está no <b>teste grátis de 14 dias</b>, com tudo liberado e sem limite de alunos. Quando o teste acabar, você escolhe um dos planos abaixo.</p>`
 : must
 ? `<h1>${st.wasPaid ? "Seu plano venceu" : "Seu teste grátis terminou"}</h1><p class="plan-lead">Para continuar usando o app, escolha um plano. Nada do que você já cadastrou se perde.${st.requested ? ` O pagamento do plano ${escapeHtml(st.requested.name)} ainda não foi confirmado.` : ""}</p>`
@@ -10082,12 +10110,14 @@ gate.innerHTML = `<div class="plan-wrap"><svg class="brand-owl plan-owl" viewBox
 <div class="plan-grid">${cards}</div>
 <div class="plan-err" id="planErr"></div>
 <p class="plan-foot">O aluno nunca paga. Você pode trocar de plano quando quiser.</p>
+${must ? "" : refCardHTML()}
 ${must ? "" : `<div class="actions"><button type="button" class="cancel" id="planClose">${why === "welcome" ? "Começar o teste" : "Fechar"}</button></div>`}
 ${must ? `<button type="button" class="auth-toggle" id="planOut">Sair da conta</button>` : ""}</div>`;
 gate.classList.remove("hidden");
 gate.scrollTop = 0;
 planGateOpen = true;
 const close = () => { gate.classList.add("hidden"); gate.innerHTML = ""; planGateOpen = false; };
+refCardBind(gate);
 const c = gate.querySelector("#planClose"); if (c) c.onclick = close;
 const o = gate.querySelector("#planOut"); if (o) o.onclick = async () => { try { await supabaseClient.auth.signOut(); } catch(e) {} location.reload(); };
 const err = gate.querySelector("#planErr");
@@ -10150,23 +10180,50 @@ if (n) showCloudWarning(`${n} professor${n > 1 ? "es pediram" : " pediu"} um pla
 async function openPlanAdmin(){
 const body = document.createElement("div");
 body.innerHTML = `<div class="field-hint" style="margin:0">Carregando…</div>`;
-openQuickModal("Assinaturas", "Professores, planos e pedidos. Ativar = marcar como pago.", body, null, "Fechar");
+openQuickModal("Assinaturas", "Seus números, os pedidos e cada professor. Ativar = marcar como pago.", body, null, "Fechar");
 let list = [];
-try { const { data, error } = await supabaseClient.rpc("hi_admin_plans"); if (error) throw error; list = data || []; }
-catch(e) { body.innerHTML = `<div class="field-hint" style="margin:0">Não consegui carregar agora.</div>`; return; }
-const today = isoOf(new Date());
+const load = async () => { const { data, error } = await supabaseClient.rpc("hi_admin_plans"); if (error) throw error; list = data || []; };
+try { await load(); } catch(e) { body.innerHTML = `<div class="field-hint" style="margin:0">Não consegui carregar agora.</div>`; return; }
+const today = isoOf(new Date()), in7 = isoOf(new Date(Date.now() + 7 * 86400000)), month = today.slice(0, 7);
+const paidNow = x => { const p = planById(x.plan); return !!(p && p.id !== "free" && x.paid_until && x.paid_until >= today); };
+const kindOf = x => paidNow(x) ? "paid" : x.plan === "free" ? "free" : (x.plan === "trial" && (!x.trial_until || x.trial_until >= today)) ? "trial" : "expired";
 const status = x => {
-const p = planById(x.plan);
-if (p && p.id !== "free" && x.paid_until && x.paid_until >= today) return `<span class="cloud-ok">${escapeHtml(p.name)} · pago até ${formatDateShort(x.paid_until)}</span>`;
-if (x.plan === "free") return "Grátis";
-if (x.plan === "trial" && x.trial_until && x.trial_until >= today) return `Teste até ${formatDateShort(x.trial_until)}`;
-if (x.plan === "trial" && !x.trial_until) return "Ainda não abriu os planos";
+const p = planById(x.plan), k = kindOf(x);
+if (k === "paid") return `<span class="cloud-ok">${escapeHtml(p.name)} · pago até ${formatDateShort(x.paid_until)}</span>`;
+if (k === "free") return "Grátis";
+if (k === "trial") return x.trial_until ? `Teste até ${formatDateShort(x.trial_until)}` : "Ainda não abriu os planos";
 return `<span class="cloud-bad">${p && p.id !== "free" ? `${escapeHtml(p.name)} vencido` : "Teste terminou"}</span>`;
 };
+const soon = x => { const k = kindOf(x); return (k === "paid" && x.paid_until <= in7) || (k === "trial" && x.trial_until && x.trial_until <= in7); };
+const FILTERS = [["all", "Todos"], ["req", "Pediram plano"], ["soon", "Vencem em 7 dias"], ["trial", "Em teste"], ["paid", "Pagando"], ["free", "Grátis"], ["expired", "Vencidos"]];
+let filter = "all";
+const pass = x => filter === "all" || (filter === "new" ? String(x.created_at || "").slice(0, 7) === month : filter === "req" ? !!(x.requested && x.requested !== "free") : filter === "soon" ? soon(x) : kindOf(x) === filter);
+const summary = () => {
+const n = k => list.filter(x => kindOf(x) === k).length;
+const paid = list.filter(paidNow);
+const income = paid.reduce((a, x) => a + ((planById(x.plan) || {}).price || 0), 0);
+const byPlan = PLANS.filter(p => p.price !== 0).map(p => [p.name, paid.filter(x => x.plan === p.id).length]).filter(x => x[1]).map(x => `${x[1]} ${x[0]}`).join(", ");
+const reqs = list.filter(x => x.requested && x.requested !== "free").length;
+const soonN = list.filter(soon).length;
+const newN = list.filter(x => String(x.created_at || "").slice(0, 7) === month).length;
+const ended = list.filter(x => x.trial_until && x.trial_until < today);
+const conv = ended.filter(x => x.paid_until).length;
+const card = (f, big, label, sub) => `<button type="button" class="adm-stat${filter === f ? " on" : ""}" data-af="${f}"><b>${big}</b><span>${label}</span>${sub ? `<em>${sub}</em>` : ""}</button>`;
+return `<div class="adm-stats">
+${card("all", list.length, list.length === 1 ? "professor" : "professores", `${n("trial")} em teste · ${n("free")} no Grátis · ${n("paid")} pagando${n("expired") ? ` · ${n("expired")} vencido${n("expired") > 1 ? "s" : ""}` : ""}`)}
+${card("paid", `R$ ${moneyText(income)}`, "por mês", byPlan || "ninguém pagando ainda")}
+${card("req", reqs, reqs === 1 ? "pedido esperando você" : "pedidos esperando você", "")}
+${card("soon", soonN, soonN === 1 ? "vence nos próximos 7 dias" : "vencem nos próximos 7 dias", "")}
+${card("new", newN, newN === 1 ? "cadastro neste mês" : "cadastros neste mês", ended.length ? `${conv} de ${ended.length} testes que acabaram viraram plano pago` : "")}
+</div>`;
+};
 const draw = () => {
-body.innerHTML = list.length ? list.map((x, i) => `<div class="plan-adm-row"><div class="plan-adm-info"><b>${escapeHtml(x.name || "")}</b><div>${escapeHtml(x.email || "")} · ${Number(x.students) || 0} aluno${Number(x.students) === 1 ? "" : "s"} ativo${Number(x.students) === 1 ? "" : "s"}</div><div>${status(x)}${x.requested ? ` · <b class="plan-adm-req">pediu ${escapeHtml((planById(x.requested) || {}).name || "")}</b>` : ""}</div></div>
+const shown = list.map((x, i) => [x, i]).filter(([x]) => pass(x));
+body.innerHTML = summary() + `<div class="reason-chips adm-filters">${FILTERS.map(([f, l]) => `<button type="button" class="filter-chip${filter === f ? " selected" : ""}" data-af="${f}">${l}</button>`).join("")}</div>`
++ (shown.length ? shown.map(([x, i]) => `<div class="plan-adm-row"><div class="plan-adm-info"><b>${escapeHtml(x.name || "")}</b><div>${escapeHtml(x.email || "")} · ${Number(x.students) || 0} aluno${Number(x.students) === 1 ? "" : "s"} ativo${Number(x.students) === 1 ? "" : "s"}</div><div>${status(x)}${x.requested ? ` · <b class="plan-adm-req">pediu ${escapeHtml((planById(x.requested) || {}).name || "")}</b>` : ""}</div>${x.referred_by || Number(x.credit_months) ? `<div>${x.referred_by ? `Indicado por ${escapeHtml(x.referred_by)}` : ""}${x.referred_by && Number(x.credit_months) ? " · " : ""}${Number(x.credit_months) ? `${Number(x.credit_months)} mês${Number(x.credit_months) > 1 ? "es" : ""} ganho${Number(x.credit_months) > 1 ? "s" : ""} por indicação` : ""}</div>` : ""}</div>
 <div class="plan-adm-acts"><select data-ap="${i}">${PLANS.map(p => `<option value="${p.id}"${(x.requested || x.plan) === p.id ? " selected" : ""}>${escapeHtml(p.name)}</option>`).join("")}</select><select data-am="${i}"><option value="1">1 mês</option><option value="3">3 meses</option><option value="6">6 meses</option><option value="12">12 meses</option></select><button type="button" class="btn-historico" data-aok="${i}">Ativar</button></div></div>`).join("")
-: `<div class="field-hint" style="margin:0">Nenhum professor ainda.</div>`;
+: `<div class="field-hint" style="margin:0.75rem 0 0">${list.length ? "Ninguém nesta lista." : "Nenhum professor ainda."}</div>`);
+body.querySelectorAll("[data-af]").forEach(b => b.onclick = () => { filter = b.dataset.af; draw(); });
 body.querySelectorAll("[data-aok]").forEach(b => b.onclick = async () => {
 const i = Number(b.dataset.aok), x = list[i];
 const plan = body.querySelector(`[data-ap="${i}"]`).value, months = Number(body.querySelector(`[data-am="${i}"]`).value) || 1;
@@ -10175,12 +10232,52 @@ if (!confirm(plan === "free" ? `Passar ${x.name} para o plano Grátis?` : `Ativa
 b.disabled = true;
 const { error } = await supabaseClient.rpc("hi_admin_set_plan", { p_teacher: x.id, p_plan: plan, p_months: months });
 if (error) { alert("Não consegui salvar. Tente de novo."); b.disabled = false; return; }
-const { data } = await supabaseClient.rpc("hi_admin_plans");
-list = data || list;
+try { await load(); } catch(e) {}
 draw();
 });
 };
 draw();
+}
+// ---------- Indique um professor (8.41) ----------
+// Link: <app>?indica=CÓDIGO. A conta nova guarda o código e, quando vira professor, o servidor
+// marca quem indicou. Quando o indicado assina, quem indicou ganha 1 mês (supabase/schema-v8.41.sql).
+const REF_KEY = "jp_ref_code_v1";
+(function(){
+try {
+const q = new URLSearchParams(location.search), k = (q.get("indica") || "").trim().toUpperCase();
+if (!k) return;
+if (/^[A-Z0-9]{6}$/.test(k)) localStorage.setItem(REF_KEY, k);
+q.delete("indica");
+history.replaceState(null, "", location.pathname + (q.toString() ? "?" + q : "") + location.hash);
+} catch(e) {}
+})();
+async function refApply(){
+let code = null;
+try { code = localStorage.getItem(REF_KEY); } catch(e) {}
+if (!code || !myPlan || !myPlan.ref_code) return;
+try { localStorage.removeItem(REF_KEY); } catch(e) {}
+if (myPlan.referred || code === myPlan.ref_code) return;
+try { const { data } = await supabaseClient.rpc("hi_set_referrer", { p_code: code }); if (data) myPlan.referred = true; } catch(e) {}
+}
+function refLink(){ return myPlan && myPlan.ref_code ? `${appLink()}?indica=${myPlan.ref_code}` : ""; }
+function refCardHTML(){
+if (!myPlan || !myPlan.ref_code || myPlan.admin) return "";
+const n = Number(myPlan.ref_count) || 0, paid = Number(myPlan.ref_paid) || 0, cr = Number(myPlan.credit_months) || 0;
+return `<div class="ref-card"><div class="ref-title">Indique um professor</div>
+<p>Cada professor que criar a conta pelo seu link e assinar um plano te dá <b>1 mês grátis</b>.</p>
+<div class="ref-link">${escapeHtml(refLink())}</div>
+<div class="ref-acts"><a class="save" id="refWa" href="https://wa.me/?text=${encodeURIComponent(`Estou usando o Hi Teacher para organizar minhas aulas, alunos e pagamentos. Tem 14 dias grátis: ${refLink()}`)}" target="_blank" rel="noopener">Enviar pelo WhatsApp</a><button type="button" class="btn-historico" id="refCopy">Copiar link</button></div>
+${n ? `<div class="ref-count">${n} indicado${n === 1 ? "" : "s"} · ${paid} já assin${paid === 1 ? "ou" : "aram"}${cr ? ` · ${cr} mês${cr > 1 ? "es" : ""} grátis guardado${cr > 1 ? "s" : ""} para o seu próximo pagamento` : ""}</div>` : ""}</div>`;
+}
+function refCardBind(root){
+const c = root.querySelector("#refCopy");
+if (c) c.onclick = async () => { if (await copyText(refLink())) c.textContent = "Link copiado"; else prompt("Copie o link:", refLink()); };
+}
+function openReferral(){
+const body = document.createElement("div");
+body.innerHTML = refCardHTML() || `<div class="field-hint" style="margin:0">A indicação ainda não está ativa no servidor do app.</div>`;
+refCardBind(body);
+openQuickModal("Indique um professor", "", body, null, "Fechar");
 }
 
 // Lista padrão de instrumentos, usada só como semente pra quem está começando do zero
