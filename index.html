@@ -6,6 +6,29 @@
 <meta name="theme-color" content="#05060B">
 <meta name="color-scheme" content="dark">
 <title>Hi Teacher</title>
+<script>
+// Idioma do app (8.42): "pt" (padrão) ou "en". Em inglês, i18n/en.js troca os textos da tela.
+(function(){
+var l = null;
+try {
+l = localStorage.getItem("jp_lang_v1");
+var q = new URLSearchParams(location.search).get("lang");
+if (q === "en" || q === "pt") { l = q; localStorage.setItem("jp_lang_v1", q); }
+if (!l) {
+// Aparelho sem nada do app e em outro idioma: começa em inglês. Quem já usa continua em português.
+var fresh = true;
+for (var i = 0; i < localStorage.length; i++) { if (/^jp_/.test(localStorage.key(i) || "")) { fresh = false; break; } }
+if (fresh && !/^pt/i.test(navigator.language || "pt")) { l = "en"; localStorage.setItem("jp_lang_v1", "en"); }
+}
+} catch(e) {}
+window.APP_LANG = l === "en" ? "en" : "pt";
+window.APP_LOCALE = "pt-BR";
+window.hiTr = function(s){ return s; };
+window.hiTrList = function(a){ return a; };
+window.hiTrUrl = function(u){ return u; };
+if (window.APP_LANG === "en") { document.documentElement.lang = "en"; document.write('<script src="i18n/en.js"><\/script>'); }
+})();
+</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" href="icons/favicon-32.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -1340,6 +1363,8 @@ body.lead-open #authGate,body.lead-open #onboardingGate{display:none!important}
 .auth-toggle{display:block;width:100%;background:none;border:none;color:var(--accent);font-size:0.8125rem;font-weight:650;margin-top:0.75rem;cursor:pointer;border-radius:var(--radius-sm);padding:0.25rem}
 .auth-toggle:hover{text-decoration:underline;text-underline-offset:0.2em}
 .auth-toggle:first-of-type{margin-top:1rem}
+.auth-lang{color:var(--muted);font-weight:600;margin-top:1.25rem}
+#authGate.is-loading .auth-lang{display:none}
 .auth-loading{color:var(--muted);font-size:0.8125rem}
 .social-btn{display:flex;align-items:center;justify-content:center;gap:0.625rem;width:100%;min-height:2.875rem;margin-bottom:0.625rem;border-radius:var(--radius-pill);border:0.0625rem solid var(--glass-border);background:#fff;color:#111;font:inherit;font-size:0.9375rem;font-weight:700;cursor:pointer}
 .social-btn#authApple{background:#000;color:#fff;border-color:rgba(255,255,255,.25)}
@@ -2280,6 +2305,7 @@ body.pdf-open{overflow:hidden}
 <button type="button" class="auth-toggle" id="authStuBack" style="display:none">Voltar</button>
 </div>
 <div id="stuEntry" style="display:none"></div>
+<button type="button" class="auth-toggle auth-lang" id="authLang" data-no-tr></button>
 <div class="auth-loading" id="authLoading">Carregando seus dados…</div>
 <div class="auth-splash-bar" aria-hidden="true"><span></span></div>
 <div class="auth-splash-slow">Está demorando? Confira a internet. Seus dados continuam guardados.</div>
@@ -2688,6 +2714,7 @@ body.pdf-open{overflow:hidden}
 <div class="settings-group-label">Sobre</div>
 <div class="settings-card">
 <div class="settings-row" id="rowFeedback"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-message"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Enviar feedback</div></div><span class="settings-row-chevron">›</span></div>
+<div class="settings-row" id="rowLang" data-no-tr><span class="settings-row-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span><div class="settings-row-text"><div class="settings-row-title" id="rowLangTitle">Idioma · Language</div></div><span class="settings-row-value" id="valLang"></span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowTermos"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-file-text"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Termos e privacidade</div></div><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowInstallApp" style="display:none"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-download"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Instalar o app</div><div class="settings-row-sub">Abre em tela cheia, com ícone na tela inicial</div></div><span class="settings-row-chevron">›</span></div>
 <div class="settings-row"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-info"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Versão do app</div></div><span class="settings-row-value" id="valVersao"></span></div>
@@ -3598,6 +3625,12 @@ body.pdf-open{overflow:hidden}
 <p><strong style="color:#cbd5e1">Backup:</strong> mesmo com a sincronização, recomendamos usar "Exportar dados" em Configurações → Dados de tempos em tempos, como backup extra.</p>
 <p><strong style="color:#cbd5e1">Feedback:</strong> o que você escreve em "Enviar feedback" é enviado por e-mail pra quem desenvolve o app e também fica salvo neste dispositivo.</p>
 <p><strong style="color:#cbd5e1">App do aluno:</strong> quando você cria a chave para alunos, alunos e responsáveis podem pedir para entrar. <b>Você decide quem entra</b> e responde pelos dados dos seus alunos dentro do app (inclusive de menores de idade, que só entram com a autorização do responsável). Cada aluno vê só o que é dele; anotações e notas que você não liberar ficam só com você.</p>
+<p><strong style="color:#cbd5e1">Planos e pagamento (professores):</strong> a conta de professor começa com 14 dias grátis, com tudo liberado. Depois, é preciso escolher um plano: o Grátis (até 5 alunos ativos) ou um plano pago, que muda pelo número de alunos ativos. Os preços estão na tela "Meu plano". Alunos e responsáveis nunca pagam pelo app.</p>
+<p><strong style="color:#cbd5e1">Validade e renovação:</strong> o plano pago vale até a data que aparece em "Meu plano". Ele não é cobrado sozinho: para continuar, você paga o próximo período. Depois de pedir um plano, você tem 3 dias para fazer o pagamento.</p>
+<p><strong style="color:#cbd5e1">Atraso e cancelamento:</strong> você pode parar quando quiser, sem multa: é só não renovar ou escolher o Grátis. Se o plano vencer, <b>nada do que você guardou é apagado</b>. Você só não consegue ter mais alunos ativos que o limite do Grátis até escolher um plano de novo.</p>
+<p><strong style="color:#cbd5e1">Reembolso:</strong> se você se arrepender em até 7 dias depois do primeiro pagamento, devolvemos o valor inteiro (direito de arrependimento, art. 49 do Código de Defesa do Consumidor). Depois disso, o período já pago não é devolvido, mas o plano continua valendo até o fim dele. Para pedir, use "Enviar feedback" ou o contato do seu plano.</p>
+<p><strong style="color:#cbd5e1">Mudança de preço:</strong> se os preços mudarem, avisamos no app com pelo menos 30 dias de antecedência. O período que você já pagou não muda.</p>
+<p><strong style="color:#cbd5e1">Indicação:</strong> quando um professor que você indicou começa a pagar um plano, você ganha 1 mês grátis. O mês não vira dinheiro e não pode ser transferido.</p>
 <p><strong style="color:#cbd5e1">Excluir:</strong> Configurações → Conta → "Excluir minha conta e todos os dados" apaga tudo da nuvem (antes, o app baixa o backup). Alunos podem excluir a conta deles pelo Perfil e pedir que você apague os registros que guarda.</p>
 <p>Detalhes na <a href="privacidade.html" target="_blank" rel="noopener" style="color:var(--accent)">Política de Privacidade</a> (a mesma que os alunos leem).</p>
 </div>
@@ -3679,7 +3712,19 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.41";
+const APP_VERSION = "8.42";
+// Idioma (8.42): troca entre português e inglês e recarrega. Fica guardado neste aparelho.
+function langSwitchLabel(){ return APP_LANG === "en" ? "🌐 Mudar para português" : "🌐 Switch to English"; }
+function langSwitch(){
+const to = APP_LANG === "en" ? "pt" : "en";
+if (!confirm(to === "en" ? "Mudar o app para inglês?\nSwitch the app to English?" : "Switch the app to Portuguese?\nMudar o app para português?")) return;
+try { localStorage.setItem("jp_lang_v1", to); } catch(e) {}
+location.reload();
+}
+(function(){ const b = document.getElementById("authLang"); if (b) { b.textContent = langSwitchLabel(); b.onclick = langSwitch; } })();
+// O idioma também vai para os avisos: o service worker (sw.js) e o app Android traduzem as notificações.
+try { if (window.caches) caches.open("hi-lang").then(c => c.put("./__lang", new Response(APP_LANG))).catch(() => {}); } catch(e) {}
+try { if (window.HiTeacherApp && typeof window.HiTeacherApp.setLang === "function") window.HiTeacherApp.setLang(APP_LANG); } catch(e) {}
 // ===================== App instalável (8.4) =====================
 // Service worker (sw.js), aviso de versão nova, faixa "Sem internet", botão "Instalar o app",
 // atalhos do ícone (?p=...) e botão voltar do celular fechando modal/menu no app instalado.
@@ -3699,8 +3744,8 @@ try {
 const share = async d => {
 d = d || {};
 const f = d.files && d.files[0];
-if (f) { if (!HI_APP.shareFile(f.name || "arquivo", f.type || "", await hiB64(f), d.text || "")) throw new Error("share"); return; }
-HI_APP.shareText([d.text, d.url].filter(Boolean).join("\n"), d.title || "");
+if (f) { if (!HI_APP.shareFile(f.name || "arquivo", f.type || "", await hiB64(f), hiTr(d.text || ""))) throw new Error("share"); return; }
+HI_APP.shareText(hiTr([d.text, d.url].filter(Boolean).join("\n")), hiTr(d.title || ""));
 };
 Object.defineProperty(navigator, "share", { value: share, configurable: true });
 Object.defineProperty(navigator, "canShare", { value: () => true, configurable: true });
@@ -3716,7 +3761,7 @@ return click.call(this);
 };
 // window.open: link de fora (WhatsApp, etc.) abre no app certo; janela em branco vira uma tela por cima.
 window.open = function(url){
-if (url) { try { const u = new URL(url, location.href); if (u.origin === location.origin && u.pathname.startsWith("/Hi-Teacher")) { location.assign(u.href); return window; } HI_APP.openExternal(u.href); } catch(e) {} return null; }
+if (url) { url = hiTrUrl(url); try { const u = new URL(url, location.href); if (u.origin === location.origin && u.pathname.startsWith("/Hi-Teacher")) { location.assign(u.href); return window; } HI_APP.openExternal(u.href); } catch(e) {} return null; }
 const box = document.createElement("div");
 box.style.cssText = "position:fixed;inset:0;z-index:2147483000;background:#000";
 const fr = document.createElement("iframe");
@@ -3936,7 +3981,30 @@ const BACKUP_EVERY = { weekly: 7, biweekly: 15, monthly: 30, never: 0 };
 const BACKUP_LABELS = { weekly: "Toda semana", biweekly: "A cada 15 dias", monthly: "Todo mês", never: "Nunca" };
 const REMINDER_SENT_KEY = "jp_reminders_sent_v1";
 const REMINDER_GROUPS = [["eve", "Véspera"], ["later", "Mais tarde (no mesmo dia)"], ["soon", "Daqui a pouco (menos de 2 horas)"]];
-const REMINDER_DEFAULTS = {
+const REMINDER_DEFAULTS = APP_LANG === "en" ? {
+eve: [
+"[Greeting], [name]! Just a reminder about [lesson] tomorrow at [time]. See you then!",
+"[Greeting]! All set for [lesson] tomorrow [period] at [time]?",
+"[Greeting], [name]! We have [lesson] tomorrow at [time]. Sound good?",
+"Hi, [name]! [Greeting]! Just a reminder: [lesson] is tomorrow at [time].",
+"[Greeting], [name]! Quick reminder: tomorrow [period], at [time], we have [lesson].",
+"[Greeting], [name]! Are we still on for [lesson] tomorrow at [time]? If anything comes up, let me know!"
+],
+later: [
+"[Greeting]! All set for [lesson] later today at [time]?",
+"[Greeting], [name]! Don't forget [lesson] today [period] at [time].",
+"[Greeting]! We have [lesson] today at [time]. See you later!",
+"[Greeting], [name]! Just a reminder about [lesson] today at [time].",
+"Hi, [name]! [Greeting]! [lesson] is today at [time]. See you later!",
+"[Greeting]! Are we confirmed for [lesson] today [period] at [time]?"
+],
+soon: [
+"Hi, [name]! [lesson] starts soon, at [time]. See you shortly!",
+"[Greeting]! All set for [lesson] in a little while, at [time]?",
+"[name], just a reminder: [lesson] starts at [time], very soon!",
+"[Greeting], [name]! It's almost time for [lesson], at [time]. See you soon!"
+]
+} : {
 eve: [
 "[Saudação], [nome]! Passando pra lembrar da [aula] amanhã, às [hora]. Até lá!",
 "[Saudação]!! Tudo certo pra [aula] de amanhã [período], às [hora]?",
@@ -5610,7 +5678,7 @@ return { min: min ? Number(min[1]) : null, from: bpm ? Number(bpm[1]) : null, to
 // e uma frase do contexto do aluno; aulas dos próximos dias em cards por dia; uma seção de
 // estudo da semana (lição, matéria e o que o professor deixou no mural) e o próximo evento.
 // Os avisos ficam no sino do cabeçalho.
-const DAY_NAMES = ["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"];
+const DAY_NAMES = hiTrList(["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"]);
 function stuGreetStatus(up){
 const s = stuCur.s, guardian = stuCur.link.role === "guardian", who = guardian ? firstName(s.name) : "";
 const today = isoOf(new Date());
@@ -5675,13 +5743,13 @@ const s = stuCur.s, tp = stuCur.tp, content = stuContent();
 const x = up.find(y => !y.off && !(y.record && isNoClass(y.record)));
 if (!x) return `<div class="empty">Nenhuma aula marcada nas próximas semanas.</div>`;
 const { offset, off, st, status, cls } = stuLessonCardInfo(x);
-const suffix = offset === 0 ? " (hoje)" : offset === 1 ? " (amanhã)" : ` (daqui a ${offset} dias)`;
+const suffix = offset === 0 ? hiTr(" (hoje)") : offset === 1 ? hiTr(" (amanhã)") : hiTr(` (daqui a ${offset} dias)`);
 const meta = [`com ${tp.display_name || "o professor"}`, x.kind === "extra" ? extraLabel(s, x.makeupId).toLowerCase() : "", stuIsGroup() ? "grupo" : ""].filter(Boolean).map(escapeHtml).join(" · ");
 const link = stuLinkURL(s);
 const acts = offset === 0 && !off ? `${content.reminder ? `<div class="stu-remind stu-card-note">Lembrete: ${escapeHtml(content.reminder)}</div>` : ""}
 <div class="song-acts stu-next-acts">${link ? `<a class="save stu-online-mini" href="${escapeHtml(link)}" target="_blank" rel="noopener">Entrar na aula online</a>` : ""}${st.canAbsent ? `<button type="button" class="btn-edit-toggle" data-absent="${escapeHtml(x.key)}">Vou faltar</button>` : ""}</div>
 <div class="stu-absent-form" data-absent-form="${escapeHtml(x.key)}"></div>` : "";
-return `<section class="day-section focused"><div class="day-head">${DAY_NAMES[x.date.getDay()]}, ${x.date.getDate()} de ${MONTH_FULL[x.date.getMonth()]}${suffix}</div>
+return `<section class="day-section focused"><div class="day-head">${DAY_NAMES[x.date.getDay()]}, ${dayMonth(x.date.getDate(), MONTH_FULL[x.date.getMonth()])}${suffix}</div>
 <div class="card card-tappable" data-lp="${escapeHtml(x.key)}" role="button" tabindex="0" aria-label="Abrir a aula"><div class="time">${escapeHtml(x.time)}</div><div class="avatar-cluster"><div class="avatar-span2">${stuTeacherAvatar()}</div></div><div class="info"><div class="name">${escapeHtml(s.instrument ? `Aula de ${s.instrument}` : "Aula")}</div><div class="instrument">${meta}${stuPlaceHTML(s) ? ` · ${stuPlaceHTML(s)}` : ""}</div></div><div class="status ${cls}">${escapeHtml(status)}</div></div>${acts}</section>`;
 }
 // Painel da aula do aluno: usa o mesmo modal do painel do professor (#lessonPanelModal).
@@ -5859,7 +5927,8 @@ if (used >= rules.maxMonth) return `Limite de ${rules.maxMonth} remarcaç${rules
 return null;
 }
 function stuReschedReq(key){ return stuRequestsFor("reschedule").find(r => r.payload && r.payload.key === key && r.status === "pending"); }
-function slotLabel(iso, time){ const d = dateFromIso(iso); return `${WEEKDAY_SHORT[d.getDay()].toLowerCase()}, ${formatDateShort(iso).slice(0,5)} às ${time}`; }
+function wdLow(w){ return APP_LANG === "en" ? w : w.toLowerCase(); }
+function slotLabel(iso, time){ const d = dateFromIso(iso); const wd = APP_LANG === "en" ? WEEKDAY_SHORT[d.getDay()] : wdLow(WEEKDAY_SHORT[d.getDay()]); return `${wd}, ${formatDateShort(iso).slice(0,5)} às ${time}`; }
 function slotPickerHTML(kind, ref){
 const slots = stuOpenSlots();
 return `<div class="field"><label>Horários vagos do professor</label>${slots.length ? `<div class="reason-chips">${slots.slice(0, 18).map(x => `<button type="button" class="filter-chip" data-slot="${x.iso}|${x.time}">${escapeHtml(slotLabel(x.iso, x.time))}</button>`).join("")}</div>` : `<div class="stu-muted">O professor não tem horários vagos publicados agora. Sugira um dia e horário:</div>`}</div>
@@ -5936,7 +6005,7 @@ if (vals.length) { const avg = vals.reduce((a, c) => a + l[c.key], 0) / vals.len
 }
 const d = dateFromIso(isoFromBr(l.date));
 const taught = String(l.taught || l.topic || "").trim(), home = String(l.homework || "").trim();
-return `<div class="hist-lesson${badge && badge.cls !== "info" ? " hist-off" : ""}"><div class="up-date"><b>${escapeHtml(l.date.slice(0,2))}</b><span>${escapeHtml(WEEKDAY_SHORT[d.getDay()].toLowerCase())}</span></div><div class="hist-body">${badge ? `<span class="stu-status ${badge.cls}">${escapeHtml(badge.text)}</span>` : ""}${taught ? `<div class="hist-taught">${escapeHtml(taught)}</div>` : ""}${home ? `<div class="hist-home"><span>Para casa:</span> ${escapeHtml(home)}</div>` : ""}${!badge && !taught && !home ? `<div class="hist-home">Aula dada</div>` : ""}${stars}</div></div>`;
+return `<div class="hist-lesson${badge && badge.cls !== "info" ? " hist-off" : ""}"><div class="up-date"><b>${escapeHtml(l.date.slice(0,2))}</b><span>${escapeHtml(wdLow(WEEKDAY_SHORT[d.getDay()]))}</span></div><div class="hist-body">${badge ? `<span class="stu-status ${badge.cls}">${escapeHtml(badge.text)}</span>` : ""}${taught ? `<div class="hist-taught">${escapeHtml(taught)}</div>` : ""}${home ? `<div class="hist-home"><span>Para casa:</span> ${escapeHtml(home)}</div>` : ""}${!badge && !taught && !home ? `<div class="hist-home">Aula dada</div>` : ""}${stars}</div></div>`;
 };
 const byMonth = new Map();
 past.forEach(l => { const k = isoFromBr(l.date).slice(0, 7); if (!byMonth.has(k)) byMonth.set(k, []); byMonth.get(k).push(l); });
@@ -5955,7 +6024,7 @@ return `<div class="settings-row study-row still"><span class="settings-row-icon
 const up = stuUpcoming(28);
 const shown = stuMoreWeeks ? up : up.slice(0, 5);
 const row = (x, i) => { const b = stuUpBadge(x); const first = i === 0;
-return `<button type="button" class="stu-lrow up-row${first ? " up-next" : ""}" data-lp="${escapeHtml(x.key)}"><span class="up-date"><b>${pad2(x.date.getDate())}</b><span>${escapeHtml(WEEKDAY_SHORT[x.date.getDay()].toLowerCase())}</span></span><span class="stu-lrow-main">${first ? `<span class="up-kicker">Próxima aula</span>` : ""}<span class="up-when">${first ? `${escapeHtml(WEEKDAY_FULL[x.date.getDay()])} · ` : ""}${escapeHtml(x.time)}</span></span>${b ? `<span class="stu-status ${b.cls}">${escapeHtml(b.text)}</span>` : ""}<span class="settings-row-chevron" aria-hidden="true">›</span></button>`; };
+return `<button type="button" class="stu-lrow up-row${first ? " up-next" : ""}" data-lp="${escapeHtml(x.key)}"><span class="up-date"><b>${pad2(x.date.getDate())}</b><span>${escapeHtml(wdLow(WEEKDAY_SHORT[x.date.getDay()]))}</span></span><span class="stu-lrow-main">${first ? `<span class="up-kicker">Próxima aula</span>` : ""}<span class="up-when">${first ? `${escapeHtml(WEEKDAY_FULL[x.date.getDay()])} · ` : ""}${escapeHtml(x.time)}</span></span>${b ? `<span class="stu-status ${b.cls}">${escapeHtml(b.text)}</span>` : ""}<span class="settings-row-chevron" aria-hidden="true">›</span></button>`; };
 html += up.length ? `<div class="settings-group-label">Próximas aulas</div><div class="settings-card lrow-card">${shown.map(row).join("")}</div>`
 + (up.length > shown.length ? `<button type="button" class="btn-historico more-weeks" id="moreWeeks">Ver mais aulas</button>` : "")
 : `<div class="settings-group-label">Próximas aulas</div>${stuCard("", `<div class="stu-empty">Nenhuma aula nas próximas 4 semanas.</div>`)}`;
@@ -6065,6 +6134,7 @@ return `<div class="settings-group-label">Perfil</div><details class="settings-c
 <div class="actions"><button class="cancel" id="stuChangeCancel">Cancelar</button><button class="save" id="stuChangeSend">Enviar pedido</button></div></div>
 ${changes.length ? `<div class="stu-sub-list">${changes.map(r => `<div class="stu-muted">Pedido de ${formatDateShort(r.created_at.slice(0,10)).slice(0,5)}: ${r.status === "pending" ? "aguardando o professor" : r.status === "accepted" ? "aplicado" : "não aceito"}${r.response ? ` · "${escapeHtml(r.response)}"` : ""}</div>`).join("")}</div>` : ""}</div></details>`
 + stuCard("Preferências", `<div class="toggle-field"><label>Modo criança (botões maiores e figurinhas)</label><label class="switch"><input type="checkbox" id="stuKid" ${stuKidMode() ? "checked" : ""}><span class="switch-slider"></span></label></div>
+<button type="button" class="btn-historico" id="stuLang" data-no-tr style="width:100%;margin-top:0.75rem">${langSwitchLabel()}</button>
 ${pwaCanInstall() ? `<button type="button" class="btn-historico" id="stuInstall" style="width:100%;margin-top:0.75rem">Instalar o app</button>` : ""}`)
 + `<div class="settings-group-label">Agenda</div><div class="settings-card study-list ics-card" style="margin-bottom:1.25rem"><div class="settings-row study-row" id="stuIcs" role="button" tabindex="0"><span class="settings-row-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-calendar"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Colocar as aulas na agenda do celular</div><div class="settings-row-sub">Com lembrete 1 dia e 1 hora antes</div></div><span class="settings-row-chevron" aria-hidden="true">›</span></div></div>`
 + stuContractCardHTML(true)
@@ -6187,6 +6257,7 @@ if (await stuSendRequest("change_data", { changes: f === "other" ? {} : { [f]: v
 }
 const kid = main.querySelector("#stuKid");
 if (kid) kid.onchange = () => { if (demoMode) stuCur._kid = kid.checked; else { const all = tbRead(KID_KEY, {}); if (kid.checked) all[ptKey()] = true; else delete all[ptKey()]; tbWrite(KID_KEY, all); } document.body.classList.toggle("kid-mode", kid.checked); if (kid.checked) kidReward("Modo criança ligado!"); };
+const lng = main.querySelector("#stuLang"); if (lng) lng.onclick = langSwitch;
 const inst = main.querySelector("#stuInstall");
 if (inst) inst.onclick = pwaInstall;
 main.querySelectorAll("[data-install]").forEach(b => b.onclick = pwaInstall);
@@ -6315,7 +6386,7 @@ mandolin: { label: "Bandolim", notes: ["G3","D4","A4","E5"] }
 const TUNER_GROUPS = [["chromatic", "Cromático", ["chromatic"]], ["guitar", "Violão / guitarra", ["guitar", "guitarDropD", "guitarHalf", "guitarOpenG"]], ["ukulele", "Ukulele", ["ukulele", "ukuleleBari"]], ["cavaquinho", "Cavaquinho", ["cavaquinho"]], ["bass", "Baixo", ["bass", "bass5"]], ["violin", "Violino", ["violin"]], ["mandolin", "Bandolim", ["mandolin"]]];
 const TUNING_SHORT = { guitar: "Padrão", guitarDropD: "Drop D", guitarHalf: "Meio tom abaixo", guitarOpenG: "Sol aberto", ukulele: "Padrão", ukuleleBari: "Barítono", bass: "4 cordas", bass5: "5 cordas" };
 const NOTE_NAMES = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
-const NOTE_PT = { C:"Dó", "C#":"Dó#", D:"Ré", "D#":"Ré#", E:"Mi", F:"Fá", "F#":"Fá#", G:"Sol", "G#":"Sol#", A:"Lá", "A#":"Lá#", B:"Si", Db:"Réb", Eb:"Mib", Gb:"Solb", Ab:"Láb", Bb:"Sib" };
+const NOTE_PT = APP_LANG === "en" ? { C:"C", "C#":"C#", D:"D", "D#":"D#", E:"E", F:"F", "F#":"F#", G:"G", "G#":"G#", A:"A", "A#":"A#", B:"B", Db:"Db", Eb:"Eb", Gb:"Gb", Ab:"Ab", Bb:"Bb" } : { C:"Dó", "C#":"Dó#", D:"Ré", "D#":"Ré#", E:"Mi", F:"Fá", "F#":"Fá#", G:"Sol", "G#":"Sol#", A:"Lá", "A#":"Lá#", B:"Si", Db:"Réb", Eb:"Mib", Gb:"Solb", Ab:"Láb", Bb:"Sib" };
 function noteToMidi(n){ const m = /^([A-G]#?)(-?\d)$/.exec(n); return NOTE_NAMES.indexOf(m[1]) + (Number(m[2]) + 1) * 12; }
 function midiToName(m){ return NOTE_NAMES[((m % 12) + 12) % 12] + (Math.floor(m / 12) - 1); }
 const tuner = { stream: null, analyser: null, buf: null, raf: null, mode: "guitar", smooth: [] };
@@ -6404,10 +6475,10 @@ function metroHTML(){
 if (metro.accents.length !== metro.beats) metro.accents = metroDefaultAccents(metro.beats);
 const p = metro.prog;
 return stuCard("Metrônomo", `<div class="metro-bpm"><button type="button" class="metro-step" data-bpm="-1" aria-label="Menos 1 BPM">−</button><div><span id="metroBpm">${metro.bpm}</span><small>BPM</small></div><button type="button" class="metro-step" data-bpm="1" aria-label="Mais 1 BPM">+</button></div>
-<input type="range" min="20" max="300" value="${metro.bpm}" id="metroRange" class="metro-range" aria-label="Andamento">
+<input type="range" min="20" max="300" value="${metro.bpm}" id="metroRange" class="metro-range" aria-label="${APP_LANG === "en" ? "Tempo" : "Andamento"}">
 <div class="reason-chips metro-sigs">${METRO_SIGS.map(([l, n]) => `<button type="button" class="filter-chip${metro.beats === n ? " selected" : ""}" data-sig="${n}">${l}</button>`).join("")}</div>
 <div class="reason-chips metro-sigs">${METRO_SUBS.map(([n, l]) => `<button type="button" class="filter-chip${metro.sub === n ? " selected" : ""}" data-sub="${n}">${l}</button>`).join("")}</div>
-<div class="metro-dots">${metro.accents.map((lvl, i) => `<button type="button" class="metro-dot${lvl === 2 ? " first" : lvl === 0 ? " mute" : ""}" data-acc="${i}" aria-label="Tempo ${i + 1}: ${lvl === 2 ? "forte" : lvl === 0 ? "mudo" : "normal"}"></button>`).join("")}</div>
+<div class="metro-dots">${metro.accents.map((lvl, i) => `<button type="button" class="metro-dot${lvl === 2 ? " first" : lvl === 0 ? " mute" : ""}" data-acc="${i}" aria-label="Tempo ${i + 1}: ${lvl === 2 ? (APP_LANG === "en" ? "accent" : "forte") : lvl === 0 ? "mudo" : "normal"}"></button>`).join("")}</div>
 <div class="stu-muted metro-hint">Toque numa bolinha pra mudar o tempo: forte → normal → mudo.</div>
 <div class="actions"><button class="save" id="metroToggle">${metro.running ? "Parar" : "Tocar"}</button><button class="cancel" id="metroTap">Tocar no ritmo</button></div>`)
 + stuCard("Treino progressivo", `<div class="toggle-field"><label>Aumentar o andamento sozinho</label><label class="switch"><input type="checkbox" id="metroProgOn" ${p.on ? "checked" : ""}><span class="switch-slider"></span></label></div>
@@ -6631,7 +6702,7 @@ if (other >= 0) { const a = spellFrom(other, rootPc, ivs, chord); if (!a.some(n 
 }
 return { names, map, alt };
 }
-function ptSpelled(n){ const m = /^([A-G])(#{1,2}|b{1,2})?$/.exec(n); return m ? ({ C:"Dó", D:"Ré", E:"Mi", F:"Fá", G:"Sol", A:"Lá", B:"Si" })[m[1]] + (m[2] || "") : n; }
+function ptSpelled(n){ if (APP_LANG === "en") return n; const m = /^([A-G])(#{1,2}|b{1,2})?$/.exec(n); return m ? ({ C:"Dó", D:"Ré", E:"Mi", F:"Fá", G:"Sol", A:"Lá", B:"Si" })[m[1]] + (m[2] || "") : n; }
 function ptName(n){ return NOTE_PT[n] || n; }
 const CHORD_TYPES = [["", "Maior", [0,4,7]], ["m", "Menor", [0,3,7]], ["7", "Com sétima", [0,4,7,10]], ["m7", "Menor com sétima", [0,3,7,10]], ["7M", "Com sétima maior", [0,4,7,11]], ["sus4", "Suspenso (4ª)", [0,5,7]], ["dim", "Diminuto", [0,3,6]], ["aug", "Aumentado", [0,4,8]]];
 const SCALE_TYPES = [["maior", "Maior", [0,2,4,5,7,9,11]], ["menor", "Menor natural", [0,2,3,5,7,8,10]], ["penta", "Pentatônica maior", [0,2,4,7,9]], ["pentam", "Pentatônica menor", [0,3,5,7,10]], ["blues", "Blues", [0,3,5,6,7,10]], ["harm", "Menor harmônica", [0,2,3,5,7,8,11]], ["dor", "Dórico", [0,2,3,5,7,9,10]], ["mixo", "Mixolídio", [0,2,4,5,7,9,10]]];
@@ -6647,7 +6718,7 @@ sus4: [["A",[-1,0,2,2,3,0],9],["E",[0,2,2,2,0,0],4],["D",[-1,-1,0,2,3,3],2]],
 dim: [["A",[-1,0,1,2,1,-1],9]],
 aug: [["A",[-1,0,3,2,2,-1],9],["E",[0,3,2,1,1,0],4]]
 };
-const SHAPE_PT = { C: "Dó", A: "Lá", G: "Sol", E: "Mi", D: "Ré" };
+const SHAPE_PT = APP_LANG === "en" ? { C: "C", A: "A", G: "G", E: "E", D: "D" } : { C: "Dó", A: "Lá", G: "Sol", E: "Mi", D: "Ré" };
 const GUITAR_OPEN = [40, 45, 50, 55, 59, 64];
 function guitarShapesStd(rootName, pc, suffix){
 return (SHAPE_BASE[suffix] || []).map(([letter, shape, ref]) => {
@@ -6752,7 +6823,7 @@ const max = Math.max(0, ...fretted), min = fretted.length ? Math.min(...fretted)
 const start = max > 4 ? min : 1;
 const W = 120, H = 150, x0 = 22, y0 = 28, sw = 16, fh = 22;
 let s = `<svg class="chord-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Diagrama do acorde">`;
-s += start === 1 ? `<rect x="${x0 - 1}" y="${y0 - 4}" width="${sw * 5 + 2}" height="4" class="cd-nut"/>` : `<text x="${x0 - 5}" y="${y0 + fh * 0.65}" class="cd-fretno" text-anchor="end">${start}ª</text>`;
+s += start === 1 ? `<rect x="${x0 - 1}" y="${y0 - 4}" width="${sw * 5 + 2}" height="4" class="cd-nut"/>` : `<text x="${x0 - 5}" y="${y0 + fh * 0.65}" class="cd-fretno" text-anchor="end">${start}${APP_LANG === "en" ? "fr" : "ª"}</text>`;
 for (let i = 0; i <= 5; i++) s += `<line x1="${x0}" y1="${y0 + i * fh}" x2="${x0 + sw * 5}" y2="${y0 + i * fh}" class="cd-line"/>`;
 for (let i = 0; i < 6; i++) s += `<line x1="${x0 + i * sw}" y1="${y0}" x2="${x0 + i * sw}" y2="${y0 + fh * 5}" class="cd-line"/>`;
 if (sh.barre) s += `<rect x="${x0 + sh.from * sw - 6}" y="${y0 + (sh.barre - start + 0.5) * fh - 6}" width="${(sh.to - sh.from) * sw + 12}" height="12" rx="6" class="cd-dot"/>`;
@@ -6879,7 +6950,7 @@ draw += `<div class="fb-wrap">${fretboardSVG(chordTuning(), pcs, pc, spell)}</di
 } else draw = `<div class="fb-wrap">${fretboardSVG(chordTuning(), pcs, pc, spell)}</div>`;
 html += stuCard("", `<div class="chord-head${locked && view ? " locked" : ""}" id="chordHold"${view ? ` role="button" tabindex="0"` : ""}><div class="chord-title">${escapeHtml(title)}</div>${view ? `<span class="stu-status ${locked ? "off" : "ok"}">${locked ? "Não liberado" : "Liberado"}</span>` : ""}</div>
 ${view ? `<div class="rules-small">Segure o dedo no nome${isChord && isGuitar ? " ou numa forma" : ""} para liberar ou tirar.</div>` : ""}
-${isChord ? `<div class="chord-notes">${names.map(n => `<span>${escapeHtml(n)}<small>${escapeHtml(ptSpelled(n))}</small></span>`).join("")}</div>` : harmonicFieldHTML(t.scale, pc, def[2], names)}
+${isChord ? `<div class="chord-notes">${names.map(n => `<span>${escapeHtml(n)}${APP_LANG === "en" ? "" : `<small>${escapeHtml(ptSpelled(n))}</small>`}</span>`).join("")}</div>` : harmonicFieldHTML(t.scale, pc, def[2], names)}
 ${sp.alt ? `<div class="rules-small" style="margin:0.25rem 0 0.75rem">Tom com dobrado sustenido (##). Na prática costuma-se escrever como ${escapeHtml(sp.alt[0])}${isChord ? escapeHtml(t.type) : " " + escapeHtml(def[1].toLowerCase())}: ${escapeHtml(sp.alt.join(" "))}.</div>` : ""}
 ${tuningChipsHTML()}
 ${draw}
@@ -7054,7 +7125,7 @@ earAnswer(ear.q.options[i] === ear.q.rhythm, String(i), "o desenho marcado em ve
 
 // ---------- Leitura de partitura (notas na pauta) ----------
 const LETTERS = ["C","D","E","F","G","A","B"];
-const LETTERS_PT = ["Dó","Ré","Mi","Fá","Sol","Lá","Si"];
+const LETTERS_PT = APP_LANG === "en" ? ["C","D","E","F","G","A","B"] : ["Dó","Ré","Mi","Fá","Sol","Lá","Si"];
 // dia = oitava * 7 + letra (C4 = 28). Clave de sol: linha de baixo = E4 (30); de fá: G2 (18).
 const READ_CLEFS = { treble: { bottom: 30, min: 28, max: 41, label: "Clave de sol" }, bass: { bottom: 18, min: 16, max: 28, label: "Clave de fá" } };
 const reading = { clef: "treble", note: null, ok: 0, total: 0, streak: 0, answered: null, timed: false, endsAt: 0, timer: null };
@@ -7149,12 +7220,12 @@ const parts = DRUM_PARTS.filter(([k]) => g.parts[k]);
 const playing = seq.on && seq.owner === "groove", rplaying = seq.on && seq.owner === "rud";
 return stuCard("Grooves", `<div class="reason-chips">${GROOVES.map(x => `<button type="button" class="filter-chip${x.id === g.id ? " selected" : ""}" data-groove="${x.id}">${x.name}</button>`).join("")}</div>
 <div class="drum-grid-wrap"><table class="drum-grid">${parts.map(([k, l]) => `<tr><th>${l}</th>${Array.from({ length: g.steps }, (_, i) => `<td class="${g.parts[k].includes(i) ? "hit" : ""}${i % (g.steps === 12 ? 3 : 4) === 0 ? " beat" : ""}" data-col="${i}"></td>`).join("")}</tr>`).join("")}</table></div>
-<div class="bpm-row"><label>Andamento <b id="grooveBpmTxt">${drums.bpm}</b> BPM</label><input type="range" min="40" max="260" value="${drums.bpm}" id="grooveBpm" class="metro-range"></div>
+<div class="bpm-row"><label>${APP_LANG === "en" ? "Tempo" : "Andamento"} <b id="grooveBpmTxt">${drums.bpm}</b> BPM</label><input type="range" min="40" max="260" value="${drums.bpm}" id="grooveBpm" class="metro-range"></div>
 <div class="actions"><button class="save" id="grooveToggle">${playing ? "Parar" : "Tocar"}</button></div>`)
 + stuCard("Rudimentos", `<div class="reason-chips">${RUDIMENTS.map(x => `<button type="button" class="filter-chip${x.id === r.id ? " selected" : ""}" data-rud="${x.id}">${x.name}</button>`).join("")}</div>
 <div class="stick-row">${r.stick.split(" ").map((k, i) => `<span class="stick${r.id === "flam" && k === k.toUpperCase() ? " acc" : ""}" data-sk="${i}">${k.toUpperCase()}</span>`).join("")}</div>
 <div class="stu-muted">D = mão direita, E = mão esquerda.${r.id === "flam" ? " As letras em destaque são as notas fortes." : ""} Com fone, a direita toca no lado direito.</div>
-<div class="bpm-row"><label>Andamento <b id="rudBpmTxt">${drums.rudBpm}</b> BPM</label><input type="range" min="40" max="240" value="${drums.rudBpm}" id="rudBpm" class="metro-range"></div>
+<div class="bpm-row"><label>${APP_LANG === "en" ? "Tempo" : "Andamento"} <b id="rudBpmTxt">${drums.rudBpm}</b> BPM</label><input type="range" min="40" max="240" value="${drums.rudBpm}" id="rudBpm" class="metro-range"></div>
 <div class="actions"><button class="save" id="rudToggle">${rplaying ? "Parar" : "Tocar"}</button></div>`)
 + stuCard("Contador de BPM", `<button type="button" class="tap-big" id="tapBig">Toque aqui no ritmo</button>
 <div class="tap-out" id="tapOut">${drums.tapBpm ? `${drums.tapBpm} BPM` : "—"}</div>
@@ -7220,7 +7291,7 @@ function voiceHTML(){
 const w = voiceTool, playing = seq.on && seq.owner === "warm";
 return stuCard("Aquecimento vocal", `<div class="field"><label>Exercício</label><div class="reason-chips">${WARMUPS.map(x => `<button type="button" class="filter-chip${w.warm === x.id ? " selected" : ""}" data-warm="${x.id}">${x.name}</button>`).join("")}</div></div>
 <div class="field"><label>Sua voz</label><select id="warmRange">${VOICE_RANGES.map(([k, l]) => `<option value="${k}"${w.range === k ? " selected" : ""}>${l}</option>`).join("")}</select></div>
-<div class="bpm-row"><label>Andamento <b id="warmBpmTxt">${w.bpm}</b> BPM</label><input type="range" min="40" max="180" value="${w.bpm}" id="warmBpm" class="metro-range"></div>
+<div class="bpm-row"><label>${APP_LANG === "en" ? "Tempo" : "Andamento"} <b id="warmBpmTxt">${w.bpm}</b> BPM</label><input type="range" min="40" max="180" value="${w.bpm}" id="warmBpm" class="metro-range"></div>
 <div class="warm-now" id="warmNow">${playing ? "…" : "O piano toca o acorde, depois o exercício. Cante junto na vogal \"a\" ou \"u\". Sobe meio tom a cada repetição e depois volta."}</div>
 <div class="actions"><button class="save" id="warmToggle">${playing ? "Parar" : "Começar"}</button></div>`)
 + tunerHTML({ voice: true })
@@ -7352,7 +7423,7 @@ return stuCard("Bases pra improvisar", `<div class="field"><label>Progressão</l
 <div class="field"><label>Tom</label><div class="reason-chips key-chips">${KEY_ROOTS.map(([n]) => `<button type="button" class="filter-chip${b.key === n ? " selected" : ""}" data-bkey="${n}">${escapeHtml(noteLabel(n))}</button>`).join("")}</div></div>
 <div class="field"><label>Som</label><div class="reason-chips">${[["guitar", "Violão"], ["piano", "Teclado"]].map(([k, l]) => `<button type="button" class="filter-chip${backingInst() === k ? " selected" : ""}" data-binst="${k}">${l}</button>`).join("")}</div></div>
 <div class="field"><label>Estilo</label><div class="reason-chips">${[["pop", "Pop"], ["ballad", "Balada"]].map(([k, l]) => `<button type="button" class="filter-chip${b.style === k ? " selected" : ""}" data-bstyle="${k}">${l}</button>`).join("")}</div></div>
-<div class="bpm-row"><label>Andamento <b id="bkBpmTxt">${b.bpm}</b> BPM</label><input type="range" min="40" max="240" value="${b.bpm}" id="bkBpm" class="metro-range"></div>`)
+<div class="bpm-row"><label>${APP_LANG === "en" ? "Tempo" : "Andamento"} <b id="bkBpmTxt">${b.bpm}</b> BPM</label><input type="range" min="40" max="240" value="${b.bpm}" id="bkBpm" class="metro-range"></div>`)
 + stuCard("", `<div class="bk-now"><div class="bk-cur" id="bkCur">${escapeHtml(backingChordName(b.key, pr.chords[0][0], pr.chords[0][1]))}</div><div class="bk-next" id="bkNext">${playing ? "" : "Aperte tocar e improvise por cima"}</div></div>
 <div class="bk-list">${pr.chords.map(([o, s], i) => `<span data-bk="${i}">${escapeHtml(backingChordName(b.key, o, s))}</span>`).join("")}</div>
 <div class="stu-muted">Escala que combina: ${escapeHtml(b.key)} ${pr.id === "minor" ? "pentatônica menor" : pr.id === "blues" ? "blues" : "pentatônica maior"}.</div>
@@ -7801,7 +7872,7 @@ function weekGoalOf(d){ const g = jMap(d, "prefs").weekGoal; return g && Number(
 function weekStripHTML(d){
 const start = weekStartOf(new Date()), today = isoOf(new Date());
 const days = new Set(jAlive(d, "practice").map(p => isoOf(new Date(p.at))));
-return `<div class="week-strip" role="list">${["S", "T", "Q", "Q", "S", "S", "D"].map((l, i) => { const x = new Date(start); x.setDate(x.getDate() + i); const iso = isoOf(x); const on = days.has(iso); return `<span role="listitem" class="wk-day${on ? " on" : ""}${iso === today ? " today" : ""}" aria-label="${WEEKDAY_FULL[x.getDay()]}${on ? ": praticou" : ""}"><b>${l}</b>${on ? `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19.5 7"/></svg>` : ""}</span>`; }).join("")}</div>`;
+return `<div class="week-strip" role="list">${(APP_LANG === "en" ? ["M", "T", "W", "T", "F", "S", "S"] : ["S", "T", "Q", "Q", "S", "S", "D"]).map((l, i) => { const x = new Date(start); x.setDate(x.getDate() + i); const iso = isoOf(x); const on = days.has(iso); return `<span role="listitem" class="wk-day${on ? " on" : ""}${iso === today ? " today" : ""}" aria-label="${WEEKDAY_FULL[x.getDay()]}${on ? (APP_LANG === "en" ? ": practiced" : ": praticou") : ""}"><b>${l}</b>${on ? `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19.5 7"/></svg>` : ""}</span>`; }).join("")}</div>`;
 }
 // O que praticar: lição de casa, desafio, matéria escolhida e músicas "Aprendendo".
 function ptSuggestions(){
@@ -7811,7 +7882,7 @@ const hw = stuLastHomework();
 if (hw) {
 const g = hwGoals(hw.homework);
 out.push({ what: "Lição de casa", title: "Lição de casa", sub: hw.homework, icon: "clipboard" });
-if (g.from && g.to && stuPageAllowed("metronome")) out.push({ train: `${g.from}|${g.to}`, title: `Treinar de ${g.from} a ${g.to} BPM`, sub: "Metrônomo aumentando sozinho", icon: "music" });
+if (g.from && g.to && stuPageAllowed("metronome")) out.push({ train: `${g.from}|${g.to}`, title: `Treinar de ${g.from}${APP_LANG === "en" ? " to " : " a "}${g.to} BPM`, sub: "Metrônomo aumentando sozinho", icon: "music" });
 }
 const ch = (stuContent().board || {}).challenge;
 if (ch) out.push({ what: "Desafio da semana", title: "Desafio da semana", sub: ch, icon: "target" });
@@ -8489,7 +8560,7 @@ winds: { topics: [["Respiração e embocadura", "Notas longas 5 min por dia"], [
   songs: [["Careless Whisper", "George Michael"], ["Tico-Tico no Fubá", "Zequinha de Abreu"], ["Garota de Ipanema", "Tom Jobim"], ["Asa Branca", "Luiz Gonzaga"]],
   board: { tip: "Notas longas todos os dias deixam o som mais firme.", videoTitle: "Como melhorar a respiração no sopro", challenge: "Grave uma nota longa de 10 segundos sem tremer." } }
 };
-function demoPack(instr){ return DEMO_PACKS[instrumentKind(instr)] || DEMO_PACKS.strings; }
+function demoPack(instr){ return hiTrDeep(DEMO_PACKS[instrumentKind(instr)] || DEMO_PACKS.strings); }
 // Instrumentos que a faixa da demonstração oferece: os do professor e os mais comuns.
 function demoInstrumentList(){
 const seen = new Set(), out = [];
@@ -8508,6 +8579,14 @@ stuOpenPage(page);
 }
 // Aluno fictício: aulas com uma remarcada, uma reposição e um feriado; histórico anotado e
 // avaliado; uma mensalidade paga (com recibo), uma a pagar e uma atrasada.
+// Demonstração em inglês: os textos de exemplo passam pelo tradutor (o instrumento fica, porque escolhe as ferramentas).
+function hiTrDeep(v, k){
+if (APP_LANG !== "en" || k === "instrument" || k === "id" || k === "kind" || k === "status" || k === "reason") return v;
+if (typeof v === "string") return hiTr(v);
+if (Array.isArray(v)) return v.map(x => hiTrDeep(x));
+if (v && typeof v === "object") { const o = {}; for (const key of Object.keys(v)) o[key] = hiTrDeep(v[key], key); return o; }
+return v;
+}
 function demoStudent(instr){
 const t = appSettings;
 const instrument = instr || (t.instruments || [])[0] || "Violão", pack = demoPack(instrument);
@@ -8575,7 +8654,7 @@ pix: real.pix || { key: "exemplo@email.com", name: (appSettings.profile || {}).f
 rules: real.rules || "Falta avisada com 24 h de antecedência tem reposição.\nFérias em janeiro e em julho.\nReajuste da mensalidade uma vez por ano.",
 reminder: real.reminder || "Leve seu caderno.",
 board: real.board || { video: "https://www.youtube.com/", ...((pack || DEMO_PACKS.strings).board) },
-events: real.events || [{ id: "evdemo", name: "Recital de fim de ano", date: isoOf(day(40)), time: "19:00", place: "Auditório da escola", notes: "Chegar 30 min antes.", order: "" }],
+events: real.events || hiTrDeep([{ id: "evdemo", name: "Recital de fim de ano", date: isoOf(day(40)), time: "19:00", place: "Auditório da escola", notes: "Chegar 30 min antes.", order: "" }]),
 resched: real.resched || { on: true, minHours: 24, maxMonth: 2 },
 openSlots: real.openSlots && real.openSlots.length ? real.openSlots : slots,
 ...(real.evalView ? { evalView: real.evalView } : {})
@@ -8773,7 +8852,7 @@ function requestText(r, s){
 const p = r.payload || {}, name = s ? sn(s) : "Aluno";
 if (r.type === "absence") {
 const d = p.iso ? dateFromIso(p.iso) : null;
-return `${name} vai faltar na aula de ${d ? WEEKDAY_SHORT[d.getDay()].toLowerCase() + ", " + (p.date || "").slice(0,5) : p.date || ""}${p.time ? " às " + fmtHour(p.time) : ""}${p.reason ? ` (motivo: ${p.reason})` : ""}`;
+return `${name} vai faltar na aula de ${d ? wdLow(WEEKDAY_SHORT[d.getDay()]) + ", " + (p.date || "").slice(0,5) : p.date || ""}${p.time ? " às " + fmtHour(p.time) : ""}${p.reason ? ` (motivo: ${p.reason})` : ""}`;
 }
 if (r.type === "payment_notice") return `${name} diz que pagou ${p.kind === "month" && p.key ? monthLabel(p.key).replace("/", " de ") : (p.label || "").toLowerCase()}`;
 if (r.type === "song_request") return `${name} quer aprender: ${p.title || ""}${p.artist ? " – " + p.artist : ""}${p.note ? ` (${p.note})` : ""}`;
@@ -9230,8 +9309,8 @@ throw new Error("Não consegui gerar uma chave nova");
 }
 function appLink(){ return /^https?:/.test(location.protocol) ? location.origin + location.pathname : "https://jpleguizamon.github.io/Hi-Teacher/"; }
 function inviteText(code){
-const t = appSettings.studentInviteMsg || "Baixe o Hi Teacher em [link], toque em Entrar como aluno e use a minha chave: [chave]";
-return t.replace(/\[link\]/g, `${appLink()}?chave=${encodeURIComponent(code)}`).replace(/\[chave\]/g, code);
+const t = appSettings.studentInviteMsg || INVITE_MSG_DEFAULT;
+return t.replace(/\[link\]/g, `${appLink()}?chave=${encodeURIComponent(code)}`).replace(/\[(chave|code)\]/gi, code);
 }
 // Botão "Ver demonstração" (funciona sem internet e mesmo antes de ter a chave).
 function demoButtonHTML(){ return `<button type="button" class="btn-historico" data-demo style="width:100%;margin-top:0.75rem">Ver demonstração do app do aluno</button>`; }
@@ -9262,7 +9341,7 @@ body.innerHTML = `<div class="key-big" id="keyCode">${escapeHtml(c.code)}</div>
 <button type="button" class="btn-historico" id="keyNew" style="width:100%;margin-top:0.5rem">Gerar nova chave</button>` + demoButtonHTML();
 bindDemoButton(body);
 const msg = body.querySelector("#keyMsg");
-msg.value = appSettings.studentInviteMsg || "Baixe o Hi Teacher em [link], toque em Entrar como aluno e use a minha chave: [chave]";
+msg.value = appSettings.studentInviteMsg || INVITE_MSG_DEFAULT;
 msg.onchange = () => { appSettings.studentInviteMsg = msg.value.trim() || undefined; saveAppSettings(); };
 body.querySelector("#keyCopy").onclick = async () => { try { await navigator.clipboard.writeText(c.code); showCloudWarning("Chave copiada: " + c.code); } catch(e) { prompt("Copie a chave:", c.code); } };
 body.querySelector("#keyShare").onclick = async () => {
@@ -9521,7 +9600,7 @@ showImageModal(blob, `certificado-${stripAccents(s.name + "-" + cert.level).toLo
 }
 
 // ---------- Recados novos: música, remarcação e reposição ----------
-function slotText(iso, time){ if (!iso) return ""; const d = dateFromIso(iso); return `${WEEKDAY_SHORT[d.getDay()].toLowerCase()}, ${formatDateShort(iso).slice(0,5)}${time ? " às " + fmtHour(time) : ""}`; }
+function slotText(iso, time){ if (!iso) return ""; const d = dateFromIso(iso); const wd = APP_LANG === "en" ? WEEKDAY_SHORT[d.getDay()] : wdLow(WEEKDAY_SHORT[d.getDay()]); return `${wd}, ${formatDateShort(iso).slice(0,5)}${time ? " às " + fmtHour(time) : ""}`; }
 function approveSongRequest(r, s){
 const p = r.payload || {};
 const body = document.createElement("div");
@@ -9844,7 +9923,7 @@ showLoginFirst();
 // Mostra o estado da nuvem em Configurações assim que o app termina de carregar.
 setTimeout(renderCloudStatus, 0);
 
-const monthNamesShort=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+const monthNamesShort = hiTrList(["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"]);
 const today=new Date();
 const todayKey=today.getDay();
 
@@ -10350,7 +10429,7 @@ delete appSettings.notifications.reminderMinutes;
 function saveAppSettings(){ localStorage.setItem("jp_settings_v1", JSON.stringify(appSettings)); }
 // ===== Horários (minutos desde 00:00) =====
 function toMin(t){ const [h, m] = String(t || "0:0").split(":").map(Number); return (h || 0) * 60 + (m || 0); }
-function fmtHour(t){ const m = typeof t === "number" ? t : toMin(t); return `${Math.floor(m / 60)}h${m % 60 ? pad2(m % 60) : ""}`; }
+function fmtHour(t){ const m = typeof t === "number" ? t : toMin(t); if (APP_LANG === "en") return `${Math.floor(m / 60)}:${pad2(m % 60)}`; return `${Math.floor(m / 60)}h${m % 60 ? pad2(m % 60) : ""}`; }
 function fromMin(m){ return `${pad2(Math.floor(m / 60))}:${pad2(m % 60)}`; }
 async function copyText(text){
 try { await navigator.clipboard.writeText(text); return true; }
@@ -10466,7 +10545,7 @@ updateStarInputDisplay(container, v);
 // pós-aula, Início, Agenda e lembretes. Registros de aula (student.lessons) continuam
 // identificados pela data "dd/mm/aaaa"; reposições levam também o makeupId.
 function pad2(n){ return String(n).padStart(2,"0"); }
-const WEEKDAY_SHORT = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+const WEEKDAY_SHORT = hiTrList(["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"]);
 function isoOf(d){ return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
 function brOf(d){ return `${pad2(d.getDate())}/${pad2(d.getMonth()+1)}/${d.getFullYear()}`; }
 function isoFromBr(br){ const [d,m,y] = String(br).split("/"); return `${y}-${pad2(m)}-${pad2(d)}`; }
@@ -11475,8 +11554,8 @@ return agendaEvents.filter(e => eventCovers(e, dateStr));
 let agendaViewYear = new Date().getFullYear();
 let agendaViewMonth = new Date().getMonth();
 let agendaModalDate = null;
-const agendaMonthNamesFull = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-const agendaWeekdayNamesFull = ["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"];
+const agendaMonthNamesFull = hiTrList(["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"]);
+const agendaWeekdayNamesFull = hiTrList(["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"]);
 // As cores de cada tipo ficam no CSS (.agenda-tag--holiday etc.).
 const agendaTagInfo = {
 holiday: { label:"Feriado nacional" },
@@ -11498,7 +11577,7 @@ const eh = document.getElementById("agendaEmptyHint");
 if (eh) eh.innerHTML = students.some(s => s.active !== false) ? "" : `<div class="empty-teach slim"><b>Ainda sem aulas na agenda.</b><span>As aulas aparecem aqui quando você cadastra alunos com dia e horário. Feriados e os seus eventos já aparecem.</span></div>`;
 document.getElementById("agendaMonthLabel").textContent = `${agendaMonthNamesFull[month]} ${year}`;
 
-const weekdayNames = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+const weekdayNames = hiTrList(["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"]);
 const ws = appSettings.weekStart;
 const order = [0,1,2,3,4,5,6].map(i => (ws + i) % 7);
 document.getElementById("agendaWeekdays").innerHTML = order.map(d => `<div class="agenda-weekday">${weekdayNames[d]}</div>`).join('');
@@ -11590,9 +11669,9 @@ bindQuickActions(document.getElementById("agendaLessonsLine"));
 
 const breakItems = (appSettings.breaks || []).filter(b => b.start <= dateStr && dateStr <= b.end).map(b => {
 const st = b.studentId ? students.find(x => x.id === b.studentId) : null;
-return { type:"break", name: b.label || "Férias/recesso", who: st ? `só ${st.name}` : "todos os alunos", range: `${formatDateShort(b.start)} a ${formatDateShort(b.end)}` };
+return { type:"break", name: b.label || "Férias/recesso", who: st ? `só ${st.name}` : "todos os alunos", range: `${formatDateShort(b.start)}${APP_LANG === "en" ? " to " : " a "}${formatDateShort(b.end)}` };
 });
-const dayList = [...breakItems, ...getNationalHolidaysForYear(y).filter(h => h.date === dateStr), ...getAgendaEventsForDate(dateStr).map(e => e.end && e.end > e.date ? { ...e, range: `${formatDateShort(e.date)} a ${formatDateShort(e.end)}` } : e)];
+const dayList = [...breakItems, ...getNationalHolidaysForYear(y).filter(h => h.date === dateStr), ...getAgendaEventsForDate(dateStr).map(e => e.end && e.end > e.date ? { ...e, range: `${formatDateShort(e.date)}${APP_LANG === "en" ? " to " : " a "}${formatDateShort(e.end)}` } : e)];
 document.getElementById("holidayInfoList").innerHTML = dayList.length ? dayList.map(item => `
 <div class="holiday-info-item">
 <div><div class="holiday-info-name">${escapeHtml(item.type==='event' ? item.title : item.name)}</div><div class="holiday-info-type"><span class="agenda-dot agenda-tag--${item.type}"></span>${agendaTagInfo[item.type].label}${item.who ? " · " + escapeHtml(item.who) : ""}</div>${item.range ? `<div class="holiday-info-type">${item.range}</div>` : ""}</div>
@@ -11602,7 +11681,7 @@ ${item.type==='event' ? `<button type="button" class="btn-delete" style="margin:
 document.querySelectorAll('#holidayInfoList [data-del-id]').forEach(btn => {
 btn.onclick = () => {
 const ev = agendaEvents.find(e => e.id === btn.dataset.delId);
-if (ev && ev.end && ev.end > ev.date && !confirm(`Remover "${ev.title}" de todos os dias (${formatDateShort(ev.date)} a ${formatDateShort(ev.end)})?`)) return;
+if (ev && ev.end && ev.end > ev.date && !confirm(`Remover "${ev.title}" de todos os dias (${formatDateShort(ev.date)}${APP_LANG === "en" ? " to " : " a "}${formatDateShort(ev.end)})?`)) return;
 agendaEvents = agendaEvents.filter(e => e.id !== btn.dataset.delId);
 saveAgendaEvents();
 renderAgenda();
@@ -11733,7 +11812,17 @@ return `<div class="avatar-cluster">${btn(g[0])}${btn(g[1])}${btn(g[2])}<div cla
 // que o professor mudou). Variáveis entre colchetes: [nome] = quem recebe (o responsável,
 // se o aluno for menor de idade e tiver responsável), [aluno], [mês], [valor], [dia],
 // [data], [hora], [referência] ("da aula de 10/09" / "do pacote de 10 aulas").
-const DEFAULT_MESSAGES = {
+const DEFAULT_MESSAGES = APP_LANG === "en" ? {
+charge: "Hi, [name]! Just a reminder about the monthly fee for [month] (R$ [amount]). Thank you!",
+lessonMoved: "Your lesson is now on [day], [date], at [time].",
+cancel: "Hi, [name]! I won't be able to teach the [time] lesson today. Shall we schedule a make-up lesson?",
+cancelMakeup: "Hi, [name]! I won't be able to teach the lesson on [original date]. The make-up lesson is set for [day], [date], at [time].",
+birthday: "Happy birthday, [student]!",
+classAnniversary: "Hi, [name]! Today [student] completes [years] of lessons with me. Thank you for your trust, and here's to many more!",
+lessonKept: "Hi, [name]! The lesson on [day], [date], at [time] is still on. See you then!",
+monthSummary: "Hi, [name]! Here's a summary of [student]'s lessons in [month]:\nLessons taught: [lessons]\nAbsences: [absences]\nMake-up lessons: [make-ups]\n\nWhat we worked on:\n[content]\n\nTo practice at home: [homework]",
+chargeItem: "Hi, [name]! Just a reminder about the payment [reference] (R$ [amount]). Thank you!"
+} : {
 charge: "Oi, [nome]! Passando pra lembrar da mensalidade de [mês] (R$ [valor]). Obrigado!",
 lessonMoved: "Sua aula ficou para [dia], [data], às [hora].",
 cancel: "Oi, [nome]! Hoje não vou conseguir dar a aula das [hora]. Vamos marcar uma reposição?",
@@ -11744,6 +11833,7 @@ lessonKept: "Oi, [nome]! A aula de [dia], [data], às [hora] está mantida. Até
 monthSummary: "Oi, [nome]! Resumo das aulas de [aluno] em [mês]:\nAulas dadas: [aulas]\nFaltas: [faltas]\nReposições: [reposições]\n\nO que trabalhamos:\n[conteúdo]\n\nPara estudar em casa: [para casa]",
 chargeItem: "Oi, [nome]! Passando pra lembrar do pagamento [referência] (R$ [valor]). Obrigado!"
 };
+const INVITE_MSG_DEFAULT = APP_LANG === "en" ? "Download Hi Teacher at [link], tap \"I'm a student or parent\" and use my code: [code]" : "Baixe o Hi Teacher em [link], toque em Entrar como aluno e use a minha chave: [chave]";
 const MESSAGE_LABELS = {
 charge: { title:"Cobrar mensalidade", vars:"[nome] [aluno] [mês] [valor]" },
 lessonMoved: { title:"Aula marcada ou remarcada", vars:"[nome] [aluno] [dia] [data] [hora]" },
@@ -11755,8 +11845,8 @@ lessonKept: { title:"Aula mantida (depois de desfazer)", vars:"[nome] [aluno] [d
 monthSummary: { title:"Resumo do mês", vars:"[nome] [aluno] [mês] [aulas] [faltas] [reposições] [conteúdo] [para casa]" },
 chargeItem: { title:"Cobrar aula avulsa ou pacote", vars:"[nome] [aluno] [referência] [valor]" }
 };
-const WEEKDAY_FULL = ["domingo","segunda-feira","terça-feira","quarta-feira","quinta-feira","sexta-feira","sábado"];
-const MONTH_FULL = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+const WEEKDAY_FULL = hiTrList(["domingo","segunda-feira","terça-feira","quarta-feira","quinta-feira","sexta-feira","sábado"]);
+const MONTH_FULL = hiTrList(["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"]);
 function getMessageTemplate(key){ return (appSettings.messages && appSettings.messages[key]) || DEFAULT_MESSAGES[key] || ""; }
 function firstName(n){ return String(n || "").trim().split(/\s+/)[0] || ""; }
 // ===== Nome abreviado (só no Início) =====
@@ -11812,10 +11902,13 @@ if (whatsappLink(s.phone)) return { phone: s.phone, name: firstName(s.name) };
 if (whatsappLink(s.guardianPhone)) return { phone: s.guardianPhone, name: firstName(s.guardianName) || firstName(s.name), guardian: true };
 return null;
 }
+// Campos em inglês (8.42): [name] vale o mesmo que [nome], e assim por diante.
+const MSG_KEYS_EN = { name: "nome", student: "aluno", month: "mes", amount: "valor", day: "dia", date: "data", time: "hora", reference: "referencia", "original date": "data original", years: "anos", lessons: "aulas", absences: "faltas", "make-ups": "reposicoes", content: "conteudo", homework: "para casa", greeting: "saudacao", lesson: "aula", period: "periodo" };
 function fillMessage(tpl, vars){
 return tpl.replace(/\[([^\]]+)\]/g, (all, k) => {
-const key = stripAccents(k).toLowerCase().trim();
-return vars[key] !== undefined && vars[key] !== null ? String(vars[key]) : all;
+let key = stripAccents(k).toLowerCase().trim();
+if (vars[key] === undefined && MSG_KEYS_EN[key]) key = MSG_KEYS_EN[key];
+return vars[key] !== undefined && vars[key] !== null ? String(APP_LANG === "en" ? hiTr(String(vars[key])) : vars[key]) : all;
 });
 }
 // Link wa.me já com o texto; null se o aluno não tem telefone.
@@ -11825,7 +11918,7 @@ if (!r) return null;
 const text = fillMessage(getMessageTemplate(key), { nome: r.name, aluno: firstName(s.name), ...vars });
 return `${whatsappLink(r.phone)}?text=${encodeURIComponent(text)}`;
 }
-function moneyText(v){ return Number(v || 0).toLocaleString("pt-BR", { minimumFractionDigits: Number.isInteger(Number(v)) ? 0 : 2, maximumFractionDigits: 2 }); }
+function moneyText(v){ return Number(v || 0).toLocaleString(APP_LOCALE, { minimumFractionDigits: Number.isInteger(Number(v)) ? 0 : 2, maximumFractionDigits: 2 }); }
 function monthLongLabel(key){
 const [y, m] = key.split("-").map(Number);
 return MONTH_FULL[m-1] + (y !== new Date().getFullYear() ? `/${y}` : "");
@@ -12381,7 +12474,7 @@ return `<div class="bday-card">
 <div class="bday-title">Hoje: ${escapeHtml(sn(x.s))}${x.age > 0 && x.age < 120 ? ` <span class="bday-sub">· ${x.age} anos</span>` : ""}</div>
 ${href ? `<a class="wa-btn wa-mini" href="${href}" target="_blank" rel="noopener">Parabenizar</a>` : ""}
 </div>`;
-}).join("") + (week.length ? `<div class="bday-week">Esta semana: ${week.map(x => `${escapeHtml(sn(x.s))} (${WEEKDAY_SHORT[x.date.getDay()].toLowerCase()}, ${pad2(x.date.getDate())}/${pad2(x.date.getMonth()+1)})`).join(" · ")}</div>` : "") + annHtml;
+}).join("") + (week.length ? `<div class="bday-week">Esta semana: ${week.map(x => `${escapeHtml(sn(x.s))} (${wdLow(WEEKDAY_SHORT[x.date.getDay()])}, ${pad2(x.date.getDate())}/${pad2(x.date.getMonth()+1)})`).join(" · ")}</div>` : "") + annHtml;
 }
 
 function renderHome(){
@@ -12395,8 +12488,8 @@ renderLessonReminderBox();
 renderCloudStatus();
 const now=new Date();
 document.getElementById("homeGreetingText").textContent = `Olá, ${appSettings.profile.name}`;
-const months=["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
-const shortDays=["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"];
+const months=hiTrList(["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"]);
+const shortDays = hiTrList(["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"]);
 const box=document.getElementById("nextDays");
 box.innerHTML="";
 
@@ -12446,8 +12539,8 @@ section.classList.add("focused");
 
 const head=document.createElement("div");
 head.className="day-head";
-let suffix = offset===0 ? " (hoje)" : offset===1 ? " (amanhã)" : ` (daqui a ${offset} dias)`;
-head.textContent=`${shortDays[dayKey]}, ${date.getDate()} de ${months[date.getMonth()]}${suffix}`;
+let suffix = offset===0 ? hiTr(" (hoje)") : offset===1 ? hiTr(" (amanhã)") : hiTr(` (daqui a ${offset} dias)`);
+head.textContent=`${shortDays[dayKey]}, ${dayMonth(date.getDate(), months[date.getMonth()])}${suffix}`;
 if (offset <= 1) {
 const bell = document.createElement("button");
 bell.type = "button";
@@ -12531,7 +12624,7 @@ renderPendingPayments();
 // (payTo vazio ou "me"); "school" = paga à escola, "none" = bolsa. Atraso só conta a partir
 // de appSettings.paymentsSince (mês em que esse recurso chegou na conta), pra meses antigos
 // que ninguém marcava não virarem "atrasados" de uma vez.
-const MONTH_ABBR = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+const MONTH_ABBR = hiTrList(["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"]);
 function currentMonthKey(){
 const d = new Date();
 return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
@@ -12787,7 +12880,25 @@ await shareBlob(new Blob([taxCsv(year, d)], { type: "text/csv" }), `hi-teacher-i
 // Modelo em appSettings.contractText (vazio = o padrão abaixo). O contrato de cada aluno fica em
 // s.contract = { text, h, at } e vai para o app do aluno pelo student_view. O aceite fica no
 // caderno do aluno (prefs["ct_" + h]); texto mudado = aceitar de novo.
-const CONTRACT_DEFAULT = `CONTRATO DE AULAS PARTICULARES
+const CONTRACT_DEFAULT = APP_LANG === "en" ? `PRIVATE LESSON AGREEMENT
+
+TEACHER: [teacher]
+TAX ID: [teacher ID]
+STUDENT: [student]
+PARENT/GUARDIAN: [guardian]
+PAYER'S TAX ID: [payer ID]
+
+1. LESSONS. The teacher will give [subject] lessons to the student, [days and times], each lasting [duration] minutes. Location: [location].
+
+2. PAYMENT. [payment]
+
+3. ABSENCES, MAKE-UP LESSONS AND VACATIONS. [rules]
+
+4. START AND END. This agreement begins on [start date] and remains in effect indefinitely. Either party may end it by giving the other 30 days' notice.
+
+5. ACCEPTANCE. By accepting this agreement in the Hi Teacher app, the student or their parent or guardian confirms that they have read and agree to these terms.
+
+[city], [date].` : `CONTRATO DE AULAS PARTICULARES
 
 PROFESSOR(A): [professor]
 CPF/CNPJ: [documento do professor]
@@ -12807,28 +12918,30 @@ CPF DE QUEM PAGA: [cpf de quem paga]
 
 [cidade], [data].`;
 const CONTRACT_KEYS = ["professor", "documento do professor", "aluno", "responsável", "cpf de quem paga", "matéria", "dias e horários", "duração", "local", "pagamento", "regras", "início", "cidade", "data"];
+const CONTRACT_KEYS_EN = { teacher: "professor", "teacher id": "documento do professor", student: "aluno", guardian: "responsável", "payer id": "cpf de quem paga", subject: "matéria", "days and times": "dias e horários", duration: "duração", location: "local", payment: "pagamento", rules: "regras", "start date": "início", city: "cidade", date: "data" };
 function contractHash(text){ return tbCyrb128(String(text)).slice(0, 2).map(n => n.toString(36)).join(""); }
 function contractPayText(s){
-if (s.payTo === "none") return "O(a) aluno(a) tem bolsa e não paga pelas aulas.";
-if (s.payTo === "school") return "O pagamento é feito diretamente à escola.";
+if (s.payTo === "none") return hiTr("O(a) aluno(a) tem bolsa e não paga pelas aulas.");
+if (s.payTo === "school") return hiTr("O pagamento é feito diretamente à escola.");
 const mode = billingMode(s), r = appSettings.payRules || {}, pix = stContent().pixKey;
 let t;
-if (mode === "lesson") t = `O valor é de ${moneyFull(s.lessonPrice)} por aula dada.`;
-else if (mode === "package") t = `O valor é de ${moneyFull(s.packagePrice)} por pacote de ${s.packageSize} aulas, pago no início de cada pacote.`;
+if (mode === "lesson") t = hiTr(`O valor é de ${moneyFull(s.lessonPrice)} por aula dada.`);
+else if (mode === "package") t = hiTr(`O valor é de ${moneyFull(s.packagePrice)} por pacote de ${s.packageSize} aulas, pago no início de cada pacote.`);
 else {
-t = `O valor é de ${moneyFull(studentMonthlyValue(s))} por mês${Number(s.dueDay) > 0 ? `, com vencimento todo dia ${s.dueDay}` : ""}.`;
-if (s.valueNext && s.valueNext.from) t += ` A partir de ${monthLongLabel(s.valueNext.from)}, o valor passa a ser de ${moneyFull(s.valueNext.v)}.`;
-if (Number(r.disc) > 0) t += ` Pagando até o dia ${Number(r.discDay) > 0 ? r.discDay : "do vencimento"}, há desconto de ${r.discType === "pct" ? `${String(r.disc).replace(".", ",")}%` : moneyFull(r.disc)}.`;
-if ((Number(r.fine) > 0 || Number(r.interest) > 0) && Number(s.dueDay) > 0) t += ` Depois do vencimento, ${[Number(r.fine) > 0 ? `há multa de ${String(r.fine).replace(".", ",")}%` : "", Number(r.interest) > 0 ? `juros de ${String(r.interest).replace(".", ",")}% ao mês` : ""].filter(Boolean).join(" e ")}.`;
+t = hiTr(`O valor é de ${moneyFull(studentMonthlyValue(s))} por mês${Number(s.dueDay) > 0 ? `, com vencimento todo dia ${s.dueDay}` : ""}.`);
+if (s.valueNext && s.valueNext.from) t += hiTr(` A partir de ${monthLongLabel(s.valueNext.from)}, o valor passa a ser de ${moneyFull(s.valueNext.v)}.`);
+if (Number(r.disc) > 0) t += hiTr(` Pagando até o dia ${Number(r.discDay) > 0 ? r.discDay : "do vencimento"}, há desconto de ${r.discType === "pct" ? `${String(r.disc).replace(".", ",")}%` : moneyFull(r.disc)}.`);
+if ((Number(r.fine) > 0 || Number(r.interest) > 0) && Number(s.dueDay) > 0) t += hiTr(` Depois do vencimento, ${[Number(r.fine) > 0 ? `há multa de ${String(r.fine).replace(".", ",")}%` : "", Number(r.interest) > 0 ? `juros de ${String(r.interest).replace(".", ",")}% ao mês` : ""].filter(Boolean).join(" e ")}.`);
 }
-if (pix) t += ` O pagamento pode ser feito por Pix, na chave ${pix}.`;
+if (pix) t += hiTr(` O pagamento pode ser feito por Pix, na chave ${pix}.`);
 return t;
 }
 function contractValues(s){
 const p = appSettings.profile || {}, loc = appSettings.location || {};
-const days = orderedDays(studentDays(s)).map(d => `${WEEKDAY_NAMES[d]} às ${getStudentTimeFor(s, d)}`);
-const daysText = s.lessonFrequency === "single" || !days.length ? "em dias e horários combinados entre as partes"
-: `${s.lessonFrequency === "biweekly" ? "a cada 15 dias" : "toda semana"} (${days.length > 1 ? days.slice(0, -1).join(", ") + " e " + days[days.length - 1] : days[0]})`;
+const en = APP_LANG === "en";
+const days = orderedDays(studentDays(s)).map(d => en ? `${WEEKDAY_NAMES[d]} at ${getStudentTimeFor(s, d)}` : `${WEEKDAY_NAMES[d]} às ${getStudentTimeFor(s, d)}`);
+const daysText = s.lessonFrequency === "single" || !days.length ? (en ? "on days and times agreed between the parties" : "em dias e horários combinados entre as partes")
+: `${s.lessonFrequency === "biweekly" ? (en ? "every other week" : "a cada 15 dias") : (en ? "every week" : "toda semana")} (${days.length > 1 ? days.slice(0, -1).join(", ") + (en ? " and " : " e ") + days[days.length - 1] : days[0]})`;
 const place = s.locationType ? [LOCATION_TYPES[s.locationType] || "", s.locationDetail && !/^https?:\/\//i.test(s.locationDetail) ? s.locationDetail : ""].filter(Boolean).join(", ") : "";
 return {
 "professor": p.fullName || p.name || "", "documento do professor": p.document || "", "aluno": s.name || "",
@@ -12840,7 +12953,7 @@ return {
 }
 function renderContract(s){
 const vals = contractValues(s);
-const text = (appSettings.contractText || CONTRACT_DEFAULT).replace(/\[([^\]]+)\]/g, (m, k) => { const key = k.trim().toLowerCase(); return key in vals ? vals[key] : m; });
+const text = (appSettings.contractText || CONTRACT_DEFAULT).replace(/\[([^\]]+)\]/g, (m, k) => { let key = k.trim().toLowerCase(); if (!(key in vals) && CONTRACT_KEYS_EN[key]) key = CONTRACT_KEYS_EN[key]; return key in vals ? (APP_LANG === "en" ? hiTr(vals[key]) : vals[key]) : m; });
 // Linha de rótulo que ficou sem valor ("RESPONSÁVEL:") sai.
 return text.split("\n").filter(l => !/^[^:\n]{2,40}:\s*$/.test(l)).join("\n").replace(/\n{3,}/g, "\n\n").trim();
 }
@@ -13055,7 +13168,7 @@ if (inDays >= 0 && inDays <= 6 && years >= 1) { out.push({ s, date, inDays, year
 });
 return out.sort((a, b) => a.inDays - b.inDays || a.s.name.localeCompare(b.s.name));
 }
-function yearsText(n){ return `${n} ano${n === 1 ? "" : "s"}`; }
+function yearsText(n){ if (APP_LANG === "en") return `${n} year${n === 1 ? "" : "s"}`; return `${n} ano${n === 1 ? "" : "s"}`; }
 
 // ===== Aviso de vencimento no celular do aluno (8.35, app Android) =====
 function stuDueSchedItems(item, kid, who){
@@ -14152,7 +14265,7 @@ filterDot.classList.toggle("active", currentFilters.format !== "all" || currentF
 }
 
 // ===== Pendências: dados provisórios que a importação de planilha preencheu sozinha =====
-const WEEKDAY_NAMES = ["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"];
+const WEEKDAY_NAMES = hiTrList(["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"]);
 // Rótulo guardado em student.needsReview -> id do campo no formulário do aluno.
 const PENDING_FIELDS = {
 "instrumento": "fInstrument",
@@ -14495,7 +14608,7 @@ const payLabel = mode === "lesson" ? "Valor por aula" : mode === "package" ? "Va
 const basePrice = mode === "monthly" ? `R$ ${monthlyValue}` : priceText(s).replace(/ (por aula|o pacote)$/, "");
 const payText = s.payTo === "school" ? `${basePrice} · paga à escola`
 : s.payTo === "none" ? "Bolsa"
-: mode === "monthly" ? `R$ ${monthlyValue}${payLate ? ` · ${lateMonths} atrasada${lateMonths > 1 ? "s" : ""}` : ""}`
+: mode === "monthly" ? `R$ ${monthlyValue}${payLate ? ` · ${APP_LANG === "en" ? `${lateMonths} overdue` : `${lateMonths} atrasada${lateMonths > 1 ? "s" : ""}`}` : ""}`
 : `${basePrice}${openCharges ? ` · ${openCharges} a receber` : ""}`;
 const absences = isInactive ? 0 : countMonthAbsences(s);
 const pkg = isInactive ? null : packageUsage(s);
@@ -15103,13 +15216,15 @@ const a = series[0], b = series[series.length - 1], n = statsMonthDiff(a.key, b.
 if (n < 1 || a.value <= 0) return null;
 return { pct: Math.pow(b.value / a.value, 1 / n) - 1, a, b };
 }
-function statsPct(x){ const v = Math.round(x * 1000) / 10; return `${v > 0 ? "+" : ""}${v.toLocaleString("pt-BR")}%`; }
+function statsPct(x){ const v = Math.round(x * 1000) / 10; return `${v > 0 ? "+" : ""}${v.toLocaleString(APP_LOCALE)}%`; }
 function statsMonthsText(m){
 if (!(m > 0)) return "—";
 const t = Math.round(m);
 if (t < 1) return "menos de 1 mês";
 const y = Math.floor(t / 12), r = t % 12;
+if (APP_LANG === "en" && !y) return `${t} month${t === 1 ? "" : "s"}`;
 if (!y) return `${t} ${t === 1 ? "mês" : "meses"}`;
+if (APP_LANG === "en") return `${y} ${y === 1 ? "year" : "years"}${r ? ` and ${r} ${r === 1 ? "month" : "months"}` : ""}`;
 return `${y} ${y === 1 ? "ano" : "anos"}${r ? ` e ${r} ${r === 1 ? "mês" : "meses"}` : ""}`;
 }
 function statsMonthsBetween(a, b){ const d = (dateFromIso(b) - dateFromIso(a)) / 86400000; return d > 0 ? d / 30.44 : 0; }
@@ -15175,7 +15290,7 @@ active.filter(paysMe).forEach(s => unpaidMonths(s).forEach(k => { if (isPastDue(
 const dinheiro = [
 growthCard("Crescimento do faturamento", statsGrowth(earn), "R$", "Precisa de pelo menos 2 meses com faturamento.", earn.length ? { now: earn[earn.length - 1].value, before: valAt(earningsData, addMonths(earn[earn.length - 1].key, -3)) || -1 } : null),
 card("Faturamento médio", earn.length ? `R$ ${moneyText(Math.round(avgEarn))}` : "—", earn.length ? `Por mês, nos últimos 12 meses (${earn.length} ${earn.length === 1 ? "mês" : "meses"} com valor).` : "Ainda sem meses com faturamento.", (() => { const avg3 = (a, b) => { const v = earn.filter(x => x.key > a && x.key <= b); return v.length ? v.reduce((t, x) => t + x.value, 0) / v.length : -1; }; return { now: avg3(ago3, cur), before: avg3(addMonths(cur, -6), ago3) }; })()),
-card(`Faturamento de ${y}`, `R$ ${moneyText(Math.round(thisYear))}`, lastYear > 0 ? `${statsPct(thisYear / lastYear - 1)} em relação ao mesmo período de ${y - 1}.` : `De janeiro até ${MONTH_ABBR[m]}.`),
+card(`Faturamento de ${y}`, `R$ ${moneyText(Math.round(thisYear))}`, lastYear > 0 ? `${statsPct(thisYear / lastYear - 1)} em relação ao mesmo período de ${y - 1}.` : (APP_LANG === "en" ? `From January to ${MONTH_FULL[m]}.` : `De janeiro até ${MONTH_ABBR[m]}.`)),
 card("Previsto para este mês", `R$ ${moneyText(Math.round(calculateCurrentMonthlyRevenue()))}`, "Somando mensalidades, aulas avulsas e pacotes do mês.", { now: calculateCurrentMonthlyRevenue(), before: valAt(earningsData, ago3) || -1 }),
 card("Mensalidade média", monthly.length ? `R$ ${moneyText(Math.round(avgFee))}` : "—", monthly.length ? `Entre ${monthly.length} aluno${monthly.length === 1 ? "" : "s"} com mensalidade.` : "Nenhum aluno com mensalidade."),
 card("Em atraso", lateN ? `R$ ${moneyText(Math.round(lateV))}` : "R$ 0", lateN ? `${lateN} mensalidade${lateN === 1 ? "" : "s"} vencida${lateN === 1 ? "" : "s"}.` : "Nenhuma mensalidade vencida.")
@@ -15188,7 +15303,7 @@ const instList = Object.entries(inst).sort((a, b) => b[1] - a[1]).slice(0, 5), i
 const weekly = perWeek(active);
 const aulas = [
 card("Aulas por semana", String(Math.round(weekly * 10) / 10).replace(".", ","), "Aulas fixas dos alunos ativos (quinzenal conta meia).", { now: perWeek(activeOn(todayIso)), before: perWeek(activeOn(ago3Iso)) }),
-card("Faltas neste mês", String(abs), active.length ? `Média de ${(abs / active.length).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} por aluno.` : ""),
+card("Faltas neste mês", String(abs), active.length ? `Média de ${(abs / active.length).toLocaleString(APP_LOCALE, { maximumFractionDigits: 1 })} por aluno.` : ""),
 `<div class="kpi-card stats-wide"><div class="kpi-title">Alunos por instrumento</div>${instList.length ? `<div class="stats-bars">${instList.map(([k, n]) => `<div class="stats-bar-row"><span>${escapeHtml(k)}</span><span class="stats-bar"><i style="width:${Math.round(n / instMax * 100)}%"></i></span><span>${n}</span></div>`).join("")}</div>` : `<div class="kpi-sub">Nenhum aluno ativo.</div>`}</div>`
 ];
 box.innerHTML = sec("Alunos", alunos) + sec("Dinheiro", dinheiro) + sec("Aulas", aulas) + surveyStatsHTML(card, sec);
@@ -15680,17 +15795,23 @@ return p ? presetPlan(p) : undefined;
    "t:metronome" (ferramenta), "c:Am" (acorde), "s:maior@C" (escala num tom), "s:maior" (todos os tons).
    Vincular a matéria ao aluno libera no app dele; o vínculo guarda o que ele acrescentou (added)
    pra tirar só isso depois. */
-const PT_NOTE = { C: "Dó", "C#": "Dó#", D: "Ré", "D#": "Ré#", E: "Mi", F: "Fá", "F#": "Fá#", G: "Sol", "G#": "Sol#", A: "Lá", "A#": "Lá#", B: "Si" };
+const PT_NOTE = APP_LANG === "en" ? { C: "C", "C#": "C#", D: "D", "D#": "D#", E: "E", F: "F", "F#": "F#", G: "G", "G#": "G#", A: "A", "A#": "A#", B: "B" } : { C: "Dó", "C#": "Dó#", D: "Ré", "D#": "Ré#", E: "Mi", F: "Fá", "F#": "Fá#", G: "Sol", "G#": "Sol#", A: "Lá", "A#": "Lá#", B: "Si" };
 const MAT_NATURAL = ["C", "D", "E", "F", "G", "A", "B"];
 const MAT_TOOLS = [["tuner", "Afinação do instrumento"], ["metronome", "Uso do metrônomo"], ["ear", "Treino de ouvido"], ["reading", "Leitura de partitura"], ["backing", "Tocar com bases"], ["player", "Tocar junto com músicas"], ["drums", "Ritmos de bateria"], ["voice", "Exercícios de canto"]];
 const MAT_CHORDS = { "": "Acordes maiores", m: "Acordes menores", "7": "Acordes com sétima", m7: "Acordes menores com sétima", "7M": "Acordes com sétima maior", sus4: "Acordes suspensos (4ª)", dim: "Acordes diminutos", aug: "Acordes aumentados" };
 const MAT_SCALES = { maior: "Escala maior", menor: "Escala menor natural", penta: "Escala pentatônica maior", pentam: "Escala pentatônica menor", blues: "Escala blues", harm: "Escala menor harmônica", dor: "Modo dórico", mixo: "Modo mixolídio" };
+// "Escala maior de Dó" / "C major scale" (8.42).
+function scaleTopic(k, r){
+if (APP_LANG !== "en") return `${MAT_SCALES[k]} de ${PT_NOTE[r]}`;
+const t = hiTr(MAT_SCALES[k] || k);
+return `${r} ${t.replace(/^(Major|Minor|Natural|Harmonic|Melodic|Blues|Pentatonic)\b/, w => w.toLowerCase())}`;
+}
 function materiaPresets(){
 if (materiaPresets.list) return materiaPresets.list;
 const L = [];
 MAT_TOOLS.forEach(([p, n]) => L.push({ id: "mp:t:" + p, group: "Ferramentas", topic: n, unlock: ["t:" + p] }));
-CHORD_TYPES.forEach(([k]) => L.push({ id: "mp:c:" + (k || "M"), group: "Acordes", topic: `${MAT_CHORDS[k]} (${MAT_NATURAL.map(r => r + k).join(" ")})`, unlock: ["t:chords", ...MAT_NATURAL.map(r => "c:" + r + k)] }));
-SCALE_TYPES.forEach(([k]) => KEY_ROOTS.forEach(([r]) => L.push({ id: `mp:s:${k}:${r}`, group: MAT_SCALES[k], topic: `${MAT_SCALES[k]} de ${PT_NOTE[r]}`, unlock: ["t:chords", `s:${k}@${r}`] })));
+CHORD_TYPES.forEach(([k]) => L.push({ id: "mp:c:" + (k || "M"), group: "Acordes", topic: `${hiTr(MAT_CHORDS[k])} (${MAT_NATURAL.map(r => r + k).join(" ")})`, unlock: ["t:chords", ...MAT_NATURAL.map(r => "c:" + r + k)] }));
+SCALE_TYPES.forEach(([k]) => KEY_ROOTS.forEach(([r]) => L.push({ id: `mp:s:${k}:${r}`, group: hiTr(MAT_SCALES[k]), topic: scaleTopic(k, r), unlock: ["t:chords", `s:${k}@${r}`] })));
 return materiaPresets.list = L;
 }
 function matOverrides(){ return appSettings.materias && typeof appSettings.materias === "object" ? appSettings.materias : {}; }
@@ -15701,7 +15822,7 @@ function matKeyLabel(k){
 if (k.startsWith("t:")) return `Ferramenta ${STU_PAGES[k.slice(2)] || k.slice(2)}`;
 if (k.startsWith("c:")) return `Acorde ${k.slice(2)}`;
 if (k.startsWith("f:")) return `Forma ${k.slice(2).replace("@", " ")}`;
-if (k.startsWith("s:")) { const [t, r] = k.slice(2).split("@"); return `${MAT_SCALES[t] || t}${r ? ` de ${PT_NOTE[r] || r}` : " (todos os tons)"}`; }
+if (k.startsWith("s:")) { const [t, r] = k.slice(2).split("@"); if (APP_LANG === "en") return r ? scaleTopic(t, r) : `${hiTr(MAT_SCALES[t] || t)} (all keys)`; return `${MAT_SCALES[t] || t}${r ? ` de ${PT_NOTE[r] || r}` : " (todos os tons)"}`; }
 return k;
 }
 // Resumo curto do que a matéria libera (as ferramentas "Acordes e escalas" ficam implícitas).
@@ -16331,7 +16452,7 @@ if (payTo === "me" && due) parts.push(`vence dia ${due}`);
 const dur = Number(document.getElementById("fDuration").value);
 parts.push(`${dur > 0 ? dur : appSettings.lessonDuration} min`);
 const ef = document.getElementById("fEvalFreq").value || appSettings.evalFrequency || "every";
-parts.push(`avaliação ${(EVAL_FREQUENCIES[ef] || "Toda aula").toLowerCase()}`);
+parts.push(APP_LANG === "en" ? `assessment ${hiTr(EVAL_FREQUENCIES[ef] || "Toda aula").toLowerCase()}` : `avaliação ${(EVAL_FREQUENCIES[ef] || "Toda aula").toLowerCase()}`);
 const pk = Number(document.getElementById("fPackageSize").value);
 if (pk > 0) parts.push(`pacote de ${pk} aulas`);
 const ts = document.getElementById("fTrackingSince").value;
@@ -16371,6 +16492,7 @@ const b = dateFromIso(birthIso), now = new Date();
 if (isNaN(b.getTime()) || b > now) return "";
 let months = (now.getFullYear() - b.getFullYear()) * 12 + (now.getMonth() - b.getMonth());
 if (now.getDate() < b.getDate()) months--;
+if (APP_LANG === "en") { if (months < 12) return `${months} month${months === 1 ? "" : "s"}`; const ye = Math.floor(months / 12); return `${ye} year${ye === 1 ? "" : "s"}`; }
 if (months < 12) return `${months} ${months === 1 ? "mês" : "meses"}`;
 const y = Math.floor(months / 12);
 return `${y} ano${y === 1 ? "" : "s"}`;
@@ -16432,8 +16554,10 @@ if (reais) parts.push(inteiro(reais) + (reais === 1 ? " real" : (reais % 1e6 ===
 if (cent) parts.push(inteiro(cent) + (cent === 1 ? " centavo" : " centavos"));
 return parts.length ? parts.join(" e ") : "zero reais";
 }
-function moneyFull(v){ return Number(v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }); }
-function longDate(iso){ const d = dateFromIso(iso); return `${d.getDate()} de ${MONTH_FULL[d.getMonth()]} de ${d.getFullYear()}`; }
+function moneyFull(v){ return Number(v || 0).toLocaleString(APP_LOCALE, { style: "currency", currency: "BRL" }); }
+// "22 de outubro" / "October 22" (8.42).
+function dayMonth(d, m){ return APP_LANG === "en" ? `${m} ${d}` : `${d} de ${m}`; }
+function longDate(iso){ const d = dateFromIso(iso); if (APP_LANG === "en") return `${MONTH_FULL[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`; return `${dayMonth(d.getDate(), MONTH_FULL[d.getMonth()])} de ${d.getFullYear()}`; }
 // Referência do recibo; com o instrumento no texto corrido ("mensalidade de setembro/2026
 // das aulas de bateria", "aula de piano do dia 10/09/2026", "pacote de 10 aulas de canto…").
 function receiptReference(s, item, withInstrument){
@@ -16445,6 +16569,7 @@ return `pacote${size ? ` de ${size}` : " de"} aulas${inst ? ` de ${inst}` : ""} 
 }
 // Quebra o texto em linhas que cabem na largura.
 function wrapCanvasText(ctx, text, maxWidth){
+text = hiTr(text);
 const words = text.split(/\s+/), lines = [];
 let line = "";
 words.forEach(w => {
@@ -17884,7 +18009,7 @@ box.innerHTML = list.length ? list.map(b => {
 const st = b.studentId ? students.find(x => x.id === b.studentId) : null;
 return `<div class="holiday-info-item">
 <div><div class="holiday-info-name">${escapeHtml(b.label || "Férias/recesso")}</div>
-<div class="holiday-info-type"><span class="agenda-dot agenda-tag--break"></span>${formatDateShort(b.start)} a ${formatDateShort(b.end)} · ${st ? "só " + escapeHtml(st.name) : "todos os alunos"}</div></div>
+<div class="holiday-info-type"><span class="agenda-dot agenda-tag--break"></span>${formatDateShort(b.start)}${APP_LANG === "en" ? " to " : " a "}${formatDateShort(b.end)} · ${st ? "só " + escapeHtml(st.name) : "todos os alunos"}</div></div>
 <button type="button" class="btn-delete" style="margin:0;width:auto;padding:0.375rem 0.75rem;font-size:0.75rem" data-del-break="${b.id}">Remover</button>
 </div>`;
 }).join("") : `<div class="field-hint" style="margin:0 0 0.875rem">Nenhum período cadastrado.</div>`;
@@ -17979,8 +18104,8 @@ const c = lessonReminderCfg();
 return c.when === "day" ? `No mesmo dia · ${c.dayFrom}` : c.when === "both" ? "Véspera e mesmo dia" : `Na véspera · ${c.eveFrom}`;
 }
 // [Saudação] pela hora do envio; [período] pela hora da aula.
-function greetingFor(d){ const h = d.getHours(); return h >= 5 && h < 12 ? "Bom dia" : h >= 12 && h < 18 ? "Boa tarde" : "Boa noite"; }
-function periodFor(time){ const h = Math.floor(toMin(time) / 60); return h < 12 ? "de manhã" : h < 18 ? "à tarde" : "à noite"; }
+function greetingFor(d){ const h = d.getHours(); if (APP_LANG === "en") return h >= 5 && h < 12 ? "Good morning" : h >= 12 && h < 18 ? "Good afternoon" : "Good evening"; return h >= 5 && h < 12 ? "Bom dia" : h >= 12 && h < 18 ? "Boa tarde" : "Boa noite"; }
+function periodFor(time){ const h = Math.floor(toMin(time) / 60); if (APP_LANG === "en") return h < 12 ? "in the morning" : h < 18 ? "in the afternoon" : "in the evening"; return h < 12 ? "de manhã" : h < 18 ? "à tarde" : "à noite"; }
 function weekOfYear(d){ return Math.floor((new Date(d.getFullYear(), d.getMonth(), d.getDate()) - new Date(d.getFullYear(), 0, 1)) / (7 * 86400000)); }
 function reminderSituation(dateObj, time, now){
 if (isoOf(dateObj) !== isoOf(now)) return "eve";
@@ -17992,7 +18117,7 @@ const list = reminderPhrases(reminderSituation(dateObj, time, now));
 const r = messageRecipient(s);
 return fillReminder(list[(weekOfYear(now) + pos) % list.length], {
 saudacao: greetingFor(now), periodo: periodFor(time), nome: r ? r.name : firstName(s.name), hora: fmtHour(time),
-aula: r && r.guardian ? `aula de ${firstName(s.name)}` : "nossa aula"
+aula: APP_LANG === "en" ? (r && r.guardian ? `${firstName(s.name)}'s lesson` : "our lesson") : r && r.guardian ? `aula de ${firstName(s.name)}` : "nossa aula"
 });
 }
 // Aulas do dia pra lembrar: sem as canceladas, remarcadas e de feriado/férias; hoje, só as
@@ -18098,7 +18223,7 @@ else time = fromMin(Math.min(now.getHours() * 60 + now.getMinutes() + (g === "la
 const list = (rpDraft[g] || []).map(t => t.trim()).filter(Boolean);
 if (!list.length) return "";
 const idx = weekOfYear(now) % list.length;
-const text = fillReminder(list[idx], { saudacao: greetingFor(now), periodo: periodFor(time), nome: "Ana", hora: fmtHour(time), aula: "nossa aula" });
+const text = fillReminder(list[idx], { saudacao: greetingFor(now), periodo: periodFor(time), nome: "Ana", hora: fmtHour(time), aula: APP_LANG === "en" ? "our lesson" : "nossa aula" });
 return `Exemplo agora (frase ${idx + 1}, aluna Ana, aula às ${fmtHour(time)}${g === "eve" ? " de amanhã" : ""}): <b>${escapeHtml(text)}</b>`;
 }
 function renderReminderPhrases(){
@@ -18283,6 +18408,8 @@ document.getElementById("feedbackModal").classList.remove("show");
 };
 
 // --- Termos e privacidade ---
+document.getElementById("valLang").textContent = APP_LANG === "en" ? "English" : "Português";
+document.getElementById("rowLang").onclick = langSwitch;
 document.getElementById("rowTermos").onclick = () => document.getElementById("termosModal").classList.add("show");
 
 // ===================== Página de Metas =====================
@@ -18899,7 +19026,7 @@ function hiAppSchedule(){
 if (!hiAppCanSchedule()) return;
 let items = [];
 try { if (authCurrentUser && !demoMode) items = studentMode ? stuSchedItems() : teacherSchedItems(); } catch(e) { console.warn("Lembretes do celular:", e); return; }
-const s = JSON.stringify(items);
+const s = JSON.stringify(APP_LANG === "en" ? items.map(x => Object.assign({}, x, { title: hiTr(x.title || ""), body: hiTr(x.body || "") })) : items);
 if (s === hiSchedLast) return;
 hiSchedLast = s;
 try { HI_APP.schedule(s); } catch(e) {}
@@ -19891,8 +20018,8 @@ function schoolPayMonths(){ const cur = currentMonthKey(); return [addMonths(cur
 function schoolHomeHTML(ctx){
 const { team, repOf, nameOf } = ctx;
 const now = new Date(), todayIso = isoOf(now);
-const months = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
-const days = ["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"];
+const months = hiTrList(["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"]);
+const days = hiTrList(["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"]);
 // Aulas por dia: cada professor manda os próximos 7 dias.
 const byDay = new Map();
 team.forEach(m => {
@@ -19928,9 +20055,9 @@ const keys = [...byDay.keys()].sort().slice(0, 3);
 if (!keys.length) html += `<div class="empty-teach"><b>Nenhuma aula nos próximos dias.</b><span>${team.length > 1 ? "As aulas aparecem quando cada professor abrir o app." : "Traga os professores em Professores → + para ver as aulas de todos aqui."}</span></div>`;
 keys.forEach((iso, idx) => {
 const d = dateFromIso(iso), off = Math.round((d - dateFromIso(todayIso)) / 86400000);
-const suffix = off === 0 ? " (hoje)" : off === 1 ? " (amanhã)" : ` (daqui a ${off} dias)`;
+const suffix = off === 0 ? hiTr(" (hoje)") : off === 1 ? hiTr(" (amanhã)") : hiTr(` (daqui a ${off} dias)`);
 const list = [...byDay.get(iso).values()].sort((a, b) => a.t.localeCompare(b.t) || nameOf(a.m).localeCompare(nameOf(b.m)));
-html += `<section class="day-section${idx === 0 ? " focused" : ""}"><div class="day-head">${days[d.getDay()]}, ${d.getDate()} de ${months[d.getMonth()]}${suffix}</div>` + list.map(x => {
+html += `<section class="day-section${idx === 0 ? " focused" : ""}"><div class="day-head">${days[d.getDay()]}, ${dayMonth(d.getDate(), months[d.getMonth()])}${suffix}</div>` + list.map(x => {
 const a0 = x.arr[0], allOff = x.arr.every(a => a.s);
 let st = "Em breve", cls = "upcoming";
 if (allOff) { st = a0.s === "off" ? (a0.o || "Feriado/férias") : (SCHOOL_REASON[a0.s] || "Sem aula"); cls = "off"; }
@@ -19950,7 +20077,7 @@ const bd = [];
 team.forEach(m => { const r = repOf(m); ((r && r.data && r.data.bd) || []).forEach(b => { if (b.d >= todayIso) bd.push({ ...b, who: nameOf(m) }); }); });
 bd.sort((a, b) => a.d.localeCompare(b.d) || a.n.localeCompare(b.n));
 const bdToday = bd.filter(b => b.d === todayIso), bdWeek = bd.filter(b => b.d !== todayIso && b.d <= isoOf(new Date(now.getFullYear(), now.getMonth(), now.getDate() + 6)));
-if (bdToday.length || bdWeek.length) html += `<div class="settings-group-label" style="margin-top:1.5rem">Aniversários</div>` + bdToday.map(b => `<div class="bday-card"><span class="bday-emoji" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-cake"/></svg></span><div class="bday-title">Hoje: ${escapeHtml(b.n)} <span class="bday-sub">· aluno de ${escapeHtml(b.who)}</span></div></div>`).join("") + (bdWeek.length ? `<div class="bday-week">Esta semana: ${bdWeek.map(b => { const d = dateFromIso(b.d); return `${escapeHtml(b.n)} (${WEEKDAY_SHORT[d.getDay()].toLowerCase()}, ${pad2(d.getDate())}/${pad2(d.getMonth() + 1)})`; }).join(" · ")}</div>` : "");
+if (bdToday.length || bdWeek.length) html += `<div class="settings-group-label" style="margin-top:1.5rem">Aniversários</div>` + bdToday.map(b => `<div class="bday-card"><span class="bday-emoji" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-cake"/></svg></span><div class="bday-title">Hoje: ${escapeHtml(b.n)} <span class="bday-sub">· aluno de ${escapeHtml(b.who)}</span></div></div>`).join("") + (bdWeek.length ? `<div class="bday-week">Esta semana: ${bdWeek.map(b => { const d = dateFromIso(b.d); return `${escapeHtml(b.n)} (${wdLow(WEEKDAY_SHORT[d.getDay()])}, ${pad2(d.getDate())}/${pad2(d.getMonth() + 1)})`; }).join(" · ")}</div>` : "");
 // Mensalidades pagas direto à escola, no fim (como as mensalidades no Início do professor).
 if (schoolV824() && schoolPayRows(ctx).length) html += `<div style="margin-top:1.5rem"></div>` + schoolExtrasHTML(ctx, "school");
 return html;

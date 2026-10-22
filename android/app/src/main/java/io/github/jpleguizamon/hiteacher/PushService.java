@@ -34,14 +34,14 @@ public class PushService extends FirebaseMessagingService {
         Map<String, String> d = msg.getData();
         String title = d.get("title"), body = d.get("body"), page = d.get("page"), tag = d.get("tag");
         if (title == null && msg.getNotification() != null) { title = msg.getNotification().getTitle(); body = msg.getNotification().getBody(); }
-        show(this, CHANNEL, title == null ? "Hi Teacher" : title, body == null ? "" : body, page, tag);
+        show(this, CHANNEL, title == null ? "Hi Teacher" : PushTr.tr(this, title), body == null ? "" : PushTr.tr(this, body), page, tag);
     }
 
     static void show(Context c, String channel, String title, String body, String page, String tag) {
         NotificationManager nm = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT >= 26 && nm.getNotificationChannel(channel) == null) {
             boolean remind = CHANNEL_REMIND.equals(channel);
-            nm.createNotificationChannel(new NotificationChannel(channel, remind ? "Lembretes e resumos" : "Avisos", NotificationManager.IMPORTANCE_HIGH));
+            nm.createNotificationChannel(new NotificationChannel(channel, PushTr.english(c) ? (remind ? "Reminders and summaries" : "Notifications") : (remind ? "Lembretes e resumos" : "Avisos"), NotificationManager.IMPORTANCE_HIGH));
         }
         Intent open = new Intent(c, MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         if (page != null) open.putExtra("page", page);

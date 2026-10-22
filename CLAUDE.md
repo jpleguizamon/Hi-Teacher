@@ -6,6 +6,7 @@ Lido automaticamente no começo de toda sessão. As regras do app estão em `HI-
 - A identidade visual azul e preto continua, a não ser que ele diga o contrário.
 - Ao terminar cada mudança: rodar `node tests/smoke.js` (tem de dar "Tudo certo"), depois commit e push na `main`.
 - Se decidirmos algo novo sobre o app, atualizar o `HI-TEACHER.md`.
+- O app tem versão em inglês (8.42): texto novo na tela precisa de tradução em `i18n/en-dict.json` (ver `HI-TEACHER.md`, "versão em inglês"), depois `node tools/i18n-build.js`.
 - Em cada rodada de mudanças: dado antigo continua funcionando igual, sem perder nada; o que é novo começa vazio ou com o comportamento de hoje. No fim da rodada, subir a versão (`APP_VERSION`).
 
 ## Economia de créditos (pedido do dono)

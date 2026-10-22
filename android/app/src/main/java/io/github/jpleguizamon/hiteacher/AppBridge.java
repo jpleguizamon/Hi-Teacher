@@ -59,6 +59,10 @@ public class AppBridge {
         return on ? "granted" : "denied";
     }
 
+    /** Idioma do site ("pt" ou "en"), para traduzir os avisos e os textos do próprio app. */
+    @JavascriptInterface
+    public void setLang(String lang) { prefs(act).edit().putString("lang", "en".equals(lang) ? "en" : "pt").apply(); }
+
     /** Pede a permissão (se precisar) e devolve o código do aparelho no Firebase. */
     @JavascriptInterface
     public void enablePush(String cb) {
@@ -148,7 +152,7 @@ public class AppBridge {
             Uri u = act.getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, v);
             if (u == null) return shareFile(name, mime, b64, "");
             try (OutputStream out = act.getContentResolver().openOutputStream(u)) { out.write(Base64.decode(b64, Base64.DEFAULT)); }
-            act.runOnUiThread(() -> Toast.makeText(act, "Salvo em Downloads: " + safeName(name), Toast.LENGTH_LONG).show());
+            act.runOnUiThread(() -> Toast.makeText(act, (PushTr.english(act) ? "Saved to Downloads: " : "Salvo em Downloads: ") + safeName(name), Toast.LENGTH_LONG).show());
             return true;
         } catch (Exception e) {
             return shareFile(name, mime, b64, "");

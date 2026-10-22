@@ -9,9 +9,9 @@
 //  - Notificações (8.14): mostra o que a função send-push mandou e, ao tocar, abre (ou traz pra
 //    frente) o app já na página certa (?p=inicio | aulas | avisos | financeiro).
 const VERSION = new URL(self.location.href).searchParams.get("v") || "dev";
-const SW_REV = "8.36";   // sobe junto com o APP_VERSION quando o próprio service worker muda
+const SW_REV = "8.42";   // sobe junto com o APP_VERSION quando o próprio service worker muda
 const CACHE = `hi-teacher-${SW_REV}-${VERSION}`;
-const CORE = ["./", "./index.html", "./privacidade.html", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/icon-maskable-512.png", "./icons/apple-touch-icon.png", "./icons/favicon-32.png", "./icons/logo-text.png"];
+const CORE = ["./", "./index.html", "./privacidade.html", "./privacy.html", "./i18n/en.js", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/icon-512.png", "./icons/icon-maskable-512.png", "./icons/apple-touch-icon.png", "./icons/favicon-32.png", "./icons/logo-text.png"];
 const LIB_HOSTS = /(^|\.)(cdn\.jsdelivr\.net|cdn\.sheetjs\.com|unpkg\.com|tessdata\.projectnaptha\.com)$/;
 
 self.addEventListener("install", e => {
@@ -71,17 +71,30 @@ self.addEventListener("fetch", e => {
 });
 
 // ---------- Notificações (push) ----------
+// App em inglês (8.42): a página guarda o idioma em "hi-lang" e os avisos são traduzidos aqui.
+const PUSH_EN = [["Notificações ativas", "Notifications are on"], ["Teste enviado com sucesso.", "Test sent successfully."], ["Resposta do professor", "Reply from your teacher"], ["O professor respondeu ao seu recado.", "Your teacher replied to your message."], ["Novo recado", "New message"], ["{0} avisou que vai faltar na aula de {1}", "{0} said they'll miss the lesson on {1}"], ["{0} avisou que vai faltar", "{0} said they'll miss a lesson"], ["{0} avisou que pagou", "{0} said they've paid"], ["{0} pediu uma alteração nos dados", "{0} asked to change their details"], ["{0} pediu para remarcar a aula de {1}", "{0} asked to reschedule the lesson on {1}"], ["{0} pediu para remarcar uma aula", "{0} asked to reschedule a lesson"], ["{0} escolheu um horário de reposição", "{0} picked a time for a make-up lesson"], ["{0} pediu para apagar os dados", "{0} asked to delete their data"], ["Pedido de entrada", "Request to join"], ["{0} quer entrar", "{0} wants to join"], ["Aula remarcada", "Lesson rescheduled"], ["Aula cancelada", "Lesson canceled"], ["Sua aula de {0} foi remarcada", "Your lesson on {0} was rescheduled"], ["Sua aula de {0} foi cancelada", "Your lesson on {0} was canceled"], ["Reposição marcada", "Make-up lesson scheduled"], ["{0} às {1}", "{0} at {1}"], ["Aviso de {0}", "Notice from {0}"], ["Novo aviso do seu professor", "New notice from your teacher"], ["Mensalidade em atraso", "Monthly fee overdue"], ["Confira o financeiro", "Check your payments in the app"], ["Aviso da escola", "School notice"], ["Novo aviso", "New notice"], ["A escola mandou um interessado para você.", "The school sent you a lead."], ["Um aluno foi passado para você. Toque para aceitar.", "A student was transferred to you. Tap to accept."], ["Escola", "School"], ["Um professor pediu para entrar na escola", "A teacher asked to join the school"], ["{0} pediu para entrar na escola", "{0} asked to join the school"]];
+function pushTr(t){
+  t = String(t || "");
+  for (const [pt, en] of PUSH_EN) {
+    const names = [];
+    const re = new RegExp("^" + pt.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\\\{(\d)\\\}/g, (_, n) => { names.push(+n); return "(.+?)"; }) + "$");
+    const m = re.exec(t);
+    if (m) return en.replace(/\{(\d)\}/g, (_, n) => pushTr(m[names.indexOf(+n) + 1]) );
+  }
+  return t;
+}
+async function pushLang(){ try { const c = await caches.open("hi-lang"); const r = await c.match("./__lang"); return r ? await r.text() : "pt"; } catch (x) { return "pt"; } }
 self.addEventListener("push", e => {
   let d = {};
   try { d = e.data ? e.data.json() : {}; } catch (x) { d = { body: e.data ? e.data.text() : "" }; }
-  e.waitUntil(self.registration.showNotification(d.title || "Hi Teacher", {
+  e.waitUntil(pushLang().then(l => { if (l === "en") { d.title = pushTr(d.title); d.body = pushTr(d.body); } }).then(() => self.registration.showNotification(d.title || "Hi Teacher", {
     body: d.body || "",
     icon: "icons/icon-192.png",
     badge: "icons/icon-192.png",
     tag: d.tag || undefined,
     data: { url: d.url || "./" },
     requireInteraction: false
-  }));
+  })));
 });
 // Abre (ou traz pra frente) o app na página do aviso. Com o app já aberto, só pede pra ele trocar de página.
 async function openFromNotification(rawUrl){

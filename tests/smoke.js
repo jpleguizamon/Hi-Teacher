@@ -3,7 +3,8 @@
 // (Supabase) de mentira, e confere:
 //   1. o login aparece primeiro e a escolha (professor/escola/aluno) só depois, em conta nova;
 //   2. todas as páginas do professor e do aluno abrem sem erro;
-//   3. planos: teste grátis, fim do teste, limite de alunos e a tela Assinaturas.
+//   3. planos: teste grátis, fim do teste, limite de alunos e a tela Assinaturas;
+//   4. a versão em inglês (8.42): login em inglês e todas as páginas abrindo sem erro.
 // Se algo der errado, sai com erro e a publicação não acontece.
 const http = require("http"), fs = require("fs"), path = require("path");
 const { chromium } = require("playwright");
@@ -101,6 +102,23 @@ async function page(browser, url, { session = false, seed = true } = {}) {
       check(/Prata/.test(r.tier || "") && r.canAdd === true, "planos: Prata mostra o nível e deixa cadastrar");
       check(r.adminStats >= 4, "planos: a tela Assinaturas mostra os números");
       check(!errs.length && !r.err, "planos: nenhum erro" + (errs.length || r.err ? " → " + (r.err || errs[0]) : ""));
+      await p.close(); }
+    // 4. Inglês
+    { const { p, errs } = await page(browser, base + "?lang=en", { seed: false });
+      const t = await p.evaluate(() => [document.documentElement.lang, document.getElementById("authForgotBtn").textContent, document.getElementById("authLang").textContent]);
+      check(t[0] === "en" && t[1] === "I forgot my password" && /português/.test(t[2]), "inglês: o login aparece em inglês");
+      check(!errs.length, "inglês: login sem erro" + (errs.length ? " → " + errs[0] : ""));
+      await p.close(); }
+    { const { p, errs } = await page(browser, base + "?lang=en");
+      await p.evaluate(() => hideAuthGate()).catch(() => {});
+      const pages = await p.evaluate(() => [...new Set([...document.querySelectorAll("[data-page]")].map(e => e.dataset.page))]);
+      for (const pg of pages) { await p.evaluate(pg => openPage(pg), pg).catch(e => errs.push(pg + ": " + e.message)); await p.waitForTimeout(100); }
+      const home = await p.evaluate(() => { openPage("settings"); return document.getElementById("valLang").textContent; });
+      check(home === "English", "inglês: Configurações mostra o idioma");
+      check(!errs.length, "inglês: páginas sem erro" + (errs.length ? " → " + errs.slice(0, 3).join(" | ") : ""));
+      await p.close(); }
+    { const { p } = await page(browser, base + "?lang=pt", { seed: false });
+      check(await p.evaluate(() => document.documentElement.lang === "pt-BR" && document.getElementById("authForgotBtn").textContent === "Esqueci minha senha" && typeof window.hiTrTree === "undefined"), "português: continua igual (sem tradução carregada)");
       await p.close(); }
   } finally {
     await browser.close();
