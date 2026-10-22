@@ -2688,7 +2688,7 @@ body.pdf-open{overflow:hidden}
 <div class="settings-row" id="rowEvalFreq"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-star"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Frequência da avaliação<button type="button" class="help-icon" data-help="De quanto em quanto tempo o app pede pra avaliar cada aluno. Fora do dia de avaliação a aula fica só como 'Aula dada', sem pop-up nem 'Aguardando avaliação'. Dá pra mudar por aluno no cadastro dele.">!</button></div></div><span class="settings-row-value" id="valEvalFreq">Toda aula</span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowFerias"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-sun"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Férias e recesso<button type="button" class="help-icon" data-help="Períodos sem aula, pra todos os alunos ou só pra um. As aulas nesses dias (e nos feriados da Agenda) ficam automaticamente como 'Não houve aula', sem avaliação.">!</button></div><div class="settings-row-sub">Períodos sem aula, gerais ou por aluno</div></div><span class="settings-row-value" id="valFerias">Nenhum</span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowMensagens"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-message"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Mensagens prontas<button type="button" class="help-icon" data-help="Textos que o app já deixa escritos pra mandar no WhatsApp: cobrar mensalidade, avisar aula marcada ou cancelada e parabenizar no aniversário. As palavras entre colchetes são trocadas pelos dados do aluno.">!</button></div><div class="settings-row-sub">Cobrança, aula remarcada, cancelamento, aniversário, lembrete de aula</div></div><span class="settings-row-chevron">›</span></div>
-<div class="settings-row" id="rowIdioma"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-globe"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Idioma</div></div><span class="settings-row-value">Português</span><span class="settings-row-chevron">›</span></div>
+<div class="settings-row" id="rowIdioma"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-globe"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Idioma</div></div><span class="settings-row-value" id="valLang" data-no-tr>Português</span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowChartsStart"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-trending-up"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Início dos gráficos<button type="button" class="help-icon" data-help="Meses antes dessa data aparecem apagados nos gráficos, em vez de parecerem um resultado zero.">!</button></div><div class="settings-row-sub">A partir de quando os gráficos começam a contar</div></div><span class="settings-row-value" id="valChartsStart">Desde o início</span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowGrowthGoal"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-target"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Meta de crescimento mensal<button type="button" class="help-icon" data-help="Defina quanto espera crescer por mês. Sem meta definida, o app calcula uma média automática com base no seu histórico, descartando meses fora do padrão (como um mês de matrículas em massa ou de saída de vários alunos).">!</button></div><div class="settings-row-sub">Usada para marcar em verde/vermelho se o mês bateu a meta</div></div><span class="settings-row-value" id="valGrowthGoal">Sem meta</span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowLocalizacao"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-pin"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Localização</div><div class="settings-row-sub">Usada pra mostrar os feriados certos na Agenda</div></div><span class="settings-row-value" id="valLocalizacao">Não definida</span><span class="settings-row-chevron">›</span></div>
@@ -2714,7 +2714,6 @@ body.pdf-open{overflow:hidden}
 <div class="settings-group-label">Sobre</div>
 <div class="settings-card">
 <div class="settings-row" id="rowFeedback"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-message"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Enviar feedback</div></div><span class="settings-row-chevron">›</span></div>
-<div class="settings-row" id="rowLang" data-no-tr><span class="settings-row-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span><div class="settings-row-text"><div class="settings-row-title" id="rowLangTitle">Idioma · Language</div></div><span class="settings-row-value" id="valLang"></span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowTermos"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-file-text"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Termos e privacidade</div></div><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowInstallApp" style="display:none"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-download"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Instalar o app</div><div class="settings-row-sub">Abre em tela cheia, com ícone na tela inicial</div></div><span class="settings-row-chevron">›</span></div>
 <div class="settings-row"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-info"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Versão do app</div></div><span class="settings-row-value" id="valVersao"></span></div>
@@ -3411,12 +3410,12 @@ body.pdf-open{overflow:hidden}
 <h2>Idioma</h2>
 <div class="field"><label>Idioma do app</label>
 <div class="choice-chips">
-<button type="button" class="filter-chip selected" aria-pressed="true">Português (Brasil)</button>
-<button type="button" class="filter-chip" disabled>English <span class="badge-soon">Em breve</span></button>
+<button type="button" class="filter-chip" id="langPt" data-no-tr>Português (Brasil)</button>
+<button type="button" class="filter-chip" id="langEn" data-no-tr>English</button>
 <button type="button" class="filter-chip" disabled>Español <span class="badge-soon">Em breve</span></button>
 </div>
 </div>
-<div class="field-hint">Por enquanto o Hi Teacher está disponível só em Português.</div>
+<div class="field-hint">Toque no idioma para trocar. O app recarrega na hora e seus dados continuam iguais.</div>
 <div class="actions"><button class="save" id="idiomaSaveBtn" style="width:100%">Fechar</button></div>
 </div>
 </div>
@@ -3712,7 +3711,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.42";
+const APP_VERSION = "8.43";
 // Idioma (8.42): troca entre português e inglês e recarrega. Fica guardado neste aparelho.
 function langSwitchLabel(){ return APP_LANG === "en" ? "🌐 Mudar para português" : "🌐 Switch to English"; }
 function langSwitch(){
@@ -18241,9 +18240,17 @@ box.querySelectorAll("[data-rp-add]").forEach(b => b.onclick = () => { const g =
 document.getElementById("rowIdioma").onclick = () => {
 document.getElementById("idiomaModal").classList.add("show");
 };
+[["langPt", "pt"], ["langEn", "en"]].forEach(([id, l]) => {
+const b = document.getElementById(id);
+b.classList.toggle("selected", APP_LANG === l); b.setAttribute("aria-pressed", APP_LANG === l ? "true" : "false");
+b.onclick = () => {
+if (APP_LANG === l) return;
+appSettings.language = l === "en" ? "en" : "pt-BR"; saveAppSettings();
+try { localStorage.setItem("jp_lang_v1", l); } catch(e) {}
+location.reload();
+};
+});
 document.getElementById("idiomaSaveBtn").onclick = () => {
-appSettings.language = "pt-BR";
-saveAppSettings();
 document.getElementById("idiomaModal").classList.remove("show");
 };
 
@@ -18409,7 +18416,6 @@ document.getElementById("feedbackModal").classList.remove("show");
 
 // --- Termos e privacidade ---
 document.getElementById("valLang").textContent = APP_LANG === "en" ? "English" : "Português";
-document.getElementById("rowLang").onclick = langSwitch;
 document.getElementById("rowTermos").onclick = () => document.getElementById("termosModal").classList.add("show");
 
 // ===================== Página de Metas =====================
