@@ -1377,7 +1377,8 @@ body.lead-open #authGate,body.lead-open #onboardingGate{display:none!important}
 /* Tela de carregamento em tela cheia (8.37) */
 #authGate.is-loading{background:radial-gradient(60rem 40rem at 50% 38%,rgba(47,211,242,.14),transparent 60%),radial-gradient(40rem 30rem at 50% 110%,rgba(47,211,242,.08),transparent 70%),var(--bg)}
 #authGate.is-loading .auth-card{background:none;border:none;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;width:min(20rem,100%);display:flex;flex-direction:column;align-items:center}
-#authGate.is-loading #authSubtitle{display:none}
+#authGate.is-loading #authSubtitle,#authGate.is-loading .auth-tagline{display:none}
+.auth-card p.auth-tagline{color:var(--text-2);font-size:0.875rem;margin:0 0 0.5rem}
 #authGate.is-loading .auth-owl{width:7.5rem;height:7.5rem;margin-bottom:1.25rem;filter:drop-shadow(0 0 1.5rem rgba(47,211,242,.45));animation:splashBreath 2.4s ease-in-out infinite}
 #authGate.is-loading .auth-logo-img{height:3.25rem;margin-bottom:2rem}
 #authGate.is-loading .auth-loading{font-size:0.9375rem;color:var(--text-2);font-weight:600}
@@ -2278,6 +2279,7 @@ body.pdf-open{overflow:hidden}
 <div id="authGate" class="is-loading">
 <div class="auth-card">
 <svg class="brand-owl auth-owl" viewBox="0 0 512 512" aria-hidden="true"><use href="#brand-owl"/></svg><img class="auth-logo-img" src="icons/logo-text.png" alt="Hi Teacher">
+<p class="auth-tagline">Agenda, alunos e mensalidades do professor particular, num lugar só.</p>
 <p id="authSubtitle">Entre pra acessar seus dados.</p>
 <div id="authChoice" style="display:none">
 <div class="entry-big">
@@ -2981,6 +2983,21 @@ body.pdf-open{overflow:hidden}
 <select id="fLevel"></select>
 </div>
 <div class="field" id="fRoomField" style="display:none"><label>Sala</label><select id="fRoom"></select><div class="field-hint" id="fRoomHint"></div></div>
+<!-- 8.44: mensalidade e telefone ficam à vista (antes estavam nas seções recolhidas) -->
+<div class="field" id="fValueField"><label id="fValueLabel">Valor da mensalidade</label>
+<select id="fValueSelect">
+<option value="auto">Automático (valores padrões)</option>
+<option value="outro">Outro valor...</option>
+</select>
+</div>
+<div class="field" id="fPriceField" style="display:none"><label id="fPriceLabel">Valor por aula (R$)</label><input id="fPrice" type="number" min="0" inputmode="decimal" placeholder="Ex.: 80"></div>
+<div class="field" id="customValWrapper" style="display:none">
+<label>Valor personalizado (R$)</label>
+<input id="fCustomValue" type="number" min="0" inputmode="decimal" placeholder="Ex: 100">
+</div>
+<div class="field"><label>Telefone / WhatsApp</label>
+<div class="input-with-action"><input id="fPhone" type="tel" inputmode="tel" placeholder="Ex.: (31) 99999-9999"><a class="wa-btn" id="fPhoneWa" target="_blank" rel="noopener" style="display:none">WhatsApp</a></div>
+</div>
 <div style="display:flex;gap:10px">
 <div class="field" style="flex:1"><label>Data de entrada</label><input id="fEntry" type="date"></div>
 <div class="field" id="exitDateFieldWrapper" style="flex:1;display:none"><label>Data de saída</label><input id="fExit" type="date"></div>
@@ -2996,17 +3013,6 @@ body.pdf-open{overflow:hidden}
 <label>Formato da aula (Calculado automaticamente)</label>
 <div id="fFormat" class="locked-input">Individual</div>
 <div class="field-hint" id="fFormatSuggested" style="margin-top:0.375rem">Valor sugerido: R$ 140</div>
-</div>
-<div class="field" id="fValueField"><label id="fValueLabel">Valor da mensalidade</label>
-<select id="fValueSelect">
-<option value="auto">Automático (valores padrões)</option>
-<option value="outro">Outro valor...</option>
-</select>
-</div>
-<div class="field" id="fPriceField" style="display:none"><label id="fPriceLabel">Valor por aula (R$)</label><input id="fPrice" type="number" min="0" inputmode="decimal" placeholder="Ex.: 80"></div>
-<div class="field" id="customValWrapper" style="display:none">
-<label>Valor personalizado (R$)</label>
-<input id="fCustomValue" type="number" min="0" inputmode="decimal" placeholder="Ex: 100">
 </div>
 <div style="display:flex;gap:0.625rem">
 <div class="field" style="flex:1.3"><label>Paga para</label>
@@ -3042,9 +3048,6 @@ body.pdf-open{overflow:hidden}
 </details>
 <details class="form-section" id="fContactSection">
 <summary><span class="form-section-title">Contato, responsável e local da aula</span></summary>
-<div class="field"><label>Telefone / WhatsApp</label>
-<div class="input-with-action"><input id="fPhone" type="tel" inputmode="tel" placeholder="Ex.: (31) 99999-9999"><a class="wa-btn" id="fPhoneWa" target="_blank" rel="noopener" style="display:none">WhatsApp</a></div>
-</div>
 <div class="field"><label>Data de nascimento</label><input id="fBirth" type="date"><div class="field-hint" id="fAgeHint" style="margin:0.375rem 0 0"></div></div>
 <div class="field"><label>Responsável (nome)</label><input id="fGuardianName" placeholder="Pra aluno menor de idade"></div>
 <div class="field"><label>Telefone do responsável</label>
@@ -3711,7 +3714,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.44";
+const APP_VERSION = "8.45";
 // Idioma (8.42): troca entre português e inglês e recarrega. Fica guardado neste aparelho.
 function langSwitchLabel(){ return APP_LANG === "en" ? "🌐 Mudar para português" : "🌐 Switch to English"; }
 function langSwitch(){
@@ -4067,11 +4070,14 @@ const SYNC_META_KEY = "jp_sync_meta_v1";
 function readSyncMeta(){ try { return JSON.parse(localStorage.getItem(SYNC_META_KEY) || "null") || {}; } catch(e) { return {}; } }
 function writeSyncMeta(patch){ _nativeSetItem.call(localStorage, SYNC_META_KEY, JSON.stringify({ ...readSyncMeta(), ...patch })); }
 let cloudStatus = { state: "idle", at: null, error: "" };
+// 8.44: o detalhe técnico só aparece para o dono do app; os outros veem uma frase simples.
+function techMsg(plain, tech){ return (typeof myPlan !== "undefined" && myPlan && myPlan.admin) ? tech : plain; }
+const SETUP_MSG = "Esta função ainda não está ligada no servidor. Fale com o suporte.";
 function cloudErrorText(e){
 const code = e && e.code, msg = (e && e.message) || String(e || "");
 const table = tbActive() ? "às tabelas de dados" : "à tabela user_data";
-if (code === "42501" || /permission denied|row-level security/i.test(msg)) return `o Supabase recusou o acesso ${table}, falta permissão no banco`;
-if (code === "42P01" || code === "PGRST205" || /does not exist|could not find the table/i.test(msg)) return tbActive() ? "as tabelas da versão 8.0 não existem no Supabase" : "a tabela user_data não existe no Supabase";
+if (code === "42501" || /permission denied|row-level security/i.test(msg)) return techMsg("o servidor recusou o acesso (fale com o suporte)", `o Supabase recusou o acesso ${table}, falta permissão no banco`);
+if (code === "42P01" || code === "PGRST205" || /does not exist|could not find the table/i.test(msg)) return techMsg("o servidor ainda não está pronto (fale com o suporte)", tbActive() ? "as tabelas da versão 8.0 não existem no Supabase" : "a tabela user_data não existe no Supabase");
 if (/failed to fetch|network|load failed/i.test(msg)) return "sem conexão com a internet";
 return msg || "erro desconhecido";
 }
@@ -9913,6 +9919,7 @@ setTimeout(() => { row.scrollIntoView({ block: "center" }); row.classList.add("r
 authSocialLoad();
 document.getElementById("authGoogle").onclick = () => authSocial("google");
 document.getElementById("authApple").onclick = () => authSocial("apple");
+let authStartedFor = null;
 supabaseClient.auth.onAuthStateChange(async (event, session) => {
 if (event === "PASSWORD_RECOVERY") {
 authMode = "recovery";
@@ -9922,16 +9929,20 @@ showAuthGate("Defina sua nova senha.");
 return;
 }
 if (session && session.user) {
+// 8.44: a renovação do login (mais ou menos a cada hora e ao voltar pro app) não refaz a entrada:
+// antes recarregava a tela e o texto que o professor estava escrevendo se perdia.
+if (authStartedFor === session.user.id && (event === "TOKEN_REFRESHED" || event === "USER_UPDATED" || event === "SIGNED_IN")) { authCurrentUser = session.user; return; }
 authCurrentUser = session.user;
 pushAppRefresh();
 document.getElementById("valContaEmail").textContent = session.user.email || "";
-if (studentMode) { startStudentMode(true); return; }
+if (studentMode) { authStartedFor = session.user.id; startStudentMode(true); return; }
 authCardParts("authLoading");
 showAuthGate();
 // Aluno/responsável (8.1): modo aluno, sem nada do professor (não sincroniza dados de professor).
 const role = await resolveAppRole(session.user);
 if (role === null) { showRoleRetry(); return; }
 if (role === "choose") { showEntryChoice(); return; }
+authStartedFor = session.user.id;
 if (role === "student") { await startStudentMode(); return; }
 await pullCloudData();
 hideAuthGate();
@@ -9942,6 +9953,7 @@ schoolStart();
 leadsStart();
 setTimeout(() => { try { hiAppSchedule(); daySummaryAuto(); } catch(e) {} }, 1500);
 } else {
+authStartedFor = null;
 authCurrentUser = null;
 authMode = "login";
 applyAuthMode();
@@ -12644,8 +12656,8 @@ offset++;
 
 if(daysFound === 0) {
 // Estado vazio que ensina (8.14).
-if (!students.length && onbState() && !onbState().hidden) box.innerHTML = "";
-else if (!students.length) {
+// 8.44: os "Primeiros passos" ficam no sino desde a 8.16; o Início vazio mostra sempre o botão.
+if (!students.length) {
 box.innerHTML = `<div class="empty-teach"><b>Cadastre o primeiro aluno para ver sua agenda aqui.</b><span>Com os alunos cadastrados, as próximas aulas, reposições e mensalidades aparecem no Início.</span><div class="empty-acts"><button type="button" class="save" data-empty-add>Cadastrar aluno</button><button type="button" class="btn-historico" data-empty-import>Importar planilha</button></div></div>`;
 box.querySelector("[data-empty-add]").onclick = () => { openPage("students"); openEdit(); };
 box.querySelector("[data-empty-import]").onclick = () => { openPage("students"); document.getElementById("btnImportSpreadsheet").click(); };
@@ -13515,7 +13527,10 @@ renderPendingPayments();
 }
 // Botão "Cobrar" (mensagem pronta no WhatsApp); some se o aluno não tem telefone.
 function chargeLink(s, key){
-const href = waMessageLink(s, "charge", { mes: monthLongLabel(key), valor: moneyText(payQuote(s, key).value) });
+// 8.44: com chave Pix em "Conteúdo para os alunos", a cobrança já leva a chave (ou onde estiver [pix] no texto).
+const pix = String(stContent().pixKey || "").trim();
+let href = waMessageLink(s, "charge", { mes: monthLongLabel(key), valor: moneyText(payQuote(s, key).value), pix });
+if (href && pix && !/\[pix\]/i.test(getMessageTemplate("charge"))) href += encodeURIComponent(`\n\nPix: ${pix}`);
 return href ? `<a class="wa-btn wa-mini" href="${href}" target="_blank" rel="noopener" aria-label="Cobrar ${escapeHtml(s.name)} no WhatsApp">Cobrar</a>` : "";
 }
 function renderPendingPayments(){
@@ -15206,9 +15221,18 @@ const currentRev = calculateCurrentMonthlyRevenue();
 document.querySelectorAll(".setMonthTitle").forEach(el => el.textContent = `Setar Mês de ${monthNamesShort[currentMonthIdx]}/${today.getFullYear()}`);
 document.querySelectorAll(".setMonthDesc").forEach(el => el.textContent = `${activeCount} alunos ativos · Receita calculada: R$ ${currentRev}`);
 
+// 8.44: mês sem valor posto à mão usa o que foi marcado como pago (o aviso da tela já dizia isso).
+const finYears = {};
+const finFilled = y => {
+if (finYears[y]) return finYears[y];
+const base = earningsData[y] || monthNamesShort.map(m => ({ month: m, value: 0 }));
+let rec = null;
+finYears[y] = base.map((m, i) => { if (m.value > 0) return m; rec = rec || taxYearData(Number(y)).months; const v = Math.round(rec[i] || 0); return v > 0 ? { ...m, value: v, auto: true } : m; });
+return finYears[y];
+};
 let maxGain = 0; let maxYear = selectedYear; let maxMonthIdx = -1; let maxMonthName = '';
-Object.keys(earningsData).forEach(y => {
-earningsData[y].forEach((m, idx) => { if (m.value > maxGain) { maxGain = m.value; maxYear = Number(y); maxMonthIdx = idx; maxMonthName = m.month; }});});
+[...new Set([...Object.keys(earningsData), String(selectedYear)])].forEach(y => {
+finFilled(y).forEach((m, idx) => { if (m.value > maxGain) { maxGain = m.value; maxYear = Number(y); maxMonthIdx = idx; maxMonthName = m.month; }});});
 
 document.getElementById("kpiMaxGain").textContent = maxGain > 0 ? `R$ ${maxGain}` : 'R$ 0';
 { const nd = document.getElementById("finNoData"); if (nd) nd.style.display = maxGain > 0 ? "none" : ""; }
@@ -15220,7 +15244,7 @@ document.getElementById("kpiMaxSub").textContent = diff === 0 ? `Recorde este m�
 document.getElementById("kpiMaxSub").textContent = "Nenhum ganho.";
 }
 
-const validRev = earningsData[selectedYear].filter(e => e.value > 0);
+const validRev = finFilled(selectedYear).filter(e => e.value > 0);
 const avgRev = validRev.length ? Math.round(validRev.reduce((a,b)=>a+b.value, 0) / validRev.length) : 0;
 document.getElementById("kpiAverage").textContent = `R$ ${avgRev}`;
 
@@ -15231,7 +15255,7 @@ getPrevYearDec: () => (earningsData[selectedYear-1]||[])[11]?.value || 0,
 save: () => localStorage.setItem("jp_earnings_v3", JSON.stringify(earningsData)),
 rerender: () => renderEvolution()
 };
-renderGenericLineChart("lineChartSvg", earningsData[selectedYear], earningsData[selectedYear-1]||[], "R$", "#2FD3F2", getChartStartMonthIdx(selectedYear), financialEditCtx);
+renderGenericLineChart("lineChartSvg", finFilled(selectedYear), earningsData[selectedYear-1] ? finFilled(selectedYear-1) : [], "R$", "#2FD3F2", getChartStartMonthIdx(selectedYear), financialEditCtx);
 
 let maxSt = 0; let maxStYear = selectedYear; let maxStMonthIdx = -1; let maxStMonthName = '';
 Object.keys(studentCountsData).forEach(y => {
@@ -15395,6 +15419,8 @@ const stepX = (width - padX * 2) / 11;
 // mesma média automática (ganho/perda absoluto típico) usada no card "sem meta" do modal.
 let lastRealIdx = -1;
 for (let i = 0; i < currentList.length; i++) if (i >= startMonthIdx && currentList[i].value > 0) lastRealIdx = i;
+// 8.44: no ano atual, a linha para no mês de hoje (antes descia a zero nos meses que ainda não chegaram).
+const futureFrom = selectedYear === today.getFullYear() ? today.getMonth() + 1 : 12;
 const goalPct = appSettings.growthGoalPercent;
 const autoDelta = editCtx && goalPct === null ? computeAutoExpectedDelta(editCtx) : null;
 const canProject = lastRealIdx > -1 && lastRealIdx < 11 && (goalPct !== null || autoDelta !== null);
@@ -15419,7 +15445,7 @@ x: padX + i * stepX,
 y: height - padY - (item.value / maxValue) * chartH,
 value: item.value,
 month: item.month,
-tracked: i >= startMonthIdx,
+tracked: i >= startMonthIdx && i < futureFrom,
 status: getStatusIndicator(item.value, i>0?currentList[i-1].value:(prevList.length===12?prevList[11].value:0))
 }));
 
@@ -18734,7 +18760,7 @@ openQuickModal("Excluir minha conta", "", body, () => {
 closeQuickModal();
 confirmTyped("Excluir minha conta", "Última etapa.", async () => {
 const { data, error } = await supabaseClient.rpc("hi_delete_my_student_account", { p_reason: "app" });
-if (error) { alert(isMissingFnError(error) ? "Ainda não dá para excluir pelo app: o professor precisa atualizar o app (passo do Supabase da versão 8.14). Peça para ele." : /fetch|network/i.test(error.message || "") ? "Sem conexão. Tente de novo quando tiver internet." : "Não foi possível excluir agora. Tente de novo."); return; }
+if (error) { alert(isMissingFnError(error) ? "Ainda não dá para excluir pelo app. Fale com o suporte." : /fetch|network/i.test(error.message || "") ? "Sem conexão. Tente de novo quando tiver internet." : "Não foi possível excluir agora. Tente de novo."); return; }
 if (!data || !data.ok) { alert((data && data.error) || "Não foi possível excluir agora."); return; }
 await stuWipeDevice();
 closeQuickModal();
@@ -18772,7 +18798,7 @@ if (!gotBackup) { alert("Baixe o backup antes de continuar."); return; }
 closeQuickModal();
 confirmTyped("Excluir minha conta e todos os dados", "Não dá para desfazer.", async () => {
 const { data, error } = await supabaseClient.rpc("hi_delete_my_teacher_account", { p_reason: "app" });
-if (error) { alert(isMissingFnError(error) ? "Falta rodar o SQL da versão 8.14 no Supabase (veja o HI-TEACHER.md)." : /fetch|network/i.test(error.message || "") ? "Sem conexão. Tente de novo." : "Não foi possível excluir agora. Tente de novo."); return; }
+if (error) { alert(isMissingFnError(error) ? techMsg(SETUP_MSG, "Falta rodar o SQL da versão 8.14 no Supabase (veja o HI-TEACHER.md).") : /fetch|network/i.test(error.message || "") ? "Sem conexão. Tente de novo." : "Não foi possível excluir agora. Tente de novo."); return; }
 if (!data || !data.ok) { alert((data && data.error) || "Não foi possível excluir agora."); return; }
 try { await pushDisable(true); } catch(e) {}
 // Nada deste aparelho pode voltar pra nuvem: limpa tudo antes de sair.
@@ -18820,7 +18846,7 @@ return (pushKeyCache = data.publicKey);
 async function pushAppRegister(role, token){
 const old = pushAppSaved();
 const { error } = await supabaseClient.rpc("hi_push_subscribe", { p_endpoint: PUSH_APP_PREFIX + token, p_p256dh: "fcm", p_auth: "fcm", p_role: role, p_label: "Android (app)" });
-if (error) throw new Error(isMissingFnError(error) ? "Falta rodar o SQL da versão 8.14 no Supabase." : "Não consegui registrar este aparelho. Tente de novo.");
+if (error) throw new Error(isMissingFnError(error) ? techMsg(SETUP_MSG, "Falta rodar o SQL da versão 8.14 no Supabase.") : "Não consegui registrar este aparelho. Tente de novo.");
 if (old && old.token && old.token !== token) { try { await supabaseClient.from("push_subscriptions").delete().eq("endpoint", PUSH_APP_PREFIX + old.token); } catch(e) {} }
 _nativeSetItem.call(localStorage, PUSH_APP_KEY, JSON.stringify({ role, token, user: authCurrentUser.id }));
 }
@@ -18838,7 +18864,7 @@ if (!authCurrentUser) throw new Error("Entre na sua conta para ativar.");
 if (HI_APP) {
 const r = await hiAppCall("enablePush");
 if (r.perm !== "granted") throw Object.assign(new Error("denied"), { denied: true });
-if (!r.token) throw new Error("Não consegui falar com o Firebase. Confira a internet e tente de novo.");
+if (!r.token) throw new Error("Não consegui ligar os avisos do celular. Confira a internet e tente de novo.");
 await pushAppRegister(role, r.token);
 return;
 }
@@ -18855,7 +18881,7 @@ if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applica
 const j = sub.toJSON();
 const label = `${/iphone|ipad/i.test(navigator.userAgent) ? "iPhone" : /android/i.test(navigator.userAgent) ? "Android" : "Computador"}${pwaStandalone() ? " (app)" : ""}`;
 const { error } = await supabaseClient.rpc("hi_push_subscribe", { p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_role: role, p_label: label });
-if (error) { await sub.unsubscribe().catch(() => {}); throw new Error(isMissingFnError(error) ? "Falta rodar o SQL da versão 8.14 no Supabase." : "Não consegui registrar este aparelho. Tente de novo."); }
+if (error) { await sub.unsubscribe().catch(() => {}); throw new Error(isMissingFnError(error) ? techMsg(SETUP_MSG, "Falta rodar o SQL da versão 8.14 no Supabase.") : "Não consegui registrar este aparelho. Tente de novo."); }
 }
 async function pushDisable(quiet){
 if (HI_APP) {
@@ -18912,7 +18938,7 @@ go("#pushOff", () => pushDisable());
 go("#pushRetry", async () => {});
 go("#pushTest", async () => {
 const { data, error } = await supabaseClient.functions.invoke(PUSH_FN, { body: { type: "test", id: "" } });
-if (error || !data) throw new Error("A função send-push não respondeu. Confira se ela está publicada no Supabase.");
+if (error || !data) throw new Error(techMsg("O envio de avisos não respondeu. Tente de novo mais tarde.", "A função send-push não respondeu. Confira se ela está publicada no Supabase."));
 if (data.sent) { stuToastOr("Teste enviado. Deve chegar em alguns segundos."); return; }
 // Diagnóstico (8.14.1): diz o que falhou.
 const f = (data.failures || [])[0] || {};
@@ -19222,7 +19248,7 @@ document.getElementById("annNewBtn").style.display = "";
 if (!annCache) box.innerHTML = `<div class="stu-muted">Carregando…</div>`;
 const { data, error } = await supabaseClient.from("announcements").select("id,title,body,created_at,expires_at,audience,push,announcement_targets(student_id,read_at)").eq("teacher_id", authCurrentUser.id).order("created_at", { ascending: false }).limit(100);
 if (error) {
-box.innerHTML = `<div class="empty-teach"><b>Avisos ainda não disponíveis.</b><span>${tbIsMissingTableError(error) ? "Falta rodar o SQL da versão 8.14 no Supabase (veja o HI-TEACHER.md)." : "Sem conexão agora. Tente de novo daqui a pouco."}</span></div>`;
+box.innerHTML = `<div class="empty-teach"><b>Avisos ainda não disponíveis.</b><span>${tbIsMissingTableError(error) ? techMsg(SETUP_MSG, "Falta rodar o SQL da versão 8.14 no Supabase (veja o HI-TEACHER.md).") : "Sem conexão agora. Tente de novo daqui a pouco."}</span></div>`;
 return;
 }
 annCache = data || [];
@@ -19291,7 +19317,7 @@ if (until && until < isoOf(new Date())) { err.textContent = "A data de validade 
 const push = body.querySelector("#annPush").checked;
 const btn = document.getElementById("quickLessonSave"); btn.disabled = true;
 const { data: a, error } = await supabaseClient.from("announcements").insert({ teacher_id: authCurrentUser.id, title, body: text, expires_at: until ? new Date(`${until}T23:59:59`).toISOString() : null, audience: audience(), push }).select("id").single();
-if (error || !a) { btn.disabled = false; err.textContent = error && tbIsMissingTableError(error) ? "Falta rodar o SQL da versão 8.14 no Supabase." : "Não consegui enviar agora. Tente de novo."; return; }
+if (error || !a) { btn.disabled = false; err.textContent = error && tbIsMissingTableError(error) ? techMsg(SETUP_MSG, "Falta rodar o SQL da versão 8.14 no Supabase.") : "Não consegui enviar agora. Tente de novo."; return; }
 const { error: e2 } = await supabaseClient.from("announcement_targets").insert(list.map(s => ({ announcement_id: a.id, student_id: map.of(s) })));
 btn.disabled = false;
 if (e2) { await supabaseClient.from("announcements").delete().eq("id", a.id); err.textContent = "Não consegui enviar para esses alunos. Confira se todos estão salvos na nuvem e tente de novo."; return; }

@@ -489,6 +489,15 @@ Vêm da revisão com os agentes (`.claude/agents-lista.md`; relatórios e lista 
 - Mensalidade: mês já pago fica com o valor pago (`keepPaidValues`, guarda a diferença em `payAdj`). Mudar o valor na ficha vira um reajuste deste mês em diante (os meses de antes ficam com o valor antigo, no recibo e no resumo do imposto); o "Reajustar" a partir de mês passado também não muda mês já pago.
 - Marcar pago no Início: com desconto ou multa nas regras, pergunta "Pago em que dia?" (já vem hoje) e mostra o valor; depois, aviso "Pago ✓" com Desfazer. Na ficha do aluno o dia continua sendo o de hoje.
 
+## Primeiro uso, gráfico e login (8.45)
+- Cadastro do aluno: "Valor da mensalidade" (com valor por aula/personalizado) e "Telefone / WhatsApp" saíram das seções recolhidas e ficam à vista, antes da data de entrada (o resto da descrição "Cadastro do aluno em três partes" continua valendo).
+- Início sem alunos: mostra sempre "Cadastrar aluno" e "Importar planilha" (antes ficava vazio enquanto os "Primeiros passos" do sino não acabavam).
+- Tela de entrar: frase curta embaixo da logo dizendo o que o app faz.
+- Cobrar no WhatsApp: se o professor pôs a chave Pix em "Conteúdo para os alunos", a mensagem já leva "Pix: chave" no fim (ou onde estiver `[pix]` no texto).
+- Gráfico de Faturamento: mês sem valor posto à mão ("Setar Mês" ou tocando no mês) usa o que foi marcado como pago naquele mês (o mesmo número do resumo do imposto). No ano atual, a linha para no mês de hoje (antes caía a zero nos meses que não chegaram).
+- Login: a renovação automática do acesso (mais ou menos a cada hora) não refaz a entrada nem recarrega a tela (`authStartedFor`).
+- Mensagens de erro: palavras técnicas (Supabase, SQL, Firebase) só aparecem para o dono do app (`techMsg`); os outros veem "Esta função ainda não está ligada no servidor. Fale com o suporte." e frases parecidas.
+
 ## O que ainda falta / próximos passos
 
 - **App do aluno — ideias ainda não feitas (lista de set/2026)**: gravação enviada pelo próprio app com comentário do professor marcado no tempo (hoje vai pelo compartilhar do celular); cifras e partituras anexadas pelo professor (precisa de armazenamento de arquivos no Supabase); cadastro já completo pelo convite (hoje o link só preenche a chave; para interessados existe a ficha de matrícula da 8.35); lembrete de aula por notificação do celular (hoje é pela agenda .ics); mural da turma e avisos por turma; toques de IA (feedback da gravação, plano da semana a partir do resumo da aula, assistente de teoria).
