@@ -31,6 +31,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,8 +46,10 @@ public class MainActivity extends Activity {
     static final String HOME = "https://" + HOST + "/Hi-Teacher/";
     static final int REQ_FILE = 1, REQ_MEDIA = 2, REQ_NOTIF = 3;
     static final int BG = Color.rgb(5, 6, 11);
+    static final int BG_LIGHT = Color.rgb(244, 247, 251);
 
     WebView web;
+    FrameLayout root;
     AppBridge bridge;
     ValueCallback<Uri[]> fileCallback;
     PermissionRequest pendingMedia;
@@ -58,13 +61,9 @@ public class MainActivity extends Activity {
         super.onCreate(saved);
         Window w = getWindow();
         WindowCompat.setDecorFitsSystemWindows(w, false);
-        w.setStatusBarColor(BG);
-        w.setNavigationBarColor(BG);
-
-        FrameLayout root = new FrameLayout(this);
-        root.setBackgroundColor(BG);
+        root = new FrameLayout(this);
         web = new WebView(this);
-        web.setBackgroundColor(BG);
+        applyTheme("light".equals(AppBridge.prefs(this).getString("theme", "dark")));
         root.addView(web, new FrameLayout.LayoutParams(-1, -1));
         offline = offlineView();
         root.addView(offline, new FrameLayout.LayoutParams(-1, -1));
@@ -280,5 +279,18 @@ public class MainActivity extends Activity {
     void askNotif() {
         if (Build.VERSION.SDK_INT >= 33) requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQ_NOTIF);
         else bridge.afterNotifPermission();
+    }
+
+    /** Modo claro (8.48): barras do sistema e fundo acompanham o tema escolhido no site. */
+    void applyTheme(boolean light) {
+        int bg = light ? BG_LIGHT : BG;
+        Window w = getWindow();
+        w.setStatusBarColor(bg);
+        w.setNavigationBarColor(bg);
+        root.setBackgroundColor(bg);
+        web.setBackgroundColor(bg);
+        WindowInsetsControllerCompat c = new WindowInsetsControllerCompat(w, w.getDecorView());
+        c.setAppearanceLightStatusBars(light);
+        c.setAppearanceLightNavigationBars(light);
     }
 }

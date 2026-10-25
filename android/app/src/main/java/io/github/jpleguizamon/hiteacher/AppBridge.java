@@ -64,6 +64,14 @@ public class AppBridge {
     @JavascriptInterface
     public void setLang(String lang) { prefs(act).edit().putString("lang", "en".equals(lang) ? "en" : "pt").apply(); }
 
+    /** Tema do site ("dark" ou "light"): pinta as barras do sistema da mesma cor. */
+    @JavascriptInterface
+    public void setTheme(String theme) {
+        boolean light = "light".equals(theme);
+        prefs(act).edit().putString("theme", light ? "light" : "dark").apply();
+        act.runOnUiThread(() -> act.applyTheme(light));
+    }
+
     /** Pede a permissão (se precisar) e devolve o código do aparelho no Firebase. */
     @JavascriptInterface
     public void enablePush(String cb) {

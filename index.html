@@ -7,6 +7,17 @@
 <meta name="color-scheme" content="dark">
 <title>Hi Teacher</title>
 <script>
+// Aparência (8.48): "dark" (padrão, o visual de sempre), "light" ou "auto" (segue o celular). Fica só neste aparelho.
+(function(){
+var t = "dark";
+try { t = localStorage.getItem("jp_theme_v1") || "dark"; } catch(e) {}
+var light = t === "light" || (t === "auto" && window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches);
+window.APP_THEME_PREF = t === "light" || t === "auto" ? t : "dark";
+window.APP_THEME = light ? "light" : "dark";
+document.documentElement.setAttribute("data-theme", window.APP_THEME);
+})();
+</script>
+<script>
 // Idioma do app (8.42): "pt" (padrão) ou "en". Em inglês, i18n/en.js troca os textos da tela.
 (function(){
 var l = null;
@@ -50,6 +61,8 @@ if (window.APP_LANG === "en") { document.documentElement.lang = "en"; document.w
   --accent:#2FD3F2;            /* ciano elétrico: ação primária, ativo, foco */
   --accent-2:#1E88E5;          /* azul elétrico: luz ambiente, avatares, apoio */
   --accent-ink:#021219;        /* texto sobre o ciano */
+  --accent-fill:var(--accent); /* fundo de botões e marcados (no claro continua o ciano vivo) */
+  --text-soft:#cbd5e1;
   --accent-soft:rgba(47,211,242,.1);
   --accent-soft-2:rgba(47,211,242,.18);
   --accent-line:rgba(47,211,242,.45);
@@ -369,7 +382,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .goal-row.done .goal-title{text-decoration:line-through}
 .goal-check{flex:none;width:1.5rem;height:1.5rem;border-radius:50%;border:0.125rem solid var(--accent);background:transparent;color:var(--accent);font-weight:800;font-size:0.8125rem;display:grid;place-items:center;cursor:pointer;transition:background .2s,box-shadow .2s}
 .goal-check:hover{box-shadow:var(--glow-sm)}
-.goal-check.checked{background:var(--accent);color:var(--accent-ink);box-shadow:var(--glow)}
+.goal-check.checked{background:var(--accent-fill);color:var(--accent-ink);box-shadow:var(--glow)}
 .goal-info{flex:1;min-width:0}
 .goal-title{font-size:0.875rem;font-weight:650;color:var(--text);overflow-wrap:break-word}
 .goal-period-badge{display:inline-block;margin-top:0.3125rem;font-size:0.625rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#bfeefa;background:var(--accent-soft);border:0.0625rem solid var(--glass-border-soft);padding:0.125rem 0.5rem;border-radius:var(--radius-pill);font-variant-numeric:tabular-nums}
@@ -572,7 +585,7 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .bulk-check{position:absolute;top:0.625rem;right:0.625rem;width:1.375rem;height:1.375rem;border-radius:0.4375rem;border:0.125rem solid rgba(148,163,184,.5);background:var(--glass-inset);display:grid;place-items:center;color:transparent;font-size:0.875rem;font-weight:900}
 .student-square.bulk-selected{border-color:var(--accent);box-shadow:var(--edge-light),var(--glow-sm)}
 .student-square.inactive.bulk-selected{opacity:.9;filter:none}
-.student-square.bulk-selected .bulk-check{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.student-square.bulk-selected .bulk-check{background:var(--accent-fill);border-color:var(--accent);color:var(--accent-ink)}
 .bulk-top{display:flex;align-items:center;gap:0.375rem 0.75rem;flex-wrap:wrap;min-height:1.875rem;font-size:0.875rem;font-weight:700;color:var(--text)}
 .bulk-top button{border:none;background:none;padding:0.25rem 0;color:var(--accent);font-weight:750;font-size:0.8125rem;cursor:pointer}
 .bulk-top .bulk-sep{color:var(--muted)}
@@ -651,7 +664,7 @@ body.lead-open #authGate,body.lead-open #onboardingGate{display:none!important}
 .icon-btn-ctrl svg path,.icon-btn-ctrl svg circle{stroke:currentColor}
 .icon-btn-ctrl:hover, .icon-btn-ctrl.active{background:var(--accent-soft-2);border-color:var(--accent);color:#fff;box-shadow:var(--edge-light),var(--glow)}
 .icon-btn-ctrl select{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;background:#0b0f18;color:#f8fafc;}
-.filter-dot{position:absolute;top:0.3125rem;right:0.3125rem;width:0.375rem;height:0.375rem;border-radius:50%;background:var(--accent);box-shadow:0 0 0.375rem var(--accent);display:none;}
+.filter-dot{position:absolute;top:0.3125rem;right:0.3125rem;width:0.375rem;height:0.375rem;border-radius:50%;background:var(--accent-fill);box-shadow:0 0 0.375rem var(--accent);display:none;}
 .filter-dot.active{display:block}
 .filter-drawer{
   display:none;position:absolute;right:0;top:2.75rem;z-index:50;width:15rem;
@@ -746,7 +759,7 @@ body.lead-open #authGate,body.lead-open #onboardingGate{display:none!important}
   border-radius:var(--radius-pill);padding:0.4375rem 0.8125rem;font-size:0.75rem;font-weight:700;white-space:nowrap;
   transition:background .15s,color .15s,box-shadow .15s;
 }
-.btn-edit-toggle.active{background:var(--accent);color:var(--accent-ink);box-shadow:var(--glow)}
+.btn-edit-toggle.active{background:var(--accent-fill);color:var(--accent-ink);box-shadow:var(--glow)}
 
 /* Widget de estrelas editável (avaliação por critério) */
 .star-input-row{display:flex;align-items:center;justify-content:space-between;gap:0.625rem;padding:0.4375rem 0;border-bottom:0.0625rem solid var(--hairline)}
@@ -1158,7 +1171,7 @@ body.lead-open #authGate,body.lead-open #onboardingGate{display:none!important}
 .dot-item .dot{width:1.125rem;height:1.125rem}
 .dot-date{font-size:0.6875rem;font-weight:650}
 .dot-given{background:var(--green);box-shadow:0 0 0.375rem rgba(74,222,128,.35)}
-.dot-evaluated{background:var(--accent);box-shadow:0 0 0.375rem rgba(47,211,242,.35)}
+.dot-evaluated{background:var(--accent-fill);box-shadow:0 0 0.375rem rgba(47,211,242,.35)}
 .dot-notice{background:var(--orange)}
 .dot-nonotice{background:var(--danger)}
 .dot-cancel{background:#94a3b8}
@@ -1224,7 +1237,7 @@ body.lead-open #authGate,body.lead-open #onboardingGate{display:none!important}
 .cancel:hover{background:rgba(255,255,255,.06);border-color:rgba(148,163,184,.4);color:var(--text)}
 /* Ação primária: preenchimento azul elétrico + brilho */
 .save,.btn-set-month,.agenda-today-fab{
-  background:var(--accent);color:var(--accent-ink);border:0.0625rem solid rgba(255,255,255,.2);
+  background:var(--accent-fill);color:var(--accent-ink);border:0.0625rem solid rgba(255,255,255,.2);
   box-shadow:inset 0 0.0625rem 0 rgba(255,255,255,.35),var(--glow);
   transition:box-shadow .2s,filter .2s,transform .15s;
 }
@@ -1306,7 +1319,7 @@ body.lead-open #authGate,body.lead-open #onboardingGate{display:none!important}
 .plan-card{position:relative;display:flex;flex-direction:column;gap:0.5rem;padding:1.125rem 1rem 1rem;border-radius:var(--radius-lg);border:0.0625rem solid var(--glass-border);background:var(--glass-inset)}
 .plan-card.best{border-color:var(--accent);box-shadow:var(--glow-sm)}
 .plan-card.cur{border-color:var(--accent-line);background:var(--accent-soft)}
-.plan-badge{position:absolute;top:-0.625rem;right:0.875rem;background:var(--accent);color:var(--accent-ink);font-size:0.625rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;padding:0.1875rem 0.5rem;border-radius:var(--radius-pill)}
+.plan-badge{position:absolute;top:-0.625rem;right:0.875rem;background:var(--accent-fill);color:var(--accent-ink);font-size:0.625rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;padding:0.1875rem 0.5rem;border-radius:var(--radius-pill)}
 .plan-name{font-size:1.0625rem;font-weight:800;color:var(--heading)}
 .plan-card.tier-bronze .plan-name{color:#e3a469}.plan-card.tier-silver .plan-name{color:#cbd4dc}.plan-card.tier-gold .plan-name{color:#f3c04a}
 .plan-price{font-size:1.375rem;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums}
@@ -1380,7 +1393,7 @@ body.lead-open #authGate,body.lead-open #onboardingGate{display:none!important}
 #authGate.is-loading .auth-logo-img{height:3.25rem;margin-bottom:2rem}
 #authGate.is-loading .auth-loading{font-size:0.9375rem;color:var(--text-2);font-weight:600}
 #authGate.is-loading .auth-splash-bar{display:block;width:10rem;height:0.25rem;margin:1rem auto 0;border-radius:var(--radius-pill);background:rgba(47,211,242,.15);overflow:hidden}
-#authGate.is-loading .auth-splash-bar span{display:block;width:40%;height:100%;border-radius:inherit;background:var(--accent);box-shadow:var(--glow-sm);animation:splashBar 1.3s ease-in-out infinite}
+#authGate.is-loading .auth-splash-bar span{display:block;width:40%;height:100%;border-radius:inherit;background:var(--accent-fill);box-shadow:var(--glow-sm);animation:splashBar 1.3s ease-in-out infinite}
 #authGate.is-loading .auth-splash-slow{display:block;margin-top:1.5rem;font-size:0.75rem;color:var(--muted);line-height:1.45;opacity:0;animation:splashSlow .4s ease 12s forwards}
 @keyframes splashBreath{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
 @keyframes splashBar{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
@@ -1449,10 +1462,10 @@ body.student-mode .stu-link{color:var(--accent)}
 .metro-dots{display:flex;justify-content:center;gap:0.625rem;margin:1rem 0}
 .metro-dot{width:1rem;height:1rem;border-radius:50%;background:var(--glass-inset);border:0.0625rem solid var(--glass-border)}
 .metro-dot.first{border-color:var(--accent-line)}
-.metro-dot.on{background:var(--accent);box-shadow:var(--glow)}
+.metro-dot.on{background:var(--accent-fill);box-shadow:var(--glow)}
 .tuner-strings{display:flex;justify-content:center;gap:0.5rem;margin:0.75rem 0 0.25rem;flex-wrap:wrap}
 .tuner-strings span{min-width:2.5rem;text-align:center;padding:0.25rem 0.5rem;border-radius:var(--radius-pill);border:0.0625rem solid var(--glass-border-soft);font-size:0.8125rem;color:var(--muted)}
-.tuner-strings span.on{color:var(--accent-ink);background:var(--accent);border-color:var(--accent)}
+.tuner-strings span.on{color:var(--accent-ink);background:var(--accent-fill);border-color:var(--accent)}
 .tuner-note{text-align:center;font-size:2rem;font-weight:800;color:var(--heading);margin-top:0.5rem}
 #tunerFreq{text-align:center}
 .tuner-scale{position:relative;height:2.25rem;margin:1rem 0 0.5rem;border-radius:var(--radius-pill);background:linear-gradient(90deg,rgba(248,113,113,.25),rgba(74,222,128,.3) 45%,rgba(74,222,128,.3) 55%,rgba(248,113,113,.25));border:0.0625rem solid var(--glass-border-soft)}
@@ -1462,7 +1475,7 @@ body.student-mode .stu-link{color:var(--accent)}
 .tuner-status{text-align:center;font-size:0.875rem;font-weight:650;color:var(--text-2);min-height:1.25rem}
 /* ===== App do aluno 8.3: estudo, ferramentas e conteúdo do professor ===== */
 .tuner-strings button{min-width:2.5rem;text-align:center;padding:0.25rem 0.5rem;border-radius:var(--radius-pill);border:0.0625rem solid var(--glass-border-soft);font:inherit;font-size:0.8125rem;color:var(--muted);background:transparent;cursor:pointer}
-.tuner-strings button.on{color:var(--accent-ink);background:var(--accent);border-color:var(--accent)}
+.tuner-strings button.on{color:var(--accent-ink);background:var(--accent-fill);border-color:var(--accent)}
 button.metro-dot{width:1.75rem;height:1.75rem;padding:0;cursor:pointer}
 .metro-dot.first{background:color-mix(in srgb,var(--accent) 22%,transparent)}
 .metro-dot.mute{opacity:.4;border-style:dashed}
@@ -1607,14 +1620,14 @@ label.goal-check{flex:1;width:auto;height:auto;border:none;border-radius:0;displ
 .drum-grid td.beat{border-color:var(--glass-border)}
 .drum-grid td.hit{background:color-mix(in srgb,var(--accent) 55%,transparent);border-color:var(--accent-line)}
 .drum-grid td.now{box-shadow:0 0 0 0.125rem var(--text)}
-.drum-grid td.hit.now{background:var(--accent)}
+.drum-grid td.hit.now{background:var(--accent-fill)}
 .bpm-row{margin-top:0.5rem}
 .bpm-row label{display:block;font-size:0.8125rem;color:var(--text-2)}
 .bpm-row b{color:var(--heading)}
 .stick-row{display:flex;flex-wrap:wrap;justify-content:center;gap:0.375rem;margin:0.875rem 0 0.5rem}
 .stick{min-width:2.25rem;padding:0.375rem 0;text-align:center;border-radius:var(--radius-sm);background:var(--glass-inset);border:0.0625rem solid var(--hairline);font-weight:800;color:var(--text-2)}
 .stick.acc{color:var(--accent);border-color:var(--accent-line)}
-.stick.now{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.stick.now{background:var(--accent-fill);color:var(--accent-ink);border-color:var(--accent)}
 .tap-big{display:block;width:100%;min-height:7rem;border-radius:var(--radius-lg);border:0.0625rem dashed var(--accent-line);background:var(--accent-soft);color:var(--accent);font:inherit;font-size:1.125rem;font-weight:750;cursor:pointer;touch-action:manipulation}
 .tap-big:active{background:var(--accent-soft-2)}
 .tap-out{text-align:center;font-size:2rem;font-weight:800;color:var(--heading);margin-top:0.75rem}
@@ -1630,7 +1643,7 @@ label.goal-check{flex:1;width:auto;height:auto;border:none;border-radius:0;displ
 .bk-next{color:var(--muted);font-size:0.875rem;min-height:1.25rem}
 .bk-list{display:flex;flex-wrap:wrap;justify-content:center;gap:0.375rem;margin:0.75rem 0}
 .bk-list span{padding:0.3125rem 0.625rem;border-radius:var(--radius-pill);border:0.0625rem solid var(--hairline);font-size:0.8125rem;font-weight:700;color:var(--text-2)}
-.bk-list span.now{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.bk-list span.now{background:var(--accent-fill);color:var(--accent-ink);border-color:var(--accent)}
 .chip-x{background:none;border:none;color:inherit;padding:0 0 0 0.25rem;cursor:pointer;font-size:0.6875rem}
 .sc-add{margin:0.25rem 0 0.75rem}
 .sc-crit{margin-bottom:0.875rem}
@@ -1677,7 +1690,7 @@ body.kid-mode #stuMain .actions button{padding:1rem;font-size:1rem}
 .switch input{opacity:0;width:0;height:0;position:absolute}
 .switch-slider{position:absolute;cursor:pointer;inset:0;background:rgba(148,163,184,.16);border-radius:var(--radius-pill);transition:background .2s,border-color .2s,box-shadow .2s;border:0.0625rem solid rgba(148,163,184,.28)}
 .switch-slider:before{content:"";position:absolute;height:1.125rem;width:1.125rem;left:0.125rem;top:0.125rem;background:var(--muted);border-radius:50%;transition:transform .22s var(--ease-out),background .2s}
-.switch input:checked + .switch-slider{background:var(--accent);border-color:var(--accent);box-shadow:var(--glow)}
+.switch input:checked + .switch-slider{background:var(--accent-fill);border-color:var(--accent);box-shadow:var(--glow)}
 .switch input:checked + .switch-slider:before{transform:translateX(1.25rem);background:#ffffff}
 .switch input:focus-visible + .switch-slider{outline:0.125rem solid var(--accent);outline-offset:0.125rem}
 .toggle-field{display:flex;align-items:center;justify-content:space-between;gap:0.75rem;margin-bottom:0.875rem}
@@ -1961,7 +1974,7 @@ html.standalone .only-browser{display:none}
 .wk-day{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.125rem;aspect-ratio:1;max-height:3.25rem;border-radius:var(--radius-sm);background:var(--glass-inset);border:0.0625rem solid var(--hairline);color:var(--muted);font-size:0.75rem}
 .wk-day b{font-weight:750}
 .wk-day svg{width:0.875rem;height:0.875rem;fill:none;stroke:currentColor;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
-.wk-day.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.wk-day.on{background:var(--accent-fill);border-color:var(--accent);color:var(--accent-ink)}
 .wk-day.today{border-color:var(--accent-line)}
 .wk-goal{display:flex;align-items:center;justify-content:space-between;gap:0.75rem;margin-top:0.875rem}
 .wk-goal b{font-size:1rem;color:var(--heading)}
@@ -2212,7 +2225,7 @@ body.pdf-open{overflow:hidden}
 .onb-item{display:flex;align-items:center;gap:0.75rem;width:100%;padding:0.625rem 0;border:none;border-bottom:0.0625rem solid var(--hairline);background:transparent;color:var(--text);font:inherit;text-align:left;cursor:pointer}
 .onb-item:last-child{border-bottom:none}
 .onb-check{flex:none;width:1.375rem;height:1.375rem;border-radius:50%;border:0.125rem solid var(--accent);display:grid;place-items:center;font-size:0.75rem;font-weight:800;color:var(--accent-ink,#05060B)}
-.onb-item.ok .onb-check{background:var(--accent)}
+.onb-item.ok .onb-check{background:var(--accent-fill)}
 .onb-item.ok .onb-text b{color:var(--muted);text-decoration:line-through}
 .onb-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:0.125rem}
 .onb-text b{font-size:0.875rem;font-weight:700}
@@ -2222,6 +2235,133 @@ body.pdf-open{overflow:hidden}
 .sidebar-legal:hover{color:var(--accent)}
 .entry-legal{display:block;text-align:center;margin-top:0.75rem;font-size:0.75rem;color:var(--muted)}
 #annWho{margin:-0.25rem 0 0.875rem;font-size:0.75rem}
+
+/* ===== Modo claro (8.48) =====
+   Mesmo app, mesmos azuis e o mesmo fundo animado; só o preto vira branco.
+   O ciano vivo (#2FD3F2) continua nos botões e marcados (--accent-fill, com texto escuro).
+   Para texto, ícone e borda o ciano escurece (--accent), senão some no branco.
+   Verdes, laranjas e vermelhos também escurecem para dar leitura. */
+:root[data-theme="light"]{
+  color-scheme:light;
+  --bg:#F4F7FB; --bg-deep:#E9EFF6;
+  --accent:#087A9C;
+  --accent-fill:#2FD3F2;
+  --accent-2:#1E78D0;
+  --accent-ink:#03222C;
+  --accent-soft:rgba(8,145,178,.09);
+  --accent-soft-2:rgba(8,145,178,.15);
+  --accent-line:rgba(8,122,156,.4);
+
+  --glass:rgba(255,255,255,.58);
+  --glass-strong:rgba(255,255,255,.8);
+  --glass-raised:rgba(255,255,255,.74);
+  --glass-inset:rgba(15,40,80,.035);
+  --glass-field:rgba(255,255,255,.72);
+  --glass-border:rgba(8,122,156,.2);
+  --glass-border-soft:rgba(15,40,80,.09);
+  --hairline:rgba(15,40,80,.09);
+  --edge-light:inset 0 0.0625rem 0 rgba(255,255,255,.95);
+  --sheen:linear-gradient(145deg,rgba(255,255,255,.7),rgba(255,255,255,.2) 42%,rgba(255,255,255,0) 70%);
+  --surface-2:rgba(255,255,255,.86);
+
+  --text:#0B1524; --text-2:#22324A; --text-soft:#33435A; --muted:#506079; --faint:#66758C;
+  --heading:#062330;
+  --placeholder:#6A788C;
+
+  --green:#15803D; --green-light:#15803D; --orange:#C2410C; --star:#E09A00;
+  --star-empty:rgba(80,96,121,.25);
+  --danger:#DC2626; --danger-border:rgba(220,38,38,.32);
+
+  --glow-sm:0 0 0.625rem rgba(8,145,178,.16);
+  --glow:0 0.25rem 0.9375rem rgba(8,145,178,.22);
+  --glow-lg:0 0.375rem 1.5rem rgba(8,145,178,.3);
+
+  --shadow-sm:0 0.25rem 0.75rem rgba(15,40,80,.07);
+  --shadow-md:0 0.75rem 2rem rgba(15,40,80,.11);
+  --shadow-lg:0 1.25rem 3rem rgba(15,40,80,.16);
+
+  --chart-dot-empty:#C9D4E2; --chart-label-empty:#8A97AA; --chart-ring:#FFFFFF; --chart-dot-empty2:#C9D4E2;
+}
+[data-theme="light"] ::selection{background:rgba(47,211,242,.35);color:#03222C}
+[data-theme="light"] body::before{
+  background:
+    radial-gradient(38rem 28rem at 92% -4%, rgba(47,211,242,.22), transparent 62%),
+    radial-gradient(34rem 30rem at -6% 38%, rgba(30,136,229,.14), transparent 64%),
+    radial-gradient(40rem 26rem at 62% 112%, rgba(30,136,229,.16), transparent 62%),
+    var(--bg);
+}
+[data-theme="light"] option,[data-theme="light"] .icon-btn-ctrl select,[data-theme="light"] .demo-bar .demo-instr option{background:#fff;color:var(--text)}
+[data-theme="light"] header,[data-theme="light"] .settings-topbar{background:rgba(255,255,255,.55)}
+[data-theme="light"] .sidebar{box-shadow:1.125rem 0 2.8125rem rgba(15,40,80,.14)}
+@media (min-width:900px){ [data-theme="light"] .sidebar{background:var(--sheen),rgba(255,255,255,.5);box-shadow:none} }
+[data-theme="light"] .overlay{background:rgba(15,30,55,.22)}
+[data-theme="light"] .modal-bg{background:rgba(15,30,55,.28)}
+[data-theme="light"] .help-bubble,[data-theme="light"] .help-bubble::before{background:rgba(255,255,255,.94)}
+[data-theme="light"] .help-bubble{box-shadow:var(--shadow-md)}
+/* Avatares e fotos de perfil: círculo claro com a letra em azul */
+[data-theme="light"] .settings-profile-avatar,[data-theme="light"] .profile-photo-preview{background:linear-gradient(145deg,#DDF5FC,#BFE6F4);color:#065A73}
+[data-theme="light"] .avatar-small,[data-theme="light"] .perf-chip-avatar,[data-theme="light"] .student-picker-avatar{background:rgba(30,136,229,.1);border-color:rgba(8,122,156,.28);color:#065A73}
+[data-theme="light"] .perf-chip.perf-chip-all .perf-chip-avatar{background:linear-gradient(145deg,#FDE9C4,#F7D08A);border-color:#D9962A;color:#6B3E06}
+/* Planos e níveis */
+[data-theme="light"] .profile-tier-line.tier-silver,[data-theme="light"] .plan-card.tier-silver .plan-name{color:#5B6878}
+[data-theme="light"] .profile-tier-line.tier-gold,[data-theme="light"] .plan-card.tier-gold .plan-name{color:#9A6B00}
+[data-theme="light"] .plan-card.tier-bronze .plan-name{color:#9A5527}
+/* Botões e estados */
+[data-theme="light"] .icon-btn-ctrl:hover,[data-theme="light"] .icon-btn-ctrl.active,[data-theme="light"] .agenda-nav-btn:hover,[data-theme="light"] .close-btn-inline:hover{color:var(--accent)}
+[data-theme="light"] .close-btn-inline:hover,[data-theme="light"] .cancel:hover{background:rgba(15,40,80,.05)}
+[data-theme="light"] .save,[data-theme="light"] .btn-set-month,[data-theme="light"] .agenda-today-fab{border-color:rgba(8,122,156,.35);box-shadow:inset 0 0.0625rem 0 rgba(255,255,255,.6),var(--glow)}
+[data-theme="light"] .save:hover,[data-theme="light"] .btn-set-month:hover,[data-theme="light"] .agenda-today-fab:hover{box-shadow:inset 0 0.0625rem 0 rgba(255,255,255,.6),var(--glow-lg)}
+[data-theme="light"] .switch-slider:before{box-shadow:0 0.0625rem 0.25rem rgba(15,40,80,.25)}
+[data-theme="light"] .reason-picker{background:rgba(15,40,80,.03)}
+[data-theme="light"] .locked-input{background:rgba(15,40,80,.04)}
+[data-theme="light"] .demo-bar .demo-instr{background:rgba(255,255,255,.6)}
+[data-theme="light"] .social-btn#authApple{border-color:#000}
+[data-theme="light"] .lesson-img-wrap{box-shadow:var(--shadow-sm)}
+[data-theme="light"] .viewer-gallery img{box-shadow:var(--shadow-lg)}
+[data-theme="light"] .breath-text{text-shadow:none}
+[data-theme="light"] .nav-badge,[data-theme="light"] .stu-bell-badge{color:#fff}
+[data-theme="light"] .rec-on,[data-theme="light"] .ear-wrong{color:#fff!important}
+[data-theme="light"] .ear-right{color:#fff!important}
+/* Verde, roxo, laranja e avisos com texto mais escuro */
+[data-theme="light"] .wa-pill,[data-theme="light"] .wa-btn,[data-theme="light"] .stu-link{color:#15803D!important}
+[data-theme="light"] .stats-trend.up{background:rgba(21,128,61,.1)}
+[data-theme="light"] .stats-trend.down{color:var(--danger);background:rgba(220,38,38,.08)}
+[data-theme="light"] .noclass-makeup,[data-theme="light"] .badge-makeup{color:#6D28D9}
+[data-theme="light"] .cloud-banner,[data-theme="light"] .cloud-banner button{color:#9A3412}
+[data-theme="light"] .agenda-tag--holiday{--tag-ink:#BE123C}
+[data-theme="light"] .agenda-tag--state{--tag-ink:#92400E}
+[data-theme="light"] .agenda-tag--facultativo{--tag-ink:#475569}
+[data-theme="light"] .danger-row .settings-row-title{color:var(--danger)}
+[data-theme="light"] .school-conflict b{color:var(--orange)}
+[data-theme="light"] .dot-cancel{background:#94A3B8}
+/* Data e hora com o seletor claro do sistema */
+[data-theme="light"] .wh-row input,[data-theme="light"] .time-by-day-row input,[data-theme="light"] .field input[type="date"],[data-theme="light"] .field input[type="time"],[data-theme="light"] .agenda-add-range input{color-scheme:light}
+/* Teclado do piano e partitura já são claros; só o contorno muda */
+[data-theme="light"] .kb-w{stroke:#94A3B8}
+[data-theme="light"] .staff-wrap{background:#fff;border:0.0625rem solid var(--hairline)}
+[data-theme="light"] .pdf-frame{background:#E9EFF6}
+/* Painéis que tinham fundo escuro fixo */
+[data-theme="light"] .modal{background:var(--sheen),rgba(255,255,255,.84)}
+[data-theme="light"] .field input:focus,[data-theme="light"] .field select:focus,[data-theme="light"] .field textarea:focus,[data-theme="light"] .inline-input:focus{background:#fff}
+[data-theme="light"] .agenda-day{background:var(--sheen),rgba(255,255,255,.5)}
+[data-theme="light"] .agenda-day:not(.other-month):hover{background:rgba(255,255,255,.9)}
+[data-theme="light"] .agenda-day.other-month .agenda-day-num{color:#8A97AA}
+[data-theme="light"] .modal-fullscreen{background:rgba(244,247,251,.97)}
+[data-theme="light"] .fullscreen-header-bar{background:rgba(255,255,255,.82)}
+[data-theme="light"] .notif-pop{box-shadow:var(--edge-light),var(--shadow-lg)}
+[data-theme="light"] .file-count-badge{background:rgba(255,255,255,.92)}
+[data-theme="light"] .avatar{background:linear-gradient(145deg,#DDF5FC,#BFE6F4);color:#065A73}
+/* Login e logo */
+[data-theme="light"] #authGate,[data-theme="light"] #onboardingGate{background:rgba(255,255,255,.12)}
+[data-theme="light"] .auth-card{background:var(--sheen),rgba(255,255,255,.62);box-shadow:var(--edge-light),var(--shadow-lg),0 0 3.5rem rgba(47,211,242,.14)}
+[data-theme="light"] .auth-logo-img,[data-theme="light"] .header-app-title,[data-theme="light"] .side-logo-img{content:url("icons/logo-text-light.png")}
+[data-theme="light"] #authGate.is-loading .auth-owl{filter:drop-shadow(0 0.5rem 1.25rem rgba(8,145,178,.3))}
+@media (prefers-reduced-transparency: reduce) {
+  :root[data-theme="light"]{--glass:rgba(255,255,255,.96);--glass-strong:rgba(255,255,255,.98);--glass-raised:rgba(255,255,255,.97)}
+  [data-theme="light"] header,[data-theme="light"] .settings-topbar{background:rgba(250,252,255,.97)}
+  [data-theme="light"] .modal,[data-theme="light"] .auth-card,[data-theme="light"] .sidebar{background:rgba(255,255,255,.97)}
+  [data-theme="light"] .agenda-day{background:rgba(255,255,255,.96)}
+}
 </style>
 </head>
 <body>
@@ -2688,6 +2828,7 @@ body.pdf-open{overflow:hidden}
 <div class="settings-row" id="rowFerias"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-sun"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Férias e recesso<button type="button" class="help-icon" data-help="Períodos sem aula, pra todos os alunos ou só pra um. As aulas nesses dias (e nos feriados da Agenda) ficam automaticamente como 'Não houve aula', sem avaliação.">!</button></div><div class="settings-row-sub">Períodos sem aula, gerais ou por aluno</div></div><span class="settings-row-value" id="valFerias">Nenhum</span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowMensagens"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-message"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Mensagens prontas<button type="button" class="help-icon" data-help="Textos que o app já deixa escritos pra mandar no WhatsApp: cobrar mensalidade, avisar aula marcada ou cancelada e parabenizar no aniversário. As palavras entre colchetes são trocadas pelos dados do aluno.">!</button></div><div class="settings-row-sub">Cobrança, aula remarcada, cancelamento, aniversário, lembrete de aula</div></div><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowIdioma"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-globe"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Idioma</div></div><span class="settings-row-value" id="valLang" data-no-tr>Português</span><span class="settings-row-chevron">›</span></div>
+<div class="settings-row" id="rowTema"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-sun"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Aparência</div></div><span class="settings-row-value" id="valTema">Escuro</span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowChartsStart"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-trending-up"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Início dos gráficos<button type="button" class="help-icon" data-help="Meses antes dessa data aparecem apagados nos gráficos, em vez de parecerem um resultado zero.">!</button></div><div class="settings-row-sub">A partir de quando os gráficos começam a contar</div></div><span class="settings-row-value" id="valChartsStart">Desde o início</span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowGrowthGoal"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-target"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Meta de crescimento mensal<button type="button" class="help-icon" data-help="Defina quanto espera crescer por mês. Sem meta definida, o app calcula uma média automática com base no seu histórico, descartando meses fora do padrão (como um mês de matrículas em massa ou de saída de vários alunos).">!</button></div><div class="settings-row-sub">Usada para marcar em verde/vermelho se o mês bateu a meta</div></div><span class="settings-row-value" id="valGrowthGoal">Sem meta</span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowLocalizacao"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-pin"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Localização</div><div class="settings-row-sub">Usada pra mostrar os feriados certos na Agenda</div></div><span class="settings-row-value" id="valLocalizacao">Não definida</span><span class="settings-row-chevron">›</span></div>
@@ -2706,7 +2847,7 @@ body.pdf-open{overflow:hidden}
 <div class="settings-row" id="rowBackupReminder"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-bell"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Lembrar de fazer backup</div></div><span class="settings-row-value" id="valBackupReminder">Toda semana</span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowRestoreSnapshot"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-download"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Restaurar cópia do aparelho</div><div class="settings-row-sub" id="valSnapshots">Cópias automáticas guardadas neste aparelho</div></div><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowImportarDados"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-download"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Importar dados</div></div><span class="settings-row-chevron">›</span></div>
-<div class="settings-row" id="rowApagarDados"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-trash"/></svg></span><div class="settings-row-text"><div class="settings-row-title" style="color:#f87171">Apagar todos os dados</div></div><span class="settings-row-chevron">›</span></div>
+<div class="settings-row" id="rowApagarDados"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-trash"/></svg></span><div class="settings-row-text"><div class="settings-row-title" style="color:var(--danger)">Apagar todos os dados</div></div><span class="settings-row-chevron">›</span></div>
 <input type="file" id="importFileInput" accept="application/json" style="display:none">
 </div>
 
@@ -2738,7 +2879,7 @@ body.pdf-open{overflow:hidden}
 <div class="settings-row" id="rowStudentMode"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-user"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Entrar como aluno/responsável</div><div class="settings-row-sub">Pra quem também é aluno ou responsável por um aluno</div></div><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowPushTeacher"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-bell"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Notificações no celular</div><div class="settings-row-sub" id="valPushTeacher">Avisos dos alunos mesmo com o app fechado</div></div><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowOnboarding"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-target"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Primeiros passos</div><div class="settings-row-sub">Mostrar de novo o passo a passo nas notificações</div></div><span class="settings-row-chevron">›</span></div>
-<div class="settings-row" id="rowDeleteAccount"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-trash"/></svg></span><div class="settings-row-text"><div class="settings-row-title" style="color:#f87171">Excluir minha conta e todos os dados</div><div class="settings-row-sub">Antes, o app baixa o backup</div></div><span class="settings-row-chevron">›</span></div>
+<div class="settings-row" id="rowDeleteAccount"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-trash"/></svg></span><div class="settings-row-text"><div class="settings-row-title" style="color:var(--danger)">Excluir minha conta e todos os dados</div><div class="settings-row-sub">Antes, o app baixa o backup</div></div><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowSairConta"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-logout"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Sair da conta</div><div class="settings-row-sub" id="valContaEmail"></div></div></div>
 </div>
 </main>
@@ -2917,7 +3058,7 @@ body.pdf-open{overflow:hidden}
 </div>
 <input type="file" id="importSpreadsheetFileInput" accept=".csv,.xlsx,.xls,.zip" style="display:none">
 <input type="file" id="importImageFileInput" accept="image/*" style="display:none">
-<div class="field-hint" id="importOcrHint" style="display:none;color:#fbbf24;margin-top:0.75rem"><svg class="inline-icon" viewBox="0 0 24 24"><use href="#icon-camera"/></svg> Leitura de imagem é experimental: funciona melhor com prints de planilha (texto digitado, nítido e reto). Foto de caderno com letra à mão não é reconhecida de forma confiável ainda. Confira a próxima tela com atenção antes de importar.</div>
+<div class="field-hint" id="importOcrHint" style="display:none;color:var(--star);margin-top:0.75rem"><svg class="inline-icon" viewBox="0 0 24 24"><use href="#icon-camera"/></svg> Leitura de imagem é experimental: funciona melhor com prints de planilha (texto digitado, nítido e reto). Foto de caderno com letra à mão não é reconhecida de forma confiável ainda. Confira a próxima tela com atenção antes de importar.</div>
 <div id="importOcrProgress" style="display:none;margin-top:0.75rem">
 <div class="field-hint" id="importOcrProgressText">Lendo a imagem...</div>
 </div>
@@ -3404,6 +3545,22 @@ body.pdf-open{overflow:hidden}
 </div>
 </div>
 
+<!-- Modal: Aparência (8.48) -->
+<div class="modal-bg" id="temaModal">
+<div class="modal">
+<h2>Aparência</h2>
+<div class="field"><label>Cores do app</label>
+<div class="choice-chips">
+<button type="button" class="filter-chip" data-theme-pick="dark">Escuro</button>
+<button type="button" class="filter-chip" data-theme-pick="light">Claro</button>
+<button type="button" class="filter-chip" data-theme-pick="auto">Igual ao celular</button>
+</div>
+</div>
+<div class="field-hint">O escuro é o visual padrão. A troca vale só neste aparelho e não mexe nos seus dados.</div>
+<div class="actions"><button class="save" id="temaCloseBtn" style="width:100%">Fechar</button></div>
+</div>
+</div>
+
 <!-- Modal: Idioma -->
 <div class="modal-bg" id="idiomaModal">
 <div class="modal">
@@ -3619,18 +3776,18 @@ body.pdf-open{overflow:hidden}
 <h2 style="margin:0">Termos e privacidade</h2>
 <button class="close-btn-inline" onclick="document.getElementById('termosModal').classList.remove('show')" aria-label="Fechar">✕</button>
 </div>
-<div style="font-size:0.8125rem;color:#94a3b8;line-height:1.6;max-height:55vh;overflow-y:auto">
-<p><strong style="color:#cbd5e1">Onde seus dados ficam:</strong> se você está logado numa conta, os dados de alunos, aulas e avaliações ficam salvos neste dispositivo e também sincronizados na nuvem, vinculados ao seu login — assim você consegue acessar de outros aparelhos entrando com o mesmo email. Sem login, tudo fica só no armazenamento local deste dispositivo.</p>
-<p><strong style="color:#cbd5e1">Backup:</strong> mesmo com a sincronização, recomendamos usar "Exportar dados" em Configurações → Dados de tempos em tempos, como backup extra.</p>
-<p><strong style="color:#cbd5e1">Feedback:</strong> o que você escreve em "Enviar feedback" é enviado por e-mail pra quem desenvolve o app e também fica salvo neste dispositivo.</p>
-<p><strong style="color:#cbd5e1">App do aluno:</strong> quando você cria a chave para alunos, alunos e responsáveis podem pedir para entrar. <b>Você decide quem entra</b> e responde pelos dados dos seus alunos dentro do app (inclusive de menores de idade, que só entram com a autorização do responsável). Cada aluno vê só o que é dele; anotações e notas que você não liberar ficam só com você.</p>
-<p><strong style="color:#cbd5e1">Planos e pagamento (professores):</strong> a conta de professor começa com 14 dias grátis, com tudo liberado. Depois, é preciso escolher um plano: o Grátis (até 5 alunos ativos) ou um plano pago, que muda pelo número de alunos ativos. Os preços estão na tela "Meu plano". Alunos e responsáveis nunca pagam pelo app.</p>
-<p><strong style="color:#cbd5e1">Validade e renovação:</strong> o plano pago vale até a data que aparece em "Meu plano". Ele não é cobrado sozinho: para continuar, você paga o próximo período. Depois de pedir um plano, você tem 3 dias para fazer o pagamento.</p>
-<p><strong style="color:#cbd5e1">Atraso e cancelamento:</strong> você pode parar quando quiser, sem multa: é só não renovar ou escolher o Grátis. Se o plano vencer, <b>nada do que você guardou é apagado</b>. Você só não consegue ter mais alunos ativos que o limite do Grátis até escolher um plano de novo.</p>
-<p><strong style="color:#cbd5e1">Reembolso:</strong> se você se arrepender em até 7 dias depois do primeiro pagamento, devolvemos o valor inteiro (direito de arrependimento, art. 49 do Código de Defesa do Consumidor). Depois disso, o período já pago não é devolvido, mas o plano continua valendo até o fim dele. Para pedir, use "Enviar feedback" ou o contato do seu plano.</p>
-<p><strong style="color:#cbd5e1">Mudança de preço:</strong> se os preços mudarem, avisamos no app com pelo menos 30 dias de antecedência. O período que você já pagou não muda.</p>
-<p><strong style="color:#cbd5e1">Indicação:</strong> quando um professor que você indicou começa a pagar um plano, você ganha 1 mês grátis. O mês não vira dinheiro e não pode ser transferido.</p>
-<p><strong style="color:#cbd5e1">Excluir:</strong> Configurações → Conta → "Excluir minha conta e todos os dados" apaga tudo da nuvem (antes, o app baixa o backup). Alunos podem excluir a conta deles pelo Perfil e pedir que você apague os registros que guarda.</p>
+<div style="font-size:0.8125rem;color:var(--muted);line-height:1.6;max-height:55vh;overflow-y:auto">
+<p><strong style="color:var(--text-soft)">Onde seus dados ficam:</strong> se você está logado numa conta, os dados de alunos, aulas e avaliações ficam salvos neste dispositivo e também sincronizados na nuvem, vinculados ao seu login — assim você consegue acessar de outros aparelhos entrando com o mesmo email. Sem login, tudo fica só no armazenamento local deste dispositivo.</p>
+<p><strong style="color:var(--text-soft)">Backup:</strong> mesmo com a sincronização, recomendamos usar "Exportar dados" em Configurações → Dados de tempos em tempos, como backup extra.</p>
+<p><strong style="color:var(--text-soft)">Feedback:</strong> o que você escreve em "Enviar feedback" é enviado por e-mail pra quem desenvolve o app e também fica salvo neste dispositivo.</p>
+<p><strong style="color:var(--text-soft)">App do aluno:</strong> quando você cria a chave para alunos, alunos e responsáveis podem pedir para entrar. <b>Você decide quem entra</b> e responde pelos dados dos seus alunos dentro do app (inclusive de menores de idade, que só entram com a autorização do responsável). Cada aluno vê só o que é dele; anotações e notas que você não liberar ficam só com você.</p>
+<p><strong style="color:var(--text-soft)">Planos e pagamento (professores):</strong> a conta de professor começa com 14 dias grátis, com tudo liberado. Depois, é preciso escolher um plano: o Grátis (até 5 alunos ativos) ou um plano pago, que muda pelo número de alunos ativos. Os preços estão na tela "Meu plano". Alunos e responsáveis nunca pagam pelo app.</p>
+<p><strong style="color:var(--text-soft)">Validade e renovação:</strong> o plano pago vale até a data que aparece em "Meu plano". Ele não é cobrado sozinho: para continuar, você paga o próximo período. Depois de pedir um plano, você tem 3 dias para fazer o pagamento.</p>
+<p><strong style="color:var(--text-soft)">Atraso e cancelamento:</strong> você pode parar quando quiser, sem multa: é só não renovar ou escolher o Grátis. Se o plano vencer, <b>nada do que você guardou é apagado</b>. Você só não consegue ter mais alunos ativos que o limite do Grátis até escolher um plano de novo.</p>
+<p><strong style="color:var(--text-soft)">Reembolso:</strong> se você se arrepender em até 7 dias depois do primeiro pagamento, devolvemos o valor inteiro (direito de arrependimento, art. 49 do Código de Defesa do Consumidor). Depois disso, o período já pago não é devolvido, mas o plano continua valendo até o fim dele. Para pedir, use "Enviar feedback" ou o contato do seu plano.</p>
+<p><strong style="color:var(--text-soft)">Mudança de preço:</strong> se os preços mudarem, avisamos no app com pelo menos 30 dias de antecedência. O período que você já pagou não muda.</p>
+<p><strong style="color:var(--text-soft)">Indicação:</strong> quando um professor que você indicou começa a pagar um plano, você ganha 1 mês grátis. O mês não vira dinheiro e não pode ser transferido.</p>
+<p><strong style="color:var(--text-soft)">Excluir:</strong> Configurações → Conta → "Excluir minha conta e todos os dados" apaga tudo da nuvem (antes, o app baixa o backup). Alunos podem excluir a conta deles pelo Perfil e pedir que você apague os registros que guarda.</p>
 <p>Detalhes na <a href="privacidade.html" target="_blank" rel="noopener" style="color:var(--accent)">Política de Privacidade</a> (a mesma que os alunos leem).</p>
 </div>
 </div>
@@ -3647,9 +3804,9 @@ body.pdf-open{overflow:hidden}
 <label>Selecione as Imagens dos Mapas Mentais / Aulas (opcional)</label>
 <input type="file" id="pMindMapFile" accept="image/*" multiple>
 </div>
-<div style="font-size:0.75rem;color:#94a3b8;margin-top:-0.5rem;margin-bottom:0.5rem">Sem imagem, o tema é salvo em "Pequenos Temas".</div>
+<div style="font-size:0.75rem;color:var(--muted);margin-top:-0.5rem;margin-bottom:0.5rem">Sem imagem, o tema é salvo em "Pequenos Temas".</div>
 <div id="uploadPreviewWrap" style="display:none; margin-top:10px;">
-<label style="font-size:12px; color:#94a3b8; font-weight:600;">Imagens Selecionadas:</label>
+<label style="font-size:12px; color:var(--muted); font-weight:600;">Imagens Selecionadas:</label>
 <div id="uploadPreviewGrid" class="images-edit-grid"></div>
 </div>
 <div class="actions">
@@ -3685,7 +3842,7 @@ body.pdf-open{overflow:hidden}
 <div class="modal modal-fullscreen">
 <div class="fullscreen-header-bar">
 <div style="flex:1; min-width:0;">
-<h2 id="vPlanTitle" style="font-size:18px; font-weight:800; color:#f8fafc; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Título da Aula</h2>
+<h2 id="vPlanTitle" style="font-size:18px; font-weight:800; color:var(--text); margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Título da Aula</h2>
 </div>
 <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
 <button class="edit" id="btnFuncPlanView" style="padding:6px 14px; font-size:12px;">Libera no app</button>
@@ -3711,7 +3868,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.47";
+const APP_VERSION = "8.48";
 // Idioma (8.42): troca entre português e inglês e recarrega. Fica guardado neste aparelho.
 function langSwitchLabel(){ return APP_LANG === "en" ? "🌐 Mudar para português" : "🌐 Switch to English"; }
 function langSwitch(){
@@ -6169,6 +6326,7 @@ return `<div class="settings-group-label">Perfil</div><details class="settings-c
 ${changes.length ? `<div class="stu-sub-list">${changes.map(r => `<div class="stu-muted">Pedido de ${formatDateShort(r.created_at.slice(0,10)).slice(0,5)}: ${r.status === "pending" ? "aguardando o professor" : r.status === "accepted" ? "aplicado" : "não aceito"}${r.response ? ` · "${escapeHtml(r.response)}"` : ""}</div>`).join("")}</div>` : ""}</div></details>`
 + stuCard("Preferências", `<div class="toggle-field"><label>Modo criança (botões maiores e figurinhas)</label><label class="switch"><input type="checkbox" id="stuKid" ${stuKidMode() ? "checked" : ""}><span class="switch-slider"></span></label></div>
 <button type="button" class="btn-historico" id="stuLang" data-no-tr style="width:100%;margin-top:0.75rem">${langSwitchLabel()}</button>
+<button type="button" class="btn-historico" id="stuTheme" data-theme-open style="width:100%;margin-top:0.75rem">Aparência: ${themeLabel(window.APP_THEME_PREF)}</button>
 ${pwaCanInstall() ? `<button type="button" class="btn-historico" id="stuInstall" style="width:100%;margin-top:0.75rem">Instalar o app</button>` : ""}`)
 + `<div class="settings-group-label">Agenda</div><div class="settings-card study-list ics-card" style="margin-bottom:1.25rem"><div class="settings-row study-row" id="stuIcs" role="button" tabindex="0"><span class="settings-row-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-calendar"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Colocar as aulas na agenda do celular</div><div class="settings-row-sub">Com lembrete 1 dia e 1 hora antes</div></div><span class="settings-row-chevron" aria-hidden="true">›</span></div></div>`
 + stuContractCardHTML(true)
@@ -6292,6 +6450,7 @@ if (await stuSendRequest("change_data", { changes: f === "other" ? {} : { [f]: v
 const kid = main.querySelector("#stuKid");
 if (kid) kid.onchange = () => { if (demoMode) stuCur._kid = kid.checked; else { const all = tbRead(KID_KEY, {}); if (kid.checked) all[ptKey()] = true; else delete all[ptKey()]; tbWrite(KID_KEY, all); } document.body.classList.toggle("kid-mode", kid.checked); if (kid.checked) kidReward("Modo criança ligado!"); };
 const lng = main.querySelector("#stuLang"); if (lng) lng.onclick = langSwitch;
+const thm = main.querySelector("#stuTheme"); if (thm) thm.onclick = themeOpen;
 const inst = main.querySelector("#stuInstall");
 if (inst) inst.onclick = pwaInstall;
 main.querySelectorAll("[data-install]").forEach(b => b.onclick = pwaInstall);
@@ -10612,7 +10771,7 @@ return new Date(y,m-1,d).getTime();
 // para valores fracionados (ex.: 4.5 -> quatro estrelas cheias + quinta pintada até a metade).
 function starsDisplayHTML(rating){
 if(rating===null || rating===undefined || isNaN(rating)){
-return '<span style="color:#94a3b8;font-size:0.8rem;font-weight:600;">Sem avaliações</span>';
+return '<span style="color:var(--muted);font-size:0.8rem;font-weight:600;">Sem avaliações</span>';
 }
 let html = '<span class="star-rating">';
 for(let i=0;i<5;i++){
@@ -14850,7 +15009,7 @@ const ea = boxActive.querySelector("[data-empty-add]"); if (ea) ea.onclick = () 
 const ei = boxActive.querySelector("[data-empty-import]"); if (ei) ei.onclick = () => document.getElementById("btnImportSpreadsheet").click();
 }
 
-if(inactiveList.length===0) boxInactive.innerHTML="<div style='color:#94a3b8;font-size:13px;padding:10px 0'>Nenhum inativo.</div>";
+if(inactiveList.length===0) boxInactive.innerHTML="<div style='color:var(--muted);font-size:13px;padding:10px 0'>Nenhum inativo.</div>";
 else inactiveList.forEach(s=>boxInactive.appendChild(createSquare(s,true)));
 updateBulkUI();
 
@@ -14862,7 +15021,7 @@ container.innerHTML = "";
 const activeList = students.filter(s => s.active !== false).sort((a,b) => a.name.localeCompare(b.name));
 
 if(activeList.length === 0) {
-container.innerHTML = "<div style='color:#94a3b8;font-size:13px;padding:10px 0'>Nenhum aluno ativo para avaliação.</div>";
+container.innerHTML = "<div style='color:var(--muted);font-size:13px;padding:10px 0'>Nenhum aluno ativo para avaliação.</div>";
 return;
 }
 
@@ -14891,7 +15050,7 @@ el.innerHTML = `
 <div class="star-rating" title="${avgRating!==null?'Média geral: '+avgRating:'Sem avaliações'}">
 ${starsDisplay}
 </div>
-<div style="font-size: 0.75rem; color: #94a3b8; font-weight: 600; margin-top: 2px;">${avgText}</div>
+<div style="font-size: 0.75rem; color: var(--muted); font-weight: 600; margin-top: 2px;">${avgText}</div>
 </div>
 <button class="btn-historico" data-history="${s.id}">Histórico</button>
 </div>
@@ -14953,7 +15112,7 @@ renderPlannerPresets();
 const attachedPlans = lessonPlans.filter(p => themeHasAttachment(p));
 
 if (attachedPlans.length === 0) {
-container.innerHTML = "<div style='color:#94a3b8;font-size:13px;grid-column:1/-1;text-align:center;padding:30px 0'>Nenhuma aula/mapa armazenado. Clique no '+' acima para enviar.</div>";
+container.innerHTML = "<div style='color:var(--muted);font-size:13px;grid-column:1/-1;text-align:center;padding:30px 0'>Nenhuma aula/mapa armazenado. Clique no '+' acima para enviar.</div>";
 return;
 }
 
@@ -15177,7 +15336,7 @@ document.getElementById("vPlanTitle").textContent = plan.topic;
 const container = document.querySelector("#modalViewPlanBg .fullscreen-img-container");
 container.innerHTML = "";
 if(images.length === 0){
-container.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3rem 1rem;color:#94a3b8;gap:0.5rem;"><span style="font-size:3rem;">🎵</span><span style="font-size:0.85rem;">Tema sem anexo (mapa mental/imagem)</span></div>`;
+container.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3rem 1rem;color:var(--muted);gap:0.5rem;"><span style="font-size:3rem;">🎵</span><span style="font-size:0.85rem;">Tema sem anexo (mapa mental/imagem)</span></div>`;
 } else {
 const gallery = document.createElement("div");
 gallery.className = "viewer-gallery";
@@ -15214,7 +15373,7 @@ function renderEditImagesGrid() {
 const grid = document.getElementById("editImagesGrid");
 grid.innerHTML = "";
 if (currentEditImages.length === 0) {
-grid.innerHTML = "<div style='color:#94a3b8; font-size:12px;'>Nenhuma imagem restante.</div>";
+grid.innerHTML = "<div style='color:var(--muted); font-size:12px;'>Nenhuma imagem restante.</div>";
 return;
 }
 currentEditImages.forEach((src, idx) => {
@@ -15281,10 +15440,10 @@ return acc + Number(studentMonthlyValue(s, monthKey) || 0);
 }
 
 function getStatusIndicator(current, previous) {
-if (current === 0 || previous === undefined || previous === 0) return { symbol: '', color: '#94a3b8' };
-if (current > previous) return { symbol: '▲', color: '#4ade80' };
-if (current < previous * 0.9) return { symbol: '▼', color: '#f87171' };
-return { symbol: '▼', color: '#fb923c' };
+if (current === 0 || previous === undefined || previous === 0) return { symbol: '', color: 'var(--muted)' };
+if (current > previous) return { symbol: '▲', color: 'var(--green)' };
+if (current < previous * 0.9) return { symbol: '▼', color: 'var(--danger)' };
+return { symbol: '▼', color: 'var(--orange)' };
 }
 
 function renderEvolution(){
@@ -15560,12 +15719,12 @@ const pointerAttr = clickable ? `class="chart-point editable-point" data-month-i
 if (!p.tracked) {
 // Mês anterior ao início configurado nas Configurações: aparece apagado, sem valor,
 // pra não parecer que o resultado daquele mês foi zero.
-svg.innerHTML += `<g class="chart-point"><circle cx="${p.x}" cy="${height-padY}" r="3" fill="#141e2e"/><text x="${p.x}" y="${height-8}" text-anchor="middle" fill="#3f4a5c" font-size="13" font-weight="600">${p.month}</text></g>`;
+svg.innerHTML += `<g class="chart-point"><circle cx="${p.x}" cy="${height-padY}" r="3" style="fill:var(--chart-dot-empty,#141e2e)"/><text x="${p.x}" y="${height-8}" text-anchor="middle" style="fill:var(--chart-label-empty,#3f4a5c)" font-size="13" font-weight="600">${p.month}</text></g>`;
 return;
 }
-let textHtml = p.value > 0 ? `<text x="${p.x}" y="${p.y-13}" text-anchor="middle" fill="${p.status.color}" font-size="13" font-weight="700">${unitPrefix==="R$"?`${p.status.symbol} R$${p.value}`:`${p.status.symbol} ${p.value}`}</text>` : '';
+let textHtml = p.value > 0 ? `<text x="${p.x}" y="${p.y-13}" text-anchor="middle" style="fill:${p.status.color}" font-size="13" font-weight="700">${unitPrefix==="R$"?`${p.status.symbol} R$${p.value}`:`${p.status.symbol} ${p.value}`}</text>` : '';
 const ringHtml = clickable && p.value === 0 ? `<circle cx="${p.x}" cy="${height-padY}" r="8.5" fill="none" stroke="${accentColor}" stroke-width="1.5" stroke-dasharray="3 2" opacity="0.7"/>` : '';
-svg.innerHTML += `<g ${pointerAttr}>${hitArea}${ringHtml}<circle cx="${p.x}" cy="${p.y}" r="5.5" fill="${p.value>0?p.status.color:'#1e293b'}" stroke="#0a0e17" stroke-width="2"/><text x="${p.x}" y="${height-8}" text-anchor="middle" fill="#94a3b8" font-size="13" font-weight="600">${p.month}</text>${textHtml}</g>`;
+svg.innerHTML += `<g ${pointerAttr}>${hitArea}${ringHtml}<circle cx="${p.x}" cy="${p.y}" r="5.5" style="fill:${p.value>0?p.status.color:'var(--chart-dot-empty2,#1e293b)'};stroke:var(--chart-ring,#0a0e17)" stroke-width="2"/><text x="${p.x}" y="${height-8}" text-anchor="middle" style="fill:var(--muted)" font-size="13" font-weight="600">${p.month}</text>${textHtml}</g>`;
 });
 
 if (editCtx) {
@@ -15871,7 +16030,7 @@ list.innerHTML = "";
 
 const allItem = document.createElement("div");
 allItem.className = `student-picker-item ${selectedPerfStudentId===PERF_ALL_ID?'selected':''}`;
-allItem.innerHTML = `<div class="student-picker-avatar">Σ</div><div class="student-picker-name" style="flex:1;min-width:0">Média Geral <span style="color:#94a3b8;font-weight:600">(todos os alunos)</span></div>`;
+allItem.innerHTML = `<div class="student-picker-avatar">Σ</div><div class="student-picker-name" style="flex:1;min-width:0">Média Geral <span style="color:var(--muted);font-weight:600">(todos os alunos)</span></div>`;
 allItem.onclick = () => {
 selectedPerfStudentId = PERF_ALL_ID;
 document.getElementById("perfSearchPanel").style.display = "none";
@@ -15887,7 +16046,7 @@ return;
 filtered.forEach(s=>{
 const item = document.createElement("div");
 item.className = `student-picker-item ${s.id===selectedPerfStudentId?'selected':''}`;
-item.innerHTML = `<div class="student-picker-avatar">${escapeHtml(initials(s.name))}</div><div class="student-picker-name" style="flex:1;min-width:0">${escapeHtml(s.name)}${s.active===false?' <span style="color:#f87171;font-weight:600">(inativo)</span>':''}</div><div class="student-picker-instrument">${s.instrument}</div>`;
+item.innerHTML = `<div class="student-picker-avatar">${escapeHtml(initials(s.name))}</div><div class="student-picker-name" style="flex:1;min-width:0">${escapeHtml(s.name)}${s.active===false?' <span style="color:var(--danger);font-weight:600">(inativo)</span>':''}</div><div class="student-picker-instrument">${s.instrument}</div>`;
 item.onclick = () => {
 selectedPerfStudentId = s.id;
 document.getElementById("perfSearchPanel").style.display = "none";
@@ -16106,7 +16265,7 @@ container.innerHTML = "";
 const list = students.slice().sort((a,b)=>a.name.localeCompare(b.name));
 
 if(list.length === 0){
-container.innerHTML = "<div style='color:#94a3b8;font-size:13px;padding:10px 0'>Nenhum aluno cadastrado.</div>";
+container.innerHTML = "<div style='color:var(--muted);font-size:13px;padding:10px 0'>Nenhum aluno cadastrado.</div>";
 return;
 }
 
@@ -16136,7 +16295,7 @@ el.innerHTML = `
 <div class="star-rating" title="${avgRating!==null?'Média de temas: '+avgRating:'Sem avaliações'}">
 ${starsDisplay}
 </div>
-<div style="font-size: 0.75rem; color: #94a3b8; font-weight: 600; margin-top: 2px;">${avgText}</div>
+<div style="font-size: 0.75rem; color: var(--muted); font-weight: 600; margin-top: 2px;">${avgText}</div>
 </div>
 <button class="btn-historico" data-perf="${s.id}">Ver Desempenho</button>
 </div>
@@ -16326,7 +16485,7 @@ container.innerHTML = "";
 const noAttachmentPlans = lessonPlans.filter(p => !themeHasAttachment(p));
 
 if(noAttachmentPlans.length === 0){
-container.innerHTML = "<div style='color:#94a3b8;font-size:13px;grid-column:1/-1;text-align:center;padding:20px 0'>Nenhum tema sem anexo ainda.</div>";
+container.innerHTML = "<div style='color:var(--muted);font-size:13px;grid-column:1/-1;text-align:center;padding:20px 0'>Nenhum tema sem anexo ainda.</div>";
 return;
 }
 
@@ -16437,7 +16596,7 @@ const SETTINGS_FOLDERS = [
 { id: "aluno", icon: "user", title: "App do aluno", sub: "Chave para alunos e conteúdo", rows: ["rowStudentKey", "rowStudentContent"] },
 { id: "dados", icon: "save", title: "Dados e backup", sub: "Exportar, importar, restaurar", rows: ["rowExportarDados", "rowBackupReminder", "rowRestoreSnapshot", "rowImportarDados", "rowApagarDados"] },
 { id: "conta", icon: "logout", title: "Conta", sub: "Nuvem, entrar como aluno, sair, excluir conta", rows: ["rowCloudSync", "rowStudentMode", "rowSairConta", "rowDeleteAccount"] },
-{ id: "sobre", icon: "info", title: "Sobre o app", sub: "Primeiros passos, instalar, feedback, termos, versão", rows: ["rowOnboarding", "rowIdioma", "rowInstallApp", "rowFeedback", "rowTermos", "valVersao"] }
+{ id: "sobre", icon: "info", title: "Sobre o app", sub: "Primeiros passos, idioma, aparência, feedback, termos, versão", rows: ["rowOnboarding", "rowIdioma", "rowTema", "rowInstallApp", "rowFeedback", "rowTermos", "valVersao"] }
 ];
 let settingsFolderCur = null;
 (function settingsFoldersBuild(){
@@ -18420,6 +18579,33 @@ box.querySelectorAll("[data-rp-del]").forEach(b => b.onclick = () => { const [g,
 box.querySelectorAll("[data-rp-add]").forEach(b => b.onclick = () => { const g = b.dataset.rpAdd; rpDraft[g].push(""); renderReminderPhrases(); const last = box.querySelector(`[data-rp="${g}|${rpDraft[g].length - 1}"]`); if (last) last.focus(); });
 }
 
+// --- Aparência (8.48) ---
+const THEME_KEY = "jp_theme_v1";
+function themeLabel(t){ return t === "light" ? "Claro" : t === "auto" ? "Igual ao celular" : "Escuro"; }
+function themeApply(){
+const t = window.APP_THEME_PREF || "dark";
+const light = t === "light" || (t === "auto" && window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches);
+window.APP_THEME = light ? "light" : "dark";
+document.documentElement.setAttribute("data-theme", window.APP_THEME);
+const mc = document.querySelector('meta[name="theme-color"]'); if (mc) mc.setAttribute("content", light ? "#F4F7FB" : "#05060B");
+const cs = document.querySelector('meta[name="color-scheme"]'); if (cs) cs.setAttribute("content", light ? "light" : "dark");
+const v = document.getElementById("valTema"); if (v) v.textContent = themeLabel(t);
+document.querySelectorAll("[data-theme-pick]").forEach(b => { const on = b.dataset.themePick === t; b.classList.toggle("selected", on); b.setAttribute("aria-pressed", on ? "true" : "false"); });
+document.querySelectorAll("[data-theme-open]").forEach(b => { b.textContent = `Aparência: ${themeLabel(t)}`; });
+try { window.dispatchEvent(new Event("hi-theme")); } catch(e) {}
+try { if (window.HiTeacherApp && HiTeacherApp.setTheme) HiTeacherApp.setTheme(window.APP_THEME); } catch(e) {}
+}
+function themeOpen(){ themeApply(); document.getElementById("temaModal").classList.add("show"); }
+document.querySelectorAll("[data-theme-pick]").forEach(b => b.onclick = () => {
+window.APP_THEME_PREF = b.dataset.themePick;
+try { localStorage.setItem(THEME_KEY, window.APP_THEME_PREF); } catch(e) {}
+themeApply();
+});
+try { matchMedia("(prefers-color-scheme: light)").addEventListener("change", () => { if (window.APP_THEME_PREF === "auto") themeApply(); }); } catch(e) {}
+document.getElementById("rowTema").onclick = themeOpen;
+document.getElementById("temaCloseBtn").onclick = () => document.getElementById("temaModal").classList.remove("show");
+themeApply();
+
 // --- Idioma ---
 document.getElementById("rowIdioma").onclick = () => {
 document.getElementById("idiomaModal").classList.add("show");
@@ -18520,7 +18706,7 @@ function renderReminderRows(){
 const list = document.getElementById("reminderList");
 list.innerHTML = "";
 if (reminderDraft.length === 0) {
-list.innerHTML = `<div style="color:#94a3b8;font-size:0.8125rem;text-align:center;padding:0.375rem 0">Nenhum lembrete adicionado.</div>`;
+list.innerHTML = `<div style="color:var(--muted);font-size:0.8125rem;text-align:center;padding:0.375rem 0">Nenhum lembrete adicionado.</div>`;
 return;
 }
 reminderDraft.forEach((r, idx) => {
@@ -19893,7 +20079,7 @@ body.innerHTML = `<div class="key-state ok">Você faz parte desta escola</div>
 <div class="field-hint">Dono: ${escapeHtml(school.owner_name || "—")}. Seus alunos e dados continuam com você. O dono vê os números do mês (alunos, aulas dadas, faltas e valores), as suas aulas dos próximos dias e, dos alunos que pagam direto para a escola, o valor e o telefone de quem paga. Observações, avaliações e anotações das aulas não vão para ele.</div>
 <div class="field-hint"><b>Regra de pagamento:</b> ${escapeHtml(payRuleText(school.pay_rule))}</div>${est}
 <button type="button" class="btn-historico" id="schSend" style="width:100%;margin-top:0.75rem">Mandar meus números agora</button>
-<button type="button" class="btn-historico" id="schLeave" style="width:100%;margin-top:0.5rem;color:#f87171">Sair da escola</button>`;
+<button type="button" class="btn-historico" id="schLeave" style="width:100%;margin-top:0.5rem;color:var(--danger)">Sair da escola</button>`;
 body.querySelector("#schSend").onclick = async e => { e.target.textContent = "Mandando…"; const ok = await schoolPublish(true); e.target.textContent = ok ? "Enviado ✓" : "Não deu certo. Tente de novo."; };
 body.querySelector("#schLeave").onclick = () => schoolLeave(`Sair da escola ${school.name}? Seus alunos e dados continuam com você; o dono deixa de ver seus números.`);
 return;
@@ -20319,7 +20505,7 @@ ${pair("Pagamento", `${escapeHtml(payRuleText(m.pay_rule))}${p !== null ? ` · <
 </dl></section>
 ${keys.length > 1 ? `<section class="sheet-sec"><div class="sheet-sec-title">Meses anteriores</div><div class="school-hist">${keys.slice(1).map(k => { const y = ctx.effOf(m, k), py = payFor(m.pay_rule, y); return `<div class="school-hist-row"><b>${escapeHtml(monthLongLabel(k))}</b><span>${y.active} alunos · ${y.lessons} aulas (${hoursText(y.minutes)}) · R$ ${moneyText(Math.round(y.revenue))}${py !== null ? ` · pagar R$ ${moneyText(py)}` : ""}</span>${py !== null ? `<button type="button" class="btn-link-inline" data-ps="${k}">Resumo</button>` : ""}</div>`; }).join("")}</div></section>` : ""}
 ${stu ? `<section class="sheet-sec"><div class="sheet-sec-title">Alunos (${stu.length})</div>${stu.length ? `<div class="school-hist">${stu.map(s => `<div class="school-hist-row"><b>${escapeHtml(s.n)}</b><span>${escapeHtml([s.i, s.e ? "desde " + monthLabel(s.e) : ""].filter(Boolean).join(" · "))}</span></div>`).join("")}</div>` : `<div class="stu-muted">Nenhum aluno ativo.</div>`}</section>` : ""}
-<div class="demo-actions"><button type="button" class="btn-historico" id="stRule">Regra de pagamento</button>${p !== null ? `<button type="button" class="btn-historico" id="stSum">Resumo do pagamento</button>` : ""}${m.role !== "owner" ? `<button type="button" class="btn-link-inline" id="stRem" style="color:#f87171">Tirar da escola</button>` : ""}</div>`;
+<div class="demo-actions"><button type="button" class="btn-historico" id="stRule">Regra de pagamento</button>${p !== null ? `<button type="button" class="btn-historico" id="stSum">Resumo do pagamento</button>` : ""}${m.role !== "owner" ? `<button type="button" class="btn-link-inline" id="stRem" style="color:var(--danger)">Tirar da escola</button>` : ""}</div>`;
 body.querySelector("#stRule").onclick = () => { closeQuickModal(); openPayRule(m, name); };
 const sum = body.querySelector("#stSum"); if (sum) sum.onclick = () => { closeQuickModal(); openPaySummary(m, name, x, ctx.cur); };
 body.querySelectorAll("[data-ps]").forEach(b => b.onclick = () => { closeQuickModal(); openPaySummary(m, name, ctx.effOf(m, b.dataset.ps), b.dataset.ps); });
@@ -20756,13 +20942,13 @@ if (want("exp")) html += schoolSec("exp", "Gastos e lucro", `lucro previsto ${pr
 <span>Pagamento dos professores <b>− R$ ${moneyText(Math.round(tot.payN ? tot.pay : 0))}</b>${tot.payN < ctx.team.length ? ` <i>(só quem tem regra)</i>` : ""}</span>
 <span>Gastos do mês <b>− R$ ${moneyText(Math.round(expSum))}</b></span>
 <span>Lucro previsto <b style="color:${profit >= 0 ? "#4ade80" : "#f87171"}">${profitTxt}</b></span></div>` +
-exp.map(e => `<div class="ann-row"><div class="ann-row-main"><div class="ann-row-title">${escapeHtml(e.name)}</div><div class="ann-row-meta">R$ ${moneyText(e.value)} · ${e.kind === "once" ? "só neste mês" : "todo mês"}</div></div><button type="button" class="btn-link-inline" data-exp-del="${e.id}" style="color:#f87171">${e.kind === "once" || e.from === key ? "Apagar" : "Parar a partir deste mês"}</button></div>`).join("") +
+exp.map(e => `<div class="ann-row"><div class="ann-row-main"><div class="ann-row-title">${escapeHtml(e.name)}</div><div class="ann-row-meta">R$ ${moneyText(e.value)} · ${e.kind === "once" ? "só neste mês" : "todo mês"}</div></div><button type="button" class="btn-link-inline" data-exp-del="${e.id}" style="color:var(--danger)">${e.kind === "once" || e.from === key ? "Apagar" : "Parar a partir deste mês"}</button></div>`).join("") +
 `<div class="school-pad school-exp-form"><input type="text" id="expName" class="inline-input" placeholder="Ex.: Aluguel" maxlength="60"><input type="number" id="expVal" class="inline-input" placeholder="R$" min="0" step="0.01" inputmode="decimal"><select id="expKind" class="inline-input"><option value="monthly">Todo mês</option><option value="once">Só este mês</option></select><button type="button" class="btn-historico" id="expAdd">Adicionar</button></div>`);
 // Avisos da escola
 const ns = (schoolPanel.notices || []);
 const aud = { all: "alunos e professores", students: "só alunos", teachers: "só professores" };
 if (want("notices")) html += schoolSec("notices", "Avisos para a escola", ns.length ? `${ns.length} enviado${ns.length > 1 ? "s" : ""}` : "nenhum",
-ns.map(n => { const exp = n.expires_at && Date.parse(n.expires_at) <= Date.now(); return `<div class="ann-row"><div class="ann-row-main"><div class="ann-row-title">${escapeHtml(n.title)}${exp ? ` <span class="status off">Vencido</span>` : ""}</div><div class="ann-row-body">${escapeHtml(n.body)}</div><div class="ann-row-meta">${formatDateShort(n.created_at.slice(0, 10))} · ${aud[n.audience] || ""}${n.expires_at && !exp ? ` · até ${formatDateShort(n.expires_at.slice(0, 10)).slice(0, 5)}` : ""}</div></div><button type="button" class="btn-link-inline" data-n-del="${n.id}" style="color:#f87171">Apagar</button></div>`; }).join("") +
+ns.map(n => { const exp = n.expires_at && Date.parse(n.expires_at) <= Date.now(); return `<div class="ann-row"><div class="ann-row-main"><div class="ann-row-title">${escapeHtml(n.title)}${exp ? ` <span class="status off">Vencido</span>` : ""}</div><div class="ann-row-body">${escapeHtml(n.body)}</div><div class="ann-row-meta">${formatDateShort(n.created_at.slice(0, 10))} · ${aud[n.audience] || ""}${n.expires_at && !exp ? ` · até ${formatDateShort(n.expires_at.slice(0, 10)).slice(0, 5)}` : ""}</div></div><button type="button" class="btn-link-inline" data-n-del="${n.id}" style="color:var(--danger)">Apagar</button></div>`; }).join("") +
 `<div class="school-pad"><button type="button" class="btn-historico" id="nAdd" style="width:100%">+ Novo aviso para a escola</button><div class="field-hint">Aparece no Início do app dos alunos dos professores da escola e no sino dos professores.</div></div>`);
 return html;
 }
@@ -20970,7 +21156,7 @@ closeQuickModal(); schoolOpenSecs.add("notices"); renderSchoolPage();
 /* Fundo animado do app (WebGL2). Desenha em meia resolução e a ~30 fps: a imagem é só
    gradiente suave (não perde nitidez) e cada quadro obriga todos os painéis de vidro a
    refazer o desfoque — menos quadros deixa a rolagem leve no celular.
-   Cores no fragmentSrc (RGB de 0 a 1): bgColor = fundo, accent = azul, accent2 = ciano. */
+   Cores no fragmentSrc (RGB de 0 a 1): accent = azul, accent2 = ciano; o fundo (bgColor) vem de themeBg(). */
 (function(){
   var canvas = document.getElementById('ribbonGlowCanvas');
   if(!canvas) return;
@@ -20995,7 +21181,8 @@ closeQuickModal(); schoolOpenSecs.add("notices"); renderSchoolPage();
       'uniform float uTime;',
       'uniform vec2 uMouse;',
       'out vec4 fragColor;',
-      'const vec3 bgColor = vec3(0.0196, 0.0235, 0.0431);',
+      'uniform vec3 bgColor;',
+      'uniform float uLight;',
       'const vec3 accent = vec3(0.3098, 0.549, 1.0);',
       'const vec3 accent2 = vec3(0.1843, 0.8275, 0.949);',
       'float flow(vec2 uv, float t){',
@@ -21018,8 +21205,8 @@ closeQuickModal(); schoolOpenSecs.add("notices"); renderSchoolPage();
       '  glow += band * 0.06;',
       '  glow += mouseGlow * 0.18;',
       '  glow = clamp(glow, 0.0, 1.0);',
-      '  vec3 col = mix(bgColor, accent, glow * 0.4);',
-      '  col = mix(col, accent2, smoothstep(0.3, 1.0, band) * 0.18 * glow);',
+      '  vec3 col = mix(bgColor, accent, glow * mix(0.4, 0.3, uLight));',
+      '  col = mix(col, accent2, smoothstep(0.3, 1.0, band) * mix(0.18, 0.3, uLight) * glow);',
       '  fragColor = vec4(col, 1.0);',
       '}'
     ].join('\n');
@@ -21050,6 +21237,10 @@ closeQuickModal(); schoolOpenSecs.add("notices"); renderSchoolPage();
     var uResolution = gl.getUniformLocation(program, 'uResolution');
     var uTime = gl.getUniformLocation(program, 'uTime');
     var uMouse = gl.getUniformLocation(program, 'uMouse');
+    var uBg = gl.getUniformLocation(program, 'bgColor');
+    var uLight = gl.getUniformLocation(program, 'uLight');
+    // Modo claro (8.48): mesmo movimento e mesmos azuis, sobre um fundo quase branco.
+    var themeBg = function(){ return document.documentElement.getAttribute('data-theme') === 'light' ? [0.957, 0.969, 0.984, 1] : [0.0196, 0.0235, 0.0431, 0]; };
 
     var RENDER_SCALE = 0.5;
     var FRAME_MS = 1000 / 30 - 1;
@@ -21068,6 +21259,7 @@ closeQuickModal(); schoolOpenSecs.add("notices"); renderSchoolPage();
       gl.uniform2f(uResolution, canvas.width, canvas.height);
       gl.uniform1f(uTime, (now - start) * 0.001);
       gl.uniform2f(uMouse, mouse[0], mouse[1]);
+      var tb = themeBg(); gl.uniform3f(uBg, tb[0], tb[1], tb[2]); gl.uniform1f(uLight, tb[3]);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
     };
 
@@ -21080,6 +21272,7 @@ closeQuickModal(); schoolOpenSecs.add("notices"); renderSchoolPage();
     };
     resize();
     window.addEventListener('resize', resize);
+    window.addEventListener('hi-theme', function(){ if(reduceMotion) draw(performance.now()); });
     canvas.addEventListener('webglcontextlost', fallback);
 
     var lastFrame = 0;

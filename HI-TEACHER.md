@@ -517,6 +517,14 @@ Versão do app 8.46; o arquivo do servidor desta rodada é `supabase/schema-v8.4
 - **Login com Google/Apple no app Android**: volta só com um código de uso único (`?code=`, fluxo PKCE com um cliente separado `authPkce`), trocado pela entrada dentro do app. No site e no login por e-mail nada muda. Funciona também com o APK antigo.
 - **Página de exclusão de conta**: `excluir-conta.html` (português e inglês), para o link que a loja pede.
 
+## Modo claro (8.48)
+- O escuro continua o visual padrão. Em Configurações → Sobre o app → Aparência (e no app do aluno, Preferências → "Aparência"), dá para escolher **Escuro**, **Claro** ou **Igual ao celular**. Fica só no aparelho (`jp_theme_v1`), troca na hora, sem recarregar. Um script no `<head>` põe `data-theme` no `<html>` antes de desenhar, para não piscar.
+- Como funciona: o bloco `:root[data-theme="light"]` no fim do CSS troca as variáveis (fundo `#F4F7FB`, vidro branco translúcido, texto azul-marinho `#0B1524`, sombras azuladas leves) e mais algumas regras que tinham cor escura fixa. Cor nova no CSS deve usar as variáveis; se precisar de cor fixa escura, criar a versão clara nesse bloco.
+- Ciano: o vivo `#2FD3F2` continua nos botões e marcados (`--accent-fill`, texto escuro por cima). Para texto, ícone e borda no claro, `--accent` vira `#087A9C` (o vivo some no branco). Verde, laranja, vermelho e estrela também escurecem para dar leitura.
+- Fundo animado: o mesmo desenho e movimento; no claro o fundo do shader é quase branco (`themeBg()`), com os azuis por cima. A logo em texto tem versão com "hi" escuro (`icons/logo-text-light.png`). A coruja não muda.
+- App Android (versionCode 10, 8.48): a ponte `setTheme` pinta as barras do sistema da mesma cor. Até instalar o app novo, no claro as barras de cima e de baixo ficam escuras.
+- Imagens geradas para compartilhar (resumo do mês, recibo, contrato) não mudam com o tema.
+
 ## O que ainda falta / próximos passos
 
 - **App do aluno — ideias ainda não feitas (lista de set/2026)**: gravação enviada pelo próprio app com comentário do professor marcado no tempo (hoje vai pelo compartilhar do celular); cifras e partituras anexadas pelo professor (precisa de armazenamento de arquivos no Supabase); cadastro já completo pelo convite (hoje o link só preenche a chave; para interessados existe a ficha de matrícula da 8.35); lembrete de aula por notificação do celular (hoje é pela agenda .ics); mural da turma e avisos por turma; toques de IA (feedback da gravação, plano da semana a partir do resumo da aula, assistente de teoria).
@@ -525,5 +533,4 @@ Versão do app 8.46; o arquivo do servidor desta rodada é `supabase/schema-v8.4
 - **Sem testes automatizados**: não há suíte de testes (unitário, e2e) para este arquivo; validação hoje é manual (abrir no navegador) mais checagem estática pontual (ex.: `impeccable detect` para anti-padrões de UI).
 - **Página de Testes**: removida na 8.16 (não era mais usada). Quem estava nela ao atualizar volta para o Início.
 - **Onboarding de instrumentos**: lista de instrumentos é customizável (pensado originalmente pra resolver o caso de professores de instrumentos fora da lista padrão, como bateria), mas ainda não foi testado com um segundo professor de verdade além do dono do projeto.
-- **Sem modo claro**: o app é 100% tema escuro; não há plano definido de suporte a tema claro.
 - **Sem histórico de versão do arquivo**: até este commit, o projeto vivia só como arquivo trocado manualmente por chat, sem controle de versão — este é o primeiro commit dele num repositório git.

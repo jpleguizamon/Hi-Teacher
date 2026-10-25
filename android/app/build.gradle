@@ -13,8 +13,8 @@ android {
         minSdk 24
         targetSdk 36
         // Ao gerar o app de novo, subir os dois (o versionCode tem de ser sempre maior).
-        versionCode 9
-        versionName "8.46"
+        versionCode 10
+        versionName "8.48"
     }
 
     buildFeatures { buildConfig true }

@@ -4,7 +4,8 @@
 //   1. o login aparece primeiro e a escolha (professor/escola/aluno) só depois, em conta nova;
 //   2. todas as páginas do professor e do aluno abrem sem erro;
 //   3. planos: teste grátis, fim do teste, limite de alunos e a tela Assinaturas;
-//   4. a versão em inglês (8.42): login em inglês e todas as páginas abrindo sem erro.
+//   4. a versão em inglês (8.42): login em inglês e todas as páginas abrindo sem erro;
+//   5. o modo claro (8.48): escuro é o padrão, o claro liga na hora e as páginas abrem sem erro.
 // Se algo der errado, sai com erro e a publicação não acontece.
 const http = require("http"), fs = require("fs"), path = require("path");
 const { chromium } = require("playwright");
@@ -136,6 +137,16 @@ async function page(browser, url, { session = false, seed = true } = {}) {
       await p.close(); }
     { const { p } = await page(browser, base + "?lang=pt", { seed: false });
       check(await p.evaluate(() => document.documentElement.lang === "pt-BR" && document.getElementById("authForgotBtn").textContent === "Esqueci minha senha" && typeof window.hiTrTree === "undefined"), "português: continua igual (sem tradução carregada)");
+      await p.close(); }
+    // 5. Modo claro (8.48): escuro continua o padrão; claro troca na hora e as páginas abrem sem erro.
+    { const { p, errs } = await page(browser, base);
+      check(await p.evaluate(() => document.documentElement.dataset.theme === "dark"), "aparência: escuro é o padrão");
+      await p.evaluate(() => { hideAuthGate(); openPage("settings"); themeOpen(); document.querySelector('[data-theme-pick="light"]').click(); }).catch(e => errs.push("tema: " + e.message));
+      const t = await p.evaluate(() => [document.documentElement.dataset.theme, localStorage.getItem("jp_theme_v1"), document.getElementById("valTema").textContent, getComputedStyle(document.body).backgroundColor]);
+      check(t[0] === "light" && t[1] === "light" && t[2] === "Claro" && t[3] === "rgb(244, 247, 251)", "aparência: modo claro liga na hora" + (t[0] === "light" ? "" : " → " + t.join(" ")));
+      const pages = await p.evaluate(() => [...new Set([...document.querySelectorAll("[data-page]")].map(e => e.dataset.page))]);
+      for (const pg of pages) { await p.evaluate(pg => openPage(pg), pg).catch(e => errs.push(pg + ": " + e.message)); await p.waitForTimeout(100); }
+      check(!errs.length, "aparência: páginas no claro sem erro" + (errs.length ? " → " + errs.slice(0, 3).join(" | ") : ""));
       await p.close(); }
   } finally {
     await browser.close();
