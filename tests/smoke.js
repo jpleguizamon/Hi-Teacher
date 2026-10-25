@@ -72,6 +72,23 @@ async function page(browser, url, { session = false, seed = true } = {}) {
       check(pages.length > 10 && sp.length > 10, `abriu ${pages.length} páginas do professor e ${sp.length} do aluno`);
       check(!errs.length, "páginas: nenhum erro" + (errs.length ? " → " + errs.slice(0, 3).join(" | ") : ""));
       await p.close(); }
+    // 2b. Consertos da 8.44 (dinheiro, segurança e janelas)
+    { const { p, errs } = await page(browser, base);
+      const r = await p.evaluate(() => {
+        const s = students[0], cur = currentMonthKey(), past = addMonths(cur, -2);
+        setMonthPaid(s, past, true);
+        raiseStudentValue(s, 170, cur);
+        const keptPast = paidMonthValue(s, past) === 150 && paidMonthValue(s, cur) === 170;
+        const clean = cleanJoin({ id: "x", instrument: '<img src=x onerror="alert(1)">', student_name: "A<b>" });
+        const m = document.getElementById("syncConflictModal"); m.classList.add("show");
+        modalDownOn = m; m.click(); const stays = m.classList.contains("show"); m.classList.remove("show");
+        return { keptPast, xss: !/[<>"]/.test(clean.instrument + clean.student_name) && clean.id === "x", stays };
+      });
+      check(r.keptPast, "8.44: mudar a mensalidade não mexe no mês que já foi pago");
+      check(r.xss, "8.44: pedido do aluno vira texto simples");
+      check(r.stays, "8.44: \"Dados diferentes\" não fecha tocando fora");
+      check(!errs.length, "8.44: nenhum erro" + (errs.length ? " → " + errs[0] : ""));
+      await p.close(); }
     // 3. Planos
     { const { p, errs } = await page(browser, base);
       const today = new Date().toISOString().slice(0, 10);

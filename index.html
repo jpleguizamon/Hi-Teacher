@@ -2262,7 +2262,7 @@ body.pdf-open{overflow:hidden}
 </defs>
 </svg>
 <!-- Modal: dados diferentes neste aparelho e na nuvem (fica fora do .app pra aparecer por cima do login) -->
-<div class="modal-bg" id="syncConflictModal">
+<div class="modal-bg" id="syncConflictModal" data-outside="stay">
 <div class="modal">
 <h2>Dados diferentes</h2>
 <div class="field-hint" id="syncConflictText">Este aparelho e a nuvem têm dados diferentes para esta conta. Escolha qual versão manter. A outra é substituída.</div>
@@ -3140,7 +3140,7 @@ body.pdf-open{overflow:hidden}
 </div>
 
 <!-- Modal de Avaliação Pós-Aula (aberto automaticamente ao detectar aula concluída) -->
-<div class="modal-bg" id="evalPopupModal">
+<div class="modal-bg" id="evalPopupModal" data-outside-btn="evalPopupSkip">
 <div class="modal">
 <h2 id="evalPopupTitle">Avaliar aula</h2>
 <div class="eval-popup-queue-indicator" id="evalPopupQueueIndicator"></div>
@@ -3711,7 +3711,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.43";
+const APP_VERSION = "8.44";
 // Idioma (8.42): troca entre português e inglês e recarrega. Fica guardado neste aparelho.
 function langSwitchLabel(){ return APP_LANG === "en" ? "🌐 Mudar para português" : "🌐 Switch to English"; }
 function langSwitch(){
@@ -3946,7 +3946,11 @@ if (el.classList && el.classList.contains("modal-bg") && el.classList.contains("
 function modalVisibleBtn(m, sel){ return [...m.querySelectorAll(sel)].reverse().find(b => b.offsetParent !== null && !b.disabled) || null; }
 function modalCloseOutside(m){
 if (["sidebar", "stuSidebar", "studentSheetModal", "quickLessonModal", "makeupModal", "historyModal"].includes(m.id)) return closeLayer(m);
-const btn = modalVisibleBtn(m, ".actions .cancel, .close-btn-inline, [aria-label='Fechar'], .modal-close, button.cancel");
+// 8.44: janela que pede uma escolha (ex.: "Dados diferentes") não fecha tocando fora.
+if (m.dataset.outside === "stay") return;
+if (m.dataset.outsideBtn) { const ob = document.getElementById(m.dataset.outsideBtn); if (ob) { ob.click(); return; } }
+// O X vem antes do "cancelar": em algumas janelas o botão da esquerda faz outra coisa (baixar, abrir outra janela).
+const btn = modalVisibleBtn(m, ".close-btn-inline, [aria-label='Fechar'], .modal-close") || modalVisibleBtn(m, ".actions .cancel, button.cancel");
 if (btn) btn.click(); else m.classList.remove("show");
 if (m.classList.contains("show")) m.classList.remove("show");
 }
@@ -4227,6 +4231,17 @@ setTimeout(() => toast.remove(), 9000);
 // 8.40: entrou numa conta diferente da que deixou os dados neste aparelho. Antes, numa conta
 // nova, os alunos da outra conta subiam sem perguntar. Agora pergunta; o padrão é começar com
 // os dados desta conta (uma cópia do que estava no aparelho fica em "Restaurar cópia do aparelho").
+// 8.44: pergunta com botões de nome claro (no lugar do OK/Cancelar). Tocar fora não escolhe nada.
+function askButtons(title, text, labels){
+return new Promise(resolve => {
+const box = document.createElement("div");
+box.className = "modal-bg show"; box.dataset.outside = "stay"; box.style.zIndex = "120";
+box.innerHTML = `<div class="modal" style="max-width:24rem"><h2>${escapeHtml(title)}</h2><div class="field-hint" style="margin-bottom:1rem;white-space:pre-line">${escapeHtml(text)}</div>
+<div style="display:flex;flex-direction:column;gap:0.5rem">${labels.map((l, i) => `<button type="button" class="${i === 0 ? "save" : "cancel"}" data-ab="${i}" style="width:100%">${escapeHtml(l)}</button>`).join("")}</div></div>`;
+document.body.appendChild(box);
+box.querySelectorAll("[data-ab]").forEach(b => b.onclick = () => { box.remove(); resolve(Number(b.dataset.ab)); });
+});
+}
 async function cloudAccountGuard(){
 const uid = authCurrentUser && authCurrentUser.id;
 if (!uid) return true;
@@ -4234,7 +4249,8 @@ const prev = tbMeta().userId || readSyncMeta().userId || null;
 if (!prev || prev === uid) return true;
 const sum = dataSummary(k => localStorage.getItem(k));
 if (!sum.students && !sum.plans) return true;
-const fresh = confirm(`Este aparelho tem dados de outra conta (${sum.students} aluno${sum.students === 1 ? "" : "s"}).\n\nOK = usar só os dados desta conta (recomendado). Uma cópia do que está no aparelho fica guardada em Configurações → Dados e backup → Restaurar cópia do aparelho.\n\nCancelar = levar esses dados para esta conta.`);
+const pick = await askButtons("Dados de outra conta", `Este aparelho tem dados de outra conta (${sum.students} aluno${sum.students === 1 ? "" : "s"}).\n\nSe você escolher usar só os desta conta, uma cópia do que está no aparelho fica guardada em Configurações → Dados e backup → Restaurar cópia do aparelho.`, ["Usar só os dados desta conta (recomendado)", "Levar os dados do aparelho para esta conta"]);
+const fresh = pick === 0;
 if (!fresh) return true;
 await saveDeviceSnapshot("Dados de outra conta (antes de trocar de conta)");
 CLOUD_SYNC_KEYS.forEach(k => localStorage.removeItem(k));
@@ -8965,6 +8981,7 @@ if (!confirm(`Recusar o pedido de ${j.student_name}?`)) return;
 await setJoinStatus(j, { status: "rejected" });
 }
 async function joinToWaitlist(j){
+j = cleanJoin(j);
 const list = waitlist();
 if (!list.some(x => x.joinRequestId === j.id)) {
 const guardian = j.guardian_name ? `Responsável: ${j.guardian_name}${j.guardian_phone ? " (" + j.guardian_phone + ")" : ""}` : "";
@@ -8999,6 +9016,7 @@ choose(`<div class="undo-q-title">Adicionar ${escapeHtml(j.student_name)} à sua
 body.querySelector("#jnCancel").onclick = back;
 body.querySelector("#jnOk").onclick = async () => {
 if (!planCanAdd(1)) return;
+j = cleanJoin(j);
 body.querySelector("#jnOk").disabled = true;
 const today = isoOf(new Date());
 const pend = ["dia da semana", "horário", "valor mensal"];
@@ -9863,10 +9881,25 @@ document.getElementById("rowReferral").onclick = openReferral;
 document.getElementById("rowStudentContent").onclick = openStudentContent;
 document.getElementById("rowInstallApp").onclick = pwaInstall;
 document.getElementById("rowStudentMode").onclick = () => { if (authCurrentUser && confirm("Abrir o modo aluno/responsável nesta conta? Seus dados de professor continuam salvos. Pra voltar: Perfil → Voltar para o modo professor.")) switchRole("student"); };
-document.getElementById("rowSairConta").onclick = async () => {
-await supabaseClient.auth.signOut();
+// 8.44: antes de sair, manda pra nuvem o que falta. Se tudo subiu, pergunta se apaga os dados deste aparelho.
+async function teacherSignOut(){
+let synced = false;
+try { synced = tbActive() ? await tbSyncNow() : false; } catch(e) { synced = false; }
+if (tbActive() && !synced) {
+const go = await askButtons("Sair da conta", "Algumas mudanças ainda não subiram para a nuvem (sem internet?). Se sair agora, elas ficam só neste aparelho.", ["Ficar e tentar de novo", "Sair mesmo assim"]);
+if (go === 0) return;
+} else if (synced) {
+const pick = await askButtons("Sair da conta", "Tudo está salvo na nuvem. Quer apagar os dados deste aparelho? Eles voltam quando você entrar de novo.", ["Sair e manter neste aparelho", "Sair e apagar deste aparelho"]);
+if (pick === 1) {
+CLOUD_SYNC_KEYS.forEach(k => localStorage.removeItem(k));
+[TB_META_KEY, TB_SHADOW_KEY, TB_QUEUE_KEY, TB_ORPHANS_KEY, SYNC_META_KEY].forEach(k => localStorage.removeItem(k));
+}
+}
+try { await supabaseClient.auth.signOut(); } catch(e) {}
+cloudReloading = true;
 location.reload();
-};
+}
+document.getElementById("rowSairConta").onclick = teacherSignOut;
 document.getElementById("btnLogout").onclick = document.getElementById("rowSairConta").onclick;
 document.getElementById("rowCloudSync").onclick = retryCloudSync;
 document.getElementById("cloudBannerRetry").onclick = retryCloudSync;
@@ -9928,7 +9961,7 @@ const todayKey=today.getDay();
 
 let students=JSON.parse(localStorage.getItem("jp_students_v5")||"null")||[];
 // 8.36: nome com < > " (só entra assim por pedido de aluno ou ficha) vira texto simples.
-students.forEach(s => { if (s && typeof s.name === "string" && /[<>"]/.test(s.name)) s.name = plainText(s.name); });
+students.forEach(s => { if (s) ["name","instrument","guardianName","phone","guardianPhone"].forEach(k => { if (typeof s[k] === "string" && /[<>"]/.test(s[k])) s[k] = plainText(s[k]); }); });
 let editingId=null;
 let selectedYear = new Date().getFullYear();
 
@@ -10087,7 +10120,9 @@ function planActiveCount(){ return students.filter(s => s && s.active !== false)
 function planDaysBetween(a, b){ return Math.round((dateFromIso(b) - dateFromIso(a)) / 86400000); }
 function planState(){
 if (!myPlan || studentMode || demoMode) return null;
-const today = myPlan.today || isoOf(new Date());
+// 8.44: o servidor conta o dia pelo horário de Londres (depois das 21h já é amanhã). Vale o dia do aparelho, se estiver a no máximo 1 dia do servidor.
+const localToday = isoOf(new Date());
+const today = !myPlan.today ? localToday : Math.abs(planDaysBetween(myPlan.today, localToday)) <= 1 ? localToday : myPlan.today;
 if (myPlan.admin) return { kind: "admin", plan: planById("school"), max: Infinity };
 const paid = planById(myPlan.plan);
 if (paid && paid.id !== "free" && myPlan.paid_until && myPlan.paid_until >= today) return { kind: "paid", plan: paid, max: paid.max, until: myPlan.paid_until, left: planDaysBetween(today, myPlan.paid_until) };
@@ -10197,7 +10232,7 @@ planGateOpen = true;
 const close = () => { gate.classList.add("hidden"); gate.innerHTML = ""; planGateOpen = false; };
 refCardBind(gate);
 const c = gate.querySelector("#planClose"); if (c) c.onclick = close;
-const o = gate.querySelector("#planOut"); if (o) o.onclick = async () => { try { await supabaseClient.auth.signOut(); } catch(e) {} location.reload(); };
+const o = gate.querySelector("#planOut"); if (o) o.onclick = () => document.getElementById("rowSairConta").click();
 const err = gate.querySelector("#planErr");
 gate.querySelectorAll("[data-plan]").forEach(b => b.onclick = async () => {
 const p = planById(b.dataset.plan);
@@ -10818,6 +10853,8 @@ return best;
 }
 // Texto que vem de outra pessoa (aluno, ficha, colega da escola): tira < > e troca " por ”,
 // pra nunca virar código na tela, mesmo onde o texto entra sem escapeHtml (8.36).
+// 8.44: o pedido do aluno chega como ele digitou; tudo vira texto simples antes de entrar na lista.
+function cleanJoin(j){ const o = { ...j }; ["student_name","instrument","guardian_name","guardian_phone","student_phone","student_birth_date"].forEach(k => { if (typeof o[k] === "string") o[k] = plainText(o[k], 120); }); return o; }
 function plainText(v, max){ const t = String(v ?? "").replace(/[<>]/g, "").replace(/"/g, "”").trim(); return max ? t.slice(0, max) : t; }
 function plainDeep(o){ if (typeof o === "string") return plainText(o); if (Array.isArray(o)) return o.map(plainDeep); if (o && typeof o === "object") { const r = {}; Object.keys(o).forEach(k => { r[k] = plainDeep(o[k]); }); return r; } return o; }
 function escapeHtml(t){ return String(t ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c])); }
@@ -12686,7 +12723,18 @@ return hit ? Number(hit.v) : base;
 function round2(v){ return Math.round((Number(v) || 0) * 100) / 100; }
 // Novo valor a partir do mês "from". Os meses antes dele ficam com o valor que já tinham.
 // Um reajuste marcado para depois (valueNext) é trocado pelo novo.
-function raiseStudentValue(s, newV, from){
+// 8.44: mês que já foi pago fica com o valor que foi pago, mesmo se a mensalidade mudar depois.
+function keepPaidValues(s, change){
+const before = {};
+getPaidMonths(s).forEach(k => { before[k] = paidMonthValue(s, k); });
+change();
+Object.keys(before).forEach(k => {
+const diff = round2(before[k] - (Number(studentMonthlyValue(s, k)) || 0));
+if (diff) (s.payAdj ??= {})[k] = diff; else if (s.payAdj) { delete s.payAdj[k]; if (!Object.keys(s.payAdj).length) delete s.payAdj; }
+});
+}
+function raiseStudentValue(s, newV, from){ keepPaidValues(s, () => raiseStudentValueRaw(s, newV, from)); }
+function raiseStudentValueRaw(s, newV, from){
 delete s.valueNext;
 const prevKey = addMonths(from, -1), prevV = Number(studentMonthlyValue(s, prevKey)) || 0;
 const old = (Array.isArray(s.valueOld) ? s.valueOld : []).filter(o => o && o.to && o.to < prevKey);
@@ -13507,9 +13555,26 @@ btn.onclick = () => {
 const [sid, key] = btn.dataset.markPaid.split("|");
 const s = students.find(x => String(x.id) === sid);
 if (!s) return;
-setMonthPaid(s, key, true);
+// 8.44: com desconto ou multa, o dia do pagamento muda o valor: pergunta o dia (já vem hoje).
+const done = onIso => {
+const snaps = snapshotFields([s], ["paidMonths", "paidMonth", "paidDates", "payAdj"]);
+setMonthPaid(s, key, true, onIso);
 saveStudents();
 renderPendingPayments();
+showUndoToast(`Pago ✓ · ${sn(s)} · R$ ${moneyText(paidMonthValue(s, key))}`, () => { restoreFields(snaps); saveStudents(); renderPendingPayments(); });
+};
+const r = payRules();
+if (!(r && (Number(r.disc) > 0 || Number(r.fine) > 0 || Number(r.interest) > 0))) { done(); return; }
+const body = document.createElement("div");
+body.innerHTML = `<div class="field"><label>Pago em que dia?</label><input type="date" id="mpDay" value="${isoOf(new Date())}" max="${isoOf(new Date())}"></div><div class="field-hint" id="mpVal"></div>`;
+const draw = () => { const d = body.querySelector("#mpDay").value || isoOf(new Date()); const q = payQuote(s, key, d); body.querySelector("#mpVal").textContent = `Valor: R$ ${moneyText(q.value)}${q.kind ? (q.kind === "disc" ? " (com desconto)" : " (com multa e juros)") : ""}`; };
+body.querySelector("#mpDay").oninput = draw; draw();
+openQuickModal(`Mensalidade de ${monthLabel(key)} · ${sn(s)}`, "Marque o dia em que o aluno pagou.", body, () => {
+const d = body.querySelector("#mpDay").value;
+if (!tbIsoOk(d)) { alert("Escolha o dia do pagamento."); return; }
+closeQuickModal();
+done(d);
+}, "Cancelar", "Marcar como pago");
 };
 });
 }
@@ -14100,7 +14165,7 @@ days: days || [],
 format: "Individual",
 value: value !== null ? value : appSettings.defaultValues.individual,
 level: level || (appSettings.useLevels ? appSettings.levels[0] : ""),
-entry: entry || new Date().toISOString().slice(0,10),
+entry: entry || isoOf(new Date()),
 trackingSince: [isoOf(new Date()), entry || ""].sort().pop(),
 active: true,
 lessons: [],
@@ -14597,7 +14662,7 @@ ${timeText !== "—" ? `<div class="stu-row"><span class="stu-label">Horário</s
 }
 
 const tier = getLevelTier(s.level);
-const refDate = isInactive ? (s.exit || new Date().toISOString().slice(0,10)) : new Date().toISOString().slice(0,10);
+const refDate = isInactive ? (s.exit || isoOf(new Date())) : isoOf(new Date());
 const monthlyValue = studentMonthlyValue(s);
 const lateMonths = (!isInactive && paysMe(s)) ? unpaidMonths(s).filter(k => isPastDue(s, k)).length : 0;
 const payLate = lateMonths > 0;
@@ -14722,7 +14787,7 @@ el.innerHTML = `
 <div class="avatar-small">${escapeHtml(initials(s.name))}</div>
 <div class="info" style="min-width: 0;">
 <div class="name">${escapeHtml(s.name)}</div>
-<div class="instrument">${s.instrument} &bull; ${dayText}</div>
+<div class="instrument">${escapeHtml(s.instrument)} &bull; ${dayText}</div>
 </div>
 </div>
 <div class="eval-row-right">
@@ -14987,6 +15052,7 @@ const endEl = document.getElementById("agendaAddEnd"), end = endEl.value;
 if (end && end < agendaModalDate) { alert("A data final não pode ser antes do primeiro dia."); return; }
 agendaEvents.push({ id:String(Date.now()), date:agendaModalDate, type:"event", title, ...(end && end > agendaModalDate ? { end } : {}) });
 document.getElementById("agendaAddTitle").value = ""; endEl.value = ""; renderAgendaSuggest();
+modalDirty.delete(document.getElementById("agendaAddBtn").closest(".modal-bg"));
 saveAgendaEvents();
 renderAgenda();
 openAgendaDayModal(agendaModalDate);
@@ -15955,7 +16021,7 @@ el.innerHTML = `
 <div class="avatar-small">${escapeHtml(initials(s.name))}</div>
 <div class="info" style="min-width: 0;">
 <div class="name">${escapeHtml(s.name)}</div>
-<div class="instrument">${s.instrument} &bull; ${dayText}</div>
+<div class="instrument">${escapeHtml(s.instrument)} &bull; ${dayText}</div>
 </div>
 </div>
 <div class="eval-row-right">
@@ -16782,7 +16848,7 @@ renderInstrumentSelectOptions();
 document.getElementById("fInstrument").value=s?.instrument||appSettings.instruments[0];
 document.getElementById("fTime").value=s?.time||"19:00";
 renderLevelSelectOptions(s);
-document.getElementById("fEntry").value=s?.entry||new Date().toISOString().slice(0,10);
+document.getElementById("fEntry").value=s?.entry||isoOf(new Date());
 document.getElementById("fExit").value=s?.exit||"";
 document.getElementById("fEvalFreq").options[0].textContent = `Padrão (${(EVAL_FREQUENCIES[appSettings.evalFrequency] || "Toda aula").toLowerCase()})`;
 document.getElementById("fEvalFreq").value = s?.evalFrequency || "";
@@ -16860,7 +16926,7 @@ btnToggle.onclick = () => {
 if (!isActive && !planCanAdd(1)) return;
 const apply = (why) => {
 s.active = !isActive;
-if (!s.active && !s.exit) { s.exit = new Date().toISOString().slice(0,10); }
+if (!s.active && !s.exit) { s.exit = isoOf(new Date()); }
 if (!s.active && why) s.exitReason = why;
 if (s.active) delete s.exitReason;
 if (!s.active) offerWaitlistFor(s);
@@ -16944,7 +17010,7 @@ delete obj.needsReview;
 
 if (document.getElementById("fRoomField").style.display !== "none") { const room = document.getElementById("fRoom").value; if (room) obj.room = room; else delete obj.room; }
 if (!isActive) {
-obj.exit = document.getElementById("fExit").value || currentObj?.exit || new Date().toISOString().slice(0,10);
+obj.exit = document.getElementById("fExit").value || currentObj?.exit || isoOf(new Date());
 const why = document.getElementById("fExitReason").value;
 if (why) obj.exitReason = why; else delete obj.exitReason;
 } else {
@@ -17019,6 +17085,17 @@ const selVal = valSelect.value;
 const objForDefault = {...obj, id: editingId || -1};
 if (selVal === "outro") obj.value = Number(document.getElementById("fCustomValue").value) || getDefaultValueFor(objForDefault);
 else obj.value = getDefaultValueFor(objForDefault);
+// 8.44: mensalidade nova vale deste mês em diante. Os meses de antes ficam com o valor antigo
+// (antes a mudança reescrevia o recibo e o resumo do imposto dos meses passados).
+if (currentObj && billingMode(currentObj) === "monthly") {
+const curKey = currentMonthKey(), newV = Number(obj.value), oldV = Number(studentMonthlyValue(currentObj, curKey));
+if (isFinite(newV) && isFinite(oldV) && newV !== oldV) {
+const tmp = { ...obj, value: currentObj.value, valueOld: Array.isArray(obj.valueOld) ? obj.valueOld.map(o => ({ ...o })) : undefined, payAdj: obj.payAdj ? { ...obj.payAdj } : undefined };
+raiseStudentValue(tmp, newV, curKey);
+obj.value = tmp.value;
+["valueOld", "valueNext", "payAdj"].forEach(k => { if (tmp[k] !== undefined) obj[k] = tmp[k]; else delete obj[k]; });
+}
+}
 
 // O aviso de pendência só sai dos campos que foram alterados ou confirmados; salvar
 // sem mexer num dado provisório mantém o "⚠ Revisar" no card.
@@ -17384,8 +17461,8 @@ const current = appSettings.defaultValues.byInstrument[instrument];
 const row = document.createElement("div");
 row.className = "instrument-simple-row";
 row.innerHTML = `
-<span class="instrument-simple-label">${instrument}</span>
-<input class="ov-value" data-instrument="${instrument}" type="number" min="0" placeholder="R$" value="${current !== undefined ? current : ""}">
+<span class="instrument-simple-label">${escapeHtml(instrument)}</span>
+<input class="ov-value" data-instrument="${escapeHtml(instrument)}" type="number" min="0" placeholder="R$" value="${current !== undefined ? current : ""}">
 `;
 wrap.appendChild(row);
 });
@@ -19361,7 +19438,8 @@ pop.hidden = true;
 document.getElementById("teacherBell").setAttribute("aria-expanded", "false");
 }
 document.getElementById("teacherBell").onclick = e => { e.stopPropagation(); const pop = document.getElementById("teacherNotifPop"); if (pop && !pop.hidden) teacherNotifClose(); else teacherNotifOpen(); };
-document.addEventListener("click", e => { const pop = document.getElementById("teacherNotifPop"); if (pop && !pop.hidden && !pop.contains(e.target) && !e.target.closest("#teacherBell") && document.contains(e.target)) teacherNotifClose(); });
+// 8.44: tocar fora do balão só fecha o balão (não abre também o que está embaixo).
+document.addEventListener("click", e => { const pop = document.getElementById("teacherNotifPop"); if (pop && !pop.hidden && !pop.contains(e.target) && !e.target.closest("#teacherBell") && document.contains(e.target)) { teacherNotifClose(); e.preventDefault(); e.stopPropagation(); } }, true);
 document.addEventListener("keydown", e => { if (e.key === "Escape") teacherNotifClose(); });
 window.addEventListener("resize", teacherNotifPlace);
 try { teacherNotifPopEl(); } catch(e) {}
