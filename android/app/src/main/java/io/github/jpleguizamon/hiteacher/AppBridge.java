@@ -46,6 +46,7 @@ public class AppBridge {
             o.put("version", BuildConfig.VERSION_NAME);
             o.put("notif", notifState());
             o.put("sched", true);
+            o.put("exact", Scheduler.exactOk(act));
         } catch (Exception ignored) {}
         return o.toString();
     }
@@ -113,6 +114,16 @@ public class AppBridge {
         try { act.startActivity(i); } catch (Exception e) {
             act.startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + act.getPackageName())));
         }
+    }
+
+    /** Android 12+: tela "Alarmes e lembretes", para os lembretes chegarem na hora certa. */
+    @JavascriptInterface
+    public void openExactAlarmSettings() {
+        if (Build.VERSION.SDK_INT < 31) return;
+        act.runOnUiThread(() -> {
+            try { act.startActivity(new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:" + act.getPackageName()))); }
+            catch (Exception e) { act.startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + act.getPackageName()))); }
+        });
     }
 
     @JavascriptInterface

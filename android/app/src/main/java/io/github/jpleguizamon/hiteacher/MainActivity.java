@@ -10,7 +10,10 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.Gravity;
+import android.view.View;
 import android.view.Window;
+import android.webkit.WebResourceError;
 import android.webkit.PermissionRequest;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
@@ -18,7 +21,11 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.window.OnBackInvokedDispatcher;
 
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -43,6 +50,7 @@ public class MainActivity extends Activity {
     AppBridge bridge;
     ValueCallback<Uri[]> fileCallback;
     PermissionRequest pendingMedia;
+    View offline;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -58,6 +66,8 @@ public class MainActivity extends Activity {
         web = new WebView(this);
         web.setBackgroundColor(BG);
         root.addView(web, new FrameLayout.LayoutParams(-1, -1));
+        offline = offlineView();
+        root.addView(offline, new FrameLayout.LayoutParams(-1, -1));
         setContentView(root);
         // Barra de status e teclado não cobrem o app.
         ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
@@ -83,9 +93,21 @@ public class MainActivity extends Activity {
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest req) {
                 return openOutside(req.getUrl());
             }
+            // Sem internet na primeira abertura (o site ainda não ficou guardado no celular): tela "Sem conexão".
+            @Override
+            public void onReceivedError(WebView view, WebResourceRequest req, WebResourceError err) {
+                if (req.isForMainFrame()) offline.setVisibility(View.VISIBLE);
+            }
+            @Override
+            public void onPageCommitVisible(WebView view, String url) {
+                if (url != null && url.startsWith(HOME)) offline.setVisibility(View.GONE);
+            }
         });
         web.setWebChromeClient(new Chrome());
         web.setDownloadListener((url, ua, cd, mime, len) -> openOutside(Uri.parse(url), true));
+
+        // Android 13+ (e obrigatório no 16): o "voltar" do sistema passa por aqui.
+        if (Build.VERSION.SDK_INT >= 33) getOnBackInvokedDispatcher().registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT, this::goBack);
 
         if (saved != null) web.restoreState(saved);
         else web.loadUrl(urlFrom(getIntent()));
@@ -140,10 +162,44 @@ public class MainActivity extends Activity {
 
     @SuppressWarnings("deprecation")
     @Override
-    public void onBackPressed() {
-        // O app usa o histórico pra fechar janelas e menus; sem nada pra voltar, sai.
-        if (web.canGoBack()) web.goBack();
-        else super.onBackPressed();
+    public void onBackPressed() { goBack(); }
+
+    /** O app usa o histórico pra fechar janelas e menus; sem nada pra voltar, vai para o fundo (como o Android faz). */
+    void goBack() {
+        if (offline.getVisibility() != View.VISIBLE && web.canGoBack()) web.goBack();
+        else moveTaskToBack(true);
+    }
+
+    View offlineView() {
+        boolean en = PushTr.english(this);
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setGravity(Gravity.CENTER);
+        box.setBackgroundColor(BG);
+        int pad = (int) (32 * getResources().getDisplayMetrics().density);
+        box.setPadding(pad, pad, pad, pad);
+        TextView t = new TextView(this);
+        t.setText(en ? "No connection" : "Sem conexão");
+        t.setTextColor(Color.WHITE);
+        t.setTextSize(22);
+        t.setGravity(Gravity.CENTER);
+        TextView m = new TextView(this);
+        m.setText(en ? "Hi Teacher needs internet the first time it opens. Check your Wi-Fi or mobile data and try again." : "O Hi Teacher precisa de internet na primeira vez que abre. Confira o Wi-Fi ou os dados móveis e tente de novo.");
+        m.setTextColor(Color.rgb(170, 180, 200));
+        m.setTextSize(16);
+        m.setGravity(Gravity.CENTER);
+        m.setPadding(0, pad / 2, 0, pad);
+        Button b = new Button(this);
+        b.setText(en ? "Try again" : "Tentar de novo");
+        b.setTextColor(Color.BLACK);
+        b.setBackgroundColor(Color.rgb(47, 211, 242));
+        b.setOnClickListener(v -> { offline.setVisibility(View.GONE); web.loadUrl(HOME); });
+        box.addView(t);
+        box.addView(m);
+        box.addView(b);
+        box.setVisibility(View.GONE);
+        box.setClickable(true);
+        return box;
     }
 
     @Override

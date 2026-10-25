@@ -509,6 +509,14 @@ Versão do app 8.46; o arquivo do servidor desta rodada é `supabase/schema-v8.4
 - **Inglês**: nomes de alunos e responsáveis não passam pelo dicionário (`window.hiNoTr`); frases com plural agora são montadas inteiras em português (o dicionário traduz a frase toda); erros do servidor traduzidos. Regra: não montar pedaço de frase com `APP_LANG` no meio de um texto que o dicionário traduz; só em texto que é só data/número.
 - **Cópia de segurança diária** (`.github/workflows/backup.yml`): todo dia às 3h baixa o banco, tranca com senha e guarda 30 dias no GitHub (Actions → Cópia de segurança → Artifacts). Precisa dos segredos `SUPABASE_DB_URL` (linha "Session pooler" do Supabase) e `BACKUP_PASSPHRASE`. Sem eles, só avisa. Para abrir: `gpg -d arquivo.sql.gz.gpg | gunzip > copia.sql`.
 
+## Preparação para a Google Play (8.47)
+- **App Android 8.46 (versionCode 9)**: feito para o Android 16 (targetSdk 36). O "voltar" do sistema usa o jeito novo do Android 13+ (`OnBackInvokedCallback`): volta no histórico do app e, sem nada para voltar, manda o app para o fundo. O GitHub agora gera também o `.aab` (formato que a loja pede), sem assinatura, ao lado do `.apk` em Releases → android-build.
+- **Sem conexão**: na primeira abertura sem internet aparece a tela "Sem conexão" com "Tentar de novo" (depois disso o site já fica guardado no celular).
+- **Lembretes na hora certa**: no Android 12+ a pessoa precisa liberar "Alarmes e lembretes". O app informa (`info().exact`) e em Notificações no celular aparece o botão "Lembretes na hora certa" quando falta liberar. O app confere de novo os lembretes quando a permissão muda.
+- **Planos dentro do app Android** (`STORE_APP`): a loja não deixa vender por fora dela. No app não aparece preço nem botão de plano pago, nem o aviso de renovar; o professor vê o plano que já tem e pode usar o Grátis. No site nada muda.
+- **Login com Google/Apple no app Android**: volta só com um código de uso único (`?code=`, fluxo PKCE com um cliente separado `authPkce`), trocado pela entrada dentro do app. No site e no login por e-mail nada muda. Funciona também com o APK antigo.
+- **Página de exclusão de conta**: `excluir-conta.html` (português e inglês), para o link que a loja pede.
+
 ## O que ainda falta / próximos passos
 
 - **App do aluno — ideias ainda não feitas (lista de set/2026)**: gravação enviada pelo próprio app com comentário do professor marcado no tempo (hoje vai pelo compartilhar do celular); cifras e partituras anexadas pelo professor (precisa de armazenamento de arquivos no Supabase); cadastro já completo pelo convite (hoje o link só preenche a chave; para interessados existe a ficha de matrícula da 8.35); lembrete de aula por notificação do celular (hoje é pela agenda .ics); mural da turma e avisos por turma; toques de IA (feedback da gravação, plano da semana a partir do resumo da aula, assistente de teoria).

@@ -5,16 +5,16 @@ plugins {
 
 android {
     namespace "io.github.jpleguizamon.hiteacher"
-    compileSdk 35
+    compileSdk 36
 
     defaultConfig {
         // Nunca muda: é o nome interno do app no celular e no Firebase.
         applicationId "io.github.jpleguizamon.hiteacher"
         minSdk 24
-        targetSdk 35
+        targetSdk 36
         // Ao gerar o app de novo, subir os dois (o versionCode tem de ser sempre maior).
-        versionCode 8
-        versionName "8.42"
+        versionCode 9
+        versionName "8.46"
     }
 
     buildFeatures { buildConfig true }

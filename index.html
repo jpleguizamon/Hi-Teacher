@@ -3711,7 +3711,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.46";
+const APP_VERSION = "8.47";
 // Idioma (8.42): troca entre português e inglês e recarrega. Fica guardado neste aparelho.
 function langSwitchLabel(){ return APP_LANG === "en" ? "🌐 Mudar para português" : "🌐 Switch to English"; }
 function langSwitch(){
@@ -9804,9 +9804,33 @@ async function authSocial(provider){
 const errEl = document.getElementById("authError");
 errEl.textContent = ""; errEl.style.color = "";
 try {
-const { error } = await supabaseClient.auth.signInWithOAuth({ provider, options: { redirectTo: HI_APP ? "hiteacher://auth" : appLink() } });
+const { error } = await (HI_APP ? authPkce() : supabaseClient).auth.signInWithOAuth({ provider, options: { redirectTo: HI_APP ? "hiteacher://auth" : appLink() } });
 if (error) errEl.textContent = authErrorMessage(error);
 } catch(e) { errEl.textContent = authErrorMessage(e); }
+}
+// App Android (8.46): o login com Google/Apple volta só com um código de uso único (?code=),
+// trocado aqui pela entrada. Assim nenhum outro app do celular consegue pegar o acesso no caminho.
+// Cliente separado só para isso: guarda a "contraprova" do código e não renova acesso sozinho.
+let authPkceClient = null;
+function authPkce(){
+if (!authPkceClient) authPkceClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { flowType: "pkce", storageKey: "hi-oauth-pkce", persistSession: true, autoRefreshToken: false, detectSessionInUrl: false } });
+return authPkceClient;
+}
+async function authPkceReturn(){
+const q = new URLSearchParams(location.search);
+const code = q.get("code"), err = q.get("error_description") || q.get("error");
+if (!code && !err) return;
+["code", "error", "error_code", "error_description"].forEach(k => q.delete(k));
+history.replaceState(null, "", location.pathname + (q.toString() ? "?" + q : "") + location.hash);
+const errEl = document.getElementById("authError");
+if (err) { if (errEl) errEl.textContent = authErrorMessage({ message: err }); return; }
+try {
+const c = authPkce();
+const { data, error } = await c.auth.exchangeCodeForSession(code);
+if (error || !data || !data.session) throw error || new Error("sem sessão");
+await supabaseClient.auth.setSession({ access_token: data.session.access_token, refresh_token: data.session.refresh_token });
+try { await c.auth.signOut({ scope: "local" }); } catch(e) {}
+} catch(e) { if (errEl) errEl.textContent = "Não deu para terminar a entrada com Google/Apple. Tente de novo."; }
 }
 
 // Erros do Supabase vêm em inglês e técnicos ("Failed to fetch"); traduz os mais comuns.
@@ -9944,6 +9968,7 @@ setTimeout(() => { row.scrollIntoView({ block: "center" }); row.classList.add("r
 };
 
 authSocialLoad();
+if (HI_APP) authPkceReturn();
 document.getElementById("authGoogle").onclick = () => authSocial("google");
 document.getElementById("authApple").onclick = () => authSocial("apple");
 let authStartedFor = null;
@@ -10153,6 +10178,9 @@ const PLANS = [
 { id: "school", name: "Escola", max: Infinity, price: null, tier: "gold", perks: ["Alunos sem limite", "Vários professores e painel do dono da escola", "Contato direto com o desenvolvedor", "Preço combinado conforme o tamanho da escola"] }
 ];
 const PLAN_PENDING_DAYS = 3;
+// App Android (8.46): a loja do Google não deixa vender plano por fora dela. Dentro do app não aparece
+// preço nem botão de plano pago; o professor vê o plano que já tem e pode usar o Grátis.
+const STORE_APP = !!HI_APP;
 let myPlan = null, planGateOpen = false;
 function planById(id){ return PLANS.find(p => p.id === id) || null; }
 function planActiveCount(){ return students.filter(s => s && s.active !== false).length; }
@@ -10171,12 +10199,12 @@ if (myPlan.plan === "free") return { kind: "free", plan: planById("free"), max: 
 if (myPlan.plan === "trial" && myPlan.trial_until >= today) return { kind: "trial", plan: null, max: Infinity, left: planDaysBetween(today, myPlan.trial_until) };
 return { kind: "expired", plan: paid && paid.id !== "free" ? paid : null, wasPaid: !!(paid && paid.id !== "free" && myPlan.paid_until), requested: req, max: 5 };
 }
-function planPriceText(p){ return p.price === null ? "Preço combinado" : p.price === 0 ? "R$ 0" : `R$ ${p.price}/mês`; }
+function planPriceText(p){ if (STORE_APP && p.id !== "free") return ""; return p.price === null ? "Preço combinado" : p.price === 0 ? "R$ 0" : `R$ ${p.price}/mês`; }
 function planStatusText(st){
 if (!st) return "";
 if (st.kind === "admin") return "Dono do app · sem limite";
 if (st.kind === "trial") return `Teste grátis · ${st.left === 0 ? "termina hoje" : st.left === 1 ? "falta 1 dia" : `faltam ${st.left} dias`}`;
-if (st.kind === "pending") return `Plano ${st.plan.name} · esperando o pagamento`;
+if (st.kind === "pending") return STORE_APP ? `Plano ${st.plan.name} · em análise` : `Plano ${st.plan.name} · esperando o pagamento`;
 if (st.kind === "expired") return st.wasPaid ? "Plano vencido · escolha um plano" : "Teste grátis terminou · escolha um plano";
 const lim = st.plan.max === Infinity ? "alunos sem limite" : `até ${st.plan.max} alunos`;
 return `Plano ${st.plan.name} · ${lim}`;
@@ -10203,9 +10231,9 @@ if (st.kind === "trial" && !appSettings.planTrialSeen) { appSettings.planTrialSe
 if (st.kind === "trial" && st.left <= 3 && appSettings.planTrialWarnedOn !== myPlan.today) {
 appSettings.planTrialWarnedOn = myPlan.today; saveAppSettings();
 if (st.left === 0) { openPlans(false, "trialEnd"); return; }
-showCloudWarning(`Seu teste grátis termina em ${st.left === 1 ? "1 dia" : `${st.left} dias`}. Escolha seu plano em Configurações → Meu plano.`);
+showCloudWarning(STORE_APP ? `Seu teste grátis termina em ${st.left === 1 ? "1 dia" : `${st.left} dias`}.` : `Seu teste grátis termina em ${st.left === 1 ? "1 dia" : `${st.left} dias`}. Escolha seu plano em Configurações → Meu plano.`);
 }
-if (st.kind === "paid" && st.left <= 3 && appSettings.planWarned !== myPlan.paid_until) { appSettings.planWarned = myPlan.paid_until; saveAppSettings(); showCloudWarning(`Seu plano ${st.plan.name} vence ${st.left === 0 ? "hoje" : st.left === 1 ? "amanhã" : `em ${st.left} dias`}. Para renovar: Configurações → Meu plano.`); }
+if (st.kind === "paid" && st.left <= 3 && appSettings.planWarned !== myPlan.paid_until && !STORE_APP) { appSettings.planWarned = myPlan.paid_until; saveAppSettings(); showCloudWarning(`Seu plano ${st.plan.name} vence ${st.left === 0 ? "hoje" : st.left === 1 ? "amanhã" : `em ${st.left} dias`}. Para renovar: Configurações → Meu plano.`); }
 if (st.kind === "admin") planAdminNotice();
 }
 // Pode cadastrar mais "extra" alunos ativos? Se não, abre os planos e explica.
@@ -10242,10 +10270,10 @@ const intro = why === "trialEnd"
 : must
 ? `<h1>${st.wasPaid ? "Seu plano venceu" : "Seu teste grátis terminou"}</h1><p class="plan-lead">Para continuar usando o app, escolha um plano. Nada do que você já cadastrou se perde.${st.requested ? ` O pagamento do plano ${escapeHtml(st.requested.name)} ainda não foi confirmado.` : ""}</p>`
 : why === "limit"
-? `<h1>Limite de alunos</h1><p class="plan-lead">${st.kind === "free" || st.kind === "expired" ? "O plano Grátis vai até 5 alunos ativos." : `Seu plano ${escapeHtml((st.plan && st.plan.name) || "")} vai até ${st.max} alunos ativos.`} Para cadastrar mais, escolha um plano maior.</p>`
+? `<h1>Limite de alunos</h1><p class="plan-lead">${st.kind === "free" || st.kind === "expired" ? "O plano Grátis vai até 5 alunos ativos." : `Seu plano ${escapeHtml((st.plan && st.plan.name) || "")} vai até ${st.max} alunos ativos.`}${STORE_APP ? " Para cadastrar mais, inative um aluno que não tem mais aula." : " Para cadastrar mais, escolha um plano maior."}</p>`
 : `<h1>Meu plano</h1><p class="plan-lead">${escapeHtml(planStatusText(st))}${st.kind === "paid" ? ` · pago até ${formatDateShort(st.until)}` : ""}</p>`;
 const cur = st.kind === "paid" || st.kind === "pending" || st.kind === "free" ? st.plan.id : null;
-const cards = PLANS.map(p => {
+const cards = PLANS.filter(p => !STORE_APP || p.id === "free" || p.id === cur).map(p => {
 const tooMany = p.max !== Infinity && n > p.max;
 const isCur = cur === p.id;
 const btn = isCur
@@ -10260,6 +10288,7 @@ return `<div class="plan-card tier-${p.tier}${p.best ? " best" : ""}${isCur ? " 
 gate.innerHTML = `<div class="plan-wrap"><svg class="brand-owl plan-owl" viewBox="0 0 512 512" aria-hidden="true"><use href="#brand-owl"/></svg>${intro}
 <div class="plan-count">Você tem <b>${n}</b> aluno${n === 1 ? "" : "s"} ativo${n === 1 ? "" : "s"}.</div>
 <div class="plan-grid">${cards}</div>
+${STORE_APP ? `<p class="plan-foot">Neste app você usa o plano Grátis ou o plano que já está na sua conta.</p>` : ""}
 <div class="plan-err" id="planErr"></div>
 <p class="plan-foot">O aluno nunca paga. Você pode trocar de plano quando quiser.</p>
 ${must ? "" : refCardHTML()}
@@ -18981,6 +19010,7 @@ ${st === "install" ? `<div class="push-hint">No iPhone, as notificações só fu
 ${PUSH_TYPES[student ? "student" : "teacher"].map(([k, l]) => `<div class="toggle-field"><label>${l}</label><label class="switch"><input type="checkbox" data-pp="${k}" ${prefs[k] === false ? "" : "checked"}><span class="switch-slider"></span></label></div>`).join("")}
 <div class="toggle-field"><label>Não enviar das 22h às 7h (o aviso continua no app)</label><label class="switch"><input type="checkbox" id="ppQuiet" ${quiet ? "checked" : ""}><span class="switch-slider"></span></label></div>
 ${pushLocalHTML(student)}
+${HI_APP && hiAppInfo().exact === false ? `<div class="push-hint">O Android pode atrasar os lembretes alguns minutos. Para chegarem na hora certa, toque abaixo e ligue "Alarmes e lembretes" para o Hi Teacher.</div><button type="button" class="btn-historico push-btn" id="pushExact">Lembretes na hora certa</button>` : ""}
 <div class="auth-error" id="pushErr"></div>`;
 pushLocalBind(body, student);
 const err = body.querySelector("#pushErr");
@@ -19005,6 +19035,7 @@ const msg = HI_APP && data.fcm === false ? "Falta a chave do Firebase nos segred
 throw new Error(msg);
 });
 const appSet = body.querySelector("#pushAppSettings"); if (appSet) appSet.onclick = () => HI_APP.openNotifSettings();
+const exact = body.querySelector("#pushExact"); if (exact) exact.onclick = () => { try { HI_APP.openExactAlarmSettings(); } catch(e) {} closeQuickModal(); };
 const inst = body.querySelector("#pushInstall"); if (inst) inst.onclick = () => { closeQuickModal(); pwaInstall(); };
 body.querySelectorAll("[data-pp]").forEach(cb => cb.onchange = async () => { const p = await pushPrefsLoad(); p[cb.dataset.pp] = cb.checked; await pushPrefsSave(p); });
 body.querySelector("#ppQuiet").onchange = async e => { const p = await pushPrefsLoad(); p.quiet = e.target.checked; await pushPrefsSave(p); };

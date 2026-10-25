@@ -18,7 +18,8 @@
         android:roundIcon="@mipmap/ic_launcher"
         android:theme="@style/AppTheme"
         android:allowBackup="false"
-        android:supportsRtl="false">
+        android:supportsRtl="false"
+        android:enableOnBackInvokedCallback="true">
 
         <activity
             android:name=".MainActivity"
@@ -51,6 +52,7 @@
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
                 <action android:name="android.intent.action.TIME_SET" />
                 <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" />
             </intent-filter>
         </receiver>
 

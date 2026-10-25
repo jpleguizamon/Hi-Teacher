@@ -72,7 +72,14 @@ public class Scheduler extends BroadcastReceiver {
         }
     }
 
-    /** Alarme tocou, celular ligou, app atualizado ou hora mudou: confere de novo. */
+    /** Android 12+ pode não deixar marcar na hora exata (a pessoa libera em "Alarmes e lembretes"). */
+    static boolean exactOk(Context c) {
+        if (Build.VERSION.SDK_INT < 31) return true;
+        AlarmManager am = (AlarmManager) c.getSystemService(Context.ALARM_SERVICE);
+        return am != null && am.canScheduleExactAlarms();
+    }
+
+    /** Alarme tocou, celular ligou, app atualizado, hora mudou ou permissão de alarme mudou: confere de novo. */
     @Override
     public void onReceive(Context c, Intent intent) { arm(c); }
 }
