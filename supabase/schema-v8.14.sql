@@ -13,6 +13,16 @@
 -- ---------------------------------------------------------------------
 -- Quando e qual versão do texto a pessoa aceitou. guardian_consent: "Sou o responsável legal
 -- e autorizo o uso dos dados deste aluno" (obrigatório para menor de 18 ou pedido do responsável).
+-- 8.45: não deixa rodar este arquivo por cima de uma versão mais nova (ele desfaria mudanças).
+do $$ declare newer boolean; begin
+  if to_regclass('public.schema_versions') is not null then
+    execute 'select exists (select 1 from public.schema_versions where string_to_array(version, ''.'')::int[] > string_to_array($1, ''.'')::int[])' into newer using '8.14';
+    if newer then
+      raise exception 'Este arquivo (8.14) é mais antigo que o que já está no servidor. Não rode: ele desfaria mudanças mais novas.';
+    end if;
+  end if;
+end $$;
+
 alter table public.join_requests add column if not exists consent_at timestamptz;
 alter table public.join_requests add column if not exists consent_version text;
 alter table public.join_requests add column if not exists guardian_consent boolean;
@@ -388,3 +398,9 @@ grant select on public.notify_prefs to service_role;
 grant usage, select on sequence public.push_log_id_seq to service_role;
 
 notify pgrst, 'reload schema';
+
+-- 8.45: grava esta versão (a lista de versões fica no servidor).
+create table if not exists public.schema_versions (version text primary key, applied_at timestamptz not null default now());
+alter table public.schema_versions enable row level security;
+revoke all on public.schema_versions from anon, authenticated;
+insert into public.schema_versions (version) values ('8.14') on conflict (version) do nothing;

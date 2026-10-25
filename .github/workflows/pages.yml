@@ -40,8 +40,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      # 8.45: publica só os arquivos do app (sem anotações, servidor, testes e ferramentas).
+      - run: |
+          mkdir -p _site/i18n
+          cp index.html sw.js manifest.webmanifest privacidade.html privacy.html _site/
+          cp -r icons sounds _site/
+          cp i18n/en.js _site/i18n/
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: _site
       - id: deployment
         uses: actions/deploy-pages@v4

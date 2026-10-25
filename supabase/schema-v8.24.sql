@@ -11,6 +11,16 @@
 -- ---------------------------------------------------------------------
 -- 1. Salas da escola
 -- ---------------------------------------------------------------------
+-- 8.45: não deixa rodar este arquivo por cima de uma versão mais nova (ele desfaria mudanças).
+do $$ declare newer boolean; begin
+  if to_regclass('public.schema_versions') is not null then
+    execute 'select exists (select 1 from public.schema_versions where string_to_array(version, ''.'')::int[] > string_to_array($1, ''.'')::int[])' into newer using '8.24';
+    if newer then
+      raise exception 'Este arquivo (8.24) é mais antigo que o que já está no servidor. Não rode: ele desfaria mudanças mais novas.';
+    end if;
+  end if;
+end $$;
+
 alter table public.organizations add column if not exists rooms jsonb not null default '[]'::jsonb;
 
 -- Minha escola (como dono ou professor), agora com as salas.
@@ -206,3 +216,9 @@ grant execute on function public.hi_school_set_rooms(jsonb), public.hi_school_ac
   public.hi_school_room_busy(), public.hi_school_send(uuid, text, jsonb),
   public.hi_school_inbox(), public.hi_school_sent(), public.hi_school_answer_transfer(uuid, boolean),
   public.hi_school_cancel_transfer(uuid), public.hi_my_school_notices(uuid[]) to authenticated;
+
+-- 8.45: grava esta versão (a lista de versões fica no servidor).
+create table if not exists public.schema_versions (version text primary key, applied_at timestamptz not null default now());
+alter table public.schema_versions enable row level security;
+revoke all on public.schema_versions from anon, authenticated;
+insert into public.schema_versions (version) values ('8.24') on conflict (version) do nothing;

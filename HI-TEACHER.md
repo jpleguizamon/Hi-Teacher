@@ -498,6 +498,17 @@ Vêm da revisão com os agentes (`.claude/agents-lista.md`; relatórios e lista 
 - Login: a renovação automática do acesso (mais ou menos a cada hora) não refaz a entrada nem recarrega a tela (`authStartedFor`).
 - Mensagens de erro: palavras técnicas (Supabase, SQL, Firebase) só aparecem para o dono do app (`techMsg`); os outros veem "Esta função ainda não está ligada no servidor. Fale com o suporte." e frases parecidas.
 
+## Base firme (8.45)
+Versão do app 8.46; o arquivo do servidor desta rodada é `supabase/schema-v8.45.sql` (já inclui o 8.44, então basta rodar ele).
+- **Controle das atualizações do servidor**: tabela `schema_versions` guarda quais arquivos já rodaram. O 8.45 descobre sozinho o que já existe no servidor e preenche a lista. Todo `schema-v*.sql` agora começa com uma trava: se o servidor já tem uma versão mais nova, o arquivo para com aviso e não desfaz nada. Os antigos terminam gravando a própria versão. Arquivo novo de servidor: copiar a trava do começo e o registro do fim (`insert into public.schema_versions`).
+- **Aviso no painel**: em Assinaturas o dono do app vê em vermelho as versões que faltam rodar (`SCHEMA_ALL` no app × `hi_schema_status()` no servidor). Ao criar um arquivo novo de servidor, pôr a versão em `SCHEMA_ALL`.
+- **Assinaturas**: números do negócio sem contar contas de administrador; "pagando" só quem tem pagamento registrado (quem ganhou mês grátis por indicação fica separado). Cada professor mostra último uso e aulas na semana. Tabela `plan_events` registra cada mudança de plano (pago, grátis, indicação).
+- **Abrir mais rápido**: as ferramentas de planilha, zip e leitura de foto só baixam quando o professor vai importar (`ensureImportLibs`). Supabase com versão fixa.
+- **Publicação**: o GitHub Pages recebe só os arquivos do app (pasta `_site` montada no fluxo), não o projeto inteiro.
+- **Menos downloads**: a caixa de entrada busca só os diários de estudo novos e baixa tudo de novo a cada 30 minutos.
+- **Inglês**: nomes de alunos e responsáveis não passam pelo dicionário (`window.hiNoTr`); frases com plural agora são montadas inteiras em português (o dicionário traduz a frase toda); erros do servidor traduzidos. Regra: não montar pedaço de frase com `APP_LANG` no meio de um texto que o dicionário traduz; só em texto que é só data/número.
+- **Cópia de segurança diária** (`.github/workflows/backup.yml`): todo dia às 3h baixa o banco, tranca com senha e guarda 30 dias no GitHub (Actions → Cópia de segurança → Artifacts). Precisa dos segredos `SUPABASE_DB_URL` (linha "Session pooler" do Supabase) e `BACKUP_PASSPHRASE`. Sem eles, só avisa. Para abrir: `gpg -d arquivo.sql.gz.gpg | gunzip > copia.sql`.
+
 ## O que ainda falta / próximos passos
 
 - **App do aluno — ideias ainda não feitas (lista de set/2026)**: gravação enviada pelo próprio app com comentário do professor marcado no tempo (hoje vai pelo compartilhar do celular); cifras e partituras anexadas pelo professor (precisa de armazenamento de arquivos no Supabase); cadastro já completo pelo convite (hoje o link só preenche a chave; para interessados existe a ficha de matrícula da 8.35); lembrete de aula por notificação do celular (hoje é pela agenda .ics); mural da turma e avisos por turma; toques de IA (feedback da gravação, plano da semana a partir do resumo da aula, assistente de teoria).

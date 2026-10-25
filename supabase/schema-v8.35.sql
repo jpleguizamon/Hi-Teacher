@@ -8,6 +8,16 @@
 -- Explicação no HI-TEACHER.md, seção "Gastos, ficha, pesquisa e resumo (8.35)".
 
 -- Um link por professor (o token vai no endereço: ?ficha=TOKEN).
+-- 8.45: não deixa rodar este arquivo por cima de uma versão mais nova (ele desfaria mudanças).
+do $$ declare newer boolean; begin
+  if to_regclass('public.schema_versions') is not null then
+    execute 'select exists (select 1 from public.schema_versions where string_to_array(version, ''.'')::int[] > string_to_array($1, ''.'')::int[])' into newer using '8.35';
+    if newer then
+      raise exception 'Este arquivo (8.35) é mais antigo que o que já está no servidor. Não rode: ele desfaria mudanças mais novas.';
+    end if;
+  end if;
+end $$;
+
 create table if not exists public.lead_links (
   teacher_id uuid primary key references auth.users(id) on delete cascade,
   token text not null unique,
@@ -88,3 +98,9 @@ begin
 end $$;
 revoke execute on function public.hi_submit_lead(text, jsonb) from public;
 grant execute on function public.hi_submit_lead(text, jsonb) to anon, authenticated;
+
+-- 8.45: grava esta versão (a lista de versões fica no servidor).
+create table if not exists public.schema_versions (version text primary key, applied_at timestamptz not null default now());
+alter table public.schema_versions enable row level security;
+revoke all on public.schema_versions from anon, authenticated;
+insert into public.schema_versions (version) values ('8.35') on conflict (version) do nothing;

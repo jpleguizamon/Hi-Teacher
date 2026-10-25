@@ -15,6 +15,16 @@
 --   trial_until: fim do teste grátis (14 dias a partir do primeiro acesso com planos)
 --   paid_until: até quando o plano pago está pago (o dono do app marca)
 --   requested: plano que o professor escolheu e ainda não pagou
+-- 8.45: não deixa rodar este arquivo por cima de uma versão mais nova (ele desfaria mudanças).
+do $$ declare newer boolean; begin
+  if to_regclass('public.schema_versions') is not null then
+    execute 'select exists (select 1 from public.schema_versions where string_to_array(version, ''.'')::int[] > string_to_array($1, ''.'')::int[])' into newer using '8.38';
+    if newer then
+      raise exception 'Este arquivo (8.38) é mais antigo que o que já está no servidor. Não rode: ele desfaria mudanças mais novas.';
+    end if;
+  end if;
+end $$;
+
 create table if not exists public.teacher_plans (
   teacher_id uuid primary key references auth.users(id) on delete cascade,
   plan text not null default 'trial' check (plan in ('trial','free','bronze','silver','gold','school')),
@@ -122,3 +132,9 @@ grant execute on function public.hi_admin_set_plan(uuid, text, int) to authentic
 insert into public.app_admins (user_id)
   select id from auth.users where lower(email) = lower('profjpleguizamon@gmail.com')
   on conflict (user_id) do nothing;
+
+-- 8.45: grava esta versão (a lista de versões fica no servidor).
+create table if not exists public.schema_versions (version text primary key, applied_at timestamptz not null default now());
+alter table public.schema_versions enable row level security;
+revoke all on public.schema_versions from anon, authenticated;
+insert into public.schema_versions (version) values ('8.38') on conflict (version) do nothing;

@@ -36,10 +36,7 @@ if (window.APP_LANG === "en") { document.documentElement.lang = "en"; document.w
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Hi Teacher">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js"></script>
 <style>
 /* =====================================================================
    HI TEACHER — Dark glass, preto + azul elétrico
@@ -3714,7 +3711,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.45";
+const APP_VERSION = "8.46";
 // Idioma (8.42): troca entre português e inglês e recarrega. Fica guardado neste aparelho.
 function langSwitchLabel(){ return APP_LANG === "en" ? "🌐 Mudar para português" : "🌐 Switch to English"; }
 function langSwitch(){
@@ -5047,6 +5044,22 @@ const STU_PICK_KEY = "jp_student_pick_v1";
 let studentMode = false;
 let stu = null;          // { links, students:[{s, uuid, row, link, tp, view}], requests, joins }
 let stuCur = null;       // item selecionado de stu.students
+// Inglês (8.46): nomes de alunos e responsáveis não passam pelo dicionário ("Natal" não vira "Christmas").
+let noTrRaw = null, noTrStu = null, noTrSet = new Set();
+window.hiNoTr = function(v){
+  try {
+    const raw = localStorage.getItem("jp_students_v5") || "";
+    const ss = stu && stu.students;
+    if (raw !== noTrRaw || ss !== noTrStu) {
+      noTrRaw = raw; noTrStu = ss; noTrSet = new Set();
+      const add = n => { n = String(n || "").trim(); if (n) { noTrSet.add(n); noTrSet.add(firstName(n)); } };
+      let list = []; try { list = JSON.parse(raw || "[]") || []; } catch(e) {}
+      for (const s of list) if (s) { add(s.name); add(s.guardianName); }
+      for (const x of ss || []) if (x && x.s) { add(x.s.name); add(x.s.guardianName); }
+    }
+    return noTrSet.has(String(v || "").trim());
+  } catch(e) { return false; }
+};
 // Página aberta (8.14): só vale enquanto a aba/app continua aberto (sessionStorage). Abrir o app
 // de novo começa no Início.
 function sessGet(k){ try { return sessionStorage.getItem(k); } catch(e) { return null; } }
@@ -7903,7 +7916,7 @@ const hw = stuLastHomework();
 if (hw) {
 const g = hwGoals(hw.homework);
 out.push({ what: "Lição de casa", title: "Lição de casa", sub: hw.homework, icon: "clipboard" });
-if (g.from && g.to && stuPageAllowed("metronome")) out.push({ train: `${g.from}|${g.to}`, title: `Treinar de ${g.from}${APP_LANG === "en" ? " to " : " a "}${g.to} BPM`, sub: "Metrônomo aumentando sozinho", icon: "music" });
+if (g.from && g.to && stuPageAllowed("metronome")) out.push({ train: `${g.from}|${g.to}`, title: `Treinar de ${g.from} a ${g.to} BPM`, sub: "Metrônomo aumentando sozinho", icon: "music" });
 }
 const ch = (stuContent().board || {}).challenge;
 if (ch) out.push({ what: "Desafio da semana", title: "Desafio da semana", sub: ch, icon: "target" });
@@ -8820,6 +8833,7 @@ tbWrite("jp_student_pub_v1", cache);
 }
 
 // ---------- Pedidos e recados ----------
+let inboxJournalsAt = null, inboxJournalsFullAt = 0;
 async function inboxLoad(){
 if (!studentAppOn()) { inbox = { joins: [], requests: [], links: [], loaded: false, journals: [] }; renderStudentInbox(); return; }
 try {
@@ -8833,7 +8847,20 @@ if (j.error || r.error || l.error) throw (j.error || r.error || l.error);
 const map = studentUuidMap();
 inbox = { joins: j.data || [], requests: (r.data || []).filter(x => map.student(x.student_id)), links: (l.data || []).filter(x => map.student(x.student_id)), loaded: true, loadedAt: Date.now(), journals: inbox.journals || [] };
 // Caderno dos alunos (8.3): sem o SQL da 8.3 a tabela não existe e fica vazio.
-try { const jr = await supabaseClient.from("student_journal").select("student_id,user_id,data,updated_at").eq("teacher_id", uid); if (!jr.error) inbox.journals = (jr.data || []).filter(x => map.student(x.student_id)); } catch(e) {}
+// 8.45: depois da primeira vez, só busca os cadernos que mudaram (com 5 min de folga); tudo de novo a cada 30 min.
+try {
+const full = !inboxJournalsAt || Date.now() - inboxJournalsFullAt > 30 * 60000;
+let jq = supabaseClient.from("student_journal").select("student_id,user_id,data,updated_at").eq("teacher_id", uid);
+if (!full) jq = jq.gt("updated_at", new Date(Date.parse(inboxJournalsAt) - 5 * 60000).toISOString());
+const jr = await jq;
+if (!jr.error) {
+const got = (jr.data || []).filter(x => map.student(x.student_id));
+if (full) { inbox.journals = got; inboxJournalsFullAt = Date.now(); }
+else { const k = x => x.student_id + "|" + x.user_id; const seen = new Set(got.map(k)); inbox.journals = (inbox.journals || []).filter(x => !seen.has(k(x))).concat(got); }
+const maxAt = (jr.data || []).reduce((m, x) => x.updated_at > m ? x.updated_at : m, inboxJournalsAt || "");
+inboxJournalsAt = maxAt || new Date().toISOString();
+}
+} catch(e) {}
 } catch(e) { console.warn("Não consegui buscar os pedidos dos alunos:", e); }
 renderStudentInbox();
 teacherPublish();
@@ -10302,6 +10329,7 @@ const n = (data || []).filter(x => x.requested && x.requested !== "free").length
 if (n) showCloudWarning(`${n} professor${n > 1 ? "es pediram" : " pediu"} um plano. Veja em Configurações → Assinaturas.`);
 } catch(e) {}
 }
+const SCHEMA_ALL = ["8.0", "8.1", "8.1.1", "8.3", "8.14", "8.23", "8.24", "8.35", "8.36", "8.38", "8.41", "8.44", "8.45"];
 async function openPlanAdmin(){
 const body = document.createElement("div");
 body.innerHTML = `<div class="field-hint" style="margin:0">Carregando…</div>`;
@@ -10309,6 +10337,13 @@ openQuickModal("Assinaturas", "Seus números, os pedidos e cada professor. Ativa
 let list = [];
 const load = async () => { const { data, error } = await supabaseClient.rpc("hi_admin_plans"); if (error) throw error; list = data || []; };
 try { await load(); } catch(e) { body.innerHTML = `<div class="field-hint" style="margin:0">Não consegui carregar agora.</div>`; return; }
+// 8.45: o que falta rodar no servidor (a 8.45 confere as outras pelo que existe lá).
+let schemaNote = "";
+try {
+const { data, error } = await supabaseClient.rpc("hi_schema_status");
+if (error) schemaNote = isMissingFnError(error) ? "Falta rodar no servidor a atualização 8.45 (ela confere as outras)." : "";
+else { const have = new Set((data && data.installed) || []); const miss = SCHEMA_ALL.filter(v => !have.has(v)); if (miss.length) schemaNote = `Falta rodar no servidor: ${miss.join(", ")}. Os arquivos estão na pasta supabase do projeto.`; }
+} catch(e) {}
 const today = isoOf(new Date()), in7 = isoOf(new Date(Date.now() + 7 * 86400000)), month = today.slice(0, 7);
 const paidNow = x => { const p = planById(x.plan); return !!(p && p.id !== "free" && x.paid_until && x.paid_until >= today); };
 const kindOf = x => paidNow(x) ? "paid" : x.plan === "free" ? "free" : (x.plan === "trial" && (!x.trial_until || x.trial_until >= today)) ? "trial" : "expired";
@@ -10324,18 +10359,20 @@ const FILTERS = [["all", "Todos"], ["req", "Pediram plano"], ["soon", "Vencem em
 let filter = "all";
 const pass = x => filter === "all" || (filter === "new" ? String(x.created_at || "").slice(0, 7) === month : filter === "req" ? !!(x.requested && x.requested !== "free") : filter === "soon" ? soon(x) : kindOf(x) === filter);
 const summary = () => {
-const n = k => list.filter(x => kindOf(x) === k).length;
-const paid = list.filter(paidNow);
+// 8.45: a conta do dono não entra nos números; "pagando" = ativado por você (mês ganho por indicação não conta).
+const real = list.filter(x => !x.is_admin);
+const n = k => real.filter(x => kindOf(x) === k).length;
+const paid = real.filter(x => paidNow(x) && (x.last_paid_at === undefined || !!x.last_paid_at));
 const income = paid.reduce((a, x) => a + ((planById(x.plan) || {}).price || 0), 0);
 const byPlan = PLANS.filter(p => p.price !== 0).map(p => [p.name, paid.filter(x => x.plan === p.id).length]).filter(x => x[1]).map(x => `${x[1]} ${x[0]}`).join(", ");
 const reqs = list.filter(x => x.requested && x.requested !== "free").length;
-const soonN = list.filter(soon).length;
-const newN = list.filter(x => String(x.created_at || "").slice(0, 7) === month).length;
-const ended = list.filter(x => x.trial_until && x.trial_until < today);
+const soonN = real.filter(soon).length;
+const newN = real.filter(x => String(x.created_at || "").slice(0, 7) === month).length;
+const ended = real.filter(x => x.trial_until && x.trial_until < today);
 const conv = ended.filter(x => x.paid_until).length;
 const card = (f, big, label, sub) => `<button type="button" class="adm-stat${filter === f ? " on" : ""}" data-af="${f}"><b>${big}</b><span>${label}</span>${sub ? `<em>${sub}</em>` : ""}</button>`;
-return `<div class="adm-stats">
-${card("all", list.length, list.length === 1 ? "professor" : "professores", `${n("trial")} em teste · ${n("free")} no Grátis · ${n("paid")} pagando${n("expired") ? ` · ${n("expired")} vencido${n("expired") > 1 ? "s" : ""}` : ""}`)}
+return (schemaNote ? `<div class="field-hint pay-late" style="display:block;margin:0 0 0.75rem;font-size:0.8125rem">${escapeHtml(schemaNote)}</div>` : "") + `<div class="adm-stats">
+${card("all", real.length, real.length === 1 ? "professor" : "professores", `${n("trial")} em teste · ${n("free")} no Grátis · ${n("paid")} pagando${n("expired") ? ` · ${n("expired")} vencido${n("expired") > 1 ? "s" : ""}` : ""}`)}
 ${card("paid", `R$ ${moneyText(income)}`, "por mês", byPlan || "ninguém pagando ainda")}
 ${card("req", reqs, reqs === 1 ? "pedido esperando você" : "pedidos esperando você", "")}
 ${card("soon", soonN, soonN === 1 ? "vence nos próximos 7 dias" : "vencem nos próximos 7 dias", "")}
@@ -10345,7 +10382,7 @@ ${card("new", newN, newN === 1 ? "cadastro neste mês" : "cadastros neste mês",
 const draw = () => {
 const shown = list.map((x, i) => [x, i]).filter(([x]) => pass(x));
 body.innerHTML = summary() + `<div class="reason-chips adm-filters">${FILTERS.map(([f, l]) => `<button type="button" class="filter-chip${filter === f ? " selected" : ""}" data-af="${f}">${l}</button>`).join("")}</div>`
-+ (shown.length ? shown.map(([x, i]) => `<div class="plan-adm-row"><div class="plan-adm-info"><b>${escapeHtml(x.name || "")}</b><div>${escapeHtml(x.email || "")} · ${Number(x.students) || 0} aluno${Number(x.students) === 1 ? "" : "s"} ativo${Number(x.students) === 1 ? "" : "s"}</div><div>${status(x)}${x.requested ? ` · <b class="plan-adm-req">pediu ${escapeHtml((planById(x.requested) || {}).name || "")}</b>` : ""}</div>${x.referred_by || Number(x.credit_months) ? `<div>${x.referred_by ? `Indicado por ${escapeHtml(x.referred_by)}` : ""}${x.referred_by && Number(x.credit_months) ? " · " : ""}${Number(x.credit_months) ? `${Number(x.credit_months)} mês${Number(x.credit_months) > 1 ? "es" : ""} ganho${Number(x.credit_months) > 1 ? "s" : ""} por indicação` : ""}</div>` : ""}</div>
++ (shown.length ? shown.map(([x, i]) => `<div class="plan-adm-row"><div class="plan-adm-info"><b>${escapeHtml(x.name || "")}</b><div>${escapeHtml(x.email || "")} · ${Number(x.students) || 0} aluno${Number(x.students) === 1 ? "" : "s"} ativo${Number(x.students) === 1 ? "" : "s"}${x.last_seen ? ` · usou em ${formatDateShort(String(x.last_seen).slice(0, 10))}` : ""}${x.lessons_7d !== undefined ? ` · ${Number(x.lessons_7d) === 1 ? "1 aula na semana" : `${Number(x.lessons_7d) || 0} aulas na semana`}` : ""}</div><div>${status(x)}${x.requested ? ` · <b class="plan-adm-req">pediu ${escapeHtml((planById(x.requested) || {}).name || "")}</b>` : ""}</div>${x.referred_by || Number(x.credit_months) ? `<div>${x.referred_by ? `Indicado por ${escapeHtml(x.referred_by)}` : ""}${x.referred_by && Number(x.credit_months) ? " · " : ""}${Number(x.credit_months) ? `${Number(x.credit_months)} mês${Number(x.credit_months) > 1 ? "es" : ""} ganho${Number(x.credit_months) > 1 ? "s" : ""} por indicação` : ""}</div>` : ""}</div>
 <div class="plan-adm-acts"><select data-ap="${i}">${PLANS.map(p => `<option value="${p.id}"${(x.requested || x.plan) === p.id ? " selected" : ""}>${escapeHtml(p.name)}</option>`).join("")}</select><select data-am="${i}"><option value="1">1 mês</option><option value="3">3 meses</option><option value="6">6 meses</option><option value="12">12 meses</option></select><button type="button" class="btn-historico" data-aok="${i}">Ativar</button></div></div>`).join("")
 : `<div class="field-hint" style="margin:0.75rem 0 0">${list.length ? "Ninguém nesta lista." : "Nenhum professor ainda."}</div>`);
 body.querySelectorAll("[data-af]").forEach(b => b.onclick = () => { filter = b.dataset.af; draw(); });
@@ -10392,7 +10429,7 @@ return `<div class="ref-card"><div class="ref-title">Indique um professor</div>
 <p>Cada professor que criar a conta pelo seu link e assinar um plano te dá <b>1 mês grátis</b>.</p>
 <div class="ref-link">${escapeHtml(refLink())}</div>
 <div class="ref-acts"><a class="save" id="refWa" href="https://wa.me/?text=${encodeURIComponent(`Estou usando o Hi Teacher para organizar minhas aulas, alunos e pagamentos. Tem 14 dias grátis: ${refLink()}`)}" target="_blank" rel="noopener">Enviar pelo WhatsApp</a><button type="button" class="btn-historico" id="refCopy">Copiar link</button></div>
-${n ? `<div class="ref-count">${n} indicado${n === 1 ? "" : "s"} · ${paid} já assin${paid === 1 ? "ou" : "aram"}${cr ? ` · ${cr} mês${cr > 1 ? "es" : ""} grátis guardado${cr > 1 ? "s" : ""} para o seu próximo pagamento` : ""}</div>` : ""}</div>`;
+${n ? `<div class="ref-count"><span>${n === 1 ? "1 indicado" : `${n} indicados`}</span> · <span>${paid === 1 ? "1 já assinou" : `${paid} já assinaram`}</span>${cr ? ` · <span>${cr > 1 ? `${cr} meses grátis guardados para o seu próximo pagamento` : "1 mês grátis guardado para o seu próximo pagamento"}</span>` : ""}</div>` : ""}</div>`;
 }
 function refCardBind(root){
 const c = root.querySelector("#refCopy");
@@ -11729,7 +11766,7 @@ ${item.type==='event' ? `<button type="button" class="btn-delete" style="margin:
 document.querySelectorAll('#holidayInfoList [data-del-id]').forEach(btn => {
 btn.onclick = () => {
 const ev = agendaEvents.find(e => e.id === btn.dataset.delId);
-if (ev && ev.end && ev.end > ev.date && !confirm(`Remover "${ev.title}" de todos os dias (${formatDateShort(ev.date)}${APP_LANG === "en" ? " to " : " a "}${formatDateShort(ev.end)})?`)) return;
+if (ev && ev.end && ev.end > ev.date && !confirm(`Remover "${ev.title}" de todos os dias (${formatDateShort(ev.date)} a ${formatDateShort(ev.end)})?`)) return;
 agendaEvents = agendaEvents.filter(e => e.id !== btn.dataset.delId);
 saveAgendaEvents();
 renderAgenda();
@@ -12990,7 +13027,11 @@ else {
 t = hiTr(`O valor é de ${moneyFull(studentMonthlyValue(s))} por mês${Number(s.dueDay) > 0 ? `, com vencimento todo dia ${s.dueDay}` : ""}.`);
 if (s.valueNext && s.valueNext.from) t += hiTr(` A partir de ${monthLongLabel(s.valueNext.from)}, o valor passa a ser de ${moneyFull(s.valueNext.v)}.`);
 if (Number(r.disc) > 0) t += hiTr(` Pagando até o dia ${Number(r.discDay) > 0 ? r.discDay : "do vencimento"}, há desconto de ${r.discType === "pct" ? `${String(r.disc).replace(".", ",")}%` : moneyFull(r.disc)}.`);
-if ((Number(r.fine) > 0 || Number(r.interest) > 0) && Number(s.dueDay) > 0) t += hiTr(` Depois do vencimento, ${[Number(r.fine) > 0 ? `há multa de ${String(r.fine).replace(".", ",")}%` : "", Number(r.interest) > 0 ? `juros de ${String(r.interest).replace(".", ",")}% ao mês` : ""].filter(Boolean).join(" e ")}.`);
+if ((Number(r.fine) > 0 || Number(r.interest) > 0) && Number(s.dueDay) > 0) {
+const f = Number(r.fine) > 0 ? String(r.fine) : "", j = Number(r.interest) > 0 ? String(r.interest) : "";
+if (APP_LANG === "en") t += ` After the due date, ${[f ? `a ${f}% late fee` : "", j ? `${j}% monthly interest` : ""].filter(Boolean).join(" and ")} appl${f && j ? "y" : "ies"}.`;
+else t += ` Depois do vencimento, ${[f ? `há multa de ${f.replace(".", ",")}%` : "", j ? `juros de ${j.replace(".", ",")}% ao mês` : ""].filter(Boolean).join(" e ")}.`;
+}
 }
 if (pix) t += hiTr(` O pagamento pode ser feito por Pix, na chave ${pix}.`);
 return t;
@@ -13924,6 +13965,15 @@ let importHeaders = [];
 let importRows = [];
 let importedFromOcr = false;
 
+// 8.45: as ferramentas de planilha, zip e foto só carregam quando o professor vai importar
+// (antes atrasavam a abertura do app; com internet fraca a tela ficava preta).
+const IMPORT_LIBS = ["https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js", "https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js", "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"];
+let importLibsP = null;
+function ensureImportLibs(){
+if (!importLibsP) importLibsP = Promise.all(IMPORT_LIBS.map(src => new Promise(res => { const el = document.createElement("script"); el.src = src; el.onload = el.onerror = () => res(); document.head.appendChild(el); })));
+return importLibsP;
+}
+document.getElementById("btnImportSpreadsheet").addEventListener("click", () => { ensureImportLibs(); });
 document.getElementById("btnImportSpreadsheet").onclick = () => {
 document.getElementById("importSpreadsheetFileInput").value = "";
 document.getElementById("importImageFileInput").value = "";
@@ -13946,7 +13996,8 @@ document.getElementById("importCancelBtn").onclick = () => document.getElementBy
 document.getElementById("btnPickSpreadsheetFile").onclick = () => document.getElementById("importSpreadsheetFileInput").click();
 document.getElementById("btnPickImageFile").onclick = () => document.getElementById("importImageFileInput").click();
 
-document.getElementById("importSpreadsheetFileInput").onchange = (e) => {
+document.getElementById("importSpreadsheetFileInput").onchange = async (e) => {
+await ensureImportLibs();
 const file = e.target.files[0];
 const errEl = document.getElementById("importError");
 errEl.textContent = "";
@@ -14004,7 +14055,8 @@ errEl.textContent = "Formato não suportado. Use .csv, .xlsx, .xls ou .zip.";
 }
 };
 
-document.getElementById("importImageFileInput").onchange = (e) => {
+document.getElementById("importImageFileInput").onchange = async (e) => {
+await ensureImportLibs();
 const file = e.target.files[0];
 const errEl = document.getElementById("importError");
 errEl.textContent = "";
@@ -19393,7 +19445,7 @@ const add = (icon, html, go, warn) => out.push({ icon, html, go, warn });
 const toHome = id => () => { openPage("home"); setTimeout(() => { const el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }, 60); };
 try { if (schoolInboxList.length) add("user", `${schoolInboxList.length} aluno${schoolInboxList.length > 1 ? "s" : ""} ou interessado${schoolInboxList.length > 1 ? "s" : ""} mandado${schoolInboxList.length > 1 ? "s" : ""} para você pela escola`, openSchoolInbox, true); } catch(e) {}
 try { const u = schoolNoticeUnread(); if (u.length) add("bell", `Aviso da escola: ${escapeHtml(u[0].title)}${u.length > 1 ? ` (+${u.length - 1})` : ""}`, openSchoolNotices, true); } catch(e) {}
-try { if (schoolIsOwner() && schoolPendingN) add("user", `${schoolPendingN} professor${schoolPendingN > 1 ? "es pedindo" : " pedindo"} para entrar na escola`, () => openPage("schoolTeam"), true); } catch(e) {}
+try { if (schoolIsOwner() && schoolPendingN) add("user", (schoolPendingN > 1 ? `${schoolPendingN} professores pedindo para entrar na escola` : "1 professor pedindo para entrar na escola"), () => openPage("schoolTeam"), true); } catch(e) {}
 try { const n = pendingJoins().length + inbox.requests.length; if (n) add("user", `${n} pedido${n > 1 ? "s" : ""} de aluno esperando resposta`, toHome("studentInboxBox"), true); } catch(e) {}
 try {
 let late = 0; students.filter(s => s.active !== false && paysMe(s)).forEach(s => unpaidMonths(s).forEach(k => { if (isPastDue(s, k)) late++; }));
@@ -19403,7 +19455,7 @@ try { lessonReminderItems().forEach(it => add("bell", `${it.label} (${it.n})`, (
 try { const n = waitlist().filter(x => x.fresh).length; if (n) add("user", `${n} ficha${n > 1 ? "s" : ""} de matrícula nova${n > 1 ? "s" : ""} na lista de espera`, openWaitlist, true); } catch(e) {}
 try { const a = upcomingClassAnniversaries().filter(x => x.inDays === 0); if (a.length) add("cake", `Hoje ${a.map(x => `${escapeHtml(sn(x.s))} completa ${yearsText(x.years)} de aula`).join(", ")}`, toHome("birthdaysBox")); } catch(e) {}
 try { const b = upcomingBirthdays().filter(x => x.inDays === 0); if (b.length) add("cake", `Hoje é aniversário de ${b.map(x => escapeHtml(sn(x.s))).join(", ")}`, toHome("birthdaysBox")); } catch(e) {}
-try { const n = students.filter(x => x.active !== false && riskReasons(x).length).length; if (n) add("alert", `${n} aluno${n > 1 ? "s precisam" : " precisa"} de atenção`, () => { currentFilters.attention = true; openPage("students"); renderStudents(); }, true); } catch(e) {}
+try { const n = students.filter(x => x.active !== false && riskReasons(x).length).length; if (n) add("alert", (n > 1 ? `${n} alunos precisam de atenção` : "1 aluno precisa de atenção"), () => { currentFilters.attention = true; openPage("students"); renderStudents(); }, true); } catch(e) {}
 try { const n = students.filter(hasPending).length; if (n) add("alert", `${n} aluno${n > 1 ? "s" : ""} com informações pendentes`, () => { openPage("students"); showPendingList(); }); } catch(e) {}
 try {
 const freq = appSettings.backupReminder || "weekly", days = BACKUP_EVERY[freq] || 0;
@@ -20153,7 +20205,7 @@ let html = (schoolDemoOn() ? `<div class="empty-teach slim school-demo-bar"><b>E
 <div class="home-message-phrase">${team.length} professor${team.length === 1 ? "" : "es"} · ${t.active} aluno${t.active === 1 ? "" : "s"} ativo${t.active === 1 ? "" : "s"}</div></div>`;
 // O que pede atenção hoje.
 const att = [];
-if (ctx.pending.length) att.push(`<div class="ann-row"><div class="ann-row-main"><div class="ann-row-title">${ctx.pending.length} professor${ctx.pending.length > 1 ? "es pedindo" : " pedindo"} para entrar na escola</div></div><button type="button" class="btn-historico" data-sch-go="schoolTeam">Ver pedidos</button></div>`);
+if (ctx.pending.length) att.push(`<div class="ann-row"><div class="ann-row-main"><div class="ann-row-title">${ctx.pending.length > 1 ? `${ctx.pending.length} professores pedindo para entrar na escola` : "1 professor pedindo para entrar na escola"}</div></div><button type="button" class="btn-historico" data-sch-go="schoolTeam">Ver pedidos</button></div>`);
 if (schoolV824()) {
 }
 const old = team.filter(m => { const r = repOf(m); return !r || (!r.live && Date.now() - Date.parse(r.updated_at) > 2 * 86400000); });

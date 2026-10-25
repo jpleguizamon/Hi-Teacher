@@ -11,6 +11,16 @@
 -- ---------------------------------------------------------------------
 
 -- updated_at automático (tabelas sem "changed_at").
+-- 8.45: não deixa rodar este arquivo por cima de uma versão mais nova (ele desfaria mudanças).
+do $$ declare newer boolean; begin
+  if to_regclass('public.schema_versions') is not null then
+    execute 'select exists (select 1 from public.schema_versions where string_to_array(version, ''.'')::int[] > string_to_array($1, ''.'')::int[])' into newer using '8.0';
+    if newer then
+      raise exception 'Este arquivo (8.0) é mais antigo que o que já está no servidor. Não rode: ele desfaria mudanças mais novas.';
+    end if;
+  end if;
+end $$;
+
 create or replace function public.hi_touch_updated_at() returns trigger
 language plpgsql as $$
 begin
@@ -559,3 +569,9 @@ grant execute on function public.hi_my_student_ids(), public.hi_owns_student(uui
 
 -- Avisa a API (PostgREST) que o esquema mudou.
 notify pgrst, 'reload schema';
+
+-- 8.45: grava esta versão (a lista de versões fica no servidor).
+create table if not exists public.schema_versions (version text primary key, applied_at timestamptz not null default now());
+alter table public.schema_versions enable row level security;
+revoke all on public.schema_versions from anon, authenticated;
+insert into public.schema_versions (version) values ('8.0') on conflict (version) do nothing;

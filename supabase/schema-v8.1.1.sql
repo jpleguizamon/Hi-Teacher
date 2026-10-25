@@ -10,6 +10,16 @@
 -- ---------------------------------------------------------------------
 -- As notas por critério (pontualidade, prática...) saem de lessons.scores (que o aluno lê)
 -- e vão pra lesson_private (só o professor). id = id da aula.
+-- 8.45: não deixa rodar este arquivo por cima de uma versão mais nova (ele desfaria mudanças).
+do $$ declare newer boolean; begin
+  if to_regclass('public.schema_versions') is not null then
+    execute 'select exists (select 1 from public.schema_versions where string_to_array(version, ''.'')::int[] > string_to_array($1, ''.'')::int[])' into newer using '8.1.1';
+    if newer then
+      raise exception 'Este arquivo (8.1.1) é mais antigo que o que já está no servidor. Não rode: ele desfaria mudanças mais novas.';
+    end if;
+  end if;
+end $$;
+
 create table if not exists public.lesson_private (
   id uuid primary key,
   lesson_id uuid not null unique references public.lessons (id) on delete cascade,
@@ -230,3 +240,9 @@ revoke execute on function public.hi_my_join_requests() from public, anon;
 grant execute on function public.hi_my_join_requests() to authenticated;
 
 notify pgrst, 'reload schema';
+
+-- 8.45: grava esta versão (a lista de versões fica no servidor).
+create table if not exists public.schema_versions (version text primary key, applied_at timestamptz not null default now());
+alter table public.schema_versions enable row level security;
+revoke all on public.schema_versions from anon, authenticated;
+insert into public.schema_versions (version) values ('8.1.1') on conflict (version) do nothing;

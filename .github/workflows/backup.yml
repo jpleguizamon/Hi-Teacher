@@ -1,0 +1,67 @@
+# Cópia de segurança diária da nuvem (8.46).
+# Todo dia às 3h (Brasília) baixa uma cópia completa do banco do Supabase, tranca com senha
+# e guarda aqui no GitHub por 30 dias (aba Actions → "Cópia de segurança" → Artifacts).
+# Precisa de dois segredos em Settings → Secrets and variables → Actions:
+#   SUPABASE_DB_URL     → Supabase → Connect → "Session pooler" (a linha que começa com postgresql://), com a senha do banco no lugar de [YOUR-PASSWORD]
+#   BACKUP_PASSPHRASE   → uma senha longa só sua. Sem ela ninguém abre a cópia (nem você: guarde bem).
+# Sem os segredos, o passo só avisa e não falha.
+# Para abrir uma cópia: gpg -d hi-teacher-AAAA-MM-DD.sql.gz.gpg | gunzip > copia.sql
+name: Cópia de segurança
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Conferir segredos
+        id: chk
+        env:
+          DB: ${{ secrets.SUPABASE_DB_URL }}
+          PW: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          if [ -z "$DB" ] || [ -z "$PW" ]; then
+            echo "::warning::Faltam os segredos SUPABASE_DB_URL e BACKUP_PASSPHRASE. Nenhuma cópia foi feita."
+            echo "ok=0" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=1" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Instalar pg_dump 17
+        if: steps.chk.outputs.ok == '1'
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-17
+
+      - name: Fazer a cópia
+        if: steps.chk.outputs.ok == '1'
+        env:
+          DB: ${{ secrets.SUPABASE_DB_URL }}
+          PW: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -o pipefail
+          f="hi-teacher-$(date -u +%F).sql.gz.gpg"
+          /usr/lib/postgresql/17/bin/pg_dump "$DB" --no-owner --no-privileges --schema=public --schema=auth \
+            | gzip -9 \
+            | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 3 --symmetric --cipher-algo AES256 -o "$f" 3<<<"$PW"
+          test -s "$f"
+          echo "FILE=$f" >> "$GITHUB_ENV"
+          ls -lh "$f"
+
+      - name: Guardar por 30 dias
+        if: steps.chk.outputs.ok == '1'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.FILE }}
+          path: ${{ env.FILE }}
+          retention-days: 30
+          if-no-files-found: error

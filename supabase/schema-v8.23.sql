@@ -12,6 +12,16 @@
 -- 1. Escola = organização do tipo "school" (já existia desde a 8.0, sem tela)
 -- ---------------------------------------------------------------------
 -- Chave da escola (o professor usa para pedir para entrar). Única, sem diferenciar maiúsculas.
+-- 8.45: não deixa rodar este arquivo por cima de uma versão mais nova (ele desfaria mudanças).
+do $$ declare newer boolean; begin
+  if to_regclass('public.schema_versions') is not null then
+    execute 'select exists (select 1 from public.schema_versions where string_to_array(version, ''.'')::int[] > string_to_array($1, ''.'')::int[])' into newer using '8.23';
+    if newer then
+      raise exception 'Este arquivo (8.23) é mais antigo que o que já está no servidor. Não rode: ele desfaria mudanças mais novas.';
+    end if;
+  end if;
+end $$;
+
 alter table public.organizations add column if not exists code text;
 create unique index if not exists organizations_code_key on public.organizations (upper(code)) where code is not null;
 -- Um dono tem no máximo uma escola.
@@ -266,3 +276,9 @@ grant execute on function public.hi_my_school(), public.hi_create_school(text, t
   public.hi_find_school(text), public.hi_join_school(text, text), public.hi_leave_school(),
   public.hi_school_members(), public.hi_school_answer(uuid, boolean), public.hi_school_remove(uuid),
   public.hi_school_set_pay(uuid, jsonb), public.hi_school_new_code(), public.hi_school_rename(text) to authenticated;
+
+-- 8.45: grava esta versão (a lista de versões fica no servidor).
+create table if not exists public.schema_versions (version text primary key, applied_at timestamptz not null default now());
+alter table public.schema_versions enable row level security;
+revoke all on public.schema_versions from anon, authenticated;
+insert into public.schema_versions (version) values ('8.23') on conflict (version) do nothing;

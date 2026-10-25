@@ -8,6 +8,16 @@
 -- Explicação no HI-TEACHER.md, seção "Consertos do plano de prioridades (8.44)".
 
 -- Quando começaram os 3 dias de espera da última vez. Volta a valer depois que o professor paga.
+-- 8.45: não deixa rodar este arquivo por cima de uma versão mais nova (ele desfaria mudanças).
+do $$ declare newer boolean; begin
+  if to_regclass('public.schema_versions') is not null then
+    execute 'select exists (select 1 from public.schema_versions where string_to_array(version, ''.'')::int[] > string_to_array($1, ''.'')::int[])' into newer using '8.44';
+    if newer then
+      raise exception 'Este arquivo (8.44) é mais antigo que o que já está no servidor. Não rode: ele desfaria mudanças mais novas.';
+    end if;
+  end if;
+end $$;
+
 alter table public.teacher_plans add column if not exists grace_from timestamptz;
 
 create or replace function public.hi_choose_plan(p_plan text) returns jsonb
@@ -35,3 +45,9 @@ begin
 end $$;
 revoke execute on function public.hi_choose_plan(text) from public, anon;
 grant execute on function public.hi_choose_plan(text) to authenticated;
+
+-- 8.45: grava esta versão (a lista de versões fica no servidor).
+create table if not exists public.schema_versions (version text primary key, applied_at timestamptz not null default now());
+alter table public.schema_versions enable row level security;
+revoke all on public.schema_versions from anon, authenticated;
+insert into public.schema_versions (version) values ('8.44') on conflict (version) do nothing;

@@ -13,6 +13,16 @@
 --    Uma linha por aluno e por conta (aluno e responsável têm cada um a sua).
 --    O aluno/responsável escreve a sua; o professor só lê a dos alunos dele.
 -- ---------------------------------------------------------------------
+-- 8.45: não deixa rodar este arquivo por cima de uma versão mais nova (ele desfaria mudanças).
+do $$ declare newer boolean; begin
+  if to_regclass('public.schema_versions') is not null then
+    execute 'select exists (select 1 from public.schema_versions where string_to_array(version, ''.'')::int[] > string_to_array($1, ''.'')::int[])' into newer using '8.3';
+    if newer then
+      raise exception 'Este arquivo (8.3) é mais antigo que o que já está no servidor. Não rode: ele desfaria mudanças mais novas.';
+    end if;
+  end if;
+end $$;
+
 create table if not exists public.student_journal (
   id uuid primary key default gen_random_uuid(),
   student_id uuid not null references public.students (id) on delete cascade,
@@ -77,3 +87,9 @@ create trigger hi_sreq_limit before insert on public.student_requests
   for each row execute function public.hi_student_requests_limit();
 
 notify pgrst, 'reload schema';
+
+-- 8.45: grava esta versão (a lista de versões fica no servidor).
+create table if not exists public.schema_versions (version text primary key, applied_at timestamptz not null default now());
+alter table public.schema_versions enable row level security;
+revoke all on public.schema_versions from anon, authenticated;
+insert into public.schema_versions (version) values ('8.3') on conflict (version) do nothing;

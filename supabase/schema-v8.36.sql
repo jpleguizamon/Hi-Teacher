@@ -8,6 +8,16 @@
 
 -- 1) Liberar o app para uma conta só se essa conta pediu (join_requests) a este professor.
 --    Antes bastava ser dono do aluno: dava para ligar qualquer conta, sem ela querer.
+-- 8.45: não deixa rodar este arquivo por cima de uma versão mais nova (ele desfaria mudanças).
+do $$ declare newer boolean; begin
+  if to_regclass('public.schema_versions') is not null then
+    execute 'select exists (select 1 from public.schema_versions where string_to_array(version, ''.'')::int[] > string_to_array($1, ''.'')::int[])' into newer using '8.36';
+    if newer then
+      raise exception 'Este arquivo (8.36) é mais antigo que o que já está no servidor. Não rode: ele desfaria mudanças mais novas.';
+    end if;
+  end if;
+end $$;
+
 drop policy if exists "links_insert" on public.student_links;
 create policy "links_insert" on public.student_links for insert to authenticated
   with check (public.hi_owns_student(student_id)
@@ -59,3 +69,9 @@ alter table public.push_subscriptions drop constraint if exists push_endpoint_ho
 alter table public.push_subscriptions add constraint push_endpoint_host check (
   endpoint ~ '^https://([a-z0-9-]+\.)*(fcm\.googleapis\.com|push\.services\.mozilla\.com|notify\.windows\.com|push\.apple\.com)/'
 ) not valid;
+
+-- 8.45: grava esta versão (a lista de versões fica no servidor).
+create table if not exists public.schema_versions (version text primary key, applied_at timestamptz not null default now());
+alter table public.schema_versions enable row level security;
+revoke all on public.schema_versions from anon, authenticated;
+insert into public.schema_versions (version) values ('8.36') on conflict (version) do nothing;

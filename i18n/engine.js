@@ -157,6 +157,8 @@ function trText(n){
   if (!p || skipEl(p) || (p.closest && p.closest("[data-no-tr],[contenteditable=true]"))) return;
   const v = n.nodeValue;
   if (done.get(n) === v) return;
+  // Nome de aluno não se traduz ("Natal" não vira "Christmas").
+  if (window.hiNoTr && window.hiNoTr(v)) { done.set(n, v); return; }
   const t = tr(v);
   if (t !== v) n.nodeValue = t;
   done.set(n, t);
