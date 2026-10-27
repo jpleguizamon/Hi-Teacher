@@ -531,6 +531,19 @@ Versão do app 8.46; o arquivo do servidor desta rodada é `supabase/schema-v8.4
 - **Estatísticas → Matrículas**: barras Interessados → Aula experimental → Viraram alunos (últimos 12 meses), "Por que não entraram" e "Tempo até a matrícula".
 - **Estatísticas → Dinheiro → Inadimplência**: % dos alunos com mensalidade que têm algum mês vencido, e quantos devem 2 meses ou mais.
 
+## Cobrança automática pelo Asaas (8.50)
+- **Ideia**: cada professor liga a própria conta do Asaas. O aluno paga por Pix, boleto ou cartão numa página do Asaas e o dinheiro cai direto na conta do professor (o Hi Teacher não passa pelo meio; as taxas são as do Asaas). Quando o aluno paga, o app marca o mês como pago sozinho, com o dia do pagamento.
+- **No app**: Configurações → "Cobrança automática" (só aparece com o arquivo 8.50 rodado). O professor cola a chave de API do Asaas (Integrações → Chave de API) e pode marcar "Conta de teste (sandbox)". No Início, nas mensalidades, aparece "Gerar cobranças pelo Asaas (N)": cria a cobrança de cada mês em aberto. Depois o "Cobrar" do WhatsApp manda o link de pagamento no lugar da chave Pix, e a linha mostra "Cobrança gerada".
+- **Regras**: o Asaas pede o CPF de quem paga ("CPF de quem paga" no cadastro do aluno; quem não tem fica de fora, com aviso). Quem paga = responsável, se houver, senão o aluno. Vencimento = dia de vencimento do aluno (sem dia, dia 10). Mês já vencido: a cobrança vence hoje, com o valor de hoje (multa e juros já somados). Mês em dia: o desconto, a multa e os juros de "Desconto e multa" vão para o Asaas, que aplica sozinho. O Asaas não manda avisos ao aluno (`notificationDisabled`): o professor manda o link pelo WhatsApp. Gerar de novo o mesmo mês devolve a mesma cobrança.
+- **Baixa**: o Asaas avisa a função quando o aluno paga (PAYMENT_RECEIVED/CONFIRMED). O app lê as cobranças ao abrir e a cada 5 minutos e marca como pago o que ainda não marcou (`hi_asaas_applied`), com um aviso "Pagamento recebido pelo Asaas".
+- **Servidor**: `supabase/schema-v8.50.sql` (tabelas `asaas_accounts`, `asaas_customers`, `asaas_charges`; o app só lê as próprias cobranças, nunca a chave) e a função `supabase/functions/asaas/index.ts` (ligar, desligar, gerar, cancelar e receber o aviso do Asaas em `?hook=<professor>`, conferindo o cabeçalho `asaas-access-token`). A chave fica trancada com o segredo `ASAAS_SECRET`.
+- **Passo a passo para ligar (uma vez, o dono do app)**:
+  1. Supabase → SQL Editor → colar `supabase/schema-v8.50.sql` → Run.
+  2. Supabase → Edge Functions → Deploy a new function → Via Editor → nome `asaas` → colar `supabase/functions/asaas/index.ts` → em configurações da função, **desligar "Verify JWT"** → Deploy.
+  3. Supabase → Edge Functions → Secrets → `ASAAS_SECRET` = um texto longo qualquer (guardar; se trocar, cada professor precisa colar a chave de novo).
+  4. Para testar: criar conta em sandbox.asaas.com, gerar a chave e ligar no app com "Conta de teste". No sandbox dá para simular o pagamento da cobrança.
+- **Ainda não faz**: nota fiscal, cobrança gerada sozinha todo mês (hoje é um toque no Início), aviso no celular do professor quando o aluno paga, estorno pelo app (faz no Asaas).
+
 ## O que ainda falta / próximos passos
 
 - **App do aluno — ideias ainda não feitas (lista de set/2026)**: gravação enviada pelo próprio app com comentário do professor marcado no tempo (hoje vai pelo compartilhar do celular); cifras e partituras anexadas pelo professor (precisa de armazenamento de arquivos no Supabase); cadastro já completo pelo convite (hoje o link só preenche a chave; para interessados existe a ficha de matrícula da 8.35); lembrete de aula por notificação do celular (hoje é pela agenda .ics); mural da turma e avisos por turma; toques de IA (feedback da gravação, plano da semana a partir do resumo da aula, assistente de teoria).
