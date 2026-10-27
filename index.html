@@ -3869,7 +3869,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.50";
+const APP_VERSION = "8.51";
 // Idioma (8.42): troca entre português e inglês e recarrega. Fica guardado neste aparelho.
 function langSwitchLabel(){ return APP_LANG === "en" ? "🌐 Mudar para português" : "🌐 Switch to English"; }
 function langSwitch(){
@@ -10379,6 +10379,38 @@ myPlan = data || null;
 try { await refApply(); } catch(e) {}
 try { renderProfessorTier(); planRowRender(); } catch(e) {}
 asaasLoad();
+planBillingLoad();
+}
+// 8.51: planos pagos pelo Asaas (conta do dono do app). planBilling = { on, sandbox, sub?, pending?, hook? }.
+// Sem a função "asaas" ou sem a chave do dono do app (on: false), o pedido do plano continua por e-mail.
+let planBilling = null;
+async function planBillingLoad(){
+if (STORE_APP || !supabaseClient || !authCurrentUser) { planBilling = null; return; }
+try { planBilling = await asaasCall({ action: "plan_status" }); } catch(e) { planBilling = null; }
+}
+function planOpenUrl(url){
+if (!url) return false;
+if (HI_APP && typeof HI_APP.openExternal === "function") { HI_APP.openExternal(url); return true; }
+const w = window.open(url, "_blank", "noopener");
+if (!w) location.href = url;
+return true;
+}
+// Escolheu um plano pago com a cobrança dos planos ligada: gera a assinatura e abre a página de pagamento.
+async function planCheckout(p){
+const prof = appSettings.profile || {};
+let doc = String(prof.document || "").replace(/\D/g, "");
+if (doc.length !== 11 && doc.length !== 14) {
+const v = prompt("Seu CPF (ou CNPJ). O Asaas, que faz a cobrança, pede para gerar o pagamento:", "");
+if (v === null) return false;
+doc = v.replace(/\D/g, "");
+if (doc.length !== 11 && doc.length !== 14) { alert("CPF ou CNPJ inválido."); return false; }
+appSettings.profile = { ...prof, document: v.trim() }; saveAppSettings();
+}
+const res = await asaasCall({ action: "plan_checkout", plan: p.id, doc, name: prof.fullName || prof.name || "" });
+if (res.off) return null;
+await planBillingLoad();
+if (!planOpenUrl(res.url)) showCloudWarning("Assinatura criada. A fatura chega no seu e-mail.");
+return true;
 }
 // Depois do login (e depois do questionário inicial): avisa do teste ou pede pra escolher o plano.
 async function planStart(){
@@ -10451,6 +10483,8 @@ gate.innerHTML = `<div class="plan-wrap"><svg class="brand-owl plan-owl" viewBox
 <div class="plan-grid">${cards}</div>
 ${STORE_APP ? `<p class="plan-foot">Neste app você usa o plano Grátis ou o plano que já está na sua conta.</p>` : ""}
 <div class="plan-err" id="planErr"></div>
+${!STORE_APP && planBilling && planBilling.sub ? `<div class="settings-card" style="padding:0.875rem 1rem;margin-top:0.75rem"><div class="field-hint" style="margin:0">Assinatura do plano ${escapeHtml((planById(planBilling.sub.plan) || {}).name || "")} pelo Asaas: renova todo mês e a fatura chega no seu e-mail.${planBilling.pending && planBilling.pending.due_date ? ` <span>Próxima fatura: ${formatDateShort(planBilling.pending.due_date)}.</span>` : ""}</div>
+<div class="push-acts" style="margin-top:0.625rem">${planBilling.pending && planBilling.pending.invoice_url ? `<button type="button" class="save" id="planPay">Pagar a fatura</button>` : ""}<button type="button" class="cancel" id="planSubCancel">Cancelar a assinatura</button></div></div>` : ""}
 <p class="plan-foot">O aluno nunca paga. Você pode trocar de plano quando quiser.</p>
 ${must ? "" : refCardHTML()}
 ${must ? "" : `<div class="actions"><button type="button" class="cancel" id="planClose">${why === "welcome" ? "Começar o teste" : "Fechar"}</button></div>`}
@@ -10466,7 +10500,8 @@ const err = gate.querySelector("#planErr");
 gate.querySelectorAll("[data-plan]").forEach(b => b.onclick = async () => {
 const p = planById(b.dataset.plan);
 if (!p) return;
-if (p.id !== "free" && !confirm(p.price === null ? `Pedir o plano ${p.name}? Abre o seu e-mail para combinar o preço com o desenvolvedor.` : `Escolher o plano ${p.name} (${planPriceText(p)})? Abre o seu e-mail para combinar o pagamento. Enquanto isso, você usa o app normalmente por ${PLAN_PENDING_DAYS} dias.`)) return;
+const viaAsaas = !!(planBilling && planBilling.on && p.price);
+if (p.id !== "free" && !confirm(p.price === null ? `Pedir o plano ${p.name}? Abre o seu e-mail para combinar o preço com o desenvolvedor.` : viaAsaas ? `Assinar o plano ${p.name} (${planPriceText(p)})? Abre a página de pagamento (Pix, boleto ou cartão). Assim que o pagamento cair, o plano fica ativo sozinho. Todo mês chega a fatura no seu e-mail; dá para cancelar quando quiser em Meu plano.` : `Escolher o plano ${p.name} (${planPriceText(p)})? Abre o seu e-mail para combinar o pagamento. Enquanto isso, você usa o app normalmente por ${PLAN_PENDING_DAYS} dias.`)) return;
 b.disabled = true; err.textContent = "";
 try {
 const { data, error } = await supabaseClient.rpc("hi_choose_plan", { p_plan: p.id });
@@ -10475,11 +10510,25 @@ myPlan = data || myPlan;
 } catch(e) { err.textContent = "Sem internet. Tente de novo."; b.disabled = false; return; }
 renderProfessorTier(); planRowRender();
 close();
-if (p.id === "free") showCloudWarning("Pronto! Você está no plano Grátis (até 5 alunos ativos).");
+if (p.id === "free") { showCloudWarning("Pronto! Você está no plano Grátis (até 5 alunos ativos)."); if (planBilling && planBilling.sub) { try { await asaasCall({ action: "plan_cancel" }); await planBillingLoad(); } catch(e) {} } }
+else if (viaAsaas) {
+let r = null;
+try { r = await planCheckout(p); } catch(e) { alert(e.message); return; }
+if (r === null) { showCloudWarning(`Pedido do plano ${p.name} enviado. Assim que o pagamento for confirmado, ele fica ativo.`); planDevContact(p); }
+else if (r) showCloudWarning(`Plano ${p.name}: pague na página que abriu. Assim que o pagamento cair, o plano fica ativo sozinho.`);
+}
 else { showCloudWarning(`Pedido do plano ${p.name} enviado. Assim que o pagamento for confirmado, ele fica ativo.`); planDevContact(p); }
 });
 const keep = gate.querySelector("[data-plan-keep]");
 if (keep) keep.onclick = () => planPickActive(5, () => openPlans(must, why));
+const pay = gate.querySelector("#planPay"); if (pay) pay.onclick = () => planOpenUrl(planBilling.pending.invoice_url);
+const subX = gate.querySelector("#planSubCancel");
+if (subX) subX.onclick = async () => {
+if (!confirm("Cancelar a assinatura? Não chega mais fatura. O plano continua valendo até o fim do que você já pagou. Se pagou há menos de 7 dias e quer o dinheiro de volta, fale com o suporte.")) return;
+subX.disabled = true;
+try { await asaasCall({ action: "plan_cancel" }); await planBillingLoad(); showCloudWarning("Assinatura cancelada."); openPlans(must, why); }
+catch(e) { err.textContent = e.message; subX.disabled = false; }
+};
 }
 // Grátis com mais de 5 alunos: o professor marca quais 5 continuam ativos; os outros ficam inativos
 // (nada é apagado, dá pra reativar depois).
@@ -10525,6 +10574,14 @@ const body = document.createElement("div");
 body.innerHTML = `<div class="field-hint" style="margin:0">Carregando…</div>`;
 openQuickModal("Assinaturas", "Seus números, os pedidos e cada professor. Ativar = marcar como pago.", body, null, "Fechar");
 let list = [];
+// 8.51: liga, na sua conta do Asaas, o aviso de pagamento dos planos (uma vez).
+body.addEventListener("click", async e => {
+const b = e.target.closest && e.target.closest("#admPlanHook");
+if (!b) return;
+b.disabled = true; b.textContent = "Ligando...";
+try { await asaasCall({ action: "plan_setup" }); await planBillingLoad(); b.replaceWith(document.createTextNode("Aviso de pagamento ligado: plano pago é ativado sozinho.")); }
+catch(err) { alert(err.message); b.disabled = false; b.textContent = "Ligar o aviso de pagamento"; }
+});
 const load = async () => { const { data, error } = await supabaseClient.rpc("hi_admin_plans"); if (error) throw error; list = data || []; };
 try { await load(); } catch(e) { body.innerHTML = `<div class="field-hint" style="margin:0">Não consegui carregar agora.</div>`; return; }
 // 8.45: o que falta rodar no servidor (a 8.45 confere as outras pelo que existe lá).
@@ -10561,7 +10618,9 @@ const newN = real.filter(x => String(x.created_at || "").slice(0, 7) === month).
 const ended = real.filter(x => x.trial_until && x.trial_until < today);
 const conv = ended.filter(x => x.paid_until).length;
 const card = (f, big, label, sub) => `<button type="button" class="adm-stat${filter === f ? " on" : ""}" data-af="${f}"><b>${big}</b><span>${label}</span>${sub ? `<em>${sub}</em>` : ""}</button>`;
-return (schemaNote ? `<div class="field-hint pay-late" style="display:block;margin:0 0 0.75rem;font-size:0.8125rem">${escapeHtml(schemaNote)}</div>` : "") + `<div class="adm-stats">
+return (schemaNote ? `<div class="field-hint pay-late" style="display:block;margin:0 0 0.75rem;font-size:0.8125rem">${escapeHtml(schemaNote)}</div>` : "")
++ (planBilling && planBilling.on ? `<div class="field-hint" style="display:block;margin:0 0 0.75rem">Cobrança dos planos pelo Asaas: ligada${planBilling.sandbox ? " (teste)" : ""}. ${planBilling.hook ? "Aviso de pagamento ligado: plano pago é ativado sozinho." : `<button type="button" class="btn-link-inline" id="admPlanHook">Ligar o aviso de pagamento</button>`}</div>` : "")
++ `<div class="adm-stats">
 ${card("all", real.length, real.length === 1 ? "professor" : "professores", `${n("trial")} em teste · ${n("free")} no Grátis · ${n("paid")} pagando${n("expired") ? ` · ${n("expired")} vencido${n("expired") > 1 ? "s" : ""}` : ""}`)}
 ${card("paid", `R$ ${moneyText(income)}`, "por mês", byPlan || "ninguém pagando ainda")}
 ${card("req", reqs, reqs === 1 ? "pedido esperando você" : "pedidos esperando você", "")}
@@ -13851,7 +13910,7 @@ const noDoc = list.filter(x => String(x.s.payerDoc || "").replace(/\D/g, "").len
 const ok = list.filter(x => !noDoc.includes(x));
 if (!ok.length) { alert(`Falta o CPF de quem paga no cadastro de: ${[...new Set(noDoc.map(x => firstName(x.s.name)))].join(", ")}. O Asaas pede o CPF para gerar a cobrança.`); return; }
 const ask = APP_LANG === "en"
-? `Create ${ok.length} charge${ok.length === 1 ? "" : "s"} in Asaas?${noDoc.length ? ` ${noDoc.length} without the payer's CPF will be left out.` : ""} Then just tap "Remind" to send the link on WhatsApp.`
+? `Create ${ok.length} charge${ok.length === 1 ? "" : "s"} in Asaas?${noDoc.length ? ` ${noDoc.length} without the payer's CPF will be left out.` : ""} Then just tap "Charge" to send the link on WhatsApp.`
 : `Gerar ${ok.length === 1 ? "1 cobrança" : `${ok.length} cobranças`} no Asaas?${noDoc.length ? ` ${noDoc.length === 1 ? "Fica" : "Ficam"} de fora ${noDoc.length} sem CPF de quem paga.` : ""} Depois é só tocar em "Cobrar" para mandar o link pelo WhatsApp.`;
 if (!confirm(ask)) return;
 if (btn) { btn.disabled = true; btn.textContent = "Gerando..."; }

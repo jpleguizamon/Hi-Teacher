@@ -8,11 +8,17 @@
 //   - charge:     gera a cobrança do mês de cada aluno (Pix, boleto ou cartão: o aluno escolhe na página);
 //   - cancel:     apaga uma cobrança que ainda não foi paga;
 //   - aviso do Asaas (?hook=<professor>): marca a cobrança como paga, vencida ou apagada. O app lê e dá baixa.
+// Planos do app (conta do Asaas do DONO do app, segredo ASAAS_HI_KEY):
+//   - plan_status / plan_checkout / plan_cancel: assinatura mensal do plano do professor (Pix, boleto ou cartão);
+//   - plan_setup (só o dono do app): cadastra o aviso de pagamento dos planos na conta dele;
+//   - aviso do Asaas (?plan=1): fatura paga → plano ativado por 1 mês (uma vez por pagamento).
 // A chave nunca volta para o app. Quem chama precisa estar logado (menos o aviso do Asaas, que vem com o
 // código secreto do professor no cabeçalho asaas-access-token).
 //
 // Publicar com "Verify JWT" DESLIGADO (o Asaas não manda o login do Supabase); a função confere o login sozinha.
 // Segredos (Supabase → Edge Functions → Secrets): ASAAS_SECRET (um texto longo qualquer, só seu).
+// Para os planos: ASAAS_HI_KEY (chave de API da conta do Asaas do dono do app) e, para testar,
+// ASAAS_HI_SANDBOX = true. Sem ASAAS_HI_KEY, o app continua pedindo o plano por e-mail, como antes.
 // SUPABASE_URL, SUPABASE_ANON_KEY e SUPABASE_SERVICE_ROLE_KEY o Supabase já fornece. Passo a passo no HI-TEACHER.md, seção 8.50.
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
 
@@ -20,6 +26,10 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 const SECRET = Deno.env.get("ASAAS_SECRET") ?? "";
+const HI_KEY = Deno.env.get("ASAAS_HI_KEY") ?? "";
+const HI_SANDBOX = /^(1|true|sim)$/i.test(Deno.env.get("ASAAS_HI_SANDBOX") ?? "");
+// Preço de cada plano (R$ por mês). Tem de ser igual ao PLANS do app (index.html).
+const PLAN_PRICES: Record<string, { name: string; value: number }> = { bronze: { name: "Bronze", value: 29 }, silver: { name: "Prata", value: 49 }, gold: { name: "Ouro", value: 79 } };
 const PROD = "https://api.asaas.com/v3", SANDBOX = "https://api-sandbox.asaas.com/v3";
 const HOOK_EVENTS = ["PAYMENT_RECEIVED", "PAYMENT_CONFIRMED", "PAYMENT_OVERDUE", "PAYMENT_DELETED", "PAYMENT_RESTORED", "PAYMENT_REFUNDED"];
 const MAX_ITEMS = 60;
@@ -196,17 +206,110 @@ async function hook(teacher: string, req: Request) {
   return json({ ok: true });
 }
 
+// ---------- planos do app (conta do dono do app) ----------
+const hiAcc = (): Acc => ({ key: HI_KEY, sandbox: HI_SANDBOX });
+async function planPending(subId: string) {
+  const j = await asaas(hiAcc(), "GET", `/subscriptions/${subId}/payments?status=PENDING`).catch(() => null);
+  const list = (j?.data ?? []).concat([]);
+  if (!list.length) {
+    const od = await asaas(hiAcc(), "GET", `/subscriptions/${subId}/payments?status=OVERDUE`).catch(() => null);
+    list.push(...(od?.data ?? []));
+  }
+  list.sort((a: { dueDate: string }, b: { dueDate: string }) => String(a.dueDate).localeCompare(String(b.dueDate)));
+  return list[0] ? { invoice_url: list[0].invoiceUrl ?? null, due_date: list[0].dueDate ?? null, value: list[0].value ?? null } : null;
+}
+async function planStatus(teacher: string, isAdmin: boolean) {
+  if (!HI_KEY) return json({ on: false });
+  const { data: sub } = await db().from("plan_subs").select("*").eq("teacher_id", teacher).maybeSingle();
+  const out: Record<string, unknown> = { on: true, sandbox: HI_SANDBOX };
+  if (sub && sub.status === "active" && sub.subscription_id) {
+    out.sub = { plan: sub.plan, value: sub.value, since: sub.created_at ? String(sub.created_at).slice(0, 10) : null };
+    out.pending = await planPending(String(sub.subscription_id));
+  }
+  if (isAdmin) { const { data: cfg } = await db().from("app_billing").select("hook_id").eq("id", 1).maybeSingle(); out.hook = !!cfg?.hook_id; }
+  return json(out);
+}
+async function planCheckout(teacher: string, email: string, b: Record<string, unknown>) {
+  if (!HI_KEY) return json({ off: true });
+  const plan = String(b.plan ?? ""), price = PLAN_PRICES[plan];
+  if (!price) return json({ error: "Plano inválido." }, 400);
+  const doc = onlyDigits(b.doc);
+  if (doc.length !== 11 && doc.length !== 14) return json({ error: "Falta o seu CPF (ou CNPJ). O Asaas pede para gerar a cobrança." }, 400);
+  const acc = hiAcc();
+  const { data: sub } = await db().from("plan_subs").select("*").eq("teacher_id", teacher).maybeSingle();
+  // Mesmo plano já assinado: devolve a fatura em aberto.
+  if (sub && sub.status === "active" && sub.subscription_id && sub.plan === plan) {
+    const pend = await planPending(String(sub.subscription_id));
+    return json({ ok: true, reused: true, url: pend?.invoice_url ?? null });
+  }
+  let customer = sub?.customer_id ? String(sub.customer_id) : "";
+  if (!customer) {
+    const c = await asaas(acc, "POST", "/customers", { name: String(b.name ?? "").slice(0, 100) || email || "Professor", cpfCnpj: doc, email: email || undefined, externalReference: teacher, notificationDisabled: false });
+    customer = String(c.id);
+  }
+  // Trocou de plano: a assinatura antiga para (o tempo já pago continua valendo).
+  if (sub?.subscription_id && sub.status === "active") await asaas(acc, "DELETE", `/subscriptions/${sub.subscription_id}`).catch(() => {});
+  const s = await asaas(acc, "POST", "/subscriptions", {
+    customer, billingType: "UNDEFINED", value: price.value, nextDueDate: isoToday(), cycle: "MONTHLY",
+    description: `Hi Teacher · plano ${price.name}`, externalReference: `${teacher}|${plan}`,
+  });
+  await db().from("plan_subs").upsert({ teacher_id: teacher, customer_id: customer, subscription_id: String(s.id), plan, value: price.value, status: "active", updated_at: new Date().toISOString() });
+  const pend = await planPending(String(s.id));
+  return json({ ok: true, url: pend?.invoice_url ?? null });
+}
+async function planCancel(teacher: string) {
+  if (!HI_KEY) return json({ off: true });
+  const { data: sub } = await db().from("plan_subs").select("*").eq("teacher_id", teacher).maybeSingle();
+  if (!sub?.subscription_id || sub.status !== "active") return json({ ok: true });
+  await asaas(hiAcc(), "DELETE", `/subscriptions/${sub.subscription_id}`).catch((e) => { if ((e as { status?: number }).status !== 404) throw e; });
+  await db().from("plan_subs").update({ status: "canceled", updated_at: new Date().toISOString() }).eq("teacher_id", teacher);
+  return json({ ok: true });
+}
+async function planSetup(teacher: string, email: string) {
+  if (!HI_KEY) return json({ error: "Falta o segredo ASAAS_HI_KEY na função (a chave da sua conta do Asaas)." }, 400);
+  const { data: adm } = await db().from("app_admins").select("user_id").eq("user_id", teacher).maybeSingle();
+  if (!adm) return json({ error: "Só o dono do app." }, 403);
+  const { data: cfg } = await db().from("app_billing").select("*").eq("id", 1).maybeSingle();
+  if (cfg?.hook_id) await asaas(hiAcc(), "DELETE", `/webhooks/${cfg.hook_id}`).catch(() => {});
+  const token = b64(crypto.getRandomValues(new Uint8Array(30)));
+  const h = await asaas(hiAcc(), "POST", "/webhooks", {
+    name: "Hi Teacher · planos", url: `${SUPABASE_URL}/functions/v1/asaas?plan=1`, email: email || undefined,
+    enabled: true, interrupted: false, apiVersion: 3, sendType: "SEQUENTIALLY", authToken: token, events: ["PAYMENT_RECEIVED", "PAYMENT_CONFIRMED"],
+  });
+  await db().from("app_billing").upsert({ id: 1, hook_token: token, hook_id: h?.id ?? null, updated_at: new Date().toISOString() });
+  return json({ ok: true });
+}
+async function planHook(req: Request) {
+  const { data: cfg } = await db().from("app_billing").select("hook_token").eq("id", 1).maybeSingle();
+  const token = req.headers.get("asaas-access-token") ?? "";
+  if (!cfg?.hook_token || token !== cfg.hook_token) return json({ error: "forbidden" }, 401);
+  const ev = await req.json().catch(() => ({}));
+  const pay = ev?.payment;
+  if (!["PAYMENT_RECEIVED", "PAYMENT_CONFIRMED"].includes(String(ev?.event ?? "")) || !pay?.id || !pay?.subscription) return json({ ok: true, ignored: true });
+  const { data: sub } = await db().from("plan_subs").select("*").eq("subscription_id", String(pay.subscription)).maybeSingle();
+  if (!sub || !PLAN_PRICES[String(sub.plan)]) return json({ ok: true, unknown: true });
+  const { error } = await db().rpc("hi_plan_activate", { p_teacher: sub.teacher_id, p_plan: sub.plan, p_months: 1, p_ref: String(pay.id) });
+  if (error) return json({ error: error.message }, 500); // o Asaas tenta de novo
+  return json({ ok: true });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return json({ error: "method" }, 405);
   if (!SECRET || SECRET.length < 16) return json({ error: "Falta o segredo ASAAS_SECRET na função (Supabase → Edge Functions → Secrets)." }, 500);
   try {
-    const hookFor = new URL(req.url).searchParams.get("hook");
+    const params = new URL(req.url).searchParams;
+    if (params.get("plan") === "1") return await planHook(req);
+    const hookFor = params.get("hook");
     if (hookFor) return /^[0-9a-f-]{36}$/.test(hookFor) ? await hook(hookFor, req) : json({ error: "forbidden" }, 401);
     const jwt = (req.headers.get("Authorization") ?? "").replace(/^Bearer\s+/i, "");
     const { data: u } = await createClient(SUPABASE_URL, ANON_KEY, { auth: { persistSession: false } }).auth.getUser(jwt);
     if (!u?.user) return json({ error: "Entre na sua conta antes" }, 401);
     const b = await req.json().catch(() => ({}));
+    if (b.action === "plan_status") { const { data: adm } = await db().from("app_admins").select("user_id").eq("user_id", u.user.id).maybeSingle(); return await planStatus(u.user.id, !!adm); }
+    if (b.action === "plan_checkout") return await planCheckout(u.user.id, u.user.email ?? "", b);
+    if (b.action === "plan_cancel") return await planCancel(u.user.id);
+    if (b.action === "plan_setup") return await planSetup(u.user.id, u.user.email ?? "");
     if (b.action === "connect") return await connect(u.user.id, u.user.email ?? "", b);
     if (b.action === "disconnect") return await disconnect(u.user.id);
     if (b.action === "charge") return await charge(u.user.id, b);
