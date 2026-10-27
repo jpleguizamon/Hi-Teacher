@@ -2817,7 +2817,6 @@ body.pdf-open{overflow:hidden}
 <div class="settings-card">
 <div class="settings-row" id="rowInstrumentos"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-music"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Instrumentos que leciona<button type="button" class="help-icon" data-help="A lista de opções que aparece ao cadastrar um aluno. Adicione quantos instrumentos precisar — não tem limite.">!</button></div></div><span class="settings-row-value" id="valInstrumentos"></span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowValoresPadrao"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-dollar"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Valores padrões<button type="button" class="help-icon" data-help="Valores sugeridos automaticamente ao cadastrar um novo aluno, de acordo com o formato da aula (individual ou grupo).">!</button></div></div><span class="settings-row-value" id="valValoresPadrao">R$ 140</span><span class="settings-row-chevron">›</span></div>
-<div class="settings-row" id="rowAsaas" style="display:none"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-dollar"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Cobrança automática</div><div class="settings-row-sub">Pix, boleto ou cartão pelo Asaas, com baixa sozinha</div></div><span class="settings-row-value" id="valAsaas">Desligada</span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowPayRules"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-dollar"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Desconto e multa</div><div class="settings-row-sub">Desconto por pagar em dia, multa e juros no atraso</div></div><span class="settings-row-value" id="valPayRules">Nenhum</span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowContract"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-clipboard"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Modelo de contrato</div><div class="settings-row-sub">O texto que o app usa no contrato de cada aluno</div></div><span class="settings-row-value" id="valContract"></span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowDiasUteis"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-calendar"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Dias úteis<button type="button" class="help-icon" data-help="Os dias da semana em que você costuma dar aula. O cadastro de aluno novo começa sem nenhum dia marcado: os dias de cada aluno são escolhidos no cadastro dele.">!</button></div></div><span class="settings-row-value" id="valDiasUteis">Seg-Sex</span><span class="settings-row-chevron">›</span></div>
@@ -3869,7 +3868,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.51";
+const APP_VERSION = "8.52";
 // Idioma (8.42): troca entre português e inglês e recarrega. Fica guardado neste aparelho.
 function langSwitchLabel(){ return APP_LANG === "en" ? "🌐 Mudar para português" : "🌐 Switch to English"; }
 function langSwitch(){
@@ -10378,39 +10377,6 @@ myPlan = data || null;
 } catch(e) { myPlan = null; }
 try { await refApply(); } catch(e) {}
 try { renderProfessorTier(); planRowRender(); } catch(e) {}
-asaasLoad();
-planBillingLoad();
-}
-// 8.51: planos pagos pelo Asaas (conta do dono do app). planBilling = { on, sandbox, sub?, pending?, hook? }.
-// Sem a função "asaas" ou sem a chave do dono do app (on: false), o pedido do plano continua por e-mail.
-let planBilling = null;
-async function planBillingLoad(){
-if (STORE_APP || !supabaseClient || !authCurrentUser) { planBilling = null; return; }
-try { planBilling = await asaasCall({ action: "plan_status" }); } catch(e) { planBilling = null; }
-}
-function planOpenUrl(url){
-if (!url) return false;
-if (HI_APP && typeof HI_APP.openExternal === "function") { HI_APP.openExternal(url); return true; }
-const w = window.open(url, "_blank", "noopener");
-if (!w) location.href = url;
-return true;
-}
-// Escolheu um plano pago com a cobrança dos planos ligada: gera a assinatura e abre a página de pagamento.
-async function planCheckout(p){
-const prof = appSettings.profile || {};
-let doc = String(prof.document || "").replace(/\D/g, "");
-if (doc.length !== 11 && doc.length !== 14) {
-const v = prompt("Seu CPF (ou CNPJ). O Asaas, que faz a cobrança, pede para gerar o pagamento:", "");
-if (v === null) return false;
-doc = v.replace(/\D/g, "");
-if (doc.length !== 11 && doc.length !== 14) { alert("CPF ou CNPJ inválido."); return false; }
-appSettings.profile = { ...prof, document: v.trim() }; saveAppSettings();
-}
-const res = await asaasCall({ action: "plan_checkout", plan: p.id, doc, name: prof.fullName || prof.name || "" });
-if (res.off) return null;
-await planBillingLoad();
-if (!planOpenUrl(res.url)) showCloudWarning("Assinatura criada. A fatura chega no seu e-mail.");
-return true;
 }
 // Depois do login (e depois do questionário inicial): avisa do teste ou pede pra escolher o plano.
 async function planStart(){
@@ -10483,8 +10449,6 @@ gate.innerHTML = `<div class="plan-wrap"><svg class="brand-owl plan-owl" viewBox
 <div class="plan-grid">${cards}</div>
 ${STORE_APP ? `<p class="plan-foot">Neste app você usa o plano Grátis ou o plano que já está na sua conta.</p>` : ""}
 <div class="plan-err" id="planErr"></div>
-${!STORE_APP && planBilling && planBilling.sub ? `<div class="settings-card" style="padding:0.875rem 1rem;margin-top:0.75rem"><div class="field-hint" style="margin:0">Assinatura do plano ${escapeHtml((planById(planBilling.sub.plan) || {}).name || "")} pelo Asaas: renova todo mês e a fatura chega no seu e-mail.${planBilling.pending && planBilling.pending.due_date ? ` <span>Próxima fatura: ${formatDateShort(planBilling.pending.due_date)}.</span>` : ""}</div>
-<div class="push-acts" style="margin-top:0.625rem">${planBilling.pending && planBilling.pending.invoice_url ? `<button type="button" class="save" id="planPay">Pagar a fatura</button>` : ""}<button type="button" class="cancel" id="planSubCancel">Cancelar a assinatura</button></div></div>` : ""}
 <p class="plan-foot">O aluno nunca paga. Você pode trocar de plano quando quiser.</p>
 ${must ? "" : refCardHTML()}
 ${must ? "" : `<div class="actions"><button type="button" class="cancel" id="planClose">${why === "welcome" ? "Começar o teste" : "Fechar"}</button></div>`}
@@ -10500,8 +10464,7 @@ const err = gate.querySelector("#planErr");
 gate.querySelectorAll("[data-plan]").forEach(b => b.onclick = async () => {
 const p = planById(b.dataset.plan);
 if (!p) return;
-const viaAsaas = !!(planBilling && planBilling.on && p.price);
-if (p.id !== "free" && !confirm(p.price === null ? `Pedir o plano ${p.name}? Abre o seu e-mail para combinar o preço com o desenvolvedor.` : viaAsaas ? `Assinar o plano ${p.name} (${planPriceText(p)})? Abre a página de pagamento (Pix, boleto ou cartão). Assim que o pagamento cair, o plano fica ativo sozinho. Todo mês chega a fatura no seu e-mail; dá para cancelar quando quiser em Meu plano.` : `Escolher o plano ${p.name} (${planPriceText(p)})? Abre o seu e-mail para combinar o pagamento. Enquanto isso, você usa o app normalmente por ${PLAN_PENDING_DAYS} dias.`)) return;
+if (p.id !== "free" && !confirm(p.price === null ? `Pedir o plano ${p.name}? Abre o seu e-mail para combinar o preço com o desenvolvedor.` : `Escolher o plano ${p.name} (${planPriceText(p)})? Abre o seu e-mail para combinar o pagamento. Enquanto isso, você usa o app normalmente por ${PLAN_PENDING_DAYS} dias.`)) return;
 b.disabled = true; err.textContent = "";
 try {
 const { data, error } = await supabaseClient.rpc("hi_choose_plan", { p_plan: p.id });
@@ -10510,25 +10473,11 @@ myPlan = data || myPlan;
 } catch(e) { err.textContent = "Sem internet. Tente de novo."; b.disabled = false; return; }
 renderProfessorTier(); planRowRender();
 close();
-if (p.id === "free") { showCloudWarning("Pronto! Você está no plano Grátis (até 5 alunos ativos)."); if (planBilling && planBilling.sub) { try { await asaasCall({ action: "plan_cancel" }); await planBillingLoad(); } catch(e) {} } }
-else if (viaAsaas) {
-let r = null;
-try { r = await planCheckout(p); } catch(e) { alert(e.message); return; }
-if (r === null) { showCloudWarning(`Pedido do plano ${p.name} enviado. Assim que o pagamento for confirmado, ele fica ativo.`); planDevContact(p); }
-else if (r) showCloudWarning(`Plano ${p.name}: pague na página que abriu. Assim que o pagamento cair, o plano fica ativo sozinho.`);
-}
+if (p.id === "free") showCloudWarning("Pronto! Você está no plano Grátis (até 5 alunos ativos).");
 else { showCloudWarning(`Pedido do plano ${p.name} enviado. Assim que o pagamento for confirmado, ele fica ativo.`); planDevContact(p); }
 });
 const keep = gate.querySelector("[data-plan-keep]");
 if (keep) keep.onclick = () => planPickActive(5, () => openPlans(must, why));
-const pay = gate.querySelector("#planPay"); if (pay) pay.onclick = () => planOpenUrl(planBilling.pending.invoice_url);
-const subX = gate.querySelector("#planSubCancel");
-if (subX) subX.onclick = async () => {
-if (!confirm("Cancelar a assinatura? Não chega mais fatura. O plano continua valendo até o fim do que você já pagou. Se pagou há menos de 7 dias e quer o dinheiro de volta, fale com o suporte.")) return;
-subX.disabled = true;
-try { await asaasCall({ action: "plan_cancel" }); await planBillingLoad(); showCloudWarning("Assinatura cancelada."); openPlans(must, why); }
-catch(e) { err.textContent = e.message; subX.disabled = false; }
-};
 }
 // Grátis com mais de 5 alunos: o professor marca quais 5 continuam ativos; os outros ficam inativos
 // (nada é apagado, dá pra reativar depois).
@@ -10568,20 +10517,12 @@ const n = (data || []).filter(x => x.requested && x.requested !== "free").length
 if (n) showCloudWarning(`${n} professor${n > 1 ? "es pediram" : " pediu"} um plano. Veja em Configurações → Assinaturas.`);
 } catch(e) {}
 }
-const SCHEMA_ALL = ["8.0", "8.1", "8.1.1", "8.3", "8.14", "8.23", "8.24", "8.35", "8.36", "8.38", "8.41", "8.44", "8.45", "8.50"];
+const SCHEMA_ALL = ["8.0", "8.1", "8.1.1", "8.3", "8.14", "8.23", "8.24", "8.35", "8.36", "8.38", "8.41", "8.44", "8.45"];
 async function openPlanAdmin(){
 const body = document.createElement("div");
 body.innerHTML = `<div class="field-hint" style="margin:0">Carregando…</div>`;
 openQuickModal("Assinaturas", "Seus números, os pedidos e cada professor. Ativar = marcar como pago.", body, null, "Fechar");
 let list = [];
-// 8.51: liga, na sua conta do Asaas, o aviso de pagamento dos planos (uma vez).
-body.addEventListener("click", async e => {
-const b = e.target.closest && e.target.closest("#admPlanHook");
-if (!b) return;
-b.disabled = true; b.textContent = "Ligando...";
-try { await asaasCall({ action: "plan_setup" }); await planBillingLoad(); b.replaceWith(document.createTextNode("Aviso de pagamento ligado: plano pago é ativado sozinho.")); }
-catch(err) { alert(err.message); b.disabled = false; b.textContent = "Ligar o aviso de pagamento"; }
-});
 const load = async () => { const { data, error } = await supabaseClient.rpc("hi_admin_plans"); if (error) throw error; list = data || []; };
 try { await load(); } catch(e) { body.innerHTML = `<div class="field-hint" style="margin:0">Não consegui carregar agora.</div>`; return; }
 // 8.45: o que falta rodar no servidor (a 8.45 confere as outras pelo que existe lá).
@@ -10618,9 +10559,7 @@ const newN = real.filter(x => String(x.created_at || "").slice(0, 7) === month).
 const ended = real.filter(x => x.trial_until && x.trial_until < today);
 const conv = ended.filter(x => x.paid_until).length;
 const card = (f, big, label, sub) => `<button type="button" class="adm-stat${filter === f ? " on" : ""}" data-af="${f}"><b>${big}</b><span>${label}</span>${sub ? `<em>${sub}</em>` : ""}</button>`;
-return (schemaNote ? `<div class="field-hint pay-late" style="display:block;margin:0 0 0.75rem;font-size:0.8125rem">${escapeHtml(schemaNote)}</div>` : "")
-+ (planBilling && planBilling.on ? `<div class="field-hint" style="display:block;margin:0 0 0.75rem">Cobrança dos planos pelo Asaas: ligada${planBilling.sandbox ? " (teste)" : ""}. ${planBilling.hook ? "Aviso de pagamento ligado: plano pago é ativado sozinho." : `<button type="button" class="btn-link-inline" id="admPlanHook">Ligar o aviso de pagamento</button>`}</div>` : "")
-+ `<div class="adm-stats">
+return (schemaNote ? `<div class="field-hint pay-late" style="display:block;margin:0 0 0.75rem;font-size:0.8125rem">${escapeHtml(schemaNote)}</div>` : "") + `<div class="adm-stats">
 ${card("all", real.length, real.length === 1 ? "professor" : "professores", `${n("trial")} em teste · ${n("free")} no Grátis · ${n("paid")} pagando${n("expired") ? ` · ${n("expired")} vencido${n("expired") > 1 ? "s" : ""}` : ""}`)}
 ${card("paid", `R$ ${moneyText(income)}`, "por mês", byPlan || "ninguém pagando ainda")}
 ${card("req", reqs, reqs === 1 ? "pedido esperando você" : "pedidos esperando você", "")}
@@ -13819,151 +13758,10 @@ renderPendingPayments();
 function chargeLink(s, key){
 // 8.44: com chave Pix em "Conteúdo para os alunos", a cobrança já leva a chave (ou onde estiver [pix] no texto).
 const pix = String(stContent().pixKey || "").trim();
-// 8.50: com cobrança do Asaas gerada, manda o link de pagamento (Pix, boleto ou cartão) no lugar da chave.
-const ac = asaasChargeOf(s, key);
-let href = waMessageLink(s, "charge", { mes: monthLongLabel(key), valor: moneyText(ac ? ac.value : payQuote(s, key).value), pix: ac ? "" : pix });
-if (href && ac && ac.invoice_url) href += encodeURIComponent(APP_LANG === "en" ? `\n\nPay here (Pix, boleto or card): ${ac.invoice_url}` : `\n\nPara pagar (Pix, boleto ou cartão): ${ac.invoice_url}`);
-else if (href && pix && !/\[pix\]/i.test(getMessageTemplate("charge"))) href += encodeURIComponent(`\n\nPix: ${pix}`);
+let href = waMessageLink(s, "charge", { mes: monthLongLabel(key), valor: moneyText(payQuote(s, key).value), pix });
+if (href && pix && !/\[pix\]/i.test(getMessageTemplate("charge"))) href += encodeURIComponent(`\n\nPix: ${pix}`);
 return href ? `<a class="wa-btn wa-mini" href="${href}" target="_blank" rel="noopener" aria-label="Cobrar ${escapeHtml(s.name)} no WhatsApp">Cobrar</a>` : "";
 }
-// ===== Cobrança automática pelo Asaas (8.50) =====
-// O professor liga a conta dele do Asaas (Configurações → Cobrança automática). "Gerar cobranças" cria
-// no Asaas a cobrança do mês de cada aluno; o aluno paga pelo link (Pix, boleto ou cartão) e o Asaas avisa
-// o servidor. Quando o app abre (e a cada 5 minutos), os pagos viram "pago" sozinhos, com o dia do pagamento.
-// A chave do Asaas fica só no servidor (função "asaas"). Sem o arquivo 8.50 e a função, nada aparece.
-let asaasState = null, asaasCharges = [];
-const ASAAS_FN = "asaas";
-function asaasOn(){ return !!(asaasState && asaasState.connected); }
-function asaasChargeOf(s, key){
-if (!asaasOn() || !authCurrentUser) return null;
-let u; try { u = studentUuidMap().of(s); } catch(e) { return null; }
-return asaasCharges.find(c => c.student_uuid === u && c.month === key && c.status !== "deleted" && c.status !== "refunded") || null;
-}
-async function asaasCall(body){
-const { data, error } = await supabaseClient.functions.invoke(ASAAS_FN, { body });
-if (error) {
-let msg = "";
-try { const j = await error.context.json(); msg = j && j.error; } catch(e) {}
-throw new Error(msg || techMsg("A cobrança automática não respondeu. Tente de novo mais tarde.", "A função asaas não respondeu. Confira se ela está publicada no Supabase (com Verify JWT desligado)."));
-}
-if (data && data.error) throw new Error(data.error);
-return data || {};
-}
-async function asaasLoad(){
-if (studentMode || demoMode || !supabaseClient || !authCurrentUser) return;
-try {
-const { data, error } = await supabaseClient.rpc("hi_asaas_status");
-asaasState = error ? null : data || null;
-} catch(e) { asaasState = null; }
-asaasRowRender();
-if (!asaasOn()) { asaasCharges = []; return; }
-try {
-const { data } = await supabaseClient.from("asaas_charges").select("id,student_uuid,month,value,due_date,status,invoice_url,paid_at,applied").gte("month", addMonths(currentMonthKey(), -18)).limit(2000);
-asaasCharges = Array.isArray(data) ? data : [];
-} catch(e) {}
-await asaasApply();
-try { renderPendingPayments(); } catch(e) {}
-}
-// Pagos no Asaas que o app ainda não marcou: marca com o dia em que o aluno pagou.
-async function asaasApply(){
-const todo = asaasCharges.filter(c => c.status === "paid" && !c.applied);
-if (!todo.length) return;
-const map = studentUuidMap(), names = [], ids = [];
-todo.forEach(c => {
-const s = map.student(c.student_uuid);
-ids.push(c.id);
-if (!s || getPaidMonths(s).has(c.month)) return;
-setMonthPaid(s, c.month, true, c.paid_at || isoOf(new Date()));
-names.push(`${firstName(s.name)} (${monthLabel(c.month)})`);
-});
-if (names.length) { saveStudents(); try { renderStudents(); renderHome(); } catch(e) {} }
-try { const { error } = await supabaseClient.rpc("hi_asaas_applied", { p_ids: ids }); if (!error) todo.forEach(c => { c.applied = true; }); } catch(e) {}
-if (names.length) showCloudWarning(names.length === 1 ? `Pagamento recebido pelo Asaas: ${names[0]}. Já está marcado como pago.` : `Pagamentos recebidos pelo Asaas: ${names.join(", ")}. Já estão marcados como pagos.`);
-}
-setInterval(() => { if (asaasOn() && document.visibilityState === "visible") asaasLoad(); }, 5 * 60000);
-function asaasRowRender(){
-const row = document.getElementById("rowAsaas");
-if (!row) return;
-row.style.display = asaasState ? "" : "none";
-const v = document.getElementById("valAsaas");
-if (v) v.textContent = asaasOn() ? (asaasState.sandbox ? "Ligada (teste)" : "Ligada") : "Desligada";
-}
-function asaasPayerName(s){ return String(s.guardianName || s.name || "").trim(); }
-function asaasItem(s, key){
-const u = studentUuidMap().of(s), r = payRules() || {};
-const cur = currentMonthKey(), late = isPastDue(s, key);
-const dueDay = Number(s.dueDay) > 0 ? Number(s.dueDay) : 10;
-const due = monthDayIso(key, dueDay);
-const it = { student_uuid: u, month: key, value: late ? payQuote(s, key).value : Number(studentMonthlyValue(s, key)) || 0, due_date: due,
-name: asaasPayerName(s), doc: s.payerDoc || "", phone: s.guardianPhone || s.phone || "",
-description: `Mensalidade de ${monthLongLabel(key)} · ${s.name}` };
-if (!late && key >= cur) {
-if (Number(r.fine) > 0) it.fine = Number(r.fine);
-if (Number(r.interest) > 0) it.interest = Number(r.interest);
-const dDay = Number(r.discDay) > 0 ? Number(r.discDay) : dueDay;
-if (Number(r.disc) > 0) it.discount = { value: Number(r.disc), type: r.discType === "pct" ? "pct" : "value", days: Math.max(0, dueDay - dDay) };
-}
-return it;
-}
-async function asaasGenerate(list, btn){
-const noDoc = list.filter(x => String(x.s.payerDoc || "").replace(/\D/g, "").length < 11);
-const ok = list.filter(x => !noDoc.includes(x));
-if (!ok.length) { alert(`Falta o CPF de quem paga no cadastro de: ${[...new Set(noDoc.map(x => firstName(x.s.name)))].join(", ")}. O Asaas pede o CPF para gerar a cobrança.`); return; }
-const ask = APP_LANG === "en"
-? `Create ${ok.length} charge${ok.length === 1 ? "" : "s"} in Asaas?${noDoc.length ? ` ${noDoc.length} without the payer's CPF will be left out.` : ""} Then just tap "Charge" to send the link on WhatsApp.`
-: `Gerar ${ok.length === 1 ? "1 cobrança" : `${ok.length} cobranças`} no Asaas?${noDoc.length ? ` ${noDoc.length === 1 ? "Fica" : "Ficam"} de fora ${noDoc.length} sem CPF de quem paga.` : ""} Depois é só tocar em "Cobrar" para mandar o link pelo WhatsApp.`;
-if (!confirm(ask)) return;
-if (btn) { btn.disabled = true; btn.textContent = "Gerando..."; }
-let made = 0; const fails = [];
-try {
-for (let i = 0; i < ok.length; i += 20) {
-const part = ok.slice(i, i + 20);
-const res = await asaasCall({ action: "charge", items: part.map(x => asaasItem(x.s, x.key)) });
-(res.items || []).forEach((r, k) => {
-if (r.error) { fails.push(`${firstName(part[k].s.name)}: ${r.error}`); return; }
-asaasCharges = asaasCharges.filter(c => c.id !== r.id).concat([{ id: r.id, student_uuid: r.student_uuid, month: r.month, value: r.value, due_date: r.due_date, status: r.status, invoice_url: r.invoice_url, applied: false }]);
-made++;
-});
-}
-} catch(e) { fails.push(e.message); }
-renderPendingPayments();
-if (fails.length) alert((APP_LANG === "en" ? `${made ? `${made} charge${made === 1 ? "" : "s"} created. ` : ""}Didn't work:\n` : `${made ? `${made === 1 ? "1 cobrança gerada" : `${made} cobranças geradas`}. ` : ""}Não deu certo:\n`) + fails.slice(0, 8).join("\n"));
-else showCloudWarning(made === 1 ? "1 cobrança gerada no Asaas. Toque em \"Cobrar\" para mandar o link." : `${made} cobranças geradas no Asaas. Toque em "Cobrar" para mandar o link.`);
-}
-function openAsaas(){
-const body = document.createElement("div");
-const on = asaasOn();
-body.innerHTML = on ? `<div class="push-state"><span>Conta do Asaas:</span> <b class="ok">ligada${asaasState.sandbox ? " (teste)" : ""}</b></div>
-${asaasState.name ? `<div class="field-hint">${escapeHtml(asaasState.name)}</div>` : ""}
-<div class="field-hint">No Início, em "Mensalidades", toque em "Gerar cobranças pelo Asaas". O aluno paga pelo link (Pix, boleto ou cartão) e o app marca como pago sozinho, com o dia do pagamento. O dinheiro cai na sua conta do Asaas; as taxas são as do Asaas.</div>
-<button type="button" class="cancel" id="asOff" style="width:100%;margin-top:0.75rem">Desligar</button>
-<div class="auth-error" id="asErr"></div>`
-: `<div class="field-hint" style="margin-top:0">O aluno paga por Pix, boleto ou cartão e o app dá baixa sozinho. O dinheiro cai direto na sua conta do Asaas (o Hi Teacher não passa pelo meio). As taxas por cobrança são as do Asaas.</div>
-<div class="field-hint">1. Crie a sua conta grátis em asaas.com (para testar antes, use sandbox.asaas.com).<br>2. No Asaas: Integrações → Chave de API → Gerar chave. Copie a chave.<br>3. Cole aqui e toque em Ligar.</div>
-<div class="field"><label>Chave de API do Asaas</label><input type="password" id="asKey" autocomplete="off" placeholder="$aact_..."></div>
-<div class="toggle-field"><label>Conta de teste (sandbox)</label><label class="switch"><input type="checkbox" id="asSandbox"><span class="switch-slider"></span></label></div>
-<div class="field-hint">O Asaas pede o CPF de quem paga: preencha no cadastro de cada aluno ("CPF de quem paga").</div>
-<div class="auth-error" id="asErr"></div>`;
-const err = () => body.querySelector("#asErr");
-const off = body.querySelector("#asOff");
-if (off) off.onclick = async () => {
-if (!confirm("Desligar a cobrança automática? As cobranças já geradas continuam no Asaas.")) return;
-off.disabled = true;
-try { await asaasCall({ action: "disconnect" }); closeQuickModal(); await asaasLoad(); showCloudWarning("Cobrança automática desligada."); }
-catch(e) { err().textContent = e.message; off.disabled = false; }
-};
-openQuickModal("Cobrança automática", "", body, on ? null : async () => {
-const key = body.querySelector("#asKey").value.trim();
-if (!key) { err().textContent = "Cole a chave de API do Asaas."; return; }
-err().style.color = "var(--muted)"; err().textContent = "Conferindo com o Asaas...";
-try {
-await asaasCall({ action: "connect", apiKey: key, sandbox: body.querySelector("#asSandbox").checked });
-closeQuickModal(); await asaasLoad();
-showCloudWarning("Conta do Asaas ligada. No Início, toque em \"Gerar cobranças pelo Asaas\".");
-} catch(e) { err().style.color = ""; err().textContent = e.message; }
-}, on ? "Fechar" : "Cancelar", "Ligar");
-}
-document.getElementById("rowAsaas").onclick = openAsaas;
 function renderPendingPayments(){
 const box = document.getElementById("pendingPaymentsBox");
 if (!box) return;
@@ -13986,7 +13784,7 @@ return `
 <button type="button" class="goal-check" data-mark-paid="${r.s.id}|${r.key}" aria-label="Marcar mensalidade de ${escapeHtml(r.s.name)} (${monthLabel(r.key)}) como paga"></button>
 <div class="goal-info">
 <div class="goal-title">${escapeHtml(sn(r.s))}</div>
-<div class="pay-meta"><span class="goal-period-badge">R$ ${moneyText(r.q.value)}</span>${r.q.kind ? `<span class="pay-due">${r.q.kind === "disc" ? "com desconto" : "com multa e juros"}</span>` : ""}${status}${asaasOn() && asaasChargeOf(r.s, r.key) ? `<span class="pay-due">Cobrança gerada</span>` : ""}</div>
+<div class="pay-meta"><span class="goal-period-badge">R$ ${moneyText(r.q.value)}</span>${r.q.kind ? `<span class="pay-due">${r.q.kind === "disc" ? "com desconto" : "com multa e juros"}</span>` : ""}${status}</div>
 </div>
 ${chargeLink(r.s, r.key)}
 </div>`;
@@ -13994,9 +13792,7 @@ ${chargeLink(r.s, r.key)}
 box.innerHTML =
 (late.length ? `<div class="settings-group-label" style="margin-top:1.5rem">Mensalidades atrasadas</div>${late.map(row).join("")}` : "") +
 (now.length ? `<div class="settings-group-label" style="margin-top:1.5rem">Mensalidades deste mês</div>${now.map(row).join("")}` : "") +
-(asaasOn() && rows.some(r => !asaasChargeOf(r.s, r.key)) ? `<button type="button" class="btn-historico" id="asaasGenAll" style="width:100%;margin-top:0.75rem">Gerar cobranças pelo Asaas (${rows.filter(r => !asaasChargeOf(r.s, r.key)).length})</button>` : "") +
 receivablesHTML();
-{ const g = box.querySelector("#asaasGenAll"); if (g) g.onclick = () => asaasGenerate(rows.filter(r => !asaasChargeOf(r.s, r.key)).map(r => ({ s: r.s, key: r.key })), g); }
 bindReceivables(box);
 box.querySelectorAll("[data-mark-paid]").forEach(btn => {
 btn.onclick = () => {
