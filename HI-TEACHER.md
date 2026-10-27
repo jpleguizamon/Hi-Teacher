@@ -525,6 +525,12 @@ Versão do app 8.46; o arquivo do servidor desta rodada é `supabase/schema-v8.4
 - App Android (versionCode 10, 8.48): a ponte `setTheme` pinta as barras do sistema da mesma cor. Até instalar o app novo, no claro as barras de cima e de baixo ficam escuras.
 - Imagens geradas para compartilhar (resumo do mês, recibo, contrato) não mudam com o tema.
 
+## Funil de matrícula e inadimplência (8.49)
+- **Lista de espera** (Agenda → Lista de espera): cada pessoa ganha o botão "Aula experimental" (dia e horário). Ela aparece na pessoa e entra na Agenda como evento (`id` "wlt-" + id da pessoa). O ✕ agora pergunta o motivo (Desistiu, Sem horário que sirva, Achou caro, Parou de responder, Outro motivo); "Foi engano" tira sem contar.
+- **Registro** `appSettings.leadLog`: `{ id, name, since, trial?, out: "student" | "lost" | "sent", outAt, why? }`. Todo mundo que passa pela lista fica anotado, mesmo depois de sair dela (até 500). Começa com quem já está na lista hoje. "Virar aluno" marca `student`; passar para outro professor da escola marca `sent`.
+- **Estatísticas → Matrículas**: barras Interessados → Aula experimental → Viraram alunos (últimos 12 meses), "Por que não entraram" e "Tempo até a matrícula".
+- **Estatísticas → Dinheiro → Inadimplência**: % dos alunos com mensalidade que têm algum mês vencido, e quantos devem 2 meses ou mais.
+
 ## O que ainda falta / próximos passos
 
 - **App do aluno — ideias ainda não feitas (lista de set/2026)**: gravação enviada pelo próprio app com comentário do professor marcado no tempo (hoje vai pelo compartilhar do celular); cifras e partituras anexadas pelo professor (precisa de armazenamento de arquivos no Supabase); cadastro já completo pelo convite (hoje o link só preenche a chave; para interessados existe a ficha de matrícula da 8.35); lembrete de aula por notificação do celular (hoje é pela agenda .ics); mural da turma e avisos por turma; toques de IA (feedback da gravação, plano da semana a partir do resumo da aula, assistente de teoria).

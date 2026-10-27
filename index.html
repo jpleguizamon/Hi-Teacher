@@ -3868,7 +3868,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.48";
+const APP_VERSION = "8.49";
 // Idioma (8.42): troca entre português e inglês e recarrega. Fica guardado neste aparelho.
 function langSwitchLabel(){ return APP_LANG === "en" ? "🌐 Mudar para português" : "🌐 Switch to English"; }
 function langSwitch(){
@@ -15622,7 +15622,13 @@ card("Faturamento médio", earn.length ? `R$ ${moneyText(Math.round(avgEarn))}` 
 card(`Faturamento de ${y}`, `R$ ${moneyText(Math.round(thisYear))}`, lastYear > 0 ? `${statsPct(thisYear / lastYear - 1)} em relação ao mesmo período de ${y - 1}.` : (APP_LANG === "en" ? `From January to ${MONTH_FULL[m]}.` : `De janeiro até ${MONTH_ABBR[m]}.`)),
 card("Previsto para este mês", `R$ ${moneyText(Math.round(calculateCurrentMonthlyRevenue()))}`, "Somando mensalidades, aulas avulsas e pacotes do mês.", { now: calculateCurrentMonthlyRevenue(), before: valAt(earningsData, ago3) || -1 }),
 card("Mensalidade média", monthly.length ? `R$ ${moneyText(Math.round(avgFee))}` : "—", monthly.length ? `Entre ${monthly.length} aluno${monthly.length === 1 ? "" : "s"} com mensalidade.` : "Nenhum aluno com mensalidade."),
-card("Em atraso", lateN ? `R$ ${moneyText(Math.round(lateV))}` : "R$ 0", lateN ? `${lateN} mensalidade${lateN === 1 ? "" : "s"} vencida${lateN === 1 ? "" : "s"}.` : "Nenhuma mensalidade vencida.")
+card("Em atraso", lateN ? `R$ ${moneyText(Math.round(lateV))}` : "R$ 0", lateN ? `${lateN} mensalidade${lateN === 1 ? "" : "s"} vencida${lateN === 1 ? "" : "s"}.` : "Nenhuma mensalidade vencida."),
+// 8.49: quantos alunos com mensalidade estão com algum mês vencido.
+(() => {
+const late = monthly.filter(s => unpaidMonths(s).some(k => isPastDue(s, k)));
+const two = late.filter(s => unpaidMonths(s).filter(k => isPastDue(s, k)).length >= 2).length;
+return card("Inadimplência", monthly.length ? `${Math.round(late.length / monthly.length * 100)}%` : "—", !monthly.length ? "Nenhum aluno com mensalidade." : late.length ? (APP_LANG === "en" ? `${late.length} of ${monthly.length} student${monthly.length === 1 ? "" : "s"} with a monthly fee ${late.length === 1 ? "is" : "are"} behind${two ? ` · ${two} owe${two === 1 ? "s" : ""} 2 months or more` : ""}. The list to send reminders is on Home.` : `${late.length === 1 ? "1 aluno" : `${late.length} alunos`} de ${monthly.length} com mensalidade em atraso${two ? ` · ${two === 1 ? "1 deve" : `${two} devem`} 2 meses ou mais` : ""}. A lista para cobrar fica no Início.`) : "Todos em dia.");
+})()
 ];
 // ---- Aulas ----
 const abs = active.reduce((a, s) => a + (countMonthAbsences(s) || 0), 0);
@@ -15635,7 +15641,22 @@ card("Aulas por semana", String(Math.round(weekly * 10) / 10).replace(".", ","),
 card("Faltas neste mês", String(abs), active.length ? `Média de ${(abs / active.length).toLocaleString(APP_LOCALE, { maximumFractionDigits: 1 })} por aluno.` : ""),
 `<div class="kpi-card stats-wide"><div class="kpi-title">Alunos por instrumento</div>${instList.length ? `<div class="stats-bars">${instList.map(([k, n]) => `<div class="stats-bar-row"><span>${escapeHtml(k)}</span><span class="stats-bar"><i style="width:${Math.round(n / instMax * 100)}%"></i></span><span>${n}</span></div>`).join("")}</div>` : `<div class="kpi-sub">Nenhum aluno ativo.</div>`}</div>`
 ];
-box.innerHTML = sec("Alunos", alunos) + sec("Dinheiro", dinheiro) + sec("Aulas", aulas) + surveyStatsHTML(card, sec);
+// ---- Matrículas (funil, 8.49) ----
+const leads = leadLog().filter(e => e.since && e.since > yearAgo && e.since <= todayIso);
+const nTrial = leads.filter(e => e.trial).length, nStu = leads.filter(e => e.out === "student").length, nLost = leads.filter(e => e.out === "lost").length;
+const pctOf = (a, b) => b ? ` (${Math.round(a / b * 100)}%)` : "";
+const daysTo = leads.filter(e => e.out === "student" && e.outAt).map(e => Math.max(0, Math.round((dateFromIso(e.outAt) - dateFromIso(e.since)) / 86400000)));
+const lostWhy = {};
+leads.filter(e => e.out === "lost").forEach(e => { const k = LEAD_LOST[e.why] ? e.why : "other"; lostWhy[k] = (lostWhy[k] || 0) + 1; });
+const lostList = Object.entries(lostWhy).sort((a, b) => b[1] - a[1]);
+const funnelMax = Math.max(1, leads.length);
+const fBar = (label, n) => `<div class="stats-bar-row"><span>${label}</span><span class="stats-bar"><i style="width:${Math.round(n / funnelMax * 100)}%"></i></span><span>${n}</span></div>`;
+const matriculas = [
+`<div class="kpi-card stats-wide"><div class="kpi-title">Do interessado ao aluno</div>${leads.length ? `<div class="stats-bars">${fBar("Interessados", leads.length)}${fBar("Experimental", nTrial)}${fBar("Viraram alunos", nStu)}</div><div class="kpi-sub"><span>${(n => n === 1 ? "De cada 10 interessados, 1 virou aluno." : `De cada 10 interessados, ${n} viraram alunos.`)(Math.round(nStu / leads.length * 10))}</span>${nTrial ? (n => n === 1 ? ` <span>Dos que fizeram aula experimental, 1 de ${nTrial} entrou.</span>` : ` <span>Dos que fizeram aula experimental, ${n} de ${nTrial} entraram.</span>`)(leads.filter(e => e.trial && e.out === "student").length) : ""} <span>Últimos 12 meses, pela lista de espera.</span></div>` : `<div class="kpi-sub">Aparece quando você usar a lista de espera (Agenda → Lista de espera): anote quem pediu informação, marque a aula experimental e toque em "Virar aluno".</div>`}</div>`,
+card("Por que não entraram", lostList.length ? escapeHtml(LEAD_LOST[lostList[0][0]]) : "—", lostList.length ? lostList.map(([k, n]) => `${escapeHtml(LEAD_LOST[k])}: ${n}`).join(" · ") : nLost ? "" : "Ninguém saiu da lista sem virar aluno."),
+card("Tempo até a matrícula", daysTo.length ? `${Math.round(avg(daysTo))} dia${Math.round(avg(daysTo)) === 1 ? "" : "s"}` : "—", daysTo.length ? "Média, do dia em que entrou na lista até virar aluno." : "Aparece depois do primeiro \"Virar aluno\".")
+];
+box.innerHTML = sec("Alunos", alunos) + sec("Matrículas", matriculas) + sec("Dinheiro", dinheiro) + sec("Aulas", aulas) + surveyStatsHTML(card, sec);
 { const b = box.querySelector("#svAll"); if (b) b.onclick = openSurveyAnswers; }
 }
 
@@ -17380,7 +17401,7 @@ renderStudents();
 renderHome();
 returnToSheet();
 // Veio da lista de espera ("Virar aluno"): sai da lista.
-if (waitlistConvertId !== null && !editingId) { const wl = waitlist().find(x => x.id === waitlistConvertId); appSettings.waitlist = waitlist().filter(x => x.id !== waitlistConvertId); saveAppSettings(); waitlistConvertedFromJoin(wl, obj); }
+if (waitlistConvertId !== null && !editingId) { const wl = waitlist().find(x => x.id === waitlistConvertId); leadClose(wl, "student"); appSettings.waitlist = waitlist().filter(x => x.id !== waitlistConvertId); saveAppSettings(); waitlistConvertedFromJoin(wl, obj); }
 waitlistConvertId = null;
 };
 
@@ -17939,7 +17960,75 @@ function waitlistPrefText(p){
 const days = orderedDays(p.days || []).map(d => WEEKDAY_SHORT[d]).join(", ");
 return [p.instrument, days, p.time].filter(Boolean).map(escapeHtml).join(" · ");
 }
+// ===== Funil de matrícula (8.49) =====
+// appSettings.leadLog = [{ id, name, since, trial:{d,t}?, out:"student"|"lost"|"sent"?, outAt?, why? }]
+// Todo interessado que passa pela lista de espera fica anotado aqui, mesmo depois de sair dela,
+// para as Estatísticas mostrarem quantos viram aula experimental e quantos viram aluno.
+const LEAD_LOST = { gave_up: "Desistiu", schedule: "Sem horário que sirva", price: "Achou caro", no_answer: "Parou de responder", other: "Outro motivo" };
+function leadLog(){ return Array.isArray(appSettings.leadLog) ? appSettings.leadLog : []; }
+function leadSync(){
+const log = leadLog().slice();
+let changed = false;
+waitlist().forEach(p => {
+let e = log.find(x => x.id === p.id);
+if (!e) { e = { id: p.id, name: plainText(p.name, 80), since: p.since || isoOf(new Date()) }; log.push(e); changed = true; }
+if (p.trial && (!e.trial || e.trial.d !== p.trial.d || e.trial.t !== p.trial.t)) { e.trial = { d: p.trial.d, ...(p.trial.t ? { t: p.trial.t } : {}) }; changed = true; }
+});
+if (changed) { appSettings.leadLog = log.slice(-500); saveAppSettings(); }
+}
+// Saiu da lista: virou aluno, desistiu (com motivo) ou foi passado para outro professor.
+function leadClose(p, out, why){
+if (!p) return;
+leadSync();
+const e = leadLog().find(x => x.id === p.id);
+if (!e || e.out) return;
+e.out = out; e.outAt = isoOf(new Date());
+if (why) e.why = why;
+saveAppSettings();
+}
+function leadTrialEventId(p){ return "wlt-" + p.id; }
+function openLeadTrial(id){
+const p = waitlist().find(x => x.id === id);
+if (!p) return;
+const body = document.createElement("div");
+body.innerHTML = `<div style="display:flex;gap:10px"><div class="field" style="flex:1"><label>Dia</label><input type="date" id="ltDate" value="${escapeHtml((p.trial && p.trial.d) || "")}"></div><div class="field" style="flex:1"><label>Horário</label><input type="time" id="ltTime" value="${escapeHtml((p.trial && p.trial.t) || "")}"></div></div>
+<div class="field-hint">Entra na Agenda. Depois da aula, toque em "Virar aluno" ou tire da lista dizendo o motivo.</div>
+${p.trial ? `<button type="button" class="btn-link-inline" id="ltClear" style="margin-top:0.5rem">Desmarcar a aula experimental</button>` : ""}`;
+const drop = () => { agendaEvents = agendaEvents.filter(e => e.id !== leadTrialEventId(p)); };
+const done = () => { saveAgendaEvents(); saveAppSettings(); leadSync(); closeQuickModal(); renderWaitlist(); try { renderAgenda(); } catch(e) {} };
+const clr = body.querySelector("#ltClear");
+if (clr) clr.onclick = () => { delete p.trial; drop(); const e = leadLog().find(x => x.id === p.id); if (e) delete e.trial; done(); };
+openQuickModal(`Aula experimental de ${firstName(p.name)}`, "", body, () => {
+const d = body.querySelector("#ltDate").value, t = body.querySelector("#ltTime").value;
+if (!d) { alert("Escolha o dia da aula experimental."); return; }
+p.trial = { d, ...(t ? { t } : {}) };
+drop();
+agendaEvents.push({ id: leadTrialEventId(p), date: d, type: "event", title: t ? `Aula experimental: ${p.name} às ${t}` : `Aula experimental: ${p.name}` });
+done();
+}, "Cancelar", "Salvar");
+}
+// ✕ na lista de espera: pergunta o motivo (vai para as Estatísticas). "Foi engano" não conta.
+function leadRemove(id){
+const p = waitlist().find(x => x.id === id);
+if (!p) return;
+const body = document.createElement("div");
+body.innerHTML = `<div class="choice-chips">${Object.entries(LEAD_LOST).map(([k, v]) => `<button type="button" class="filter-chip" data-lw="${k}">${v}</button>`).join("")}<button type="button" class="filter-chip" data-lw="mistake">Foi engano (não contar)</button></div>
+<div class="field-hint" style="margin-top:0.625rem">Ajuda a ver, nas Estatísticas, por que os interessados não viram alunos.</div>`;
+body.querySelectorAll("[data-lw]").forEach(b => b.onclick = () => {
+const why = b.dataset.lw;
+closeQuickModal();
+if (why === "mistake") appSettings.leadLog = leadLog().filter(x => x.id !== p.id);
+else leadClose(p, "lost", why);
+appSettings.waitlist = waitlist().filter(x => x !== p);
+agendaEvents = agendaEvents.filter(e => e.id !== leadTrialEventId(p) || e.date < isoOf(new Date()));
+saveAgendaEvents();
+saveAppSettings();
+renderWaitlist();
+});
+openQuickModal(`Tirar ${firstName(p.name)} da lista`, "", body, null, "Cancelar");
+}
 function renderWaitlist(){
+leadSync();
 const list = waitlist();
 const box = document.getElementById("waitlistList");
 box.innerHTML = list.length ? list.map(p => {
@@ -17948,20 +18037,16 @@ return `<div class="wl-item">
 <div><div class="wl-name">${escapeHtml(p.name)}${p.fresh ? ` <span class="status upcoming">Novo pela ficha</span>` : ""}</div>
 <div class="wl-sub">${waitlistPrefText(p) || "Sem preferência"}${p.since ? ` · desde ${formatDateShort(p.since).slice(0,5)}` : ""}</div>
 ${p.notes ? `<div class="wl-notes">${escapeHtml(p.notes)}</div>` : ""}
+${p.trial ? `<div class="wl-notes">Aula experimental: ${formatDateShort(p.trial.d)}${p.trial.t ? " às " + escapeHtml(p.trial.t) : ""}</div>` : ""}
 ${p.sentTo ? `<div class="wl-notes">Encaminhado para ${escapeHtml(p.sentTo.name || "outro professor")}, esperando resposta.</div>` : ""}</div>
-<div class="wl-acts">${wa ? `<a class="wa-btn wa-mini" href="${wa}" target="_blank" rel="noopener">WhatsApp</a>` : ""}<button type="button" class="btn-edit-toggle" data-wl-convert="${p.id}">Virar aluno</button>${schoolCanForward() && !p.sentTo ? `<button type="button" class="btn-link-inline" data-wl-send="${p.id}">Passar para professor</button>` : ""}<button type="button" class="btn-link-inline" data-wl-edit="${p.id}">Editar</button><button type="button" class="makeup-dismiss" data-wl-del="${p.id}" aria-label="Tirar ${escapeHtml(p.name)} da lista">✕</button></div>
+<div class="wl-acts">${wa ? `<a class="wa-btn wa-mini" href="${wa}" target="_blank" rel="noopener">WhatsApp</a>` : ""}<button type="button" class="btn-edit-toggle" data-wl-convert="${p.id}">Virar aluno</button><button type="button" class="btn-link-inline" data-wl-trial="${p.id}">${p.trial ? "Mudar aula experimental" : "Aula experimental"}</button>${schoolCanForward() && !p.sentTo ? `<button type="button" class="btn-link-inline" data-wl-send="${p.id}">Passar para professor</button>` : ""}<button type="button" class="btn-link-inline" data-wl-edit="${p.id}">Editar</button><button type="button" class="makeup-dismiss" data-wl-del="${p.id}" aria-label="Tirar ${escapeHtml(p.name)} da lista">✕</button></div>
 </div>`;
 }).join("") : `<div class="field-hint" style="margin:0">Ninguém na lista ainda. Anote aqui quem pediu horário e ainda não tem vaga.</div>`;
 box.querySelectorAll("[data-wl-convert]").forEach(b => b.onclick = () => waitlistToStudent(b.dataset.wlConvert));
 box.querySelectorAll("[data-wl-send]").forEach(b => b.onclick = () => openWaitlistSend(b.dataset.wlSend));
 box.querySelectorAll("[data-wl-edit]").forEach(b => b.onclick = () => openWaitlistForm(b.dataset.wlEdit));
-box.querySelectorAll("[data-wl-del]").forEach(b => b.onclick = () => {
-const p = waitlist().find(x => x.id === b.dataset.wlDel);
-if (!p || !confirm(`Tirar ${p.name} da lista de espera?`)) return;
-appSettings.waitlist = waitlist().filter(x => x !== p);
-saveAppSettings();
-renderWaitlist();
-});
+box.querySelectorAll("[data-wl-trial]").forEach(b => b.onclick = () => openLeadTrial(b.dataset.wlTrial));
+box.querySelectorAll("[data-wl-del]").forEach(b => b.onclick = () => leadRemove(b.dataset.wlDel));
 }
 function openWaitlist(){
 closeWaitlistForm();
@@ -20687,7 +20772,7 @@ let wlChanged = false;
 list.filter(t => t.kind === "lead" && t.ref).forEach(t => {
 const p = waitlist().find(x => x.id === t.ref);
 if (!p || !p.sentTo || p.sentTo.tid !== t.id) return;
-if (t.status === "accepted") { appSettings.waitlist = waitlist().filter(x => x !== p); wlChanged = true; }
+if (t.status === "accepted") { leadClose(p, "sent"); appSettings.waitlist = waitlist().filter(x => x !== p); wlChanged = true; }
 else if (t.status === "rejected" || t.status === "cancelled") { delete p.sentTo; wlChanged = true; }
 });
 if (wlChanged) { saveAppSettings(); try { if (document.getElementById("waitlistModal").classList.contains("show")) renderWaitlist(); } catch(e) {} }
