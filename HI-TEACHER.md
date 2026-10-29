@@ -540,6 +540,9 @@ Versão do app 8.46; o arquivo do servidor desta rodada é `supabase/schema-v8.4
 - As linhas "Meu plano", "Indique um professor" e "Assinaturas" (só do dono do app) estavam parando dentro da pasta Dados e backup, porque não estavam na lista de nenhuma pasta de Configurações. Agora ficam em **Conta**. Linha nova em Configurações: pôr o id dela na lista `rows` de uma pasta em `SETTINGS_FOLDERS`, senão ela cai em Dados e backup.
 - Dono do app = linha em `app_admins` com o e-mail com que ele entra (não é só o do arquivo SQL). Para incluir: `insert into public.app_admins (user_id) select id from auth.users where lower(email)=lower('EMAIL') on conflict do nothing;`
 
+## Arquivo único do servidor (8.57)
+- `supabase/schema-tudo.sql` junta todas as atualizações do servidor (8.0 até 8.45). Primeiro confere o que já está instalado e roda só o que falta, então pode ser colado e rodado quantas vezes quiser, mesmo com o servidor parcialmente atualizado. Termina mostrando a lista do que está instalado (deve ir até 8.45). Cópia para colar em `/mnt/project-files/supabase-para-colar/`. Gerado a partir dos `schema-v*.sql` (sem as travas de versão); ao criar um schema novo, regenerar. Testado em PostgreSQL 16 do zero e rodando duas vezes.
+
 ## O que ainda falta / próximos passos
 
 - **App do aluno — ideias ainda não feitas (lista de set/2026)**: gravação enviada pelo próprio app com comentário do professor marcado no tempo (hoje vai pelo compartilhar do celular); cifras e partituras anexadas pelo professor (precisa de armazenamento de arquivos no Supabase); cadastro já completo pelo convite (hoje o link só preenche a chave; para interessados existe a ficha de matrícula da 8.35); lembrete de aula por notificação do celular (hoje é pela agenda .ics); mural da turma e avisos por turma; toques de IA (feedback da gravação, plano da semana a partir do resumo da aula, assistente de teoria).
