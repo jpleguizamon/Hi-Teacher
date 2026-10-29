@@ -2422,7 +2422,7 @@ body.pdf-open{overflow:hidden}
 
 <div id="authGate" class="is-loading">
 <div class="auth-card">
-<svg class="brand-owl auth-owl" viewBox="72 72 880 880" aria-hidden="true"><use href="#brand-owl"/></svg><img class="auth-logo-img" src="icons/logo-text.png" alt="Hi Teacher">
+<svg class="brand-owl auth-owl" viewBox="0 0 880 880" aria-hidden="true"><use href="#brand-owl"/></svg><img class="auth-logo-img" src="icons/logo-text.png" alt="Hi Teacher">
 <p class="auth-tagline">Agenda, alunos e mensalidades do professor particular, num lugar só.</p>
 <p id="authSubtitle">Entre pra acessar seus dados.</p>
 <div id="authChoice" style="display:none">
@@ -2509,7 +2509,7 @@ body.pdf-open{overflow:hidden}
 <button class="menu-btn" id="menuBtn" aria-label="Abrir menu"><span class="menu-badge-dot" id="menuBadgeDot" style="display:none"></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18"/><path d="M3 12h18"/><path d="M3 18h18"/></svg></button>
 <div class="top">
 <div>
-<div class="header-brand"><svg class="brand-owl header-owl" viewBox="72 72 880 880" aria-hidden="true"><use href="#brand-owl"/></svg><img class="header-app-title" src="icons/logo-text.png" alt="Hi Teacher"></div>
+<div class="header-brand"><svg class="brand-owl header-owl" viewBox="0 0 880 880" aria-hidden="true"><use href="#brand-owl"/></svg><img class="header-app-title" src="icons/logo-text.png" alt="Hi Teacher"></div>
 <div class="date" id="dateLabel">Início</div>
 </div>
 <button type="button" class="stu-bell" id="teacherBell" aria-label="Notificações" aria-haspopup="dialog" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-bell"/></svg><span class="stu-bell-badge" id="teacherBellBadge" style="display:none"></span></button>
@@ -2897,7 +2897,7 @@ body.pdf-open{overflow:hidden}
 
 <!-- Barra Lateral Reestruturada -->
 <aside class="sidebar" id="sidebar">
-<div class="side-logo"><svg class="brand-owl side-owl" viewBox="72 72 880 880" aria-hidden="true"><use href="#brand-owl"/></svg><img class="side-logo-img" src="icons/logo-text.png" alt="Hi Teacher"></div>
+<div class="side-logo"><svg class="brand-owl side-owl" viewBox="0 0 880 880" aria-hidden="true"><use href="#brand-owl"/></svg><img class="side-logo-img" src="icons/logo-text.png" alt="Hi Teacher"></div>
 <div class="nav">
 <div class="nav-sec" id="navSchoolSec" style="display:none">
 <div class="nav-sec-label">Escola</div>
@@ -2987,7 +2987,7 @@ body.pdf-open{overflow:hidden}
 <button class="menu-btn" id="stuMenuBtn" aria-label="Abrir menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18"/><path d="M3 12h18"/><path d="M3 18h18"/></svg></button>
 <div class="top">
 <div>
-<div class="header-brand"><svg class="brand-owl header-owl" viewBox="72 72 880 880" aria-hidden="true"><use href="#brand-owl"/></svg><img class="header-app-title" id="stuLogo" alt="Hi Teacher"></div>
+<div class="header-brand"><svg class="brand-owl header-owl" viewBox="0 0 880 880" aria-hidden="true"><use href="#brand-owl"/></svg><img class="header-app-title" id="stuLogo" alt="Hi Teacher"></div>
 <div class="date" id="stuPageTitle">Início</div>
 <select id="stuPicker" class="stu-picker" aria-label="Aluno" style="display:none"></select>
 </div>
@@ -2999,7 +2999,7 @@ body.pdf-open{overflow:hidden}
 </div>
 <div class="overlay stu-shell" id="stuOverlay"></div>
 <aside class="sidebar stu-shell" id="stuSidebar">
-<div class="side-logo"><svg class="brand-owl side-owl" viewBox="72 72 880 880" aria-hidden="true"><use href="#brand-owl"/></svg><img class="side-logo-img" id="stuSideLogo" alt="Hi Teacher"></div>
+<div class="side-logo"><svg class="brand-owl side-owl" viewBox="0 0 880 880" aria-hidden="true"><use href="#brand-owl"/></svg><img class="side-logo-img" id="stuSideLogo" alt="Hi Teacher"></div>
 <div class="nav">
 <button class="nav-item" data-stu-page="home"><span class="nav-item-row"><svg class="nav-icon" viewBox="0 0 24 24"><use href="#icon-home"/></svg>Início</span></button>
 <button class="nav-item" data-stu-page="lessons"><span class="nav-item-row"><svg class="nav-icon" viewBox="0 0 24 24"><use href="#icon-calendar"/></svg>Aulas</span></button>
@@ -3875,7 +3875,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.54";
+const APP_VERSION = "8.55";
 // Idioma (8.42): troca entre português e inglês e recarrega. Fica guardado neste aparelho.
 function langSwitchLabel(){ return APP_LANG === "en" ? "🌐 Mudar para português" : "🌐 Switch to English"; }
 function langSwitch(){
@@ -10451,7 +10451,7 @@ return `<div class="plan-card tier-${p.tier}${p.best ? " best" : ""}${isCur ? " 
 <div class="plan-name">${escapeHtml(p.name)}</div><div class="plan-price">${escapeHtml(planPriceText(p))}</div>
 <ul class="plan-perks">${p.perks.map(x => `<li>${escapeHtml(x)}</li>`).join("")}</ul>${btn}</div>`;
 }).join("");
-gate.innerHTML = `<div class="plan-wrap"><svg class="brand-owl plan-owl" viewBox="72 72 880 880" aria-hidden="true"><use href="#brand-owl"/></svg>${intro}
+gate.innerHTML = `<div class="plan-wrap"><svg class="brand-owl plan-owl" viewBox="0 0 880 880" aria-hidden="true"><use href="#brand-owl"/></svg>${intro}
 <div class="plan-count">Você tem <b>${n}</b> aluno${n === 1 ? "" : "s"} ativo${n === 1 ? "" : "s"}.</div>
 <div class="plan-grid">${cards}</div>
 ${STORE_APP ? `<p class="plan-foot">Neste app você usa o plano Grátis ou o plano que já está na sua conta.</p>` : ""}
@@ -13557,7 +13557,7 @@ try { token = new URLSearchParams(location.search).get("ficha") || ""; } catch(e
 if (!/^[a-f0-9]{16,64}$/i.test(token)) return;
 const gate = document.createElement("div");
 gate.id = "leadGate";
-gate.innerHTML = `<div class="auth-card lead-card"><div class="lead-head"><svg class="brand-owl auth-owl" viewBox="72 72 880 880" aria-hidden="true"><use href="#brand-owl"/></svg><h2>Ficha de matrícula</h2><div class="lead-sub" id="lfTeacher">Carregando…</div></div><div id="lfBody"></div></div>`;
+gate.innerHTML = `<div class="auth-card lead-card"><div class="lead-head"><svg class="brand-owl auth-owl" viewBox="0 0 880 880" aria-hidden="true"><use href="#brand-owl"/></svg><h2>Ficha de matrícula</h2><div class="lead-sub" id="lfTeacher">Carregando…</div></div><div id="lfBody"></div></div>`;
 document.body.appendChild(gate);
 document.body.classList.add("lead-open");
 const body = gate.querySelector("#lfBody");
