@@ -536,6 +536,10 @@ Versão do app 8.46; o arquivo do servidor desta rodada é `supabase/schema-v8.4
 - Decisão do dono (27/10/2026): **não usar Asaas** nem outra empresa de cobrança por enquanto. A cobrança automática das versões 8.50 e 8.51 foi retirada. Fica como antes: o professor manda a cobrança pelo WhatsApp (com a chave Pix), o aluno avisa "Já paguei" e o professor marca como pago; os planos do app continuam sendo pedidos por e-mail e ativados à mão em Assinaturas. O arquivo `schema-v8.50.sql` e a função `asaas` saíram do projeto e nunca foram rodados no servidor.
 - Se um dia mudar de ideia: dar baixa sozinha sempre precisa de uma empresa ou banco que avise o app (Mercado Pago, Pix de banco digital como Inter/Efí, Pix Automático). O código da 8.50/8.51 está no histórico do git (commits "8.50" e "8.51") e dá para adaptar.
 
+## Meu plano e Assinaturas na pasta Conta (8.56)
+- As linhas "Meu plano", "Indique um professor" e "Assinaturas" (só do dono do app) estavam parando dentro da pasta Dados e backup, porque não estavam na lista de nenhuma pasta de Configurações. Agora ficam em **Conta**. Linha nova em Configurações: pôr o id dela na lista `rows` de uma pasta em `SETTINGS_FOLDERS`, senão ela cai em Dados e backup.
+- Dono do app = linha em `app_admins` com o e-mail com que ele entra (não é só o do arquivo SQL). Para incluir: `insert into public.app_admins (user_id) select id from auth.users where lower(email)=lower('EMAIL') on conflict do nothing;`
+
 ## O que ainda falta / próximos passos
 
 - **App do aluno — ideias ainda não feitas (lista de set/2026)**: gravação enviada pelo próprio app com comentário do professor marcado no tempo (hoje vai pelo compartilhar do celular); cifras e partituras anexadas pelo professor (precisa de armazenamento de arquivos no Supabase); cadastro já completo pelo convite (hoje o link só preenche a chave; para interessados existe a ficha de matrícula da 8.35); lembrete de aula por notificação do celular (hoje é pela agenda .ics); mural da turma e avisos por turma; toques de IA (feedback da gravação, plano da semana a partir do resumo da aula, assistente de teoria).

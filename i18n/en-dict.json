@@ -2101,6 +2101,7 @@
 "Novo valor a partir de {0} para {1} aluno{2}. Confirmar?": "New amount starting {0} for {1} student{2}. Confirm?",
 "Nunca": "Never",
 "Nuvem, entrar como aluno, sair, excluir conta": "Cloud, sign in as a student, sign out, delete account",
+"Nuvem, meu plano, entrar como aluno, sair, excluir conta": "Cloud, my plan, sign in as student, sign out, delete account",
 "Nº de aulas": "No. of lessons",
 "Não achei essa cobrança no cadastro do aluno. Marque pelo cadastro.": "Couldn't find this charge in the student's record. Mark it from their record.",
 "Não achei os dados desse aluno neste aparelho.": "Couldn't find this student's data on this device.",

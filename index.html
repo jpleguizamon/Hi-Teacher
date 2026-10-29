@@ -3875,7 +3875,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.55";
+const APP_VERSION = "8.56";
 // Idioma (8.42): troca entre português e inglês e recarrega. Fica guardado neste aparelho.
 function langSwitchLabel(){ return APP_LANG === "en" ? "🌐 Mudar para português" : "🌐 Switch to English"; }
 function langSwitch(){
@@ -16623,7 +16623,7 @@ const SETTINGS_FOLDERS = [
 { id: "escola", icon: "school", title: "Escola", sub: "Dono de escola ou professor de uma escola", rows: ["rowSchool"] },
 { id: "aluno", icon: "user", title: "App do aluno", sub: "Chave para alunos e conteúdo", rows: ["rowStudentKey", "rowStudentContent"] },
 { id: "dados", icon: "save", title: "Dados e backup", sub: "Exportar, importar, restaurar", rows: ["rowExportarDados", "rowBackupReminder", "rowRestoreSnapshot", "rowImportarDados", "rowApagarDados"] },
-{ id: "conta", icon: "logout", title: "Conta", sub: "Nuvem, entrar como aluno, sair, excluir conta", rows: ["rowCloudSync", "rowStudentMode", "rowSairConta", "rowDeleteAccount"] },
+{ id: "conta", icon: "logout", title: "Conta", sub: "Nuvem, meu plano, entrar como aluno, sair, excluir conta", rows: ["rowCloudSync", "rowMyPlan", "rowReferral", "rowPlanAdmin", "rowStudentMode", "rowSairConta", "rowDeleteAccount"] },
 { id: "sobre", icon: "info", title: "Sobre o app", sub: "Primeiros passos, idioma, aparência, feedback, termos, versão", rows: ["rowOnboarding", "rowIdioma", "rowTema", "rowInstallApp", "rowFeedback", "rowTermos", "valVersao"] }
 ];
 let settingsFolderCur = null;
