@@ -1,6 +1,6 @@
 // Gera os ícones do app instalável (pasta icons/) a partir do símbolo da logo
 // e do APK Android (android/app/src/main/res/mipmap-*) a partir de icons/logo-mark.svg:
-// a coruja branca de óculos e capelo, asa ciano, dentro do círculo ciano (8.33).
+// a coruja branca de óculos e capelo azuis dentro do círculo azul (8.54).
 // Como rodar (na pasta do repositório, com Node e Playwright):
 //   node tools/gerar-icones.js
 // Fundo preto #05060B liso (sem brilho) e a coruja centralizada. No Android, o "foreground" é sem fundo
@@ -16,15 +16,15 @@ const outDir = path.join(root, "icons");
 
 // size: lado do PNG; markW: tamanho do símbolo em relação ao lado.
 const ICONS = [
-  { file: "icon-192.png", size: 192, markW: 0.64 },
-  { file: "icon-512.png", size: 512, markW: 0.64 },
-  { file: "icon-maskable-512.png", size: 512, markW: 0.5 },   // área segura do ícone "maskable"
-  { file: "apple-touch-icon.png", size: 180, markW: 0.64 },
-  { file: "favicon-32.png", size: 32, markW: 0.92 }
+  { file: "icon-192.png", size: 192, markW: 0.88 },
+  { file: "icon-512.png", size: 512, markW: 0.88 },
+  { file: "icon-maskable-512.png", size: 512, markW: 0.76 },   // área segura do ícone "maskable"
+  { file: "apple-touch-icon.png", size: 180, markW: 0.88 },
+  { file: "favicon-32.png", size: 32, markW: 1 }
 ];
 const RES = path.join(root, "android", "app", "src", "main", "res");
 for (const [d, n] of [["mdpi", 48], ["hdpi", 72], ["xhdpi", 96], ["xxhdpi", 144], ["xxxhdpi", 192]]) {
-  ICONS.push({ dir: path.join(RES, "mipmap-" + d), file: "ic_launcher.png", size: n, markW: 0.86 });
+  ICONS.push({ dir: path.join(RES, "mipmap-" + d), file: "ic_launcher.png", size: n, markW: 0.94 });
   ICONS.push({ dir: path.join(RES, "mipmap-" + d), file: "ic_launcher_foreground.png", size: n * 2.25, markW: 0.6, bare: true });
 }
 
