@@ -420,6 +420,17 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .goal-toggle-completed:hover{color:var(--text)}
 .goal-toggle-completed .chevron{display:inline-block;margin-right:0.25rem;transition:transform .2s ease}
 .goal-toggle-completed.expanded .chevron{transform:rotate(90deg)}
+.goal-meta{display:flex;flex-wrap:wrap;align-items:center;gap:0.375rem;margin-top:0.3125rem}
+.goal-due{font-size:0.6875rem;font-weight:700;color:var(--accent);background:var(--accent-soft);border:0.0625rem solid var(--glass-border-soft);padding:0.125rem 0.5rem;border-radius:var(--radius-pill);font-variant-numeric:tabular-nums}
+.goal-due.soon{color:var(--orange);border-color:currentColor;background:transparent}
+.goal-due.late{color:var(--danger);border-color:var(--danger-border);background:rgba(248,113,113,.1)}
+.goal-note{font-size:0.75rem;color:var(--muted);margin-top:0.25rem;overflow-wrap:break-word;white-space:pre-line}
+.goal-prog{display:flex;align-items:center;gap:0.375rem;font-size:0.75rem;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
+.goal-prog-bar{width:3.5rem;height:0.25rem;border-radius:var(--radius-pill);background:rgba(148,163,184,.18);overflow:hidden}
+.goal-prog-bar i{display:block;height:100%;background:var(--accent-fill)}
+.goal-step{width:1.5rem;height:1.5rem;border-radius:50%;border:0.0625rem solid var(--glass-border);background:transparent;color:var(--accent);font-weight:800;line-height:1;cursor:pointer;padding:0}
+.goal-left{font-size:0.75rem;font-weight:600;color:var(--muted);margin-left:0.375rem}
+.goal-num-fields{display:grid;grid-template-columns:1fr 6.5rem;gap:0.75rem}
 .goal-title-btn{background:none;border:none;padding:0;text-align:left;font:inherit;color:inherit;cursor:pointer;display:block;width:100%}
 
 /* ===== Cabeçalho de página ===== */
@@ -2803,6 +2814,12 @@ body.pdf-open{overflow:hidden}
 <button type="button" class="filter-chip" data-period="year">Ano</button>
 </div>
 </div>
+<div class="field"><label>Prazo (opcional)</label><input type="date" id="goalDueInput"><div class="field-hint">Mostra quanto tempo falta.</div></div>
+<div class="field"><label>Detalhes (opcional)</label><textarea id="goalNoteInput" rows="2" placeholder="Ex.: como saber que deu certo, o primeiro passo"></textarea></div>
+<div class="goal-num-fields">
+<div class="field"><label>Quantidade a alcançar (opcional)</label><input type="number" id="goalTargetInput" min="1" step="1" inputmode="numeric" placeholder="Ex.: 5 alunos novos"></div>
+<div class="field"><label>Já feito</label><input type="number" id="goalCurrentInput" min="0" step="1" inputmode="numeric" placeholder="0"></div>
+</div>
 <div class="actions"><button class="cancel" id="goalCancelBtn">Cancelar</button><button class="save" id="goalSaveBtn">Salvar</button></div>
 </div>
 </div>
@@ -3390,11 +3407,11 @@ body.pdf-open{overflow:hidden}
 <div class="modal-bg" id="lessonReminderModal">
 <div class="modal">
 <h2>Lembrete de aula</h2>
-<div class="field"><label>Quando lembrar</label>
+<div class="field" style="display:none"><label>Quando lembrar</label>
 <select id="lrWhen"><option value="eve">Na véspera</option><option value="day">No mesmo dia</option><option value="both">Os dois</option></select></div>
 <div class="field" id="lrEveField"><label>Véspera, a partir de</label><input type="time" id="lrEveFrom"></div>
-<div class="field" id="lrDayField"><label>Mesmo dia, a partir de</label><input type="time" id="lrDayFrom"></div>
-<div class="field-hint">A partir desse horário, o Início mostra "Lembrar aulas de amanhã" / "Lembrar aulas de hoje". O sino nos títulos de hoje e de amanhã abre o mesmo painel a qualquer hora. As frases ficam em Mensagens prontas → Lembrete de aula.</div>
+<div class="field" id="lrDayField"><label>Lembrar as aulas do dia a partir de</label><input type="time" id="lrDayFrom"></div>
+<div class="field-hint">A partir desse horário, o Início mostra "Lembrar aulas de hoje". O sino nos títulos de hoje e de amanhã abre o mesmo painel a qualquer hora. As frases ficam em Mensagens prontas → Lembrete de aula.</div>
 <div class="actions"><button class="cancel" id="lrCancelBtn">Cancelar</button><button class="save" id="lrSaveBtn">Salvar</button></div>
 </div>
 </div>
@@ -3875,7 +3892,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.57";
+const APP_VERSION = "8.58";
 // Idioma (8.42): troca entre português e inglês e recarrega. Fica guardado neste aparelho.
 function langSwitchLabel(){ return APP_LANG === "en" ? "🌐 Mudar para português" : "🌐 Switch to English"; }
 function langSwitch(){
@@ -10219,6 +10236,29 @@ const GOAL_SECTIONS = [
 { key:"year", label:"Este ano" },
 ];
 function saveGoals(){ localStorage.setItem("jp_goals_v1", JSON.stringify(goals)); }
+// 8.58: metas com prazo (g.due "AAAA-MM-DD"), detalhes (g.note) e quantidade (g.target / g.current).
+// Metas antigas não têm esses campos e aparecem como antes.
+function daysUntil(iso){ const t = new Date(); t.setHours(0, 0, 0, 0); return Math.round((new Date(iso + "T00:00:00") - t) / 86400000); }
+function goalDueInfo(iso){
+const n = daysUntil(iso), d = new Date(iso + "T00:00:00");
+const when = `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}${d.getFullYear() !== new Date().getFullYear() ? "/" + d.getFullYear() : ""}`;
+if (n < 0) return { cls: "late", text: `Atrasada há ${-n} dia${n === -1 ? "" : "s"} · era ${when}` };
+if (n === 0) return { cls: "soon", text: "Vence hoje" };
+if (n === 1) return { cls: "soon", text: `Falta 1 dia · até ${when}` };
+if (n <= 45) return { cls: n <= 3 ? "soon" : "", text: `Faltam ${n} dias · até ${when}` };
+const m = Math.round(n / 30);
+return { cls: "", text: `Faltam cerca de ${m} meses · até ${when}` };
+}
+// Quanto falta para acabar o período da seção (Hoje, Esta semana até domingo, Este mês, Este ano).
+function goalSectionLeft(key){
+const now = new Date(), end = new Date(now);
+if (key === "day") { const h = 24 - now.getHours() - (now.getMinutes() ? 1 : 0); return h <= 0 ? "acaba em menos de 1 h" : `faltam ${h} h`; }
+if (key === "week") end.setDate(now.getDate() + (7 - now.getDay()) % 7);
+else if (key === "month") end.setMonth(now.getMonth() + 1, 0);
+else end.setMonth(11, 31);
+const n = daysUntil(isoOf(end));
+return n === 0 ? "acaba hoje" : n === 1 ? "falta 1 dia" : key === "year" && n > 60 ? `faltam ${12 - now.getMonth() - (now.getDate() > 15 ? 1 : 0)} meses` : `faltam ${n} dias`;
+}
 
 // Metas: organizadas em seções fixas por prazo (Hoje/Semana/Mês/Ano), sempre visíveis —
 // o mesmo padrão de apps de tarefas consagrados (Todoist, Google Tasks): cada seção com
@@ -10232,7 +10272,7 @@ renderProfessorTier();
 
 listEl.innerHTML = GOAL_SECTIONS.map(section => {
 const items = goals.filter(g => g.period === section.key);
-const pending = items.filter(g => !g.done).sort((a,b) => (b.createdAt||"").localeCompare(a.createdAt||""));
+const pending = items.filter(g => !g.done).sort((a,b) => (a.due ? 0 : 1) - (b.due ? 0 : 1) || (a.due||"").localeCompare(b.due||"") || (b.createdAt||"").localeCompare(a.createdAt||""));
 const completed = items.filter(g => g.done).sort((a,b) => (b.createdAt||"").localeCompare(a.createdAt||""));
 const pct = items.length > 0 ? Math.round((completed.length/items.length)*100) : 0;
 const expanded = goalCompletedExpanded[section.key];
@@ -10241,7 +10281,8 @@ const rowHtml = (g) => `
 <div class="goal-row ${g.done?'done':''}">
 <button type="button" class="goal-check ${g.done?'checked':''}" data-toggle="${g.id}">${g.done?'✓':''}</button>
 <div class="goal-info">
-<button type="button" class="goal-title-btn" data-edit="${g.id}"><div class="goal-title">${g.title}</div></button>
+<button type="button" class="goal-title-btn" data-edit="${g.id}"><div class="goal-title">${escapeHtml(g.title)}</div>${g.note ? `<div class="goal-note">${escapeHtml(g.note)}</div>` : ""}</button>
+${(g.due && !g.done) || g.target ? `<div class="goal-meta">${g.target ? `<span class="goal-prog">${g.done ? "" : `<button type="button" class="goal-step" data-step="${g.id}|-1" aria-label="Menos 1">−</button>`}${Math.min(g.current || 0, g.target)} de ${g.target}<span class="goal-prog-bar"><i style="width:${Math.min(100, Math.round((g.current || 0) / g.target * 100))}%"></i></span>${g.done ? "" : `<button type="button" class="goal-step" data-step="${g.id}|1" aria-label="Mais 1">+</button>`}</span>` : ""}${g.due && !g.done ? (i => `<span class="goal-due ${i.cls}">${i.text}</span>`)(goalDueInfo(g.due)) : ""}</div>` : ""}
 </div>
 <button type="button" class="goal-delete" data-delete="${g.id}" aria-label="Excluir meta">✕</button>
 </div>`;
@@ -10249,7 +10290,7 @@ const rowHtml = (g) => `
 return `
 <div class="goal-section">
 <div class="goal-section-header">
-<span class="goal-section-title">${section.label}</span>
+<span class="goal-section-title">${section.label}${pending.length ? `<span class="goal-left">· ${goalSectionLeft(section.key)}</span>` : ""}</span>
 <span class="goal-section-count">${items.length ? `${completed.length}/${items.length}` : ''}</span>
 </div>
 ${items.length ? `<div class="goal-section-track"><div class="goal-section-fill" style="width:${pct}%"></div></div>` : ''}
@@ -10280,6 +10321,15 @@ renderGoals();
 }
 };
 });
+listEl.querySelectorAll("[data-step]").forEach(btn => {
+btn.onclick = () => {
+const [id, d] = btn.dataset.step.split("|").map(Number), g = goals.find(x => x.id === id);
+if (!g || !g.target) return;
+g.current = Math.max(0, Math.min(g.target, (g.current || 0) + d));
+if (g.current >= g.target) g.done = true;
+saveGoals(); renderGoals();
+};
+});
 listEl.querySelectorAll("[data-edit]").forEach(btn => {
 btn.onclick = () => openGoalModal(Number(btn.dataset.edit));
 });
@@ -10303,6 +10353,10 @@ const g = id ? goals.find(x => x.id === id) : null;
 document.getElementById("goalModalTitle").textContent = g ? "Editar Meta" : "Nova Meta";
 document.getElementById("goalTitleInput").value = g ? g.title : "";
 goalPeriodDraft = g ? g.period : (defaultPeriod || "day");
+document.getElementById("goalDueInput").value = g && g.due || "";
+document.getElementById("goalNoteInput").value = g && g.note || "";
+document.getElementById("goalTargetInput").value = g && g.target || "";
+document.getElementById("goalCurrentInput").value = g && g.target ? (g.current || 0) : "";
 document.querySelectorAll("#goalPeriodPicker .filter-chip").forEach(c => c.classList.toggle("selected", c.dataset.period === goalPeriodDraft));
 document.getElementById("goalModal").classList.add("show");
 }
@@ -18532,7 +18586,9 @@ if (currentPage === "home") renderHome();
 // daqui a 2 h ou mais; "soon" = hoje, em menos de 2 h. Rotação: número da semana do ano +
 // posição do aluno na lista do dia (a turma não recebe o mesmo texto).
 function reminderPhrases(g){ const c = appSettings.reminderPhrases && appSettings.reminderPhrases[g]; return Array.isArray(c) && c.length ? c : REMINDER_DEFAULTS[g]; }
-function lessonReminderCfg(){ return Object.assign({ when: "eve", eveFrom: "12:00", dayFrom: "07:00" }, appSettings.lessonReminder || {}); }
+// 8.58: o Início só lembra as aulas de hoje ("Lembrar aulas de amanhã" saiu, a pedido). A véspera
+// salva antes fica guardada, mas não aparece mais; o sino no título de amanhã continua.
+function lessonReminderCfg(){ return Object.assign({ eveFrom: "12:00", dayFrom: "07:00" }, appSettings.lessonReminder || {}, { when: "day" }); }
 function lessonReminderLabel(){
 const c = lessonReminderCfg();
 return c.when === "day" ? `No mesmo dia · ${c.dayFrom}` : c.when === "both" ? "Véspera e mesmo dia" : `Na véspera · ${c.eveFrom}`;
@@ -18638,7 +18694,7 @@ document.getElementById("lrCancelBtn").onclick = () => document.getElementById("
 document.getElementById("lrSaveBtn").onclick = () => {
 appSettings.lessonReminder = {
 when: document.getElementById("lrWhen").value,
-eveFrom: document.getElementById("lrEveFrom").value || "12:00",
+eveFrom: document.getElementById("lrEveFrom").value || lessonReminderCfg().eveFrom,
 dayFrom: document.getElementById("lrDayFrom").value || "07:00"
 };
 saveAppSettings();
@@ -18892,16 +18948,29 @@ goalPeriodDraft = chip.dataset.period;
 };
 });
 document.getElementById("goalCancelBtn").onclick = () => document.getElementById("goalModal").classList.remove("show");
+// Ao escolher o prazo, a meta vai para a seção que combina (dá para trocar depois).
+document.getElementById("goalDueInput").onchange = e => {
+if (!e.target.value) return;
+const n = daysUntil(e.target.value), now = new Date(), due = new Date(e.target.value + "T00:00:00");
+const p = n <= 0 ? "day" : n <= (7 - now.getDay()) % 7 ? "week" : due.getMonth() === now.getMonth() && due.getFullYear() === now.getFullYear() ? "month" : "year";
+goalPeriodDraft = p;
+document.querySelectorAll("#goalPeriodPicker .filter-chip").forEach(c => c.classList.toggle("selected", c.dataset.period === p));
+};
 document.getElementById("goalSaveBtn").onclick = () => {
 const title = document.getElementById("goalTitleInput").value.trim();
 if (!title) { alert("Digite um título pra meta."); return; }
-if (editingGoalId) {
-const g = goals.find(x => x.id === editingGoalId);
+const due = document.getElementById("goalDueInput").value || "";
+const note = document.getElementById("goalNoteInput").value.trim();
+const target = Math.max(0, Math.round(Number(document.getElementById("goalTargetInput").value) || 0));
+const current = Math.max(0, Math.round(Number(document.getElementById("goalCurrentInput").value) || 0));
+let g = editingGoalId ? goals.find(x => x.id === editingGoalId) : null;
+if (!g) { g = { id: Date.now(), done: false, createdAt: new Date().toISOString() }; goals.push(g); }
 g.title = title;
 g.period = goalPeriodDraft;
-} else {
-goals.push({ id: Date.now(), title, period: goalPeriodDraft, done: false, createdAt: new Date().toISOString() });
-}
+["due", "note", "target", "current"].forEach(k => delete g[k]);
+if (due) g.due = due;
+if (note) g.note = note;
+if (target) { g.target = target; g.current = Math.min(current, target); if (!editingGoalId && g.current >= target) g.done = true; }
 saveGoals();
 document.getElementById("goalModal").classList.remove("show");
 renderGoals();
@@ -19520,11 +19589,13 @@ openQuickModal("Seu dia hoje", `${WEEKDAY_FULL[d.getDay()]}, ${pad2(d.getDate())
 return;
 }
 const now = new Date();
-let given = 0, total = 0, missed = 0;
+let given = 0, total = 0, missed = 0, kept = 0;
 const rows = all.map(x => {
 const rec = x.record, s = x.student, end = lessonEnd(d, x.time, s);
 let st, val = 0;
 if (x.off) st = `Sem aula · ${x.off.label}`;
+// 8.58: falta do aluno que não vai ser reposta conta no valor do dia (a aula era dele).
+else if (rec && isNoClass(rec) && absentNoMakeup(s, rec)) { st = `${cardReasonText(s, rec)} · não vai repor`; missed++; kept++; val = lessonValueEstimate(s, d, x.kind); total += val; }
 else if (rec && isNoClass(rec)) { st = cardReasonText(s, rec); missed++; }
 else if (end > now) st = "Ainda vai acontecer";
 else { st = "Dada"; given++; val = lessonValueEstimate(s, d, x.kind); total += val; }
@@ -19532,9 +19603,16 @@ const notes = rec ? [rec.taught && `<div class="day-sum-note"><span>O que foi da
 return `<div class="day-sum-row"><div><b>${escapeHtml(x.time)}</b> ${escapeHtml(sn(s))} <span class="stu-muted">· ${escapeHtml(st)}${val ? ` · R$ ${moneyText(Math.round(val * 100) / 100)}` : ""}</span></div>${notes || (st === "Dada" ? `<div class="day-sum-note stu-muted">Sem anotação da aula.</div>` : "")}</div>`;
 });
 body.innerHTML = `<div class="day-sum-total"><div><b>${given}</b><span>aula${given === 1 ? "" : "s"} dada${given === 1 ? "" : "s"}</span></div><div><b>R$ ${moneyText(Math.round(total))}</b><span>gerados</span></div><div><b>${missed}</b><span>falta${missed === 1 ? "" : "s"} ou cancelamento${missed === 1 ? "" : "s"}</span></div></div>
+${kept ? `<div class="field-hint" style="margin:0 0 0.75rem">Os R$ gerados incluem ${kept} falta${kept === 1 ? "" : "s"} sem reposição.</div>` : ""}
 ${rows.length ? rows.join("") : `<div class="stu-muted">Nenhuma aula hoje.</div>`}
 <div class="field-hint" style="margin-top:0.75rem">Aluno mensal: a mensalidade dividida pelas aulas dele no mês. Avulso e pacote: o valor de cada aula.</div>`;
 openQuickModal("Resumo do dia", `${WEEKDAY_FULL[d.getDay()]}, ${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}`, body, null, "Fechar");
+}
+// Falta do aluno (avisou ou não) sem reposição marcada, ou com a reposição dispensada.
+function absentNoMakeup(s, rec){
+if (!rec || rec.reason !== "absent_notice" && rec.reason !== "absent_no_notice") return false;
+const m = rec.makeupCreated ? (s.makeups || []).find(x => x.id === rec.makeupCreated) : null;
+return !m || m.status === "dismissed" || m.status === "cancelled";
 }
 var DAY_SUM_KEY = "jp_day_summary_v1";
 function daySummaryAuto(){
@@ -19549,7 +19627,9 @@ try { seen = JSON.parse(localStorage.getItem(DAY_SUM_KEY) || "{}"); } catch(e) {
 if (seen.d !== iso) seen = { d: iso };
 const mark = k => { seen[k] = 1; _nativeSetItem.call(localStorage, DAY_SUM_KEY, JSON.stringify(seen)); };
 if (cfg.dayEnd && !seen.end && d >= dayAt(d, span.end)) { mark("end"); mark("start"); if (dayLessons(d).length) openDaySummary("end", d); return; }
-if (cfg.dayStart && !seen.start && d >= dayAt(d, span.start) && d < dayAt(d, span.end)) { mark("start"); if (dayStartLines(d).length) openDaySummary("start", d); }
+// 8.58: as aulas do dia abrem sozinhas na primeira vez que o app é aberto no dia (antes do fim do
+// horário de trabalho), mesmo com o aviso de começo do dia desligado. Uma vez por dia em cada aparelho.
+if (!seen.start && d < dayAt(d, span.end) && dayLessons(d).length) { mark("start"); openDaySummary("start", d); }
 }
 setInterval(daySummaryAuto, 30000);
 

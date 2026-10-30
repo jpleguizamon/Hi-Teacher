@@ -540,6 +540,12 @@ Versão do app 8.46; o arquivo do servidor desta rodada é `supabase/schema-v8.4
 - As linhas "Meu plano", "Indique um professor" e "Assinaturas" (só do dono do app) estavam parando dentro da pasta Dados e backup, porque não estavam na lista de nenhuma pasta de Configurações. Agora ficam em **Conta**. Linha nova em Configurações: pôr o id dela na lista `rows` de uma pasta em `SETTINGS_FOLDERS`, senão ela cai em Dados e backup.
 - Dono do app = linha em `app_admins` com o e-mail com que ele entra (não é só o do arquivo SQL). Para incluir: `insert into public.app_admins (user_id) select id from auth.users where lower(email)=lower('EMAIL') on conflict do nothing;`
 
+## Resumo do dia, metas com prazo e aulas do dia ao abrir (8.58)
+- Resumo do dia (fim do dia): falta do aluno (avisou ou não) sem reposição marcada, ou com a reposição dispensada, entra nos "R$ gerados" com o valor da aula e aparece como "não vai repor" (`absentNoMakeup`). Cancelamento do professor e feriado continuam sem valor.
+- Metas: campos opcionais Prazo (`due`), Detalhes (`note`) e Quantidade (`target`/`current`, com botões − e +; ao chegar no total a meta fica concluída). Mostra "Faltam N dias · até dd/mm", "Vence hoje" ou "Atrasada há N dias" (vermelho). Cada seção mostra quanto falta para acabar o período (semana termina no domingo). Escolher o prazo muda a seção sozinho. Metas antigas continuam iguais.
+- "Seu dia hoje" (aulas do dia) abre sozinho na primeira vez que o app é aberto no dia, em cada aparelho, se houver aula e ainda não tiver passado o fim do horário de trabalho. Não depende mais do aviso de começo do dia.
+- "Lembrar aulas de amanhã" saiu do Início (pedido do Jp). Lembrete de aula agora só tem "a partir de" do mesmo dia; a véspera salva fica guardada mas não é usada. O sino no título de amanhã continua.
+
 ## Arquivo único do servidor (8.57)
 - `supabase/schema-tudo.sql` junta todas as atualizações do servidor (8.0 até 8.45). Primeiro confere o que já está instalado e roda só o que falta, então pode ser colado e rodado quantas vezes quiser, mesmo com o servidor parcialmente atualizado. Termina mostrando a lista do que está instalado (deve ir até 8.45). Cópia para colar em `/mnt/project-files/supabase-para-colar/`. Gerado a partir dos `schema-v*.sql` (sem as travas de versão); ao criar um schema novo, regenerar. Testado em PostgreSQL 16 do zero e rodando duas vezes.
 
