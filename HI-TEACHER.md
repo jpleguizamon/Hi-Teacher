@@ -540,6 +540,11 @@ Versão do app 8.46; o arquivo do servidor desta rodada é `supabase/schema-v8.4
 - As linhas "Meu plano", "Indique um professor" e "Assinaturas" (só do dono do app) estavam parando dentro da pasta Dados e backup, porque não estavam na lista de nenhuma pasta de Configurações. Agora ficam em **Conta**. Linha nova em Configurações: pôr o id dela na lista `rows` de uma pasta em `SETTINGS_FOLDERS`, senão ela cai em Dados e backup.
 - Dono do app = linha em `app_admins` com o e-mail com que ele entra (não é só o do arquivo SQL). Para incluir: `insert into public.app_admins (user_id) select id from auth.users where lower(email)=lower('EMAIL') on conflict do nothing;`
 
+## Paga no fim do mês, Início sem lembrete e quadro novo (8.60)
+- Aluno: opção "Paga no fim do mês das aulas" (`s.payAtEnd`, em Configurações avançadas do aluno, só mensal e pago para mim). A mensalidade do mês vence no último dia dele ou, com dia de vencimento, nesse dia do mês seguinte (`feeDueIso`). Vale para atraso, lista de mensalidades, desconto e multa, avisos do aluno, aluno em risco e "vencem hoje". Sem a opção, tudo igual. O campo vai para o app do aluno.
+- Início: a linha "Lembrar aulas de hoje" saiu (o sino nos títulos de hoje e de amanhã já faz isso). A configuração "Lembrete de aula" ficou escondida.
+- Quadro do Android (versionCode 13): visual do app (vidro escuro com borda azul, coruja, fonte Poppins, hora em pílula azul, próxima aula destacada, até 6 aulas e "+ N aulas").
+
 ## Quadro "Aulas de hoje" na tela inicial do Android (8.59)
 - App Android (versionCode 12): quadro para pôr na tela inicial do celular/tablet (segurar na tela → Widgets → Hi Teacher → Aulas de hoje). Mostra as aulas do dia com hora e nome; as que já acabaram ficam apagadas; tocar abre o app em "Seu dia hoje".
 - O site manda as aulas dos próximos 7 dias por `HI_APP.setWidget` (função `hiAppWidget`, junto com os lembretes, a cada minuto com o app aberto e ao sair dele). O quadro (`DayWidget.java`) escolhe o dia de hoje sozinho e se atualiza a cada 30 min, então funciona alguns dias sem abrir o app. Só no modo professor.

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Mesmo vidro escuro do app: fundo quase preto com luz azul em cima, borda azul fina. -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
-    <solid android:color="#F20B1020" />
-    <corners android:radius="20dp" />
-    <stroke android:width="1dp" android:color="#664F7DFF" />
+    <gradient android:angle="270" android:startColor="#F2111A31" android:endColor="#F205060B" />
+    <corners android:radius="22dp" />
+    <stroke android:width="1dp" android:color="#2E4F7DFF" />
 </shape>

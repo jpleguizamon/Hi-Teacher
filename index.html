@@ -2861,7 +2861,7 @@ body.pdf-open{overflow:hidden}
 <div class="settings-group-label">Notificações</div>
 <div class="settings-card">
 <div class="settings-row" id="rowLembrete"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-bell"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Lembrete antes da aula<button type="button" class="help-icon" data-help="Mostra um aviso dentro do app pouco antes de cada aula começar, enquanto o Hi Teacher estiver aberto no navegador.">!</button></div></div><span class="settings-row-value" id="valLembrete">Ativado</span><span class="settings-row-chevron">›</span></div>
-<div class="settings-row" id="rowLessonReminder"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-message"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Lembrete de aula (WhatsApp)</div><div class="settings-row-sub">Botão no Início pra lembrar os alunos da aula</div></div><span class="settings-row-value" id="valLessonReminder">Na véspera</span><span class="settings-row-chevron">›</span></div>
+<div class="settings-row" id="rowLessonReminder" style="display:none"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-message"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Lembrete de aula (WhatsApp)</div><div class="settings-row-sub">Botão no Início pra lembrar os alunos da aula</div></div><span class="settings-row-value" id="valLessonReminder">Na véspera</span><span class="settings-row-chevron">›</span></div>
 <div class="settings-row" id="rowAvalPendente"><span class="settings-row-icon"><svg viewBox="0 0 24 24"><use href="#icon-star"/></svg></span><div class="settings-row-text"><div class="settings-row-title">Avaliação pendente</div><div class="settings-row-sub">Avisar quando uma aula ainda não foi avaliada</div></div><span class="settings-row-value" id="valAvalPendente">Ativado</span><span class="settings-row-chevron">›</span></div>
 </div>
 
@@ -3186,6 +3186,8 @@ body.pdf-open{overflow:hidden}
 </div>
 <div class="field" id="fDueDayField" style="flex:1"><label>Vencimento (dia)</label><input id="fDueDay" type="number" min="1" max="31" inputmode="numeric" placeholder="Opcional"></div>
 </div>
+<div class="toggle-field" id="fPayAtEndField"><label>Paga no fim do mês das aulas</label><label class="switch"><input type="checkbox" id="fPayAtEnd"><span class="switch-slider"></span></label></div>
+<div class="field-hint" id="fPayAtEndHint" style="margin:-0.25rem 0 0.75rem">Ligado: a mensalidade de cada mês só fica atrasada depois que o mês acaba (com vencimento, no dia dele do mês seguinte).</div>
 <div class="field"><label>Duração da aula (minutos)</label><input id="fDuration" type="number" min="5" max="240" inputmode="numeric" placeholder="Padrão das Configurações"></div>
 <div class="field"><label>Avaliar este aluno</label>
 <select id="fEvalFreq">
@@ -3892,7 +3894,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.59";
+const APP_VERSION = "8.60";
 // Idioma (8.42): troca entre português e inglês e recarrega. Fica guardado neste aparelho.
 function langSwitchLabel(){ return APP_LANG === "en" ? "🌐 Mudar para português" : "🌐 Switch to English"; }
 function langSwitch(){
@@ -4504,7 +4506,7 @@ let tbV811 = false;
 function tbTables(){ return tbV811 ? TB_TABLES_BASE : TB_TABLES_BASE.filter(t => t !== "lesson_private"); }
 // Campos do aluno que o app do aluno usa (ficam em students). O resto (ex.: frequência de
 // avaliação, campos desconhecidos) vai pra student_private: só o professor lê.
-const TB_STUDENT_PUBLIC = new Set(["valueOld","valueNext","payAdj","id","timesByDay","biweeklyStart","trackingSince","duration","locationType","locationDetail","phone","birthDate","guardianName","guardianPhone","dueDay","packageSize","packageStart","packagePrice","lessonPrice","format"]);
+const TB_STUDENT_PUBLIC = new Set(["valueOld","valueNext","payAdj","id","timesByDay","biweeklyStart","trackingSince","duration","locationType","locationDetail","phone","birthDate","guardianName","guardianPhone","dueDay","payAtEnd","packageSize","packageStart","packagePrice","lessonPrice","format"]);
 const TB_TD_KEYS = CLOUD_SYNC_KEYS.filter(k => k !== "jp_students_v5");
 // [chave no aluno, coluna, tipo]. Valor de tipo diferente (ou null) vai pro "extra", sem perder nada.
 const TB_COLS = {
@@ -5714,7 +5716,7 @@ const paid = getPaidMonths(s);
 billingMonths(s).slice().reverse().forEach(k => {
 const isPaid = paid.has(k);
 const q = isPaid ? null : payQuote(s, k);
-items.push({ kind: "month", key: k, ref: k, label: `Mensalidade de ${monthLabel(k)}`, value: isPaid ? paidMonthValue(s, k) : q.value, note: q ? q.note : "", detail: q ? q.detail || "" : "", paid: isPaid, late: !isPaid && isPastDue(s, k), due: Number(s.dueDay) > 0 ? `vence dia ${s.dueDay}` : "", paidDate: (s.paidDates || {})[k] || null });
+items.push({ kind: "month", key: k, ref: k, label: `Mensalidade de ${monthLabel(k)}`, value: isPaid ? paidMonthValue(s, k) : q.value, note: q ? q.note : "", detail: q ? q.detail || "" : "", paid: isPaid, late: !isPaid && isPastDue(s, k), due: feeDueText(s, k), paidDate: (s.paidDates || {})[k] || null });
 });
 } else if (mode === "lesson") {
 lessonCharges(s).slice().reverse().forEach(c => items.push({ ...c, key: c.ref, label: chargeLabel(c), late: false }));
@@ -6110,7 +6112,7 @@ else if (x.kind === "extra") out.push({ html: `${escapeHtml(extraLabel(s, x.make
 if (billingMode(s) === "monthly" && paysMe(s) && s.active !== false) {
 const unpaid = unpaidMonths(s), cur = currentMonthKey();
 unpaid.filter(k => isPastDue(s, k)).forEach(k => { if (!stuPayReq(k)) out.push({ html: `Mensalidade de ${monthLabel(k)} em atraso`, cls: "bad", go: "money" }); });
-if (unpaid.includes(cur) && !isPastDue(s, cur) && Number(s.dueDay) > 0 && Number(s.dueDay) - new Date().getDate() <= 5 && !stuPayReq(cur)) out.push({ html: `Mensalidade de ${monthLabel(cur)} vence dia ${s.dueDay}`, cls: "warn", go: "money" });
+unpaid.filter(k => !isPastDue(s, k)).forEach(k => { const due = feeDueIso(s, k); if (!due || stuPayReq(k)) return; const left = Math.round((dateFromIso(due) - dateFromIso(isoOf(new Date()))) / 86400000); if (left <= 5) out.push({ html: `Mensalidade de ${monthLabel(k)} ${s.payAtEnd ? feeDueText(s, k) : `vence dia ${s.dueDay}`}`, cls: "warn", go: "money" }); });
 }
 const labels = { absence: "Aviso de falta", payment_notice: "Aviso de pagamento", change_data: "Pedido de alteração de dados", song_request: "Pedido de música", reschedule: "Pedido para remarcar", makeup_request: "Pedido de reposição" };
 (stu.requests || []).filter(r => r.student_id === stuCur.uuid && (r.status === "accepted" || r.status === "rejected") && r.answered_at && now - Date.parse(r.answered_at) < 14 * 86400000).forEach(r => {
@@ -11295,7 +11297,7 @@ const payTo = s.payTo === "school" ? "Escola" : s.payTo === "none" ? "Ninguém (
 let situation = "";
 if (mode === "monthly" && paysMe(s) && !inactive) {
 const unpaid = unpaidMonths(s);
-const late = unpaid.filter(k => k < currentMonthKey());
+const late = unpaid.filter(k => k < currentMonthKey() && isPastDue(s, k));
 const cur = currentMonthKey();
 const curText = !unpaid.includes(cur) ? `<span class="ok">Pago</span>` : isPastDue(s, cur) ? `<span class="late">Atrasado</span>` : "A pagar";
 situation = sheetPair("Este mês", curText) + (late.length ? sheetPair("Meses atrasados", `<span class="late">${late.map(monthLabel).join(", ")}</span>`, late.length > 2) : "");
@@ -11306,7 +11308,7 @@ const ctSt = contractStatus(s);
 const financeiro = sheetSection("Financeiro", [
 sheetPair(payLabel, s.payTo === "none" ? "Bolsa" : value),
 sheetPair("Paga para", payTo),
-sheetPair("Vencimento", Number(s.dueDay) > 0 && paysMe(s) ? `Dia ${s.dueDay}` : ""),
+sheetPair("Vencimento", !paysMe(s) ? "" : s.payAtEnd ? (Number(s.dueDay) > 0 ? `Fim do mês das aulas (dia ${s.dueDay} do mês seguinte)` : "Fim do mês das aulas") : Number(s.dueDay) > 0 ? `Dia ${s.dueDay}` : ""),
 mode === "monthly" && s.valueNext && s.valueNext.from ? sheetPair("Reajuste marcado", `R$ ${moneyText(s.valueNext.v)} a partir de ${monthLongLabel(s.valueNext.from)} <button type="button" class="btn-link-inline" data-raise-cancel>Desfazer</button>`, true) : "",
 situation,
 pkg ? sheetPair("Pacote", pkg.used >= pkg.size ? `<span class="warn">Terminou (${pkg.used} de ${pkg.size})</span>` : `${pkg.used} de ${pkg.size} aulas`) : "",
@@ -13002,7 +13004,20 @@ if (billingMode(s) !== "monthly") return []; // aula avulsa e pacote não têm m
 const paid = getPaidMonths(s);
 return billingMonths(s).filter(k => !paid.has(k));
 }
+// 8.59: aluno que paga no fim do mês das aulas (s.payAtEnd): a mensalidade de um mês vence no
+// último dia dele, ou no dia de vencimento do mês seguinte. Sem o campo, tudo igual a antes.
+function feeDueIso(s, key){
+const d = Number(s.dueDay) > 0 ? Number(s.dueDay) : 0;
+if (s.payAtEnd) return d ? monthDayIso(addMonths(key, 1), d) : monthDayIso(key, 31);
+return d ? monthDayIso(key, d) : "";
+}
+function feeDueText(s, key){
+if (!s.payAtEnd) return Number(s.dueDay) > 0 ? `vence dia ${s.dueDay}` : "";
+const iso = feeDueIso(s, key);
+return `vence ${iso.slice(8)}/${iso.slice(5, 7)}`;
+}
 function isPastDue(s, key){
+if (s.payAtEnd) return isoOf(new Date()) > feeDueIso(s, key);
 const cur = currentMonthKey();
 if (key < cur) return true;
 return key === cur && Number(s.dueDay) > 0 && new Date().getDate() > Number(s.dueDay);
@@ -13100,12 +13115,14 @@ const out = { base, value: base, kind: "", note: "" };
 if (!r || !base) return out;
 const on = onIso || isoOf(new Date());
 const dDay = Number(r.discDay) > 0 ? Number(r.discDay) : Number(s.dueDay) > 0 ? Number(s.dueDay) : 0;
-if (Number(r.disc) > 0 && dDay && on <= monthDayIso(key, dDay)) {
+// Pago no fim do mês: o desconto vale até o dia dele no mês seguinte.
+const dIso = !dDay ? "" : s.payAtEnd ? monthDayIso(addMonths(key, 1), dDay) : monthDayIso(key, dDay);
+if (Number(r.disc) > 0 && dIso && on <= dIso) {
 const d = r.discType === "pct" ? base * Number(r.disc) / 100 : Number(r.disc);
-out.value = Math.max(0, round2(base - d)); out.kind = "disc"; out.note = `com desconto até ${monthDayIso(key, dDay).slice(8)}/${key.slice(5)}`; out.detail = `Valor com desconto pagando até ${monthDayIso(key, dDay).slice(8)}/${key.slice(5)}. Depois, R$ ${moneyText(base)}.`;
+out.value = Math.max(0, round2(base - d)); out.kind = "disc"; out.note = `com desconto até ${dIso.slice(8)}/${dIso.slice(5, 7)}`; out.detail = `Valor com desconto pagando até ${dIso.slice(8)}/${dIso.slice(5, 7)}. Depois, R$ ${moneyText(base)}.`;
 return out;
 }
-const due = Number(s.dueDay) > 0 ? monthDayIso(key, Number(s.dueDay)) : "";
+const due = Number(s.dueDay) > 0 ? feeDueIso(s, key) : "";
 if (due && on > due && (Number(r.fine) > 0 || Number(r.interest) > 0)) {
 const days = Math.round((dateFromIso(on) - dateFromIso(due)) / 86400000);
 out.value = round2(base * (1 + (Number(r.fine) || 0) / 100) + base * (Number(r.interest) || 0) / 100 * days / 30);
@@ -13527,13 +13544,14 @@ const due = Number(item.s.dueDay) || 0;
 if (!due) return out;
 const cur = currentMonthKey(), r = payRules(), dd = r && Number(r.disc) > 0 ? Number(r.discDay) || 0 : 0;
 stuPayItems().forEach(it => {
-if (it.paid || it.kind !== "month" || it.key < cur) return;
-const day = dateFromIso(monthDayIso(it.key, due));
+if (it.paid || it.kind !== "month" || (it.key < cur && !item.s.payAtEnd)) return;
+const day = dateFromIso(feeDueIso(item.s, it.key));
+if (day < new Date()) return;
 const at = new Date(day.getFullYear(), day.getMonth(), day.getDate() - 2, 10, 0).getTime();
 const q = payQuote(item.s, it.key, isoOf(new Date(at)));
 out.push({ id: `sp|${item.link.id}|${it.key}`, at, title: `${kid}mensalidade vence em 2 dias`, body: `${monthLabel(it.key)}: R$ ${moneyText(q.value)}${q.kind === "disc" ? " com desconto" : ""}, vence ${pad2(day.getDate())}/${pad2(day.getMonth() + 1)}${who}`, page: "financeiro" });
 if (dd && dd !== due) {
-const dl = dateFromIso(monthDayIso(it.key, dd));
+const dl = dateFromIso(item.s.payAtEnd ? monthDayIso(addMonths(it.key, 1), dd) : monthDayIso(it.key, dd));
 const at2 = new Date(dl.getFullYear(), dl.getMonth(), dl.getDate() - 1, 10, 0).getTime();
 out.push({ id: `sd|${item.link.id}|${it.key}`, at: at2, title: `${kid}desconto da mensalidade até amanhã`, body: `Pagando até ${pad2(dl.getDate())}/${pad2(dl.getMonth() + 1)}: R$ ${moneyText(payQuote(item.s, it.key, isoOf(dl)).value)}${who}`, page: "financeiro" });
 }
@@ -13833,11 +13851,12 @@ unpaidMonths(s).forEach(key => rows.push({ s, key, late: isPastDue(s, key), q: p
 });
 if (rows.length === 0 && !allReceivables().length) { box.innerHTML = ""; bindReceivables(box); return; }
 rows.sort((a,b) => a.s.name.localeCompare(b.s.name) || a.key.localeCompare(b.key));
-const late = rows.filter(r => r.key < cur);
-const now = rows.filter(r => r.key === cur);
+const late = rows.filter(r => r.s.payAtEnd ? r.late : r.key < cur);
+const now = rows.filter(r => r.s.payAtEnd ? !r.late : r.key === cur);
 const row = r => {
 const due = Number(r.s.dueDay) > 0 ? r.s.dueDay : null;
-const status = r.key < cur ? `<span class="pay-late">Atrasada · ${monthLabel(r.key)}</span>`
+const status = r.s.payAtEnd ? (r.late ? `<span class="pay-late">Atrasada · ${monthLabel(r.key)}</span>` : `<span class="pay-due">${monthLabel(r.key)} · ${feeDueText(r.s, r.key)}</span>`)
+: r.key < cur ? `<span class="pay-late">Atrasada · ${monthLabel(r.key)}</span>`
 : r.late ? `<span class="pay-late">Venceu dia ${due}</span>`
 : due ? `<span class="pay-due">Vence dia ${due}</span>` : "";
 return `
@@ -16861,7 +16880,8 @@ const valueText = mode === "monthly" ? `R$ ${value}` : price > 0 ? `R$ ${moneyTe
 if (payTo === "none") parts.push("bolsa");
 else parts.push(valueText, payTo === "school" ? "paga à escola" : "paga para mim");
 const due = Number(document.getElementById("fDueDay").value);
-if (payTo === "me" && due) parts.push(`vence dia ${due}`);
+if (payTo === "me" && document.getElementById("fPayAtEnd").checked) parts.push(due ? `paga no fim do mês, vence dia ${due} do mês seguinte` : "paga no fim do mês");
+else if (payTo === "me" && due) parts.push(`vence dia ${due}`);
 const dur = Number(document.getElementById("fDuration").value);
 parts.push(`${dur > 0 ? dur : appSettings.lessonDuration} min`);
 const ef = document.getElementById("fEvalFreq").value || appSettings.evalFrequency || "every";
@@ -17118,6 +17138,9 @@ document.getElementById("customValWrapper").style.display = mode === "monthly" &
 document.getElementById("fPriceField").style.display = mode === "monthly" ? "none" : "";
 document.getElementById("fPriceLabel").textContent = mode === "package" ? "Valor do pacote (R$)" : "Valor por aula (R$)";
 document.getElementById("fDueDayField").style.display = mode === "monthly" ? "" : "none";
+const endOn = mode === "monthly" && document.getElementById("fPayTo").value === "me";
+document.getElementById("fPayAtEndField").style.display = endOn ? "" : "none";
+document.getElementById("fPayAtEndHint").style.display = endOn ? "" : "none";
 }
 let chargeDraft = new Map(); // ref -> pago? (aulas e pacotes)
 function renderPayMonthsField(s){
@@ -17136,7 +17159,7 @@ field.style.display = "";
 const wrap = document.getElementById("fPayMonths");
 wrap.innerHTML = months.map(k => {
 const paid = paidDraft.has(k);
-const late = !paid && isPastDue({ ...s, dueDay: document.getElementById("fDueDay").value }, k);
+const late = !paid && isPastDue({ ...s, dueDay: document.getElementById("fDueDay").value, payAtEnd: document.getElementById("fPayAtEnd").checked }, k);
 const chip = `<button type="button" class="pay-month ${paid ? "paid" : late ? "late" : ""}" data-pay-month="${k}">${monthLabel(k)}<span>${paid ? "✓ pago" : late ? "atrasado" : "a pagar"}</span></button>`;
 return paid ? `<div class="pay-item">${chip}<button type="button" class="pay-receipt" data-receipt-month="${k}">Recibo</button></div>` : chip;
 }).join("");
@@ -17185,6 +17208,7 @@ updateAdvSummary();
 };
 document.getElementById("fPayTo").onchange = () => renderPayMonthsField(editingId ? students.find(x => x.id === editingId) : null);
 document.getElementById("fDueDay").oninput = () => renderPayMonthsField(editingId ? students.find(x => x.id === editingId) : null);
+document.getElementById("fPayAtEnd").onchange = () => renderPayMonthsField(editingId ? students.find(x => x.id === editingId) : null);
 function openEdit(id=null){
 if (sheetReturnId !== id) sheetReturnId = null;
 waitlistConvertId = null;
@@ -17243,6 +17267,7 @@ document.getElementById("fObservations").value = s?.observations || "";
 document.getElementById("fAboutSection").open = !!(s && (s.objective || s.observations));
 refreshContactHints();
 document.getElementById("fDueDay").value = s?.dueDay || "";
+document.getElementById("fPayAtEnd").checked = !!(s && s.payAtEnd);
 paidDraft = s ? getPaidMonths(s) : new Set();
 chargeDraft = new Map();
 const mode0 = s ? billingMode(s) : "monthly";
@@ -17401,6 +17426,7 @@ const payTo = document.getElementById("fPayTo").value;
 if (payTo === "me") delete obj.payTo; else obj.payTo = payTo;
 const dueDay = Number(document.getElementById("fDueDay").value);
 if (payTo === "me" && dueDay >= 1 && dueDay <= 31) obj.dueDay = Math.round(dueDay); else delete obj.dueDay;
+if (payTo === "me" && document.getElementById("fPayAtEnd").checked) obj.payAtEnd = true; else delete obj.payAtEnd;
 if (currentObj) {
 const before = getPaidMonths(currentObj);
 const changed = before.size !== paidDraft.size || [...paidDraft].some(k => !before.has(k));
@@ -18223,6 +18249,7 @@ break;
 // 2 faltas seguidas, 3+ faltas no mês ou mensalidade atrasada há mais de 1 mês. Feriado/férias,
 // cancelamento do professor e remarcação não contam (nem quebram a sequência).
 function monthDueDate(s, key){
+if (s.payAtEnd) return dateFromIso(feeDueIso(s, key));
 const [y, m] = key.split("-").map(Number);
 const last = new Date(y, m, 0).getDate();
 return new Date(y, m - 1, Math.min(Number(s.dueDay) > 0 ? Number(s.dueDay) : last, last));
@@ -18670,9 +18697,12 @@ if ((c.when === "day" || c.when === "both") && nowMin >= toMin(c.dayFrom)) add(0
 if ((c.when === "eve" || c.when === "both") && nowMin >= toMin(c.eveFrom)) add(1, "Lembrar aulas de amanhã");
 return items;
 }
+// 8.59: a linha "Lembrar aulas de hoje" saiu do Início (o sino nos títulos de hoje e de amanhã já
+// abre o mesmo painel). A configuração fica guardada e escondida.
 function renderLessonReminderBox(){
 const box = document.getElementById("lessonReminderBox");
 if (!box) return;
+box.innerHTML = ""; return;
 const items = lessonReminderItems();
 box.innerHTML = items.map((it, i) => `<button type="button" class="lr-line" data-lrbox="${i}"><span><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-bell"/></svg>${it.label} (${it.n})</span><span class="lr-cta">Abrir ›</span></button>`).join("");
 box.querySelectorAll("[data-lrbox]").forEach(b => b.onclick = () => openLessonReminders(items[Number(b.dataset.lrbox)].d));
@@ -19507,7 +19537,7 @@ try { getAgendaEventsForDate(iso).filter(e => e.title).forEach(e => lines.push(`
 try { const b = upcomingBirthdays(offset + 1).filter(x => x.inDays === offset); if (b.length) lines.push(`Aniversário: ${namesList(b.map(x => firstName(sn(x.s))), 3)}`); } catch(e) {}
 try {
 const key = iso.slice(0, 7);
-const due = students.filter(s => s.active !== false && paysMe(s) && billingMode(s) === "monthly" && Number(s.dueDay) === d.getDate() && unpaidMonths(s).includes(key));
+const due = students.filter(s => s.active !== false && paysMe(s) && billingMode(s) === "monthly" && unpaidMonths(s).some(k => feeDueIso(s, k) === iso));
 if (due.length) lines.push(`${due.length} mensalidade${due.length > 1 ? "s vencem" : " vence"} hoje`);
 } catch(e) {}
 return lines;
