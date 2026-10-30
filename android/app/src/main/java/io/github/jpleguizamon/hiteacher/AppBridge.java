@@ -111,6 +111,10 @@ public class AppBridge {
     @JavascriptInterface
     public void schedule(String json) { Scheduler.save(act, json); }
 
+    /** Aulas dos próximos dias para o quadro da tela inicial (DayWidget). */
+    @JavascriptInterface
+    public void setWidget(String json) { DayWidget.save(act, json); }
+
     /** Último código do aparelho conhecido (para desligar sem perguntar ao Firebase). */
     @JavascriptInterface
     public String cachedToken() { return prefs(act).getString("fcm_token", ""); }

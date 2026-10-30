@@ -540,6 +540,11 @@ Versão do app 8.46; o arquivo do servidor desta rodada é `supabase/schema-v8.4
 - As linhas "Meu plano", "Indique um professor" e "Assinaturas" (só do dono do app) estavam parando dentro da pasta Dados e backup, porque não estavam na lista de nenhuma pasta de Configurações. Agora ficam em **Conta**. Linha nova em Configurações: pôr o id dela na lista `rows` de uma pasta em `SETTINGS_FOLDERS`, senão ela cai em Dados e backup.
 - Dono do app = linha em `app_admins` com o e-mail com que ele entra (não é só o do arquivo SQL). Para incluir: `insert into public.app_admins (user_id) select id from auth.users where lower(email)=lower('EMAIL') on conflict do nothing;`
 
+## Quadro "Aulas de hoje" na tela inicial do Android (8.59)
+- App Android (versionCode 12): quadro para pôr na tela inicial do celular/tablet (segurar na tela → Widgets → Hi Teacher → Aulas de hoje). Mostra as aulas do dia com hora e nome; as que já acabaram ficam apagadas; tocar abre o app em "Seu dia hoje".
+- O site manda as aulas dos próximos 7 dias por `HI_APP.setWidget` (função `hiAppWidget`, junto com os lembretes, a cada minuto com o app aberto e ao sair dele). O quadro (`DayWidget.java`) escolhe o dia de hoje sozinho e se atualiza a cada 30 min, então funciona alguns dias sem abrir o app. Só no modo professor.
+- Precisa do APK 8.59 assinado. No navegador/site nada muda.
+
 ## Resumo do dia, metas com prazo e aulas do dia ao abrir (8.58)
 - Resumo do dia (fim do dia): falta do aluno (avisou ou não) sem reposição marcada, ou com a reposição dispensada, entra nos "R$ gerados" com o valor da aula e aparece como "não vai repor" (`absentNoMakeup`). Cancelamento do professor e feriado continuam sem valor.
 - Metas: campos opcionais Prazo (`due`), Detalhes (`note`) e Quantidade (`target`/`current`, com botões − e +; ao chegar no total a meta fica concluída). Mostra "Faltam N dias · até dd/mm", "Vence hoje" ou "Atrasada há N dias" (vermelho). Cada seção mostra quanto falta para acabar o período (semana termina no domingo). Escolher o prazo muda a seção sozinho. Metas antigas continuam iguais.

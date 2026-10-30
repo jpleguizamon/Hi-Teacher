@@ -3892,7 +3892,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.58";
+const APP_VERSION = "8.59";
 // Idioma (8.42): troca entre português e inglês e recarrega. Fica guardado neste aparelho.
 function langSwitchLabel(){ return APP_LANG === "en" ? "🌐 Mudar para português" : "🌐 Switch to English"; }
 function langSwitch(){
@@ -19561,10 +19561,28 @@ try { stuDueSchedItems(item, kid, who).forEach(x => out.push(x)); } catch(e) {}
 } finally { stuApplyContext(orig); }
 return out.filter(x => x.at > now + 30000).sort((a, b) => a.at - b.at).slice(0, 400);
 }
+// 8.58: aulas dos próximos 7 dias para o quadro "Aulas de hoje" na tela inicial do Android.
+var hiWidgetLast = "";
+function hiAppWidget(){
+if (!HI_APP || typeof HI_APP.setWidget !== "function") return;
+const days = {};
+try {
+if (authCurrentUser && !demoMode && !studentMode) for (let i = 0; i < 7; i++) {
+const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + i);
+const ls = dayLessons(d).slice().sort((a, b) => toMin(a.time) - toMin(b.time));
+if (ls.length) days[isoOf(d)] = ls.map(x => { const e = lessonEnd(d, x.time, x.student); return [x.time, `${pad2(e.getHours())}:${pad2(e.getMinutes())}`, sn(x.student), x.kind === "extra" ? "reposição" : ""]; });
+}
+} catch(e) { console.warn("Quadro da tela inicial:", e); return; }
+const s = JSON.stringify(days);
+if (s === hiWidgetLast) return;
+hiWidgetLast = s;
+try { HI_APP.setWidget(s); } catch(e) {}
+}
 function hiAppSchedule(){
 if (!hiAppCanSchedule()) return;
 let items = [];
 try { if (authCurrentUser && !demoMode) items = studentMode ? stuSchedItems() : teacherSchedItems(); } catch(e) { console.warn("Lembretes do celular:", e); return; }
+hiAppWidget();
 const s = JSON.stringify(APP_LANG === "en" ? items.map(x => Object.assign({}, x, { title: hiTr(x.title || ""), body: hiTr(x.body || "") })) : items);
 if (s === hiSchedLast) return;
 hiSchedLast = s;
