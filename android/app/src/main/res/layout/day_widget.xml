@@ -7,6 +7,7 @@
     android:orientation="vertical"
     android:padding="14dp">
     <LinearLayout
+        android:id="@+id/w_head"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center_vertical"
@@ -52,238 +53,24 @@
             android:textColor="#FFFFFF"
             android:textSize="12sp" />
     </LinearLayout>
-    <TextView
-        android:id="@+id/w_empty"
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:textColor="#94A3B8"
-        android:textSize="14sp"
-        android:visibility="gone" />
-    <LinearLayout
-        android:id="@+id/r0"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:background="@drawable/widget_row"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="8dp"
-        android:paddingEnd="12dp"
-        android:paddingTop="7dp"
-        android:paddingBottom="7dp"
-        android:visibility="gone">
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="4dp">
+        <ListView
+            android:id="@+id/w_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:divider="@null"
+            android:dividerHeight="0dp"
+            android:scrollbars="none" />
         <TextView
-            android:id="@+id/t0"
-            android:layout_width="wrap_content"
+            android:id="@+id/w_empty"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/widget_pill"
-            android:fontFamily="@font/poppins_bold"
-            android:paddingStart="9dp"
-            android:paddingEnd="9dp"
-            android:paddingTop="2dp"
-            android:paddingBottom="2dp"
-            android:textColor="#4F7DFF"
-            android:textSize="13sp" />
-        <TextView
-            android:id="@+id/n0"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="10dp"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textColor="#FFFFFF"
+            android:layout_marginTop="10dp"
+            android:textColor="#94A3B8"
             android:textSize="14sp" />
-    </LinearLayout>
-    <LinearLayout
-        android:id="@+id/r1"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:background="@drawable/widget_row"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="8dp"
-        android:paddingEnd="12dp"
-        android:paddingTop="7dp"
-        android:paddingBottom="7dp"
-        android:visibility="gone">
-        <TextView
-            android:id="@+id/t1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/widget_pill"
-            android:fontFamily="@font/poppins_bold"
-            android:paddingStart="9dp"
-            android:paddingEnd="9dp"
-            android:paddingTop="2dp"
-            android:paddingBottom="2dp"
-            android:textColor="#4F7DFF"
-            android:textSize="13sp" />
-        <TextView
-            android:id="@+id/n1"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="10dp"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp" />
-    </LinearLayout>
-    <LinearLayout
-        android:id="@+id/r2"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:background="@drawable/widget_row"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="8dp"
-        android:paddingEnd="12dp"
-        android:paddingTop="7dp"
-        android:paddingBottom="7dp"
-        android:visibility="gone">
-        <TextView
-            android:id="@+id/t2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/widget_pill"
-            android:fontFamily="@font/poppins_bold"
-            android:paddingStart="9dp"
-            android:paddingEnd="9dp"
-            android:paddingTop="2dp"
-            android:paddingBottom="2dp"
-            android:textColor="#4F7DFF"
-            android:textSize="13sp" />
-        <TextView
-            android:id="@+id/n2"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="10dp"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp" />
-    </LinearLayout>
-    <LinearLayout
-        android:id="@+id/r3"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:background="@drawable/widget_row"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="8dp"
-        android:paddingEnd="12dp"
-        android:paddingTop="7dp"
-        android:paddingBottom="7dp"
-        android:visibility="gone">
-        <TextView
-            android:id="@+id/t3"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/widget_pill"
-            android:fontFamily="@font/poppins_bold"
-            android:paddingStart="9dp"
-            android:paddingEnd="9dp"
-            android:paddingTop="2dp"
-            android:paddingBottom="2dp"
-            android:textColor="#4F7DFF"
-            android:textSize="13sp" />
-        <TextView
-            android:id="@+id/n3"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="10dp"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp" />
-    </LinearLayout>
-    <LinearLayout
-        android:id="@+id/r4"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:background="@drawable/widget_row"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="8dp"
-        android:paddingEnd="12dp"
-        android:paddingTop="7dp"
-        android:paddingBottom="7dp"
-        android:visibility="gone">
-        <TextView
-            android:id="@+id/t4"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/widget_pill"
-            android:fontFamily="@font/poppins_bold"
-            android:paddingStart="9dp"
-            android:paddingEnd="9dp"
-            android:paddingTop="2dp"
-            android:paddingBottom="2dp"
-            android:textColor="#4F7DFF"
-            android:textSize="13sp" />
-        <TextView
-            android:id="@+id/n4"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="10dp"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp" />
-    </LinearLayout>
-    <LinearLayout
-        android:id="@+id/r5"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:background="@drawable/widget_row"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="8dp"
-        android:paddingEnd="12dp"
-        android:paddingTop="7dp"
-        android:paddingBottom="7dp"
-        android:visibility="gone">
-        <TextView
-            android:id="@+id/t5"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/widget_pill"
-            android:fontFamily="@font/poppins_bold"
-            android:paddingStart="9dp"
-            android:paddingEnd="9dp"
-            android:paddingTop="2dp"
-            android:paddingBottom="2dp"
-            android:textColor="#4F7DFF"
-            android:textSize="13sp" />
-        <TextView
-            android:id="@+id/n5"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="10dp"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textColor="#FFFFFF"
-            android:textSize="14sp" />
-    </LinearLayout>
-    <TextView
-        android:id="@+id/w_more"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="6dp"
-        android:layout_marginStart="4dp"
-        android:fontFamily="@font/poppins_semibold"
-        android:textColor="#4F7DFF"
-        android:textSize="12sp"
-        android:visibility="gone" />
+    </FrameLayout>
 </LinearLayout>

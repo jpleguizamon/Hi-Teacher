@@ -540,6 +540,9 @@ Versão do app 8.46; o arquivo do servidor desta rodada é `supabase/schema-v8.4
 - As linhas "Meu plano", "Indique um professor" e "Assinaturas" (só do dono do app) estavam parando dentro da pasta Dados e backup, porque não estavam na lista de nenhuma pasta de Configurações. Agora ficam em **Conta**. Linha nova em Configurações: pôr o id dela na lista `rows` de uma pasta em `SETTINGS_FOLDERS`, senão ela cai em Dados e backup.
 - Dono do app = linha em `app_admins` com o e-mail com que ele entra (não é só o do arquivo SQL). Para incluir: `insert into public.app_admins (user_id) select id from auth.users where lower(email)=lower('EMAIL') on conflict do nothing;`
 
+## Quadro do Android: turmas juntas e lista que rola (8.61)
+- APK versionCode 14. Alunos que começam na mesma hora ficam num cartão só ("Turma · N alunos", nomes juntos). A lista rola com o dedo (`DayWidgetService`, uma linha por horário) e já abre na próxima aula. Tocar no título ou num cartão abre "Seu dia hoje". O site manda os dados igual à 8.59.
+
 ## Paga no fim do mês, Início sem lembrete e quadro novo (8.60)
 - Aluno: opção "Paga no fim do mês das aulas" (`s.payAtEnd`, em Configurações avançadas do aluno, só mensal e pago para mim). A mensalidade do mês vence no último dia dele ou, com dia de vencimento, nesse dia do mês seguinte (`feeDueIso`). Vale para atraso, lista de mensalidades, desconto e multa, avisos do aluno, aluno em risco e "vencem hoje". Sem a opção, tudo igual. O campo vai para o app do aluno.
 - Início: a linha "Lembrar aulas de hoje" saiu (o sino nos títulos de hoje e de amanhã já faz isso). A configuração "Lembrete de aula" ficou escondida.

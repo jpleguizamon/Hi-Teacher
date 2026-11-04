@@ -63,6 +63,7 @@
             </intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/day_widget_info" />
         </receiver>
+        <service android:name=".DayWidgetService" android:exported="false" android:permission="android.permission.BIND_REMOTEVIEWS" />
 
         <meta-data android:name="com.google.firebase.messaging.default_notification_icon" android:resource="@drawable/ic_notification" />
         <meta-data android:name="com.google.firebase.messaging.default_notification_color" android:resource="@color/brand" />
