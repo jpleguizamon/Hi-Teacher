@@ -376,6 +376,25 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .nav{display:flex;flex-direction:column;gap:0.375rem}
 
 .sidebar-footer{margin-top:auto;padding-top:1rem;border-top:0.0625rem solid var(--hairline);display:flex;flex-direction:column;gap:0.375rem}
+
+/* Teclas caindo (8.63) */
+.fall-overlay{position:fixed;inset:0;z-index:400;display:flex;flex-direction:column;background:radial-gradient(120% 70% at 50% 0%,rgba(47,85,212,.28),transparent 60%),var(--bg);padding:calc(var(--sat,0px) + 0.5rem) 0.75rem calc(var(--sab,0px) + 0.5rem)}
+.fall-top{display:flex;align-items:center;gap:0.75rem;padding:0.25rem 0.25rem 0.5rem}
+.fall-title{flex:1;min-width:0;font-family:var(--font-display);font-weight:700;color:var(--heading);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fall-x{width:2.25rem;height:2.25rem;border-radius:50%;border:0.0625rem solid var(--glass-border);background:var(--glass);color:var(--text);cursor:pointer}
+.fall-canvas{flex:1;width:100%;min-height:0;border-radius:1rem;background:linear-gradient(180deg,rgba(14,20,34,.55),rgba(5,6,11,.2));border:0.0625rem solid var(--glass-border-soft);touch-action:none}
+.fall-bar{display:flex;flex-wrap:wrap;align-items:center;gap:0.5rem;padding-top:0.625rem}
+.fall-btn{border:0.0625rem solid var(--glass-border);background:var(--glass);color:var(--text);border-radius:var(--radius-pill);padding:0.5rem 0.875rem;font-weight:700;font-family:var(--font-display);cursor:pointer}
+.fall-btn.fall-main{background:var(--accent-fill);color:var(--accent-ink);border-color:transparent}
+.fall-group{display:inline-flex;gap:0.25rem}
+.fall-chip{border:0.0625rem solid var(--glass-border);background:transparent;color:var(--text-2);border-radius:var(--radius-pill);padding:0.375rem 0.75rem;font-size:0.8125rem;font-weight:600;cursor:pointer}
+.fall-chip.on{background:var(--accent-soft-2);color:var(--accent);border-color:var(--accent-line)}
+.fall-info{font-size:0.8125rem;color:var(--muted)}
+.fall-list{display:flex;flex-direction:column;gap:0.375rem}
+.fall-item{display:flex;justify-content:space-between;align-items:center;gap:0.5rem;text-align:left;padding:0.75rem 0.875rem;border-radius:0.875rem;border:0.0625rem solid var(--glass-border-soft);background:var(--glass-inset);color:var(--text);font:inherit;font-weight:600;cursor:pointer}
+.fall-lib-row{display:flex;align-items:center;gap:0.75rem;padding:0.5rem 0;border-bottom:0.0625rem solid var(--hairline)}
+.fall-lib-name{flex:1;min-width:0;font-weight:600;color:var(--text)}
+.btn-link-inline.danger{color:var(--danger)}
 /* ===== Metas ===== */
 .goals-progress-summary{font-size:0.8125rem;color:var(--muted);font-weight:600;margin-bottom:0.875rem}
 .goal-row{
@@ -3061,6 +3080,7 @@ body.pdf-open{overflow:hidden}
 <button class="nav-item" data-stu-page="voice">Canto</button>
 <button class="nav-item" data-stu-page="player">Tocar junto</button>
 <button class="nav-item" data-stu-page="backing">Bases</button>
+<button class="nav-item" data-stu-page="fall">Teclas caindo</button>
 </div>
 </div>
 </div>
@@ -3897,7 +3917,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.62";
+const APP_VERSION = "8.63";
 // Idioma (8.42): troca entre português e inglês e recarrega. Fica guardado neste aparelho.
 function langSwitchLabel(){ return APP_LANG === "en" ? "🌐 Mudar para português" : "🌐 Switch to English"; }
 function langSwitch(){
@@ -5760,11 +5780,11 @@ await startStudentMode(true);
 // Título de seção igual ao do professor (caixa alta pequena) + card de vidro.
 function stuCard(title, inner, extraCls){ return `${title ? `<div class="settings-group-label">${title}</div>` : ""}<section class="stu-card${extraCls ? " " + extraCls : ""}">${inner}</section>`; }
 const STU_PAGES = { home: "Início", lessons: "Aulas", money: "Financeiro", practice: "Praticar", songs: "Músicas", goals: "Metas", recordings: "Gravações", progress: "Minha prática", achievements: "Conquistas", evolution: "Nível e evolução", pthistory: "Histórico de prática", material: "Matérias",
-metronome: "Metrônomo", tuner: "Afinador", chords: "Acordes e escalas", ear: "Treino de ouvido", reading: "Leitura de partitura", drums: "Bateria", voice: "Canto", player: "Tocar junto", backing: "Bases", profile: "Configurações" };
+metronome: "Metrônomo", tuner: "Afinador", chords: "Acordes e escalas", ear: "Treino de ouvido", reading: "Leitura de partitura", drums: "Bateria", voice: "Canto", player: "Tocar junto", backing: "Bases", fall: "Teclas caindo", profile: "Configurações" };
 // Troca de página do modo aluno: mesma animação e mesma lógica de menu do openPage do professor.
 // Ferramentas por instrumento (8.6): o aluno só vê o que faz parte do aprendizado dele.
 // Instrumento que o app não reconhece (ou vazio) mostra todas.
-const TOOL_PAGES = ["metronome", "tuner", "chords", "ear", "reading", "drums", "voice", "player", "backing"];
+const TOOL_PAGES = ["metronome", "tuner", "chords", "ear", "reading", "drums", "voice", "player", "backing", "fall"];
 function instrumentKind(name){
 const n = stripAccents(String(name || "")).toLowerCase();
 if (!n.trim()) return null;
@@ -5780,7 +5800,7 @@ return null;
 const TOOLS_BY_KIND = {
 drums: ["metronome", "drums", "ear", "player"],
 voice: ["metronome", "voice", "ear", "reading", "player", "backing"],
-keys: ["metronome", "chords", "ear", "reading", "player", "backing"],
+keys: ["metronome", "chords", "ear", "reading", "player", "backing", "fall"],
 bass: ["metronome", "tuner", "chords", "ear", "reading", "player", "backing"],
 bowed: ["metronome", "tuner", "chords", "ear", "reading", "player", "backing"],
 strings: ["metronome", "tuner", "chords", "ear", "reading", "player", "backing"],
@@ -5862,7 +5882,7 @@ document.getElementById("stuPageTitle").textContent = STU_PAGES[stuTab];
 document.querySelectorAll("#stuSidebar [data-stu-page]").forEach(b => b.classList.toggle("active", b.dataset.stuPage === stuTab));
 const main = document.getElementById("stuMain");
 const r = { home: stuHomeHTML, lessons: stuLessonsHTML, money: stuMoneyHTML, practice: practiceHTML, songs: songsHTML, goals: goalsHTML, recordings: recordingsHTML, progress: progressHTML, achievements: achievementsHTML, evolution: evolutionHTML, pthistory: ptHistoryHTML, material: materialHTML,
-metronome: metroHTML, tuner: tunerHTML, chords: chordsHTML, ear: earHTML, reading: readingHTML, drums: drumsHTML, voice: voiceHTML, player: playerHTML, backing: backingHTML, profile: stuProfileHTML }[stuTab];
+metronome: metroHTML, tuner: tunerHTML, chords: chordsHTML, ear: earHTML, reading: readingHTML, drums: drumsHTML, voice: voiceHTML, player: playerHTML, backing: backingHTML, fall: fallHTML, profile: stuProfileHTML }[stuTab];
 // Título da página com a linha embaixo, igual ao app do professor (8.12). O primeiro rótulo
 // some quando repete o nome da página (ex.: "Afinador" logo abaixo do título "Afinador").
 let pageHtml = r();
@@ -6491,7 +6511,7 @@ const lo = main.querySelector("#stuLogoutBtn");
 if (lo) lo.onclick = () => { if (confirm("Sair da conta?")) stuSignOut(); };
 const tb = main.querySelector("#stuTeacherBtn");
 if (tb) tb.onclick = () => switchRole("teacher");
-const binders = { metronome: toolsBind, tuner: toolsBind, chords: chordsBind, ear: earBind, reading: readingBind, drums: drumsBind, voice: voiceBind, player: playerBind, backing: backingBind,
+const binders = { metronome: toolsBind, tuner: toolsBind, chords: chordsBind, ear: earBind, reading: readingBind, drums: drumsBind, voice: voiceBind, player: playerBind, backing: backingBind, fall: fallBind,
 practice: practiceBind, songs: songsBind, lessons: lessonsBind, goals: goalsBind, recordings: recordingsBind, progress: progressBind, achievements: progressBind, evolution: progressBind, pthistory: progressBind, material: materialBind };
 if (binders[stuTab]) binders[stuTab](main);
 // "Ver como aluno": botões de enviar desligados.
@@ -7617,6 +7637,282 @@ main.querySelector("#plB").onclick = () => { if (p.a !== null && m.currentTime <
 main.querySelector("#plLoop").onchange = e => { p.loop = e.target.checked; if (p.loop && p.a !== null && p.b !== null && (m.currentTime < p.a || m.currentTime > p.b)) m.currentTime = p.a; };
 main.querySelector("#plBack").onclick = () => { m.currentTime = Math.max(0, m.currentTime - 5); };
 main.querySelector("#plClear").onclick = () => { p.a = null; p.b = null; p.loop = false; main.querySelector("#plLoop").checked = false; ab(); };
+}
+// ---------- Teclas caindo (8.63) ----------
+// As notas descem até um teclado na tela, como nos vídeos de piano. As músicas vêm de três
+// lugares: prontas no app (FALL_BUILTIN), arquivo MIDI que o professor põe e gravação tocando no
+// próprio teclado da tela. Biblioteca do professor em appSettings.fallLib; o aluno recebe as
+// liberadas (s.fallOn = [ids]) pelo student_view (info.fall). Nota = [midi, início (s), duração (s), mão (0 direita, 1 esquerda)].
+const FALL_BUILTIN = (() => {
+const mk = (id, title, bpm, parts) => {
+const spb = 60 / bpm, notes = [];
+parts.forEach(([hand, seq]) => { let t = 0; seq.forEach(([m, b]) => { if (m) notes.push([m, Math.round(t * spb * 1000) / 1000, Math.round(b * spb * 0.95 * 1000) / 1000, hand]); t += b; }); });
+return { id, title, notes: notes.sort((a, b) => a[1] - b[1]), builtin: true };
+};
+const C4 = 60, D4 = 62, E4 = 64, F4 = 65, G4 = 67, A4 = 69, B4 = 71, C5 = 72, D5 = 74, E5 = 76, G5 = 79, G3 = 55;
+// Brilha, brilha, estrelinha (tradicional), em Dó.
+const tw = [[C4,1],[C4,1],[G4,1],[G4,1],[A4,1],[A4,1],[G4,2],[F4,1],[F4,1],[E4,1],[E4,1],[D4,1],[D4,1],[C4,2]];
+const twMid = [[G4,1],[G4,1],[F4,1],[F4,1],[E4,1],[E4,1],[D4,2]];
+// Ode à Alegria (Beethoven, 9ª Sinfonia), em Dó.
+const odeA = [[E4,1],[E4,1],[F4,1],[G4,1],[G4,1],[F4,1],[E4,1],[D4,1],[C4,1],[C4,1],[D4,1],[E4,1]];
+const odeB = [[D4,1],[D4,1],[E4,1],[C4,1],[D4,1],[E4,0.5],[F4,0.5],[E4,1],[C4,1],[D4,1],[E4,0.5],[F4,0.5],[E4,1],[D4,1],[C4,1],[D4,1],[G3,2]];
+const ode = [...odeA, [E4,1.5],[D4,0.5],[D4,2], ...odeA, [D4,1.5],[C4,0.5],[C4,2], ...odeB, ...odeA, [D4,1.5],[C4,0.5],[C4,2]];
+// Parabéns pra você (melodia tradicional), em Dó, compasso 3/4.
+const hb = [[G4,0.75],[G4,0.25],[A4,1],[G4,1],[C5,1],[B4,2],[G4,0.75],[G4,0.25],[A4,1],[G4,1],[D5,1],[C5,2],[G4,0.75],[G4,0.25],[G5,1],[E5,1],[C5,1],[B4,1],[A4,2],[F4+12,0.75],[F4+12,0.25],[E5,1],[C5,1],[D5,1],[C5,2]];
+// Escala de Dó maior com as duas mãos (mão esquerda uma oitava abaixo), subindo e descendo.
+const up = [0, 2, 4, 5, 7, 9, 11, 12], sc = up.concat(up.slice(0, -1).reverse());
+return [
+mk("b:scale", APP_LANG === "en" ? "C major scale (both hands)" : "Escala de Dó maior (duas mãos)", 80, [[0, sc.map(x => [C4 + x, 1])], [1, sc.map(x => [C4 - 12 + x, 1])]]),
+mk("b:twinkle", APP_LANG === "en" ? "Twinkle, Twinkle, Little Star" : "Brilha, brilha, estrelinha", 100, [[0, [...tw, ...twMid, ...twMid, ...tw]]]),
+mk("b:ode", APP_LANG === "en" ? "Ode to Joy (Beethoven)" : "Ode à Alegria (Beethoven)", 110, [[0, ode]]),
+mk("b:hbd", APP_LANG === "en" ? "Happy Birthday" : "Parabéns pra você", 100, [[0, hb]])
+];
+})();
+function fallLib(){ return Array.isArray(appSettings.fallLib) ? appSettings.fallLib : []; }
+function fallLibSave(list){ appSettings.fallLib = list.length ? list : undefined; saveAppSettings(); }
+function fallById(id){ return FALL_BUILTIN.find(x => x.id === id) || fallLib().find(x => x.id === id) || null; }
+// Lê um arquivo MIDI (formato 0 ou 1): notas em segundos, respeitando as mudanças de andamento.
+function fallParseMidi(buf){
+const d = new DataView(buf), u8 = new Uint8Array(buf);
+const str = (o, n) => String.fromCharCode(...u8.slice(o, o + n));
+if (str(0, 4) !== "MThd") throw new Error("Esse arquivo não é MIDI.");
+const ntrk = d.getUint16(10), div = d.getUint16(12);
+if (div & 0x8000) throw new Error("Esse tipo de arquivo MIDI não é aceito.");
+let o = 8 + d.getUint32(4);
+const tempos = [[0, 500000]], tracks = [];
+for (let tr = 0; tr < ntrk && o + 8 <= u8.length; tr++) {
+if (str(o, 4) !== "MTrk") break;
+const len = d.getUint32(o + 4); let p = o + 8; const end = p + len; o = end;
+let tick = 0, status = 0; const on = {}, notes = [];
+const vlq = () => { let v = 0, b; do { b = u8[p++]; v = (v << 7) | (b & 0x7f); } while (b & 0x80 && p < end); return v; };
+while (p < end) {
+tick += vlq();
+let b = u8[p];
+if (b & 0x80) { status = b; p++; } else if (!status) break;
+const type = status & 0xf0;
+if (status === 0xff) { const mt = u8[p++], ml = vlq(); if (mt === 0x51 && ml === 3) tempos.push([tick, (u8[p] << 16) | (u8[p + 1] << 8) | u8[p + 2]]); p += ml; status = 0; continue; }
+if (status === 0xf0 || status === 0xf7) { p += vlq(); status = 0; continue; }
+const a = u8[p++], v = (type === 0xc0 || type === 0xd0) ? 0 : u8[p++];
+const ch = status & 0x0f;
+if (ch === 9) continue; // canal 10 = bateria
+if (type === 0x90 && v > 0) (on[a] ??= []).push(tick);
+else if (type === 0x80 || (type === 0x90 && v === 0)) { const st = on[a] && on[a].shift(); if (st !== undefined) notes.push([a, st, tick]); }
+}
+if (notes.length) tracks.push(notes);
+}
+if (!tracks.length) throw new Error("Não achei notas nesse arquivo.");
+tempos.sort((a, b) => a[0] - b[0]);
+const sec = t => { let s = 0, lt = 0, us = 500000; for (const [tt, v] of tempos) { if (tt > t) break; s += (tt - lt) * us / div / 1e6; lt = tt; us = v; } return s + (t - lt) * us / div / 1e6; };
+// Mãos: com duas ou mais trilhas, a de som mais agudo é a direita; com uma só, abaixo do Dó central é a esquerda.
+const avg = n => n.reduce((x, y) => x + y[0], 0) / n.length;
+const order = tracks.map((n, i) => [i, avg(n)]).sort((a, b) => b[1] - a[1]).map(x => x[0]);
+const out = [];
+tracks.forEach((n, i) => n.forEach(([m, a, b]) => { const s = sec(a), e = sec(b); out.push([m, Math.round(s * 1000) / 1000, Math.max(0.08, Math.round((e - s) * 1000) / 1000), tracks.length > 1 ? (order.indexOf(i) === 0 ? 0 : 1) : (m < 60 ? 1 : 0)]); }));
+out.sort((a, b) => a[1] - b[1] || a[0] - b[0]);
+const t0 = out[0][1];
+return out.slice(0, 4000).map(n => [n[0], Math.round((n[1] - t0) * 1000) / 1000, n[2], n[3]]);
+}
+// ---------- Tela das teclas caindo (tela cheia; serve para o aluno e para o professor) ----------
+const FALL_BLACK = [1, 3, 6, 8, 10];
+let fall = null;
+function fallOpen(song, opts = {}){
+fallClose();
+const rec = !!opts.record;
+const el = document.createElement("div");
+el.className = "fall-overlay";
+el.innerHTML = `<div class="fall-top"><div class="fall-title">${escapeHtml(rec ? "Gravar tocando" : song.title)}</div><button type="button" class="fall-x" aria-label="Fechar">✕</button></div>
+<canvas class="fall-canvas"></canvas>
+<div class="fall-bar">${rec
+? `<button type="button" class="fall-btn fall-main" data-f="rec">● Gravar</button><button type="button" class="fall-btn" data-f="oct-">◀ Oitava</button><button type="button" class="fall-btn" data-f="oct+">Oitava ▶</button><span class="fall-info" data-f="info">Toque nas teclas ou num teclado ligado ao aparelho.</span>`
+: `<button type="button" class="fall-btn fall-main" data-f="play">▶ Tocar</button><button type="button" class="fall-btn" data-f="restart">⟲ Do começo</button>
+<span class="fall-group">${[0.5, 0.75, 1].map(r => `<button type="button" class="fall-chip${r === 1 ? " on" : ""}" data-rate="${r}">${Math.round(r * 100)}%</button>`).join("")}</span>
+${song.notes.some(n => n[3] === 1) ? `<span class="fall-group">${[["both", "Duas mãos"], ["r", "Direita"], ["l", "Esquerda"]].map(([k, l]) => `<button type="button" class="fall-chip${k === "both" ? " on" : ""}" data-hand="${k}">${l}</button>`).join("")}</span>` : ""}
+<button type="button" class="fall-chip" data-f="wait">Esperar eu tocar</button>`}</div>`;
+document.body.appendChild(el);
+const cv = el.querySelector("canvas"), ctx2 = cv.getContext("2d");
+const notes = rec ? [] : song.notes;
+let lo = 60, hi = 83;
+if (notes.length) { lo = Math.min(...notes.map(n => n[0])); hi = Math.max(...notes.map(n => n[0])); lo = Math.floor(lo / 12) * 12; hi = Math.max(lo + 23, Math.ceil((hi + 1) / 12) * 12 - 1); }
+const f = fall = { el, song, rec, notes, lo, hi, t: 0, playing: false, rate: 1, hand: "both", wait: false, sched: new Set(), pressed: new Map(), lit: new Map(), raf: 0, last: 0, recOn: false, recStart: 0, recNotes: [], midi: null, waitIdx: 0 };
+const keysOf = () => { const ks = []; let wi = 0; for (let m = f.lo; m <= f.hi; m++) { const blk = FALL_BLACK.includes(m % 12); ks.push({ m, blk, wi: blk ? wi - 0.5 : wi }); if (!blk) wi++; } return { ks, nW: wi }; };
+let lay = keysOf();
+const handOk = n => f.hand === "both" || (f.hand === "r" ? n[3] !== 1 : n[3] === 1);
+const resize = () => { const r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1; cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr); ctx2.setTransform(dpr, 0, 0, dpr, 0, 0); };
+const geo = () => { const r = cv.getBoundingClientRect(), W = r.width, H = r.height, kh = Math.min(H * 0.26, W / lay.nW * 5.2), ww = W / lay.nW; return { W, H, kh, ww, top: H - kh }; };
+const keyX = k => { const g = geo(); return k.blk ? (k.wi + 1) * g.ww - g.ww * 0.3 : k.wi * g.ww; };
+const keyW = k => { const g = geo(); return k.blk ? g.ww * 0.6 : g.ww; };
+const sound = (m, dur) => { try { synthNote(m, getAudioCtx().currentTime + 0.01, dur || 0.6, { inst: "piano", vol: 0.22 }); } catch(e) {} };
+const press = m => {
+f.lit.set(m, performance.now() + 220);
+sound(m, 0.6);
+if (f.rec && f.recOn) f.recNotes.push([m, Math.round((performance.now() - f.recStart) / 10) / 100, 0.35, m < 60 ? 1 : 0]);
+if (!f.rec && f.wait) f.pressed.set(m, performance.now());
+};
+const draw = () => {
+const g = geo(); ctx2.clearRect(0, 0, g.W, g.H);
+const look = 3.2, pps = g.top / look;
+// Linhas das oitavas
+ctx2.strokeStyle = "rgba(79,125,255,.08)"; ctx2.lineWidth = 1;
+lay.ks.filter(k => !k.blk && k.m % 12 === 0).forEach(k => { const x = Math.round(keyX(k)) + 0.5; ctx2.beginPath(); ctx2.moveTo(x, 0); ctx2.lineTo(x, g.top); ctx2.stroke(); });
+const now = f.t, playingNow = new Map();
+f.notes.forEach(n => {
+if (!handOk(n) || n[1] > now + look || n[1] + n[2] < now - 0.2) return;
+const k = lay.ks[n[0] - f.lo]; if (!k) return;
+const y2 = g.top - (n[1] - now) * pps, y1 = y2 - n[2] * pps;
+const x = keyX(k) + 1.5, w = keyW(k) - 3;
+const left = n[3] === 1, active = n[1] <= now && n[1] + n[2] > now;
+if (active) playingNow.set(n[0], left);
+ctx2.fillStyle = left ? (active ? "#9DB6FF" : "#6D8FF0") : (active ? "#8FB0FF" : "#4F7DFF");
+ctx2.shadowColor = "rgba(79,125,255,.7)"; ctx2.shadowBlur = active ? 14 : 6;
+const r = Math.min(6, w / 2), y = Math.max(-20, y1), h = Math.min(g.top, y2) - y;
+if (h > 0) { ctx2.beginPath(); ctx2.roundRect ? ctx2.roundRect(x, y, w, h, r) : ctx2.rect(x, y, w, h); ctx2.fill(); }
+ctx2.shadowBlur = 0;
+if (h > 16 && w > 14) { ctx2.fillStyle = "rgba(255,255,255,.92)"; ctx2.font = `600 ${Math.min(12, w * 0.45)}px Poppins, sans-serif`; ctx2.textAlign = "center"; ctx2.fillText(PT_NOTE[NOTE_NAMES[n[0] % 12]] || "", x + w / 2, Math.min(g.top, y2) - 6); }
+});
+// Linha de chegada
+ctx2.fillStyle = "rgba(79,125,255,.55)"; ctx2.fillRect(0, g.top - 2, g.W, 2);
+// Teclado
+const tnow = performance.now();
+[false, true].forEach(blk => lay.ks.filter(k => k.blk === blk).forEach(k => {
+const x = keyX(k), w = keyW(k), h = blk ? g.kh * 0.62 : g.kh;
+const lit = playingNow.has(k.m) || (f.lit.get(k.m) || 0) > tnow;
+ctx2.fillStyle = lit ? (blk ? "#3B63E0" : "#8FB0FF") : (blk ? "#0B0F1A" : "#F4F6FB");
+ctx2.fillRect(x + (blk ? 0 : 0.5), g.top, w - (blk ? 0 : 1), h);
+if (!blk) { ctx2.strokeStyle = "rgba(5,6,11,.35)"; ctx2.strokeRect(x + 0.5, g.top, w - 1, h); }
+if (!blk && k.m % 12 === 0 && w > 16) { ctx2.fillStyle = lit ? "#05060B" : "#64748B"; ctx2.font = `600 ${Math.min(11, w * 0.38)}px Poppins, sans-serif`; ctx2.textAlign = "center"; ctx2.fillText(`${PT_NOTE.C}${Math.floor(k.m / 12) - 1}`, x + w / 2, g.top + h - 6); }
+}));
+if (f.rec && f.recOn) { ctx2.fillStyle = "#f87171"; ctx2.beginPath(); ctx2.arc(16, 16, 6, 0, 7); ctx2.fill(); ctx2.fillStyle = "#EAF0FF"; ctx2.font = "600 12px Poppins, sans-serif"; ctx2.textAlign = "left"; ctx2.fillText(`${f.recNotes.length} notas`, 28, 20); }
+};
+const due = () => { // próximas notas que o aluno precisa tocar no modo "esperar"
+const list = f.notes.filter(handOk); while (f.waitIdx < list.length && list[f.waitIdx][1] < f.t - 0.05) f.waitIdx++;
+const n = list[f.waitIdx]; if (!n) return null;
+return list.filter(x => Math.abs(x[1] - n[1]) < 0.04);
+};
+const tick = ts => {
+const dt = f.last ? Math.min(0.1, (ts - f.last) / 1000) : 0; f.last = ts;
+if (f.playing) {
+let nt = f.t + dt * f.rate;
+if (f.wait) {
+const grp = due();
+if (grp && nt >= grp[0][1]) {
+const ok = grp.every(n => (f.pressed.get(n[0]) || 0) > ts - 1500);
+if (!ok) nt = grp[0][1]; else { grp.forEach(n => f.pressed.delete(n[0])); f.waitIdx += grp.length; }
+}
+}
+// Toca as notas (no "esperar", só as da outra mão, se houver)
+f.notes.forEach((n, i) => { if (n[1] >= f.t && n[1] < nt && !f.sched.has(i)) { f.sched.add(i); if (handOk(n) ? !f.wait : f.hand !== "both") sound(n[0], n[2] / f.rate); } });
+f.t = nt;
+const endT = f.notes.length ? Math.max(...f.notes.map(n => n[1] + n[2])) : 0;
+if (f.t > endT + 0.8) { f.playing = false; f.t = 0; f.sched.clear(); f.waitIdx = 0; setPlayLabel(); }
+}
+draw();
+f.raf = requestAnimationFrame(tick);
+};
+const setPlayLabel = () => { const b = el.querySelector('[data-f="play"]'); if (b) b.textContent = f.playing ? "❚❚ Pausar" : "▶ Tocar"; };
+// Toques no teclado da tela
+cv.addEventListener("pointerdown", e => {
+const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, g = geo();
+if (y < g.top) { if (!f.rec) { f.playing = !f.playing; f.last = 0; setPlayLabel(); } return; }
+const hit = lay.ks.filter(k => k.blk && y < g.top + g.kh * 0.62).concat(lay.ks.filter(k => !k.blk)).find(k => x >= keyX(k) && x < keyX(k) + keyW(k));
+if (hit) { e.preventDefault(); press(hit.m); }
+});
+// Teclado de verdade ligado ao aparelho (quando o navegador deixa)
+try { if (navigator.requestMIDIAccess) navigator.requestMIDIAccess().then(acc => { f.midi = acc; acc.inputs.forEach(inp => inp.onmidimessage = ev => { if (fall !== f) return; const [st, m, v] = ev.data; if ((st & 0xf0) === 0x90 && v > 0) press(m); }); }).catch(() => {}); } catch(e) {}
+el.querySelector(".fall-x").onclick = fallClose;
+el.querySelectorAll("[data-rate]").forEach(b => b.onclick = () => { f.rate = Number(b.dataset.rate); el.querySelectorAll("[data-rate]").forEach(x => x.classList.toggle("on", x === b)); });
+el.querySelectorAll("[data-hand]").forEach(b => b.onclick = () => { f.hand = b.dataset.hand; f.waitIdx = 0; el.querySelectorAll("[data-hand]").forEach(x => x.classList.toggle("on", x === b)); });
+const q = s => el.querySelector(`[data-f="${s}"]`);
+if (q("play")) q("play").onclick = () => { getAudioCtx(); f.playing = !f.playing; f.last = 0; setPlayLabel(); };
+if (q("restart")) q("restart").onclick = () => { f.t = 0; f.sched.clear(); f.waitIdx = 0; f.pressed.clear(); };
+if (q("wait")) q("wait").onclick = () => { f.wait = !f.wait; f.waitIdx = 0; q("wait").classList.toggle("on", f.wait); };
+const shift = d => { const nl = f.lo + d * 12; if (nl < 24 || nl + 23 > 108) return; f.lo = nl; f.hi = nl + 23; lay = keysOf(); };
+if (q("oct-")) q("oct-").onclick = () => shift(-1);
+if (q("oct+")) q("oct+").onclick = () => shift(1);
+if (q("rec")) q("rec").onclick = () => {
+getAudioCtx();
+if (!f.recOn) { f.recOn = true; f.recStart = performance.now(); f.recNotes = []; q("rec").textContent = "■ Parar"; q("info").textContent = "Gravando… toque a música."; return; }
+f.recOn = false; q("rec").textContent = "● Gravar";
+if (f.recNotes.length < 2) { q("info").textContent = "Poucas notas. Toque em Gravar e tente de novo."; return; }
+const t0 = f.recNotes[0][1], ns = f.recNotes.map((n, i, a) => { const nx = a.find((x, j) => j > i && x[0] === n[0]); return [n[0], Math.round((n[1] - t0) * 100) / 100, Math.max(0.15, Math.min(1.5, nx ? nx[1] - n[1] - 0.05 : 0.6)), n[3]]; });
+const name = (prompt("Nome desta música ou exercício:", "") || "").trim();
+if (!name) { q("info").textContent = "Gravação descartada (sem nome)."; return; }
+const x = { id: "f" + Date.now().toString(36), title: name.slice(0, 80), notes: ns };
+fallLibSave(fallLib().concat([x]));
+if (typeof opts.onSaved === "function") opts.onSaved(x);
+fallClose();
+};
+const onR = () => resize();
+window.addEventListener("resize", onR); f.offR = () => window.removeEventListener("resize", onR);
+resize();
+f.raf = requestAnimationFrame(tick);
+}
+function fallClose(){
+if (!fall) return;
+cancelAnimationFrame(fall.raf); fall.offR && fall.offR();
+try { if (fall.midi) fall.midi.inputs.forEach(i => i.onmidimessage = null); } catch(e) {}
+fall.el.remove(); fall = null;
+}
+// ---------- Aluno: página da ferramenta ----------
+function stuFallSongs(){ const v = (stuCur && stuCur.view) || {}; return FALL_BUILTIN.concat((Array.isArray(v.fall) ? v.fall : []).filter(x => x && x.t && Array.isArray(x.n)).map(x => ({ id: x.id, title: x.t, notes: x.n }))); }
+function fallHTML(){
+const list = stuFallSongs();
+return stuCard("Teclas caindo", `<div class="stu-muted" style="margin-bottom:0.5rem">As notas descem até o teclado. Toque junto, mais devagar ou com uma mão de cada vez. "Esperar eu tocar" para a música até você apertar a tecla certa.</div>
+<div class="fall-list">${list.map(x => `<button type="button" class="fall-item" data-fall="${escapeHtml(x.id)}"><span>${escapeHtml(x.title)}</span><span class="stu-muted">${x.builtin ? "Pronta no app" : "Do professor"} ›</span></button>`).join("")}</div>`);
+}
+function fallBind(main){
+main.querySelectorAll("[data-fall]").forEach(b => b.onclick = () => { const x = stuFallSongs().find(y => y.id === b.dataset.fall); if (x) fallOpen(x); });
+}
+// ---------- Professor: biblioteca e liberação ----------
+function fallReleasedTo(id){ return students.filter(s => (s.fallOn || []).includes(id)); }
+function openFallLibrary(){
+const body = document.createElement("div");
+const draw = () => {
+const mine = fallLib();
+body.innerHTML = `<div class="demo-actions" style="margin:0 0 0.75rem"><label class="btn-historico file-pick">Pôr arquivo MIDI<input type="file" id="fallMidi" accept=".mid,.midi,audio/midi,audio/x-midi" hidden></label><button type="button" class="btn-historico" id="fallRec">Gravar tocando</button></div>
+<div class="field-hint" style="margin-bottom:0.75rem">MIDI é o arquivo de partitura tocável (termina em .mid). Dá para achar de quase toda música buscando "nome da música midi piano".</div>
+<div class="settings-group-label" style="margin-top:0">Prontas no app (todos os alunos com a ferramenta veem)</div>
+${FALL_BUILTIN.map(x => `<div class="fall-lib-row"><div class="fall-lib-name">${escapeHtml(x.title)}</div><button type="button" class="btn-link-inline" data-fl-play="${x.id}">Ver</button></div>`).join("")}
+<div class="settings-group-label">Suas músicas</div>
+${mine.length ? mine.map(x => { const n = fallReleasedTo(x.id).length; return `<div class="fall-lib-row"><div class="fall-lib-name">${escapeHtml(x.title)}<div class="stu-muted">${n ? `Liberada para ${n} aluno${n > 1 ? "s" : ""}` : "Ainda não liberada"}</div></div><button type="button" class="btn-link-inline" data-fl-play="${x.id}">Ver</button><button type="button" class="btn-link-inline" data-fl-rel="${x.id}">Liberar</button><button type="button" class="btn-link-inline danger" data-fl-del="${x.id}">Tirar</button></div>`; }).join("") : `<div class="stu-muted">Nenhuma ainda. Ponha um arquivo MIDI ou grave tocando.</div>`}
+<div class="auth-error" id="fallErr"></div>`;
+body.querySelector("#fallMidi").onchange = async e => {
+const file = e.target.files && e.target.files[0]; if (!file) return;
+try {
+const notes = fallParseMidi(await file.arrayBuffer());
+const x = { id: "f" + Date.now().toString(36), title: file.name.replace(/\.(mid|midi)$/i, "").replace(/[_-]+/g, " ").trim().slice(0, 80) || "Música", notes };
+fallLibSave(fallLib().concat([x])); draw();
+} catch(err) { body.querySelector("#fallErr").textContent = err.message || "Não consegui ler esse arquivo."; }
+};
+body.querySelector("#fallRec").onclick = () => { closeQuickModal(); fallOpen(null, { record: true, onSaved: () => setTimeout(openFallLibrary, 50) }); };
+body.querySelectorAll("[data-fl-play]").forEach(b => b.onclick = () => { const x = fallById(b.dataset.flPlay); if (x) fallOpen(x); });
+body.querySelectorAll("[data-fl-rel]").forEach(b => b.onclick = () => openFallRelease(b.dataset.flRel));
+body.querySelectorAll("[data-fl-del]").forEach(b => b.onclick = () => {
+const x = fallById(b.dataset.flDel); if (!x || !confirm(`Tirar "${x.title}"? Some do app dos alunos que têm essa música.`)) return;
+fallLibSave(fallLib().filter(y => y.id !== x.id));
+students.forEach(s => { if (s.fallOn) { s.fallOn = s.fallOn.filter(i => i !== x.id); if (!s.fallOn.length) delete s.fallOn; } });
+saveStudents(); teacherPublish(); draw();
+});
+};
+draw();
+openQuickModal("Teclas caindo", "Músicas que descem até o teclado na tela.", body, null, "Fechar");
+}
+function openFallRelease(id){
+const x = fallById(id); if (!x) return;
+const list = students.filter(s => s.active !== false).sort((a, b) => String(a.name).localeCompare(String(b.name)));
+const body = document.createElement("div");
+body.innerHTML = `<div class="sab-list"><label class="sab-item"><input type="checkbox" id="frAll"> <b>Todos</b></label>${list.map(s => `<label class="sab-item"><input type="checkbox" data-fr="${escapeHtml(String(s.id))}"${(s.fallOn || []).includes(id) ? " checked" : ""}> ${escapeHtml(s.name)}${s.instrument ? ` <span class="stu-muted">· ${escapeHtml(s.instrument)}</span>` : ""}</label>`).join("")}</div>
+<div class="field-hint">Quem você marcar também ganha a ferramenta Teclas caindo no app.</div>`;
+body.querySelector("#frAll").onchange = e => body.querySelectorAll("[data-fr]").forEach(i => i.checked = e.target.checked);
+openQuickModal(`Liberar "${x.title}"`, "", body, () => {
+body.querySelectorAll("[data-fr]").forEach(i => {
+const s = students.find(y => String(y.id) === i.dataset.fr); if (!s) return;
+const set = new Set(s.fallOn || []);
+if (i.checked) { set.add(id); const on = new Set(s.appOn || []); on.add("fall"); s.appOn = [...on]; } else set.delete(id);
+if (set.size) s.fallOn = [...set]; else delete s.fallOn;
+});
+saveStudents(); teacherPublish();
+openFallLibrary();
+}, "Cancelar", "Salvar");
 }
 function playerOpen(url, name, video){
 if (!stuToolGate("player")) return;
@@ -8977,6 +9273,9 @@ if (Array.isArray(s.appOff) && s.appOff.length) { const off = s.appOff.filter(p 
 const lib = songLib(), rel = Array.isArray(s.songsOn) ? s.songsOn : [];
 const songs = rel.map(r => { const x = lib.find(y => y.id === r.id); return x ? { id: x.id, t: x.title, ...(x.artist ? { a: x.artist } : {}), u: x.url, d: r.at || "" } : null; }).filter(Boolean);
 if (songs.length) info.songs = songs;
+// 8.63: músicas das teclas caindo liberadas para o aluno (as prontas já vêm no app).
+const fl = (Array.isArray(s.fallOn) ? s.fallOn : []).map(id => fallLib().find(x => x.id === id)).filter(Boolean).map(x => ({ id: x.id, t: x.title, n: x.notes }));
+if (fl.length) info.fall = fl;
 if (Array.isArray(s.chordsOn) && s.chordsOn.length) info.chords = s.chordsOn.slice();
 if (s.flatsOn) info.flats = true;
 if (Array.isArray(s.appOn) && s.appOn.length) info.on = s.appOn.filter(p => TOOL_PAGES.includes(p));
@@ -9352,6 +9651,7 @@ box.innerHTML = `<div class="settings-card">
 ${row("saKey", "user", "Chave para alunos", appSettings.studentCode ? "Seus alunos pedem pra entrar no app com ela" : "Crie a chave para seus alunos entrarem no app", appSettings.studentCode || "")}
 ${row("saContent", "clipboard", "Conteúdo para os alunos", "Pix, regras, mural, eventos, remarcação, temas", "")}
 ${row("saDemo", "music", "Ver demonstração", "Como o app aparece para um aluno", "")}
+${row("saFall", "music", "Teclas caindo", "Músicas que descem até o teclado: arquivo MIDI, gravar tocando ou prontas", fallLib().length ? String(fallLib().length) : "")}
 </div>
 <div class="settings-group-label">O que cada aluno pode usar</div>
 <div class="sa-tools"><input type="search" id="saSearch" class="student-picker-search" placeholder="Buscar aluno..." value="${escapeHtml(saQuery)}" autocomplete="off"><button type="button" class="btn-historico" id="saBulk">Liberar para vários</button></div>
@@ -9362,6 +9662,7 @@ const on = (id, fn) => { const el = box.querySelector("#" + id); if (!el) return
 on("saKey", openStudentKey);
 on("saContent", openStudentContent);
 on("saDemo", startDemo);
+on("saFall", openFallLibrary);
 on("saBulk", openAppFeaturesBulk);
 const q = box.querySelector("#saSearch");
 q.oninput = () => { saQuery = q.value; const pos = q.selectionStart; renderStudentAppPage(); const n = document.getElementById("saSearch"); n.focus(); try { n.setSelectionRange(pos, pos); } catch(e) {} };
@@ -16239,7 +16540,7 @@ return p ? presetPlan(p) : undefined;
    pra tirar só isso depois. */
 const PT_NOTE = APP_LANG === "en" ? { C: "C", "C#": "C#", D: "D", "D#": "D#", E: "E", F: "F", "F#": "F#", G: "G", "G#": "G#", A: "A", "A#": "A#", B: "B" } : { C: "Dó", "C#": "Dó#", D: "Ré", "D#": "Ré#", E: "Mi", F: "Fá", "F#": "Fá#", G: "Sol", "G#": "Sol#", A: "Lá", "A#": "Lá#", B: "Si" };
 const MAT_NATURAL = ["C", "D", "E", "F", "G", "A", "B"];
-const MAT_TOOLS = [["tuner", "Afinação do instrumento"], ["metronome", "Uso do metrônomo"], ["ear", "Treino de ouvido"], ["reading", "Leitura de partitura"], ["backing", "Tocar com bases"], ["player", "Tocar junto com músicas"], ["drums", "Ritmos de bateria"], ["voice", "Exercícios de canto"]];
+const MAT_TOOLS = [["tuner", "Afinação do instrumento"], ["metronome", "Uso do metrônomo"], ["ear", "Treino de ouvido"], ["reading", "Leitura de partitura"], ["backing", "Tocar com bases"], ["player", "Tocar junto com músicas"], ["drums", "Ritmos de bateria"], ["voice", "Exercícios de canto"], ["fall", "Tocar com as teclas caindo"]];
 const MAT_CHORDS = { "": "Acordes maiores", m: "Acordes menores", "7": "Acordes com sétima", m7: "Acordes menores com sétima", "7M": "Acordes com sétima maior", sus4: "Acordes suspensos (4ª)", dim: "Acordes diminutos", aug: "Acordes aumentados" };
 const MAT_SCALES = { maior: "Escala maior", menor: "Escala menor natural", penta: "Escala pentatônica maior", pentam: "Escala pentatônica menor", blues: "Escala blues", harm: "Escala menor harmônica", dor: "Modo dórico", mixo: "Modo mixolídio" };
 // "Escala maior de Dó" / "C major scale" (8.42).
