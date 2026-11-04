@@ -2201,6 +2201,9 @@ body.pdf-open{overflow:hidden}
 .sa-tools .student-picker-search{flex:1;margin:0}
 .sa-row{cursor:pointer}
 .sab-list{display:flex;flex-direction:column;gap:0.375rem;max-height:16rem;overflow:auto;padding:0.25rem 0}
+.sab-list .settings-group-label{font-size:0.6875rem}
+.sab-item input[type=checkbox]{width:1.125rem;height:1.125rem;min-height:0;flex:none;margin:0;padding:0;accent-color:var(--accent)}
+.field .sab-item{display:flex;margin:0;font-weight:500}
 .sab-item{display:flex;align-items:center;gap:0.5rem;font-size:0.875rem;color:var(--text-2);cursor:pointer}
 .school-sec-label{display:flex;justify-content:space-between;align-items:baseline;gap:0.75rem}
 .school-sec-label .stu-muted{font-weight:600;font-size:0.75rem;text-transform:none;letter-spacing:0;text-align:right}
@@ -3894,7 +3897,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.61";
+const APP_VERSION = "8.62";
 // Idioma (8.42): troca entre português e inglês e recarrega. Fica guardado neste aparelho.
 function langSwitchLabel(){ return APP_LANG === "en" ? "🌐 Mudar para português" : "🌐 Switch to English"; }
 function langSwitch(){
@@ -9392,32 +9395,39 @@ function openAppFeaturesBulk(){
 const list = students.filter(s => s.active !== false).sort((a, b) => String(a.name).localeCompare(String(b.name)));
 if (!list.length) { alert("Nenhum aluno ativo ainda."); return; }
 const body = document.createElement("div");
-body.innerHTML = `<div class="field"><label>O que</label><select id="sabWhat"><optgroup label="Estudo">${SA_FEATURES.map(p => `<option value="f:${p}">${escapeHtml(saFeatName(p))}</option>`).join("")}</optgroup><optgroup label="Ferramentas">${TOOL_PAGES.map(p => `<option value="t:${p}">${escapeHtml(STU_PAGES[p] || p)}</option>`).join("")}</optgroup></select></div>
+// 8.62: dá para marcar várias funções de uma vez.
+body.innerHTML = `<div class="field"><label>O que (marque uma ou mais)</label><div class="sab-list"><div class="settings-group-label" style="margin:0">Estudo</div>${SA_FEATURES.map(p => `<label class="sab-item"><input type="checkbox" data-sab-what="f:${p}"> ${escapeHtml(saFeatName(p))}</label>`).join("")}<div class="settings-group-label" style="margin:0.5rem 0 0">Ferramentas</div>${TOOL_PAGES.map(p => `<label class="sab-item"><input type="checkbox" data-sab-what="t:${p}"> ${escapeHtml(STU_PAGES[p] || p)}</label>`).join("")}</div></div>
 <div class="field"><label>Fazer</label><select id="sabDo"><option value="on">Liberar</option><option value="off">Desativar</option></select></div>
 <div class="field"><label>Para quem</label><div class="sab-list"><label class="sab-item"><input type="checkbox" id="sabAll"> <b>Todos</b></label>${list.map(s => `<label class="sab-item"><input type="checkbox" data-sab="${escapeHtml(String(s.id))}"> ${escapeHtml(s.name)}${s.instrument ? ` <span class="stu-muted">· ${escapeHtml(s.instrument)}</span>` : ""}</label>`).join("")}</div></div>
 <div class="field-hint" id="sabHint"></div><div class="auth-error" id="sabErr"></div>`;
 const all = body.querySelector("#sabAll");
 all.onchange = () => body.querySelectorAll("[data-sab]").forEach(i => i.checked = all.checked);
-const hint = () => { const w = body.querySelector("#sabWhat").value; body.querySelector("#sabHint").textContent = w.startsWith("t:") ? "Ferramentas só aparecem para alunos de instrumentos que usam essa ferramenta; os outros ficam como estão." : ""; };
-body.querySelector("#sabWhat").onchange = hint; hint();
+const whats = () => [...body.querySelectorAll("[data-sab-what]:checked")].map(i => i.dataset.sabWhat);
+const hint = () => { body.querySelector("#sabHint").textContent = whats().some(w => w.startsWith("t:")) ? "Ferramentas só aparecem para alunos de instrumentos que usam essa ferramenta; os outros ficam como estão." : ""; };
+body.querySelectorAll("[data-sab-what]").forEach(i => i.onchange = hint); hint();
 openQuickModal("Liberar para vários alunos", "", body, () => {
-const [kind, p] = body.querySelector("#sabWhat").value.split(":"), turnOn = body.querySelector("#sabDo").value === "on";
+const turnOn = body.querySelector("#sabDo").value === "on", sel = whats();
 const ids = new Set([...body.querySelectorAll("[data-sab]:checked")].map(i => i.dataset.sab));
+if (!sel.length) { body.querySelector("#sabErr").textContent = "Marque pelo menos uma função."; return; }
 if (!ids.size) { body.querySelector("#sabErr").textContent = "Marque pelo menos um aluno."; return; }
-let n = 0;
+const hit = new Set();
+sel.forEach(w => {
+const [kind, p] = w.split(":");
 list.forEach(s => {
 if (!ids.has(String(s.id))) return;
 if (kind === "t" && !saToolsOf(s).includes(p)) return;
 const key = kind === "t" ? "appOn" : "appOff", set = new Set(s[key] || []);
 if (kind === "t" ? turnOn : !turnOn) set.add(p); else set.delete(p);
 if (set.size) s[key] = [...set]; else delete s[key];
-n++;
+hit.add(s.id);
 });
+});
+const n = hit.size;
 saveStudents(); teacherPublish();
 closeQuickModal();
 if (currentPage === "studentApp") renderStudentAppPage();
-const name = kind === "t" ? STU_PAGES[p] : saFeatName(p);
-alert(`${name}: ${turnOn ? "liberada" : "desativada"} para ${n} aluno${n === 1 ? "" : "s"}.`);
+const name = sel.length === 1 ? (([k, p]) => k === "t" ? STU_PAGES[p] : saFeatName(p))(sel[0].split(":")) : `${sel.length} funções`;
+alert(`${name}: ${turnOn ? (sel.length === 1 ? "liberada" : "liberadas") : (sel.length === 1 ? "desativada" : "desativadas")} para ${n} aluno${n === 1 ? "" : "s"}.`);
 }, "Cancelar", "Aplicar");
 }
 // ---------- Cifras (8.12) ----------
