@@ -540,6 +540,10 @@ Versão do app 8.46; o arquivo do servidor desta rodada é `supabase/schema-v8.4
 - As linhas "Meu plano", "Indique um professor" e "Assinaturas" (só do dono do app) estavam parando dentro da pasta Dados e backup, porque não estavam na lista de nenhuma pasta de Configurações. Agora ficam em **Conta**. Linha nova em Configurações: pôr o id dela na lista `rows` de uma pasta em `SETTINGS_FOLDERS`, senão ela cai em Dados e backup.
 - Dono do app = linha em `app_admins` com o e-mail com que ele entra (não é só o do arquivo SQL). Para incluir: `insert into public.app_admins (user_id) select id from auth.users where lower(email)=lower('EMAIL') on conflict do nothing;`
 
+## Tocar junto = teclas caindo (8.64)
+- O "Tocar junto" antigo (tocar uma gravação junto) saiu. A ferramenta "Tocar junto" do aluno (`player`) agora abre as teclas caindo da 8.63; a chave `fall` não existe mais (quem tinha `fall` em `appOn` recebe `player`). O botão "Tocar junto" nas gravações saiu.
+- Professor: item "Tocar junto" no menu lateral (abre a biblioteca, `openFallLibrary`) e também em Liberar no app → Tocar junto (teclas caindo). Liberar uma música liga `player` para o aluno.
+
 ## Teclas caindo (8.63)
 - Ferramenta nova do aluno "Teclas caindo" (`fall`; nos instrumentos de teclado e nos não reconhecidos). As notas descem até um teclado na tela, com som de piano, velocidade 50/75/100%, só uma mão (a outra toca sozinha e some da tela), "Esperar eu tocar" (para até apertar a tecla certa) e teclado MIDI ligado ao aparelho, quando o navegador deixa.
 - Músicas: 4 prontas no app (`FALL_BUILTIN`: escala de Dó com as duas mãos, Brilha brilha estrelinha, Ode à Alegria, Parabéns pra você, todas em Dó e de domínio público), arquivo MIDI que o professor põe (`fallParseMidi`, formato 0/1, até 4000 notas; trilha mais aguda = mão direita) e gravação tocando no teclado da tela.

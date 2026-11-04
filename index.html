@@ -3001,6 +3001,7 @@ body.pdf-open{overflow:hidden}
 <div class="nav-sec sep-top">
 <div class="nav-sec-label">App do aluno</div>
 <button class="nav-item" data-page="studentApp"><span class="nav-item-row"><svg class="nav-icon" viewBox="0 0 24 24"><use href="#icon-lock"/></svg>Liberar no app</span></button>
+<button class="nav-item" id="navFall"><span class="nav-item-row"><svg class="nav-icon" viewBox="0 0 24 24"><use href="#icon-music"/></svg>Tocar junto</span></button>
 <button class="nav-item" data-page="announcements"><span class="nav-item-row"><svg class="nav-icon" viewBox="0 0 24 24"><use href="#icon-bell"/></svg>Avisos para os alunos</span></button>
 </div>
 
@@ -3080,7 +3081,6 @@ body.pdf-open{overflow:hidden}
 <button class="nav-item" data-stu-page="voice">Canto</button>
 <button class="nav-item" data-stu-page="player">Tocar junto</button>
 <button class="nav-item" data-stu-page="backing">Bases</button>
-<button class="nav-item" data-stu-page="fall">Teclas caindo</button>
 </div>
 </div>
 </div>
@@ -3917,7 +3917,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.63";
+const APP_VERSION = "8.64";
 // Idioma (8.42): troca entre português e inglês e recarrega. Fica guardado neste aparelho.
 function langSwitchLabel(){ return APP_LANG === "en" ? "🌐 Mudar para português" : "🌐 Switch to English"; }
 function langSwitch(){
@@ -5780,11 +5780,11 @@ await startStudentMode(true);
 // Título de seção igual ao do professor (caixa alta pequena) + card de vidro.
 function stuCard(title, inner, extraCls){ return `${title ? `<div class="settings-group-label">${title}</div>` : ""}<section class="stu-card${extraCls ? " " + extraCls : ""}">${inner}</section>`; }
 const STU_PAGES = { home: "Início", lessons: "Aulas", money: "Financeiro", practice: "Praticar", songs: "Músicas", goals: "Metas", recordings: "Gravações", progress: "Minha prática", achievements: "Conquistas", evolution: "Nível e evolução", pthistory: "Histórico de prática", material: "Matérias",
-metronome: "Metrônomo", tuner: "Afinador", chords: "Acordes e escalas", ear: "Treino de ouvido", reading: "Leitura de partitura", drums: "Bateria", voice: "Canto", player: "Tocar junto", backing: "Bases", fall: "Teclas caindo", profile: "Configurações" };
+metronome: "Metrônomo", tuner: "Afinador", chords: "Acordes e escalas", ear: "Treino de ouvido", reading: "Leitura de partitura", drums: "Bateria", voice: "Canto", player: "Tocar junto", backing: "Bases", profile: "Configurações" };
 // Troca de página do modo aluno: mesma animação e mesma lógica de menu do openPage do professor.
 // Ferramentas por instrumento (8.6): o aluno só vê o que faz parte do aprendizado dele.
 // Instrumento que o app não reconhece (ou vazio) mostra todas.
-const TOOL_PAGES = ["metronome", "tuner", "chords", "ear", "reading", "drums", "voice", "player", "backing", "fall"];
+const TOOL_PAGES = ["metronome", "tuner", "chords", "ear", "reading", "drums", "voice", "player", "backing"];
 function instrumentKind(name){
 const n = stripAccents(String(name || "")).toLowerCase();
 if (!n.trim()) return null;
@@ -5800,7 +5800,7 @@ return null;
 const TOOLS_BY_KIND = {
 drums: ["metronome", "drums", "ear", "player"],
 voice: ["metronome", "voice", "ear", "reading", "player", "backing"],
-keys: ["metronome", "chords", "ear", "reading", "player", "backing", "fall"],
+keys: ["metronome", "chords", "ear", "reading", "player", "backing"],
 bass: ["metronome", "tuner", "chords", "ear", "reading", "player", "backing"],
 bowed: ["metronome", "tuner", "chords", "ear", "reading", "player", "backing"],
 strings: ["metronome", "tuner", "chords", "ear", "reading", "player", "backing"],
@@ -5882,7 +5882,7 @@ document.getElementById("stuPageTitle").textContent = STU_PAGES[stuTab];
 document.querySelectorAll("#stuSidebar [data-stu-page]").forEach(b => b.classList.toggle("active", b.dataset.stuPage === stuTab));
 const main = document.getElementById("stuMain");
 const r = { home: stuHomeHTML, lessons: stuLessonsHTML, money: stuMoneyHTML, practice: practiceHTML, songs: songsHTML, goals: goalsHTML, recordings: recordingsHTML, progress: progressHTML, achievements: achievementsHTML, evolution: evolutionHTML, pthistory: ptHistoryHTML, material: materialHTML,
-metronome: metroHTML, tuner: tunerHTML, chords: chordsHTML, ear: earHTML, reading: readingHTML, drums: drumsHTML, voice: voiceHTML, player: playerHTML, backing: backingHTML, fall: fallHTML, profile: stuProfileHTML }[stuTab];
+metronome: metroHTML, tuner: tunerHTML, chords: chordsHTML, ear: earHTML, reading: readingHTML, drums: drumsHTML, voice: voiceHTML, player: fallHTML, backing: backingHTML, profile: stuProfileHTML }[stuTab];
 // Título da página com a linha embaixo, igual ao app do professor (8.12). O primeiro rótulo
 // some quando repete o nome da página (ex.: "Afinador" logo abaixo do título "Afinador").
 let pageHtml = r();
@@ -6511,7 +6511,7 @@ const lo = main.querySelector("#stuLogoutBtn");
 if (lo) lo.onclick = () => { if (confirm("Sair da conta?")) stuSignOut(); };
 const tb = main.querySelector("#stuTeacherBtn");
 if (tb) tb.onclick = () => switchRole("teacher");
-const binders = { metronome: toolsBind, tuner: toolsBind, chords: chordsBind, ear: earBind, reading: readingBind, drums: drumsBind, voice: voiceBind, player: playerBind, backing: backingBind, fall: fallBind,
+const binders = { metronome: toolsBind, tuner: toolsBind, chords: chordsBind, ear: earBind, reading: readingBind, drums: drumsBind, voice: voiceBind, player: fallBind, backing: backingBind,
 practice: practiceBind, songs: songsBind, lessons: lessonsBind, goals: goalsBind, recordings: recordingsBind, progress: progressBind, achievements: progressBind, evolution: progressBind, pthistory: progressBind, material: materialBind };
 if (binders[stuTab]) binders[stuTab](main);
 // "Ver como aluno": botões de enviar desligados.
@@ -7604,41 +7604,8 @@ const c = document.getElementById("breathCount"); if (c) c.textContent = "";
 const tb = document.getElementById("breathToggle"); if (tb) tb.textContent = "Começar";
 }
 
-// ---------- Tocar junto: música do aparelho, velocidade e repetição de trecho (A–B) ----------
-const player = { url: null, name: "", video: false, rate: 1, a: null, b: null, loop: false, raf: 0 };
 function fmtClock(sec){ sec = Math.max(0, Math.floor(sec || 0)); return `${Math.floor(sec / 60)}:${pad2(sec % 60)}`; }
-function playerHTML(){
-const p = player;
-return stuCard("Tocar junto", `<label class="btn-historico file-pick">Escolher música ou vídeo do aparelho<input type="file" id="plFile" accept="audio/*,video/*" hidden></label>
-<div class="stu-muted">${p.url ? escapeHtml(p.name) : "Use uma gravação, um MP3 ou um vídeo que você tem no aparelho."}</div>
-<div id="plMediaBox" class="pl-media">${p.url ? (p.video ? `<video id="plMedia" src="${p.url}" controls playsinline></video>` : `<audio id="plMedia" src="${p.url}" controls></audio>`) : ""}</div>`)
-+ (p.url ? stuCard("Velocidade", `<div class="reason-chips">${[0.5, 0.6, 0.7, 0.75, 0.8, 0.9, 1, 1.1].map(r => `<button type="button" class="filter-chip${Math.abs(p.rate - r) < 0.001 ? " selected" : ""}" data-rate="${r}">${Math.round(r * 100)}%</button>`).join("")}</div>
-<div class="stu-muted">Mais devagar sem mudar o tom da música.</div>`)
-+ stuCard("Repetir um trecho", `<div class="ab-row"><button type="button" class="btn-historico" id="plA">Marcar A</button><span id="plAB">${p.a !== null ? `A ${fmtClock(p.a)}` : "A —"} · ${p.b !== null ? `B ${fmtClock(p.b)}` : "B —"}</span><button type="button" class="btn-historico" id="plB">Marcar B</button></div>
-<div class="toggle-field"><label>Repetir de A até B</label><label class="switch"><input type="checkbox" id="plLoop" ${p.loop ? "checked" : ""}><span class="switch-slider"></span></label></div>
-<div class="actions"><button class="cancel" id="plBack">Voltar 5 s</button><button class="cancel" id="plClear">Limpar A e B</button></div>`) : "");
-}
-function playerBind(main){
-const p = player;
-main.querySelector("#plFile").onchange = e => {
-const f = e.target.files && e.target.files[0];
-if (!f) return;
-playerOpen(URL.createObjectURL(f), f.name, /^video\//.test(f.type));
-};
-const m = main.querySelector("#plMedia");
-if (!m) return;
-m.preservesPitch = true; m.mozPreservesPitch = true; m.webkitPreservesPitch = true;
-m.playbackRate = p.rate;
-m.onplay = () => { toolsStopAudio(); cancelAnimationFrame(p.raf); const loop = () => { if (m.paused) return; if (p.loop && p.a !== null && p.b !== null && p.b > p.a && m.currentTime >= p.b) m.currentTime = p.a; p.raf = requestAnimationFrame(loop); }; loop(); };
-main.querySelectorAll("[data-rate]").forEach(b => b.onclick = () => { p.rate = Number(b.dataset.rate); m.playbackRate = p.rate; main.querySelectorAll("[data-rate]").forEach(x => x.classList.toggle("selected", x === b)); });
-const ab = () => { main.querySelector("#plAB").textContent = `${p.a !== null ? `A ${fmtClock(p.a)}` : "A —"} · ${p.b !== null ? `B ${fmtClock(p.b)}` : "B —"}`; };
-main.querySelector("#plA").onclick = () => { p.a = m.currentTime; if (p.b !== null && p.b <= p.a) p.b = null; ab(); };
-main.querySelector("#plB").onclick = () => { if (p.a !== null && m.currentTime <= p.a) { stuToast("O ponto B precisa vir depois do A."); return; } p.b = m.currentTime; p.loop = true; main.querySelector("#plLoop").checked = true; ab(); };
-main.querySelector("#plLoop").onchange = e => { p.loop = e.target.checked; if (p.loop && p.a !== null && p.b !== null && (m.currentTime < p.a || m.currentTime > p.b)) m.currentTime = p.a; };
-main.querySelector("#plBack").onclick = () => { m.currentTime = Math.max(0, m.currentTime - 5); };
-main.querySelector("#plClear").onclick = () => { p.a = null; p.b = null; p.loop = false; main.querySelector("#plLoop").checked = false; ab(); };
-}
-// ---------- Teclas caindo (8.63) ----------
+// ---------- Tocar junto: teclas caindo (8.63; 8.64 substituiu o Tocar junto de áudio, página "player") ----------
 // As notas descem até um teclado na tela, como nos vídeos de piano. As músicas vêm de três
 // lugares: prontas no app (FALL_BUILTIN), arquivo MIDI que o professor põe e gravação tocando no
 // próprio teclado da tela. Biblioteca do professor em appSettings.fallLib; o aluno recebe as
@@ -7856,7 +7823,7 @@ fall.el.remove(); fall = null;
 function stuFallSongs(){ const v = (stuCur && stuCur.view) || {}; return FALL_BUILTIN.concat((Array.isArray(v.fall) ? v.fall : []).filter(x => x && x.t && Array.isArray(x.n)).map(x => ({ id: x.id, title: x.t, notes: x.n }))); }
 function fallHTML(){
 const list = stuFallSongs();
-return stuCard("Teclas caindo", `<div class="stu-muted" style="margin-bottom:0.5rem">As notas descem até o teclado. Toque junto, mais devagar ou com uma mão de cada vez. "Esperar eu tocar" para a música até você apertar a tecla certa.</div>
+return stuCard("Tocar junto", `<div class="stu-muted" style="margin-bottom:0.5rem">As notas descem até o teclado. Toque junto, mais devagar ou com uma mão de cada vez. "Esperar eu tocar" para a música até você apertar a tecla certa.</div>
 <div class="fall-list">${list.map(x => `<button type="button" class="fall-item" data-fall="${escapeHtml(x.id)}"><span>${escapeHtml(x.title)}</span><span class="stu-muted">${x.builtin ? "Pronta no app" : "Do professor"} ›</span></button>`).join("")}</div>`);
 }
 function fallBind(main){
@@ -7894,33 +7861,28 @@ saveStudents(); teacherPublish(); draw();
 });
 };
 draw();
-openQuickModal("Teclas caindo", "Músicas que descem até o teclado na tela.", body, null, "Fechar");
+openQuickModal("Tocar junto", "Músicas que descem até o teclado na tela.", body, null, "Fechar");
 }
 function openFallRelease(id){
 const x = fallById(id); if (!x) return;
 const list = students.filter(s => s.active !== false).sort((a, b) => String(a.name).localeCompare(String(b.name)));
 const body = document.createElement("div");
 body.innerHTML = `<div class="sab-list"><label class="sab-item"><input type="checkbox" id="frAll"> <b>Todos</b></label>${list.map(s => `<label class="sab-item"><input type="checkbox" data-fr="${escapeHtml(String(s.id))}"${(s.fallOn || []).includes(id) ? " checked" : ""}> ${escapeHtml(s.name)}${s.instrument ? ` <span class="stu-muted">· ${escapeHtml(s.instrument)}</span>` : ""}</label>`).join("")}</div>
-<div class="field-hint">Quem você marcar também ganha a ferramenta Teclas caindo no app.</div>`;
+<div class="field-hint">Quem você marcar também ganha a ferramenta Tocar junto no app.</div>`;
 body.querySelector("#frAll").onchange = e => body.querySelectorAll("[data-fr]").forEach(i => i.checked = e.target.checked);
 openQuickModal(`Liberar "${x.title}"`, "", body, () => {
 body.querySelectorAll("[data-fr]").forEach(i => {
 const s = students.find(y => String(y.id) === i.dataset.fr); if (!s) return;
 const set = new Set(s.fallOn || []);
-if (i.checked) { set.add(id); const on = new Set(s.appOn || []); on.add("fall"); s.appOn = [...on]; } else set.delete(id);
+if (i.checked) { set.add(id); const on = new Set(s.appOn || []); on.add("player"); s.appOn = [...on]; } else set.delete(id);
 if (set.size) s.fallOn = [...set]; else delete s.fallOn;
 });
 saveStudents(); teacherPublish();
 openFallLibrary();
 }, "Cancelar", "Salvar");
 }
-function playerOpen(url, name, video){
-if (!stuToolGate("player")) return;
-if (player.url && player.url !== url && player.own) URL.revokeObjectURL(player.url);
-Object.assign(player, { url, name, video, a: null, b: null, loop: false, own: true });
-if (stuTab === "player") stuRender(); else stuOpenPage("player");
-}
-function playerPause(){ const m = document.getElementById("plMedia"); if (m && !m.paused) m.pause(); }
+// Ao trocar de página ou sair, fecha a tela das teclas caindo.
+function playerPause(){ fallClose(); }
 
 // ---------- Bases pra improvisar (progressões com bateria, baixo e piano) ----------
 const PROGRESSIONS = [
@@ -8701,10 +8663,9 @@ main._recUrls = [];
 const url = r => { const u = URL.createObjectURL(r.blob); main._recUrls.push(u); return u; };
 const media = r => r.video ? `<video src="${url(r)}" controls playsinline preload="metadata"></video>` : `<audio src="${url(r)}" controls preload="metadata"></audio>`;
 box.innerHTML = list.length ? list.map(r => `<div class="rec-item"><div class="stu-row-title">${escapeHtml(r.title)}</div><div class="stu-muted">${formatDateShort(isoOf(new Date(r.at))).slice(0,5)} · ${fmtClock(r.dur)}</div>${media(r)}
-<div class="song-acts"><button type="button" class="btn-edit-toggle" data-rshare="${r.id}">Enviar ao professor</button><button type="button" class="btn-edit-toggle" data-rplay="${r.id}">Tocar junto</button><button type="button" class="del-btn" data-rdel="${r.id}" aria-label="Apagar a gravação">${DEL_ICON}</button></div></div>`).join("")
+<div class="song-acts"><button type="button" class="btn-edit-toggle" data-rshare="${r.id}">Enviar ao professor</button><button type="button" class="del-btn" data-rdel="${r.id}" aria-label="Apagar a gravação">${DEL_ICON}</button></div></div>`).join("")
 : `<div class="stu-empty">Nenhuma gravação ainda.</div>`;
 box.querySelectorAll("[data-rshare]").forEach(b => b.onclick = () => { const r = list.find(x => x.id === b.dataset.rshare); if (r) shareBlob(r.blob, `${stripAccents(r.title).replace(/[^\w-]+/g, "-").slice(0, 40) || "gravacao"}.${/mp4/.test(r.mime) ? "mp4" : /ogg/.test(r.mime) ? "ogg" : "webm"}`, `${r.title} – ${stuCur.s.name}`); });
-box.querySelectorAll("[data-rplay]").forEach(b => b.onclick = () => { const r = list.find(x => x.id === b.dataset.rplay); if (r) { Object.assign(player, { own: false }); playerOpen(URL.createObjectURL(r.blob), r.title, !!r.video); } });
 box.querySelectorAll("[data-rdel]").forEach(b => b.onclick = async () => {
 const r = list.find(x => x.id === b.dataset.rdel); if (!r) return;
 await idbDel("recs", r.id); recordingsFill(main);
@@ -9278,7 +9239,7 @@ const fl = (Array.isArray(s.fallOn) ? s.fallOn : []).map(id => fallLib().find(x 
 if (fl.length) info.fall = fl;
 if (Array.isArray(s.chordsOn) && s.chordsOn.length) info.chords = s.chordsOn.slice();
 if (s.flatsOn) info.flats = true;
-if (Array.isArray(s.appOn) && s.appOn.length) info.on = s.appOn.filter(p => TOOL_PAGES.includes(p));
+if (Array.isArray(s.appOn) && s.appOn.length) info.on = [...new Set(s.appOn.map(p => p === "fall" ? "player" : p))].filter(p => TOOL_PAGES.includes(p)); // "fall" (8.63) virou "player"
 if (s.parentPin && stContent().moneyAdultsOnly) { try { info.parentPin = pinHash(studentUuidMap().of(s), s.parentPin); } catch(e) {} }
 if (Array.isArray(s.certificates) && s.certificates.length) info.certificates = s.certificates.filter(c => c && c.level).map(c => ({ level: c.level, date: c.date }));
 if (s.contract && s.contract.text && s.contract.h) info.contract = { t: s.contract.text, h: s.contract.h, at: s.contract.at || "" };
@@ -9651,7 +9612,7 @@ box.innerHTML = `<div class="settings-card">
 ${row("saKey", "user", "Chave para alunos", appSettings.studentCode ? "Seus alunos pedem pra entrar no app com ela" : "Crie a chave para seus alunos entrarem no app", appSettings.studentCode || "")}
 ${row("saContent", "clipboard", "Conteúdo para os alunos", "Pix, regras, mural, eventos, remarcação, temas", "")}
 ${row("saDemo", "music", "Ver demonstração", "Como o app aparece para um aluno", "")}
-${row("saFall", "music", "Teclas caindo", "Músicas que descem até o teclado: arquivo MIDI, gravar tocando ou prontas", fallLib().length ? String(fallLib().length) : "")}
+${row("saFall", "music", "Tocar junto (teclas caindo)", "Músicas que descem até o teclado: arquivo MIDI, gravar tocando ou prontas", fallLib().length ? String(fallLib().length) : "")}
 </div>
 <div class="settings-group-label">O que cada aluno pode usar</div>
 <div class="sa-tools"><input type="search" id="saSearch" class="student-picker-search" placeholder="Buscar aluno..." value="${escapeHtml(saQuery)}" autocomplete="off"><button type="button" class="btn-historico" id="saBulk">Liberar para vários</button></div>
@@ -16540,7 +16501,7 @@ return p ? presetPlan(p) : undefined;
    pra tirar só isso depois. */
 const PT_NOTE = APP_LANG === "en" ? { C: "C", "C#": "C#", D: "D", "D#": "D#", E: "E", F: "F", "F#": "F#", G: "G", "G#": "G#", A: "A", "A#": "A#", B: "B" } : { C: "Dó", "C#": "Dó#", D: "Ré", "D#": "Ré#", E: "Mi", F: "Fá", "F#": "Fá#", G: "Sol", "G#": "Sol#", A: "Lá", "A#": "Lá#", B: "Si" };
 const MAT_NATURAL = ["C", "D", "E", "F", "G", "A", "B"];
-const MAT_TOOLS = [["tuner", "Afinação do instrumento"], ["metronome", "Uso do metrônomo"], ["ear", "Treino de ouvido"], ["reading", "Leitura de partitura"], ["backing", "Tocar com bases"], ["player", "Tocar junto com músicas"], ["drums", "Ritmos de bateria"], ["voice", "Exercícios de canto"], ["fall", "Tocar com as teclas caindo"]];
+const MAT_TOOLS = [["tuner", "Afinação do instrumento"], ["metronome", "Uso do metrônomo"], ["ear", "Treino de ouvido"], ["reading", "Leitura de partitura"], ["backing", "Tocar com bases"], ["player", "Tocar junto (teclas caindo)"], ["drums", "Ritmos de bateria"], ["voice", "Exercícios de canto"]];
 const MAT_CHORDS = { "": "Acordes maiores", m: "Acordes menores", "7": "Acordes com sétima", m7: "Acordes menores com sétima", "7M": "Acordes com sétima maior", sus4: "Acordes suspensos (4ª)", dim: "Acordes diminutos", aug: "Acordes aumentados" };
 const MAT_SCALES = { maior: "Escala maior", menor: "Escala menor natural", penta: "Escala pentatônica maior", pentam: "Escala pentatônica menor", blues: "Escala blues", harm: "Escala menor harmônica", dor: "Modo dórico", mixo: "Modo mixolídio" };
 // "Escala maior de Dó" / "C major scale" (8.42).
@@ -16996,6 +16957,7 @@ b.onclick = () => openPage(b.dataset.page);
 });
 
 document.getElementById("settingsNavBtn").onclick = () => openPage("settings");
+document.getElementById("navFall").onclick = () => { closeMenu(); openFallLibrary(); };
 document.getElementById("settingsBackBtn").onclick = () => { if (settingsFolderCur) settingsFolderOpen(null); else openPage("home"); };
 // Configurações em pastas (8.13): a tela inicial mostra o perfil e as pastas; cada pasta abre
 // as linhas de antes (os mesmos elementos, movidos pra dentro dela, então tudo continua igual).
