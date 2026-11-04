@@ -382,6 +382,13 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .fall-top{display:flex;align-items:center;gap:0.75rem;padding:0.25rem 0.25rem 0.5rem}
 .fall-title{flex:1;min-width:0;font-family:var(--font-display);font-weight:700;color:var(--heading);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fall-x{width:2.25rem;height:2.25rem;border-radius:50%;border:0.0625rem solid var(--glass-border);background:var(--glass);color:var(--text);cursor:pointer}
+.fall-stage{flex:1;min-height:0;position:relative;display:flex}
+.fall-end{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(5,6,11,.55);border-radius:1rem}
+.fall-end[hidden]{display:none}
+.fall-end-card{display:flex;flex-direction:column;align-items:center;gap:0.5rem;text-align:center;padding:1.25rem 1.5rem;border-radius:1.25rem;background:var(--glass-strong,var(--glass));border:0.0625rem solid var(--glass-border);max-width:20rem}
+.fall-end-big{font-family:var(--font-display);font-weight:800;font-size:2.5rem;color:var(--accent)}
+.fall-end-line{font-weight:700;color:var(--heading)}
+.fall-end-msg{color:var(--text-2);font-size:0.875rem;margin-bottom:0.25rem}
 .fall-canvas{flex:1;width:100%;min-height:0;border-radius:1rem;background:linear-gradient(180deg,rgba(14,20,34,.55),rgba(5,6,11,.2));border:0.0625rem solid var(--glass-border-soft);touch-action:none}
 .fall-bar{display:flex;flex-wrap:wrap;align-items:center;gap:0.5rem;padding-top:0.625rem}
 .fall-btn{border:0.0625rem solid var(--glass-border);background:var(--glass);color:var(--text);border-radius:var(--radius-pill);padding:0.5rem 0.875rem;font-weight:700;font-family:var(--font-display);cursor:pointer}
@@ -3917,7 +3924,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.64";
+const APP_VERSION = "8.65";
 // Idioma (8.42): troca entre português e inglês e recarrega. Fica guardado neste aparelho.
 function langSwitchLabel(){ return APP_LANG === "en" ? "🌐 Mudar para português" : "🌐 Switch to English"; }
 function langSwitch(){
@@ -7681,117 +7688,276 @@ return out.slice(0, 4000).map(n => [n[0], Math.round((n[1] - t0) * 1000) / 1000,
 }
 // ---------- Tela das teclas caindo (tela cheia; serve para o aluno e para o professor) ----------
 const FALL_BLACK = [1, 3, 6, 8, 10];
+// Teclas pretas um pouco deslocadas, como num piano de verdade (fração da largura da branca).
+const FALL_BOFF = { 1: -0.1, 3: 0.1, 6: -0.12, 8: 0, 10: 0.12 };
+const FALL_LEAD = 2; // segundos de notas caindo antes da primeira chegar ao teclado
 let fall = null;
+// Ouvir o piano de verdade pelo microfone (8.65). A cada quadro: acha os picos do espectro, dá a
+// cada nota uma "força" (fundamental + harmônicos que batem com picos) e escolhe as notas mais fortes
+// uma de cada vez, tirando os harmônicos da escolhida (assim Dó4 não vira Dó5 nem Sol5). Uma nota
+// "tocou" quando a força dela sobe de repente (ataque da tecla). Volta [{ m, by }] ~50 ms depois.
+async function fallMicOpen(){
+const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+const ctx = getAudioCtx(); try { await ctx.resume(); } catch(e) {}
+const src = ctx.createMediaStreamSource(stream), an = ctx.createAnalyser();
+an.fftSize = 8192; an.smoothingTimeConstant = 0.15; src.connect(an);
+const N = an.frequencyBinCount, db = new Float32Array(N), mag = new Float32Array(N), hz = ctx.sampleRate / an.fftSize;
+const LO = 36, HI = 96, st = [], tmp = [], sal = new Float32Array(HI + 1);
+for (let m = 0; m <= HI; m++) st.push({ up: false, pk: 0, fl: 0, at: 0 });
+const fq = m => 440 * Math.pow(2, (m - 69) / 12);
+const b0 = Math.max(2, Math.floor(55 / hz)), b1 = Math.min(N - 2, Math.floor(6500 / hz));
+let pend = [], recent = [], ref = 0;
+const mic = {
+level: 0,
+stop(){ try { src.disconnect(); } catch(e) {} stream.getTracks().forEach(t => t.stop()); },
+step(now){
+an.getFloatFrequencyData(db);
+let top = 0; tmp.length = 0;
+for (let i = b0 - 1; i <= b1 + 1; i++) { const v = db[i] > -160 ? Math.pow(10, db[i] / 20) : 0; mag[i] = v; if (v > top) top = v; }
+for (let i = b0; i < b1; i += 3) tmp.push(mag[i]);
+tmp.sort((a, b) => a - b);
+const noise = Math.max(tmp[tmp.length >> 1] || 0, 1e-5), thr = Math.max(noise * 10, top * 0.02);
+mic.level = Math.max(0, Math.min(1, (20 * Math.log10(top + 1e-9) + 85) / 55));
+// Picos do espectro (frequência afinada pela parábola)
+const pf = [], pa = [];
+for (let i = b0; i < b1; i++) { const v = mag[i]; if (v > thr && v >= mag[i - 1] && v > mag[i + 1]) { const a1 = mag[i - 1], a3 = mag[i + 1], d = a1 - 2 * v + a3; pf.push((i + (d ? 0.5 * (a1 - a3) / d : 0)) * hz); pa.push(v); } }
+const used = new Uint8Array(pf.length);
+const near = (f, alive) => { let best = -1; for (let j = 0; j < pf.length; j++) { if (alive && used[j]) continue; const c = 12 * Math.log2(pf[j] / f); if (c > -0.4 && c < 0.5 && (best < 0 || pa[j] > pa[best])) best = j; } return best; };
+sal.fill(0);
+let first = 0;
+for (let round = 0; round < 5 && pf.length; round++) {
+let bm = -1, bs = 0, bh = null;
+for (let m = LO; m <= HI; m++) {
+if (sal[m]) continue;
+const f0 = fq(m), hs = [];
+let s = 0;
+for (let h = 1; h <= 6; h++) { const j = near(f0 * h, true); hs.push(j); if (j >= 0) s += pa[j] / Math.sqrt(h); }
+if (!((hs[0] >= 0 && (hs[1] >= 0 || hs[2] >= 0)) || (hs[1] >= 0 && hs[2] >= 0))) continue;
+if (s > bs) { bs = s; bm = m; bh = hs; }
+}
+if (bm < 0 || bs < first * 0.2) break;
+if (!first) first = bs;
+sal[bm] = bs; bh.forEach(j => { if (j >= 0) used[j] = 1; });
+}
+for (let m = LO; m <= HI; m++) {
+const s = sal[m], x = st[m];
+if (x.up) { if (s > x.pk) x.pk = s; else if (s < x.pk * 0.75) { x.up = false; x.fl = s; } }
+else if (s > 0 && s >= x.fl * 1.8 && s >= first * 0.25 && now - x.at > 120) { x.up = true; x.pk = s; x.at = now; pend.push({ m, t: now, s }); }
+else if (s < x.fl || x.fl === 0) x.fl = s;
+}
+const out = [];
+recent = recent.concat(pend.filter(c => !c.seen)).filter(c => now - c.t < 300); pend.forEach(c => c.seen = 1);
+// Ataque fraco junto de um forte (batida do martelo, ressonância) não conta
+// e harmônico (oitava, 12ª, 2 oitavas…) ou ressonância bem longe de outra nota mais forte que atacou junto também não
+ref *= Math.pow(0.5, (now - (mic.lastT || now)) / 1500); mic.lastT = now;
+pend = pend.filter(c => {
+if (now - c.t < 80) return true;
+const near = recent.filter(r => r !== c && Math.abs(r.t - c.t) < 120), mx = Math.max(c.s, ...near.map(r => r.s));
+const harmOf = near.some(r => r.s > c.s && ([12, 19, 24, 28, 31].includes(c.m - r.m) || (Math.abs(c.m - r.m) >= 19 && c.s < r.s * 0.65)));
+if (c.s >= mx * 0.35 && c.s >= ref * 0.12 && !harmOf) { out.push({ m: c.m, by: null, s: c.s }); ref = Math.max(ref, c.s); }
+return false;
+});
+return out;
+}
+};
+return mic;
+}
 function fallOpen(song, opts = {}){
 fallClose();
-const rec = !!opts.record;
+const rec = !!opts.record, canMic = !rec && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
 const el = document.createElement("div");
 el.className = "fall-overlay";
 el.innerHTML = `<div class="fall-top"><div class="fall-title">${escapeHtml(rec ? "Gravar tocando" : song.title)}</div><button type="button" class="fall-x" aria-label="Fechar">✕</button></div>
-<canvas class="fall-canvas"></canvas>
+<div class="fall-stage"><canvas class="fall-canvas"></canvas><div class="fall-end" hidden></div></div>
 <div class="fall-bar">${rec
 ? `<button type="button" class="fall-btn fall-main" data-f="rec">● Gravar</button><button type="button" class="fall-btn" data-f="oct-">◀ Oitava</button><button type="button" class="fall-btn" data-f="oct+">Oitava ▶</button><span class="fall-info" data-f="info">Toque nas teclas ou num teclado ligado ao aparelho.</span>`
 : `<button type="button" class="fall-btn fall-main" data-f="play">▶ Tocar</button><button type="button" class="fall-btn" data-f="restart">⟲ Do começo</button>
+<span class="fall-group">${[["wait", "Esperar eu tocar"], ["follow", "Seguir a música"]].map(([k, l]) => `<button type="button" class="fall-chip${k === "wait" ? " on" : ""}" data-mode="${k}">${l}</button>`).join("")}</span>
 <span class="fall-group">${[0.5, 0.75, 1].map(r => `<button type="button" class="fall-chip${r === 1 ? " on" : ""}" data-rate="${r}">${Math.round(r * 100)}%</button>`).join("")}</span>
 ${song.notes.some(n => n[3] === 1) ? `<span class="fall-group">${[["both", "Duas mãos"], ["r", "Direita"], ["l", "Esquerda"]].map(([k, l]) => `<button type="button" class="fall-chip${k === "both" ? " on" : ""}" data-hand="${k}">${l}</button>`).join("")}</span>` : ""}
-<button type="button" class="fall-chip" data-f="wait">Esperar eu tocar</button>`}</div>`;
+${canMic ? `<button type="button" class="fall-chip on" data-f="mic">🎤 Ouvir meu piano</button>` : ""}
+<span class="fall-info" data-f="info">${canMic ? "Toque no seu piano ou teclado: o app ouve pelo microfone e diz se acertou." : "Toque nas teclas da tela ou num teclado ligado ao aparelho."}</span>`}</div>`;
 document.body.appendChild(el);
-const cv = el.querySelector("canvas"), ctx2 = cv.getContext("2d");
+const cv = el.querySelector("canvas"), ctx2 = cv.getContext("2d"), endEl = el.querySelector(".fall-end");
 const notes = rec ? [] : song.notes;
 let lo = 60, hi = 83;
 if (notes.length) { lo = Math.min(...notes.map(n => n[0])); hi = Math.max(...notes.map(n => n[0])); lo = Math.floor(lo / 12) * 12; hi = Math.max(lo + 23, Math.ceil((hi + 1) / 12) * 12 - 1); }
-const f = fall = { el, song, rec, notes, lo, hi, t: 0, playing: false, rate: 1, hand: "both", wait: false, sched: new Set(), pressed: new Map(), lit: new Map(), raf: 0, last: 0, recOn: false, recStart: 0, recNotes: [], midi: null, waitIdx: 0 };
+const f = fall = { el, song, rec, notes, lo, hi, t: rec ? 0 : -FALL_LEAD, playing: false, rate: 1, hand: "both", mode: "wait", sched: new Set(), pressed: new Map(), lit: new Map(), raf: 0, last: 0, recOn: false, recStart: 0, recNotes: [], midi: null, waitIdx: 0,
+useMic: canMic, mic: null, micBusy: false, st: notes.map(() => 0), hits: 0, misses: 0, wrong: 0, streak: 0, fx: [], heard: null, appPlayed: new Map(), done: false };
 const keysOf = () => { const ks = []; let wi = 0; for (let m = f.lo; m <= f.hi; m++) { const blk = FALL_BLACK.includes(m % 12); ks.push({ m, blk, wi: blk ? wi - 0.5 : wi }); if (!blk) wi++; } return { ks, nW: wi }; };
 let lay = keysOf();
 const handOk = n => f.hand === "both" || (f.hand === "r" ? n[3] !== 1 : n[3] === 1);
+const mine = () => f.notes.filter(handOk);
 const resize = () => { const r = cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1; cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr); ctx2.setTransform(dpr, 0, 0, dpr, 0, 0); };
-const geo = () => { const r = cv.getBoundingClientRect(), W = r.width, H = r.height, kh = Math.min(H * 0.26, W / lay.nW * 5.2), ww = W / lay.nW; return { W, H, kh, ww, top: H - kh }; };
-const keyX = k => { const g = geo(); return k.blk ? (k.wi + 1) * g.ww - g.ww * 0.3 : k.wi * g.ww; };
-const keyW = k => { const g = geo(); return k.blk ? g.ww * 0.6 : g.ww; };
-const sound = (m, dur) => { try { synthNote(m, getAudioCtx().currentTime + 0.01, dur || 0.6, { inst: "piano", vol: 0.22 }); } catch(e) {} };
-const press = m => {
-f.lit.set(m, performance.now() + 220);
-sound(m, 0.6);
-if (f.rec && f.recOn) f.recNotes.push([m, Math.round((performance.now() - f.recStart) / 10) / 100, 0.35, m < 60 ? 1 : 0]);
-if (!f.rec && f.wait) f.pressed.set(m, performance.now());
+const geo = () => { const r = cv.getBoundingClientRect(), W = r.width, H = r.height, kh = Math.min(H * 0.28, W / lay.nW * 5.4), ww = W / lay.nW; return { W, H, kh, ww, top: H - kh }; };
+// Preta: centrada na divisa entre as duas brancas (com o leve deslocamento do piano de verdade).
+const keyX = k => { const g = geo(); return k.blk ? (k.wi + 0.5 + (FALL_BOFF[k.m % 12] || 0)) * g.ww - g.ww * 0.29 : k.wi * g.ww; };
+const keyW = k => { const g = geo(); return k.blk ? g.ww * 0.58 : g.ww; };
+const keyOf = m => lay.ks[m - f.lo];
+const sound = (m, dur) => { try { synthNote(m, getAudioCtx().currentTime + 0.01, dur || 0.6, { inst: "piano", vol: 0.22 }); f.appPlayed.set(m, performance.now() + (dur || 0.6) * 1000); } catch(e) {} };
+const light = (m, kind) => f.lit.set(m, { u: performance.now() + (kind === "tap" ? 220 : 420), c: kind });
+const info = s => { const x = el.querySelector('[data-f="info"]'); if (x) x.textContent = s; };
+const flash = (m, txt, col) => { const k = keyOf(m), g = geo(); f.fx.push({ x: k ? keyX(k) + keyW(k) / 2 : g.W / 2, txt, col, t0: performance.now() }); };
+const sameNote = (a, b, src) => a === b || (src === "mic" && a % 12 === b % 12 && Math.abs(a - b) === 12);
+const due = () => { // próximas notas que o aluno precisa tocar no modo "esperar"
+const list = mine(); while (f.waitIdx < list.length && list[f.waitIdx][1] < f.t - 0.05) f.waitIdx++;
+const n = list[f.waitIdx]; if (!n) return null;
+return list.filter(x => Math.abs(x[1] - n[1]) < 0.04);
+};
+// Uma nota ouvida (microfone, teclado ligado ou toque na tela): confere com a música.
+const hear = (m, src, by) => {
+const now = performance.now();
+if (src === "mic" && (f.appPlayed.get(m) || 0) + 250 > now) return; // o som do próprio app
+if (src === "mic") f.heard = { m, at: now };
+if (f.rec || !f.playing || f.done) { light(m, "tap"); return; }
+if (f.mode === "wait") {
+const grp = due(), hits = grp ? grp.filter(n => sameNote(n[0], m, src)) : [];
+if (by != null && !(hits.length && grp.some(n => sameNote(n[0], by, src)))) return;
+if (hits.length) { hits.forEach(n => f.pressed.set(n[0], now)); light(m, "ok"); }
+else if (by == null) { light(m, "bad"); f.wrong++; }
+return;
+}
+const tH = f.t - (src === "mic" ? 0.1 * f.rate : 0);
+let best = -1;
+f.notes.forEach((n, i) => { if (f.st[i] || !handOk(n) || !sameNote(n[0], m, src)) return; const d = n[1] - tH; if (d > 0.35 * f.rate || d < -0.45 * f.rate) return; if (best < 0 || Math.abs(d) < Math.abs(f.notes[best][1] - tH)) best = i; });
+if (by != null && !(best >= 0 && f.notes.some((n, i) => i !== best && handOk(n) && sameNote(n[0], by, src) && Math.abs(n[1] - f.notes[best][1]) < 0.06))) return;
+if (best >= 0) {
+const tb = f.notes[best][1];
+f.notes.forEach((n, i) => { if (!f.st[i] && handOk(n) && sameNote(n[0], m, src) && Math.abs(n[1] - tb) < 0.06) { f.st[i] = 1; f.hits++; f.streak++; } });
+light(m, "ok"); flash(m, hiTr("Certo!"), "#34d399");
+}
+else if (by == null) { light(m, "bad"); f.wrong++; }
+};
+const press = (m, src) => {
+if (src !== "mic") sound(m, 0.6);
+if (f.rec) { light(m, "tap"); if (f.recOn) f.recNotes.push([m, Math.round((performance.now() - f.recStart) / 10) / 100, 0.35, m < 60 ? 1 : 0]); return; }
+hear(m, src);
+};
+const startMic = async () => {
+if (f.mic || f.micBusy || !f.useMic) return;
+f.micBusy = true;
+try { const mic = await fallMicOpen(); if (fall !== f || !f.useMic) { mic.stop(); return; } f.mic = mic; info("Ouvindo o seu piano. Toque as notas que chegam no teclado."); }
+catch(e) { f.useMic = false; const b = el.querySelector('[data-f="mic"]'); if (b) b.classList.remove("on"); info("Sem permissão para o microfone. Libere nas configurações do aparelho, ou toque nas teclas da tela."); }
+finally { f.micBusy = false; }
+};
+const stopMic = () => { if (f.mic) { f.mic.stop(); f.mic = null; } };
+const reset = () => { f.t = -FALL_LEAD; f.sched.clear(); f.waitIdx = 0; f.pressed.clear(); f.st = f.notes.map(() => 0); f.hits = f.misses = f.wrong = f.streak = 0; f.fx = []; f.done = false; endEl.hidden = true; };
+const showEnd = () => {
+const total = mine().length; if (!total) return;
+f.done = true;
+let big, line, msg;
+if (f.mode === "follow") {
+const pct = Math.round(f.hits / total * 100);
+big = `${pct}%`; line = `Você acertou ${f.hits} de ${total} notas.`;
+msg = pct >= 90 ? "Excelente!" : pct >= 70 ? "Muito bem!" : pct >= 40 ? "Está chegando lá. Tente mais devagar." : `Tente em 50% ou com "Esperar eu tocar".`;
+} else {
+big = "✓"; line = "Você tocou a música toda.";
+msg = "Muito bem! Agora tente em \"Seguir a música\".";
+}
+endEl.innerHTML = `<div class="fall-end-card"><div class="fall-end-big">${big}</div><div class="fall-end-line">${escapeHtml(line)}</div><div class="fall-end-msg">${escapeHtml(msg)}</div><button type="button" class="fall-btn fall-main" data-f="again">⟲ Tocar de novo</button></div>`;
+endEl.hidden = false;
+endEl.querySelector('[data-f="again"]').onclick = () => { reset(); f.playing = true; f.last = 0; setPlayLabel(); };
 };
 const draw = () => {
 const g = geo(); ctx2.clearRect(0, 0, g.W, g.H);
-const look = 3.2, pps = g.top / look;
+const look = 3.2, pps = g.top / look, tnow = performance.now();
 // Linhas das oitavas
 ctx2.strokeStyle = "rgba(79,125,255,.08)"; ctx2.lineWidth = 1;
 lay.ks.filter(k => !k.blk && k.m % 12 === 0).forEach(k => { const x = Math.round(keyX(k)) + 0.5; ctx2.beginPath(); ctx2.moveTo(x, 0); ctx2.lineTo(x, g.top); ctx2.stroke(); });
 const now = f.t, playingNow = new Map();
-f.notes.forEach(n => {
+f.notes.forEach((n, i) => {
 if (!handOk(n) || n[1] > now + look || n[1] + n[2] < now - 0.2) return;
-const k = lay.ks[n[0] - f.lo]; if (!k) return;
+const k = keyOf(n[0]); if (!k) return;
 const y2 = g.top - (n[1] - now) * pps, y1 = y2 - n[2] * pps;
 const x = keyX(k) + 1.5, w = keyW(k) - 3;
-const left = n[3] === 1, active = n[1] <= now && n[1] + n[2] > now;
-if (active) playingNow.set(n[0], left);
-ctx2.fillStyle = left ? (active ? "#9DB6FF" : "#6D8FF0") : (active ? "#8FB0FF" : "#4F7DFF");
-ctx2.shadowColor = "rgba(79,125,255,.7)"; ctx2.shadowBlur = active ? 14 : 6;
+const left = n[3] === 1, active = n[1] <= now && n[1] + n[2] > now, s = f.st[i];
+if (active && !s) playingNow.set(n[0], left);
+ctx2.fillStyle = s === 1 ? "#34d399" : s === 2 ? "rgba(248,113,113,.75)" : left ? (active ? "#9DB6FF" : "#6D8FF0") : (active ? "#8FB0FF" : "#4F7DFF");
+ctx2.shadowColor = s === 1 ? "rgba(52,211,153,.7)" : s === 2 ? "rgba(248,113,113,.5)" : "rgba(79,125,255,.7)"; ctx2.shadowBlur = active ? 14 : 6;
 const r = Math.min(6, w / 2), y = Math.max(-20, y1), h = Math.min(g.top, y2) - y;
 if (h > 0) { ctx2.beginPath(); ctx2.roundRect ? ctx2.roundRect(x, y, w, h, r) : ctx2.rect(x, y, w, h); ctx2.fill(); }
 ctx2.shadowBlur = 0;
-if (h > 16 && w > 14) { ctx2.fillStyle = "rgba(255,255,255,.92)"; ctx2.font = `600 ${Math.min(12, w * 0.45)}px Poppins, sans-serif`; ctx2.textAlign = "center"; ctx2.fillText(PT_NOTE[NOTE_NAMES[n[0] % 12]] || "", x + w / 2, Math.min(g.top, y2) - 6); }
+if (h > 16 && w > 14) { ctx2.fillStyle = s === 1 ? "rgba(5,6,11,.85)" : "rgba(255,255,255,.92)"; ctx2.font = `600 ${Math.min(12, w * 0.45)}px Poppins, sans-serif`; ctx2.textAlign = "center"; ctx2.fillText(PT_NOTE[NOTE_NAMES[n[0] % 12]] || "", x + w / 2, Math.min(g.top, y2) - 6); }
 });
 // Linha de chegada
 ctx2.fillStyle = "rgba(79,125,255,.55)"; ctx2.fillRect(0, g.top - 2, g.W, 2);
 // Teclado
-const tnow = performance.now();
-[false, true].forEach(blk => lay.ks.filter(k => k.blk === blk).forEach(k => {
-const x = keyX(k), w = keyW(k), h = blk ? g.kh * 0.62 : g.kh;
-const lit = playingNow.has(k.m) || (f.lit.get(k.m) || 0) > tnow;
-ctx2.fillStyle = lit ? (blk ? "#3B63E0" : "#8FB0FF") : (blk ? "#0B0F1A" : "#F4F6FB");
-ctx2.fillRect(x + (blk ? 0 : 0.5), g.top, w - (blk ? 0 : 1), h);
-if (!blk) { ctx2.strokeStyle = "rgba(5,6,11,.35)"; ctx2.strokeRect(x + 0.5, g.top, w - 1, h); }
-if (!blk && k.m % 12 === 0 && w > 16) { ctx2.fillStyle = lit ? "#05060B" : "#64748B"; ctx2.font = `600 ${Math.min(11, w * 0.38)}px Poppins, sans-serif`; ctx2.textAlign = "center"; ctx2.fillText(`${PT_NOTE.C}${Math.floor(k.m / 12) - 1}`, x + w / 2, g.top + h - 6); }
-}));
-if (f.rec && f.recOn) { ctx2.fillStyle = "#f87171"; ctx2.beginPath(); ctx2.arc(16, 16, 6, 0, 7); ctx2.fill(); ctx2.fillStyle = "#EAF0FF"; ctx2.font = "600 12px Poppins, sans-serif"; ctx2.textAlign = "left"; ctx2.fillText(`${f.recNotes.length} notas`, 28, 20); }
-};
-const due = () => { // próximas notas que o aluno precisa tocar no modo "esperar"
-const list = f.notes.filter(handOk); while (f.waitIdx < list.length && list[f.waitIdx][1] < f.t - 0.05) f.waitIdx++;
-const n = list[f.waitIdx]; if (!n) return null;
-return list.filter(x => Math.abs(x[1] - n[1]) < 0.04);
+const litCol = (m, blk) => { const L = f.lit.get(m); if (!L || L.u < tnow) return playingNow.has(m) ? (blk ? "#3B63E0" : "#8FB0FF") : null; return L.c === "ok" ? (blk ? "#059669" : "#6EE7B7") : L.c === "bad" ? (blk ? "#DC2626" : "#FCA5A5") : (blk ? "#3B63E0" : "#8FB0FF"); };
+lay.ks.filter(k => !k.blk).forEach(k => {
+const x = keyX(k), w = keyW(k), h = g.kh, c = litCol(k.m, false);
+ctx2.fillStyle = c || "#F4F6FB";
+ctx2.beginPath(); ctx2.roundRect ? ctx2.roundRect(x + 0.5, g.top, w - 1, h, [0, 0, 4, 4]) : ctx2.rect(x + 0.5, g.top, w - 1, h); ctx2.fill();
+ctx2.strokeStyle = "rgba(5,6,11,.35)"; ctx2.lineWidth = 1; ctx2.stroke();
+if (w > 15) { const isC = k.m % 12 === 0; ctx2.fillStyle = c ? "#05060B" : isC ? "#334155" : "#94A3B8"; ctx2.font = `${isC ? 700 : 600} ${Math.min(11, w * 0.36)}px Poppins, sans-serif`; ctx2.textAlign = "center"; ctx2.fillText(isC ? `${PT_NOTE.C}${Math.floor(k.m / 12) - 1}` : (PT_NOTE[NOTE_NAMES[k.m % 12]] || ""), x + w / 2, g.top + h - 7); }
+});
+lay.ks.filter(k => k.blk).forEach(k => {
+const x = keyX(k), w = keyW(k), h = g.kh * 0.63, c = litCol(k.m, true);
+ctx2.fillStyle = c || "#0B0F1A";
+ctx2.beginPath(); ctx2.roundRect ? ctx2.roundRect(x, g.top, w, h, [0, 0, 3, 3]) : ctx2.rect(x, g.top, w, h); ctx2.fill();
+if (!c) { ctx2.fillStyle = "rgba(255,255,255,.10)"; ctx2.fillRect(x + w * 0.18, g.top, w * 0.64, h - Math.max(4, h * 0.08)); ctx2.fillStyle = "#0B0F1A"; ctx2.fillRect(x + w * 0.22, g.top, w * 0.56, h - Math.max(6, h * 0.1)); }
+});
+// Placar e o que o microfone ouviu
+ctx2.textAlign = "left"; ctx2.font = "600 13px Poppins, sans-serif";
+let hx = 12;
+if (!f.rec && f.mode === "follow" && (f.hits || f.misses)) { ctx2.fillStyle = "#34d399"; ctx2.fillText(`✓ ${f.hits}`, hx, 22); hx += ctx2.measureText(`✓ ${f.hits}`).width + 12; ctx2.fillStyle = "#f87171"; ctx2.fillText(`✗ ${f.misses}`, hx, 22); hx += ctx2.measureText(`✗ ${f.misses}`).width + 12; if (f.streak >= 3) { ctx2.fillStyle = "#EAF0FF"; ctx2.fillText(hiTr(`Sequência ${f.streak}`), hx, 22); } }
+if (f.mic) {
+const lv = f.mic.level, bx = g.W - 92;
+ctx2.fillStyle = "rgba(234,240,255,.18)"; ctx2.fillRect(bx, 14, 80, 6); ctx2.fillStyle = "#4F7DFF"; ctx2.fillRect(bx, 14, 80 * lv, 6);
+ctx2.fillStyle = "#94A3B8"; ctx2.font = "600 11px Poppins, sans-serif"; ctx2.textAlign = "right"; ctx2.fillText("🎤", bx - 6, 22);
+if (f.heard && tnow - f.heard.at < 1200) { ctx2.fillStyle = "#EAF0FF"; ctx2.fillText(hiTr(`Ouvi: ${PT_NOTE[NOTE_NAMES[f.heard.m % 12]] || ""}`), g.W - 12, 40); }
+}
+// "Certo!" / "Errou" subindo da linha de chegada
+f.fx = f.fx.filter(x => tnow - x.t0 < 800);
+f.fx.forEach(x => { const a = (tnow - x.t0) / 800; ctx2.globalAlpha = 1 - a; ctx2.fillStyle = x.col; ctx2.font = "700 15px Poppins, sans-serif"; ctx2.textAlign = "center"; ctx2.fillText(x.txt, Math.max(30, Math.min(g.W - 30, x.x)), g.top - 14 - a * 36); ctx2.globalAlpha = 1; });
+if (f.rec && f.recOn) { ctx2.fillStyle = "#f87171"; ctx2.beginPath(); ctx2.arc(16, 16, 6, 0, 7); ctx2.fill(); ctx2.fillStyle = "#EAF0FF"; ctx2.font = "600 12px Poppins, sans-serif"; ctx2.textAlign = "left"; ctx2.fillText(hiTr(`${f.recNotes.length} notas`), 28, 20); }
 };
 const tick = ts => {
 const dt = f.last ? Math.min(0.1, (ts - f.last) / 1000) : 0; f.last = ts;
+if (f.mic) { try { f.mic.step(ts).forEach(c => hear(c.m, "mic", c.by)); } catch(e) {} }
 if (f.playing) {
 let nt = f.t + dt * f.rate;
-if (f.wait) {
+if (f.mode === "wait") {
 const grp = due();
 if (grp && nt >= grp[0][1]) {
 const ok = grp.every(n => (f.pressed.get(n[0]) || 0) > ts - 1500);
-if (!ok) nt = grp[0][1]; else { grp.forEach(n => f.pressed.delete(n[0])); f.waitIdx += grp.length; }
+if (!ok) nt = grp[0][1];
+else { grp.forEach(n => { f.pressed.delete(n[0]); const i = f.notes.indexOf(n); if (i >= 0) f.st[i] = 1; }); f.hits += grp.length; f.waitIdx += grp.length; flash(grp[0][0], hiTr("Certo!"), "#34d399"); }
 }
+} else {
+f.notes.forEach((n, i) => { if (!f.st[i] && handOk(n) && f.t - n[1] > 0.45 * f.rate) { f.st[i] = 2; f.misses++; f.streak = 0; flash(n[0], hiTr("Errou"), "#f87171"); } });
 }
-// Toca as notas (no "esperar", só as da outra mão, se houver)
-f.notes.forEach((n, i) => { if (n[1] >= f.t && n[1] < nt && !f.sched.has(i)) { f.sched.add(i); if (handOk(n) ? !f.wait : f.hand !== "both") sound(n[0], n[2] / f.rate); } });
+// Toca as notas: as do aluno só no "Seguir a música" sem microfone; a outra mão sempre
+f.notes.forEach((n, i) => { if (n[1] >= f.t && n[1] < nt && !f.sched.has(i)) { f.sched.add(i); if (handOk(n) ? (f.mode === "follow" && !f.mic) : f.hand !== "both") sound(n[0], n[2] / f.rate); } });
 f.t = nt;
 const endT = f.notes.length ? Math.max(...f.notes.map(n => n[1] + n[2])) : 0;
-if (f.t > endT + 0.8) { f.playing = false; f.t = 0; f.sched.clear(); f.waitIdx = 0; setPlayLabel(); }
+if (f.t > endT + 0.8) { f.playing = false; setPlayLabel(); showEnd(); }
 }
 draw();
 f.raf = requestAnimationFrame(tick);
 };
 const setPlayLabel = () => { const b = el.querySelector('[data-f="play"]'); if (b) b.textContent = f.playing ? "❚❚ Pausar" : "▶ Tocar"; };
+const togglePlay = () => { getAudioCtx(); if (f.done) reset(); f.playing = !f.playing; f.last = 0; setPlayLabel(); if (f.playing) startMic(); };
 // Toques no teclado da tela
 cv.addEventListener("pointerdown", e => {
 const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, g = geo();
-if (y < g.top) { if (!f.rec) { f.playing = !f.playing; f.last = 0; setPlayLabel(); } return; }
-const hit = lay.ks.filter(k => k.blk && y < g.top + g.kh * 0.62).concat(lay.ks.filter(k => !k.blk)).find(k => x >= keyX(k) && x < keyX(k) + keyW(k));
-if (hit) { e.preventDefault(); press(hit.m); }
+if (y < g.top) { if (!f.rec) togglePlay(); return; }
+const hit = lay.ks.filter(k => k.blk && y < g.top + g.kh * 0.63).concat(lay.ks.filter(k => !k.blk)).find(k => x >= keyX(k) && x < keyX(k) + keyW(k));
+if (hit) { e.preventDefault(); press(hit.m, "tap"); }
 });
-// Teclado de verdade ligado ao aparelho (quando o navegador deixa)
-try { if (navigator.requestMIDIAccess) navigator.requestMIDIAccess().then(acc => { f.midi = acc; acc.inputs.forEach(inp => inp.onmidimessage = ev => { if (fall !== f) return; const [st, m, v] = ev.data; if ((st & 0xf0) === 0x90 && v > 0) press(m); }); }).catch(() => {}); } catch(e) {}
+// Teclado de verdade ligado ao aparelho (quando o navegador deixa): aí não precisa do microfone
+try { if (navigator.requestMIDIAccess) navigator.requestMIDIAccess().then(acc => {
+if (fall !== f) return; f.midi = acc;
+acc.inputs.forEach(inp => inp.onmidimessage = ev => { if (fall !== f) return; const [st, m, v] = ev.data; if ((st & 0xf0) === 0x90 && v > 0) press(m, "midi"); });
+if (acc.inputs.size && !f.rec && !f.mic) { f.useMic = false; const b = el.querySelector('[data-f="mic"]'); if (b) b.classList.remove("on"); info("Teclado ligado ao aparelho: toque nele."); }
+}).catch(() => {}); } catch(e) {}
 el.querySelector(".fall-x").onclick = fallClose;
 el.querySelectorAll("[data-rate]").forEach(b => b.onclick = () => { f.rate = Number(b.dataset.rate); el.querySelectorAll("[data-rate]").forEach(x => x.classList.toggle("on", x === b)); });
-el.querySelectorAll("[data-hand]").forEach(b => b.onclick = () => { f.hand = b.dataset.hand; f.waitIdx = 0; el.querySelectorAll("[data-hand]").forEach(x => x.classList.toggle("on", x === b)); });
+el.querySelectorAll("[data-hand]").forEach(b => b.onclick = () => { f.hand = b.dataset.hand; reset(); el.querySelectorAll("[data-hand]").forEach(x => x.classList.toggle("on", x === b)); });
+el.querySelectorAll("[data-mode]").forEach(b => b.onclick = () => { f.mode = b.dataset.mode; reset(); el.querySelectorAll("[data-mode]").forEach(x => x.classList.toggle("on", x === b)); });
 const q = s => el.querySelector(`[data-f="${s}"]`);
-if (q("play")) q("play").onclick = () => { getAudioCtx(); f.playing = !f.playing; f.last = 0; setPlayLabel(); };
-if (q("restart")) q("restart").onclick = () => { f.t = 0; f.sched.clear(); f.waitIdx = 0; f.pressed.clear(); };
-if (q("wait")) q("wait").onclick = () => { f.wait = !f.wait; f.waitIdx = 0; q("wait").classList.toggle("on", f.wait); };
+if (q("play")) q("play").onclick = togglePlay;
+if (q("restart")) q("restart").onclick = reset;
+if (q("mic")) q("mic").onclick = () => { f.useMic = !f.useMic; q("mic").classList.toggle("on", f.useMic); if (f.useMic) startMic(); else { stopMic(); info("Microfone desligado. Toque nas teclas da tela ou num teclado ligado ao aparelho."); } };
 const shift = d => { const nl = f.lo + d * 12; if (nl < 24 || nl + 23 > 108) return; f.lo = nl; f.hi = nl + 23; lay = keysOf(); };
 if (q("oct-")) q("oct-").onclick = () => shift(-1);
 if (q("oct+")) q("oct+").onclick = () => shift(1);
@@ -7810,12 +7976,14 @@ fallClose();
 };
 const onR = () => resize();
 window.addEventListener("resize", onR); f.offR = () => window.removeEventListener("resize", onR);
+f.stopMic = stopMic;
 resize();
 f.raf = requestAnimationFrame(tick);
 }
 function fallClose(){
 if (!fall) return;
 cancelAnimationFrame(fall.raf); fall.offR && fall.offR();
+try { fall.stopMic && fall.stopMic(); } catch(e) {}
 try { if (fall.midi) fall.midi.inputs.forEach(i => i.onmidimessage = null); } catch(e) {}
 fall.el.remove(); fall = null;
 }
@@ -7823,7 +7991,7 @@ fall.el.remove(); fall = null;
 function stuFallSongs(){ const v = (stuCur && stuCur.view) || {}; return FALL_BUILTIN.concat((Array.isArray(v.fall) ? v.fall : []).filter(x => x && x.t && Array.isArray(x.n)).map(x => ({ id: x.id, title: x.t, notes: x.n }))); }
 function fallHTML(){
 const list = stuFallSongs();
-return stuCard("Tocar junto", `<div class="stu-muted" style="margin-bottom:0.5rem">As notas descem até o teclado. Toque junto, mais devagar ou com uma mão de cada vez. "Esperar eu tocar" para a música até você apertar a tecla certa.</div>
+return stuCard("Tocar junto", `<div class="stu-muted" style="margin-bottom:0.5rem">As notas descem até o teclado. Toque no seu piano ou teclado: o app ouve pelo microfone e diz se você acertou. "Esperar eu tocar" para a música até você tocar a nota certa; "Seguir a música" continua sozinha e conta os acertos.</div>
 <div class="fall-list">${list.map(x => `<button type="button" class="fall-item" data-fall="${escapeHtml(x.id)}"><span>${escapeHtml(x.title)}</span><span class="stu-muted">${x.builtin ? "Pronta no app" : "Do professor"} ›</span></button>`).join("")}</div>`);
 }
 function fallBind(main){
