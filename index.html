@@ -3924,7 +3924,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.65";
+const APP_VERSION = "8.66";
 // Idioma (8.42): troca entre português e inglês e recarrega. Fica guardado neste aparelho.
 function langSwitchLabel(){ return APP_LANG === "en" ? "🌐 Mudar para português" : "🌐 Switch to English"; }
 function langSwitch(){
@@ -7692,37 +7692,50 @@ const FALL_BLACK = [1, 3, 6, 8, 10];
 const FALL_BOFF = { 1: -0.1, 3: 0.1, 6: -0.12, 8: 0, 10: 0.12 };
 const FALL_LEAD = 2; // segundos de notas caindo antes da primeira chegar ao teclado
 let fall = null;
-// Ouvir o piano de verdade pelo microfone (8.65). A cada quadro: acha os picos do espectro, dá a
-// cada nota uma "força" (fundamental + harmônicos que batem com picos) e escolhe as notas mais fortes
-// uma de cada vez, tirando os harmônicos da escolhida (assim Dó4 não vira Dó5 nem Sol5). Uma nota
-// "tocou" quando a força dela sobe de repente (ataque da tecla). Volta [{ m, by }] ~50 ms depois.
+// Ouvir o piano de verdade pelo microfone (8.65; mais preciso na 8.66). A cada quadro:
+// 1. Aprende o barulho de fundo de cada faixa do som (ventilador, motor, chiado) e só considera
+//    o que passa bem acima dele. Barulho constante some sozinho em poucos segundos.
+// 2. Acha os picos e dá a cada nota uma "força" (fundamental + harmônicos que batem com picos);
+//    escolhe as mais fortes uma de cada vez, tirando os harmônicos da escolhida (Dó4 não vira Dó5).
+// 3. Aprende a afinação do piano (piano de escola costuma estar um pouco baixo ou alto).
+// 4. Uma nota "tocou" quando a força sobe de repente (ataque) e continua firme ~80 ms depois, na
+//    mesma altura (voz e barulho escorregam). Volta [{ m, s, sure }]; "sure" = forte e firme, o único
+//    caso em que o app aponta nota errada. mic.expect (Set de notas) deixa mais fácil aceitar essas.
 async function fallMicOpen(){
 const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
 const ctx = getAudioCtx(); try { await ctx.resume(); } catch(e) {}
 const src = ctx.createMediaStreamSource(stream), an = ctx.createAnalyser();
-an.fftSize = 8192; an.smoothingTimeConstant = 0.15; src.connect(an);
-const N = an.frequencyBinCount, db = new Float32Array(N), mag = new Float32Array(N), hz = ctx.sampleRate / an.fftSize;
-const LO = 36, HI = 96, st = [], tmp = [], sal = new Float32Array(HI + 1);
+an.fftSize = 8192; an.smoothingTimeConstant = 0; src.connect(an);
+const N = an.frequencyBinCount, db = new Float32Array(N), mag = new Float32Array(N), nb = new Float32Array(N), hz = ctx.sampleRate / an.fftSize;
+const LO = 36, HI = 96, st = [], sal = new Float32Array(HI + 1), fest = new Float32Array(HI + 1);
 for (let m = 0; m <= HI; m++) st.push({ up: false, pk: 0, fl: 0, at: 0 });
-const fq = m => 440 * Math.pow(2, (m - 69) / 12);
 const b0 = Math.max(2, Math.floor(55 / hz)), b1 = Math.min(N - 2, Math.floor(6500 / hz));
-let pend = [], recent = [], ref = 0;
+const devs = [];
+let pend = [], recent = [], ref = 0, frames = 0, t0 = 0, lastT = 0, epend = [], said = [];
+const ex = new Map();
+const fq = m => 440 * Math.pow(2, (m - 69 + mic.tune) / 12);
 const mic = {
-level: 0,
+level: 0, tune: 0, expect: null,
 stop(){ try { src.disconnect(); } catch(e) {} stream.getTracks().forEach(t => t.stop()); },
 step(now){
 an.getFloatFrequencyData(db);
-let top = 0; tmp.length = 0;
-for (let i = b0 - 1; i <= b1 + 1; i++) { const v = db[i] > -160 ? Math.pow(10, db[i] / 20) : 0; mag[i] = v; if (v > top) top = v; }
-for (let i = b0; i < b1; i += 3) tmp.push(mag[i]);
-tmp.sort((a, b) => a - b);
-const noise = Math.max(tmp[tmp.length >> 1] || 0, 1e-5), thr = Math.max(noise * 10, top * 0.02);
+if (!t0) t0 = now;
+const warm = now - t0 < 900;
+let top = 0;
+for (let i = b0 - 1; i <= b1 + 1; i++) {
+const v = db[i] > -160 ? Math.pow(10, db[i] / 20) : 0; mag[i] = v; if (v > top) top = v;
+// barulho de fundo desta faixa: média dos últimos ~1 s; som bem mais forte (nota) entra bem devagar (~8 s)
+if (!nb[i]) nb[i] = v; else if (warm) nb[i] = nb[i] * 0.85 + v * 0.15; else nb[i] += (v - nb[i]) * (v < nb[i] * 3 ? 0.02 : 0.002);
+}
+frames++;
 mic.level = Math.max(0, Math.min(1, (20 * Math.log10(top + 1e-9) + 85) / 55));
-// Picos do espectro (frequência afinada pela parábola)
+const dt = lastT ? now - lastT : 16; lastT = now;
+ref *= Math.pow(0.5, dt / 2500);
+// Picos bem acima do barulho de fundo (frequência afinada pela parábola)
 const pf = [], pa = [];
-for (let i = b0; i < b1; i++) { const v = mag[i]; if (v > thr && v >= mag[i - 1] && v > mag[i + 1]) { const a1 = mag[i - 1], a3 = mag[i + 1], d = a1 - 2 * v + a3; pf.push((i + (d ? 0.5 * (a1 - a3) / d : 0)) * hz); pa.push(v); } }
+for (let i = b0; i < b1; i++) { const v = mag[i]; if (v > nb[i] * 3 + 1e-6 && v > top * 0.003 && v >= mag[i - 1] && v > mag[i + 1]) { const a1 = mag[i - 1], a3 = mag[i + 1], d = a1 - 2 * v + a3; pf.push((i + (d ? 0.5 * (a1 - a3) / d : 0)) * hz); pa.push(v - nb[i]); } }
 const used = new Uint8Array(pf.length);
-const near = (f, alive) => { let best = -1; for (let j = 0; j < pf.length; j++) { if (alive && used[j]) continue; const c = 12 * Math.log2(pf[j] / f); if (c > -0.4 && c < 0.5 && (best < 0 || pa[j] > pa[best])) best = j; } return best; };
+const near = f => { let best = -1; for (let j = 0; j < pf.length; j++) { if (used[j]) continue; const c = 12 * Math.log2(pf[j] / f); if (c > -0.5 && c < 0.5 && (best < 0 || pa[j] > pa[best])) best = j; } return best; };
 sal.fill(0);
 let first = 0;
 for (let round = 0; round < 5 && pf.length; round++) {
@@ -7731,32 +7744,70 @@ for (let m = LO; m <= HI; m++) {
 if (sal[m]) continue;
 const f0 = fq(m), hs = [];
 let s = 0;
-for (let h = 1; h <= 6; h++) { const j = near(f0 * h, true); hs.push(j); if (j >= 0) s += pa[j] / Math.sqrt(h); }
-if (!((hs[0] >= 0 && (hs[1] >= 0 || hs[2] >= 0)) || (hs[1] >= 0 && hs[2] >= 0))) continue;
+for (let h = 1; h <= 8; h++) { const j = near(f0 * h); hs.push(j); if (j >= 0) s += pa[j] / Math.sqrt(h); }
+const n4 = hs.slice(0, 4).filter(j => j >= 0).length, n6 = hs.slice(0, 6).filter(j => j >= 0).length;
+if (!((hs[0] >= 0 && n4 >= 2) || n6 >= 3)) continue;
 if (s > bs) { bs = s; bm = m; bh = hs; }
 }
-if (bm < 0 || bs < first * 0.2) break;
+if (bm < 0 || bs < first * 0.15) break;
 if (!first) first = bs;
 sal[bm] = bs; bh.forEach(j => { if (j >= 0) used[j] = 1; });
+// altura medida (pela parcial mais forte), para a afinação e para ver se fica firme
+let jb = -1, hb = 1; bh.forEach((j, k) => { if (j >= 0 && (jb < 0 || pa[j] / Math.sqrt(k + 1) > pa[jb] / Math.sqrt(hb))) { jb = j; hb = k + 1; } });
+fest[bm] = pf[jb] / hb;
 }
+// Evidência de uma nota esperada: quanto os harmônicos dela passam do barulho de fundo, mesmo
+// sem formar um pico claro (ventilador alto esconde a fundamental). Soma de log2(sinal/fundo).
+const evid = m => { const f0 = fq(m); let e = 0; for (let h = 1; h <= 8; h++) { const b = f0 * h / hz; if (b >= b1) break; const w = Math.max(1, b * 0.02); let mx = 0, nn = 1; for (let i = Math.max(b0, Math.floor(b - w)); i <= Math.ceil(b + w); i++) if (mag[i] > mx) { mx = mag[i]; nn = nb[i]; } e += Math.max(0, Math.min(4, Math.log2(mx / (nn * 1.6 + 1e-9)))); } return e; };
 for (let m = LO; m <= HI; m++) {
 const s = sal[m], x = st[m];
-if (x.up) { if (s > x.pk) x.pk = s; else if (s < x.pk * 0.75) { x.up = false; x.fl = s; } }
-else if (s > 0 && s >= x.fl * 1.8 && s >= first * 0.25 && now - x.at > 120) { x.up = true; x.pk = s; x.at = now; pend.push({ m, t: now, s }); }
+if (x.up) { if (s > x.pk) x.pk = s; else if (s < x.pk * 0.7) { x.up = false; x.fl = s; } }
+else if (s > 0 && s >= x.fl * 1.5 && now - x.at > 100 && (now - x.at > 400 || s > x.pk * 0.75)) { x.up = true; x.pk = s; x.at = now; if (!warm) pend.push({ m, t: now, s, f: fest[m] }); }
 else if (s < x.fl || x.fl === 0) x.fl = s;
 }
+recent = recent.concat(pend.filter(c => !c.seen)).filter(c => now - c.t < 400); pend.forEach(c => c.seen = 1);
+// força máxima e quanto cada nota pendente ficou firme (presente e na mesma altura) desde o ataque
+pend.forEach(c => { c.nf = (c.nf || 0) + 1; if (sal[c.m] > c.s) c.s = sal[c.m]; if (sal[c.m] > 0 && fest[c.m]) { c.ok = (c.ok || 0) + 1; c.dr = Math.max(c.dr || 0, Math.abs(12 * Math.log2(fest[c.m] / c.f))); } });
 const out = [];
-recent = recent.concat(pend.filter(c => !c.seen)).filter(c => now - c.t < 300); pend.forEach(c => c.seen = 1);
-// Ataque fraco junto de um forte (batida do martelo, ressonância) não conta
-// e harmônico (oitava, 12ª, 2 oitavas…) ou ressonância bem longe de outra nota mais forte que atacou junto também não
-ref *= Math.pow(0.5, (now - (mic.lastT || now)) / 1500); mic.lastT = now;
 pend = pend.filter(c => {
-if (now - c.t < 80) return true;
-const near = recent.filter(r => r !== c && Math.abs(r.t - c.t) < 120), mx = Math.max(c.s, ...near.map(r => r.s));
-const harmOf = near.some(r => r.s > c.s && ([12, 19, 24, 28, 31].includes(c.m - r.m) || (Math.abs(c.m - r.m) >= 19 && c.s < r.s * 0.65)));
-if (c.s >= mx * 0.35 && c.s >= ref * 0.12 && !harmOf) { out.push({ m: c.m, by: null, s: c.s }); ref = Math.max(ref, c.s); }
+const age = now - c.t;
+if (age < 80) return true;
+// Ataque fraco junto de um forte (martelo, ressonância), harmônico de outra nota que atacou junto
+// ou nota que não ficou firme (sumiu ou escorregou, como voz) não contam
+const near2 = recent.filter(r => r !== c && Math.abs(r.t - c.t) < 120), mx = Math.max(c.s, ...near2.map(r => r.s));
+const harmOf = near2.some(r => r.s > c.s && ([12, 19, 24, 28, 31].includes(c.m - r.m) || (Math.abs(c.m - r.m) >= 19 && c.s < r.s * 0.65))) || [12, 19, 24, 28, 31].some(d => c.m - d >= LO && sal[c.m - d] > c.s);
+const steady = (c.ok || 0) >= c.nf * 0.7 && (c.dr || 0) < 0.25;
+const exp = mic.expect && [...mic.expect].some(e => e % 12 === c.m % 12);
+if (said.some(o => o.m % 12 === c.m % 12 && now - o.t < 350) || harmOf || c.s < mx * 0.3) return false;
+let sure = false;
+if (exp && c.s >= ref * 0.06 && (steady || c.s >= ref * 0.25)) sure = steady && c.s >= ref * 0.3;
+else if (age < 250) return true; // nota que não era a esperada: espera mais para ter certeza (voz e barulho somem)
+else if (steady && c.s >= ref * 0.3) sure = true;
+else return false;
+out.push({ m: c.m, s: c.s, sure }); said.push({ m: c.m, t: now });
+ref = Math.max(ref, c.s);
+if (steady && c.f) { const d = 12 * Math.log2(c.f / (440 * Math.pow(2, (c.m - 69) / 12))); if (Math.abs(d) < 0.7) { devs.push(d); if (devs.length > 15) devs.shift(); if (devs.length >= 3) { const s2 = devs.slice().sort((a, b) => a - b); mic.tune = Math.max(-0.6, Math.min(0.6, s2[s2.length >> 1])); } } }
 return false;
 });
+// Notas esperadas (as que o aluno deve tocar agora): aceita pela evidência dos harmônicos subindo
+// acima do barulho, mesmo quando o ventilador esconde a fundamental. Nunca vira "nota errada".
+if (mic.expect && mic.expect.size && !warm) {
+mic.expect.forEach(e => {
+if (e < LO || e > HI) return;
+const v = evid(e), x = ex.get(e) || { h: [], at: 0 };
+const base = x.h.length ? x.h.reduce((a, b) => a + b, 0) / x.h.length : v;
+if (v >= 5 && v - base >= 2.5 && now - x.at > 350 && v >= Math.max(evid(e - 1), evid(e + 1)) + 1) { x.at = now; epend.push({ m: e, t: now, nf: 0, ok: 0 }); }
+x.h.push(v); if (x.h.length > 24) x.h.shift();
+ex.set(e, x);
+});
+}
+epend = epend.filter(c => {
+c.nf++; if (evid(c.m) >= 4) c.ok++;
+if (now - c.t < 80) return true;
+if (c.ok >= c.nf * 0.6 && !said.some(o => o.m % 12 === c.m % 12 && now - o.t < 350)) { out.push({ m: c.m, s: 0, sure: false }); said.push({ m: c.m, t: now }); }
+return false;
+});
+said = said.filter(o => now - o.t < 1000);
 return out;
 }
 };
@@ -7783,7 +7834,7 @@ const notes = rec ? [] : song.notes;
 let lo = 60, hi = 83;
 if (notes.length) { lo = Math.min(...notes.map(n => n[0])); hi = Math.max(...notes.map(n => n[0])); lo = Math.floor(lo / 12) * 12; hi = Math.max(lo + 23, Math.ceil((hi + 1) / 12) * 12 - 1); }
 const f = fall = { el, song, rec, notes, lo, hi, t: rec ? 0 : -FALL_LEAD, playing: false, rate: 1, hand: "both", mode: "wait", sched: new Set(), pressed: new Map(), lit: new Map(), raf: 0, last: 0, recOn: false, recStart: 0, recNotes: [], midi: null, waitIdx: 0,
-useMic: canMic, mic: null, micBusy: false, st: notes.map(() => 0), hits: 0, misses: 0, wrong: 0, streak: 0, fx: [], heard: null, appPlayed: new Map(), done: false };
+useMic: canMic, mic: null, micBusy: false, lat: 0.15, lats: [], st: notes.map(() => 0), hits: 0, misses: 0, wrong: 0, streak: 0, fx: [], heard: null, appPlayed: new Map(), done: false };
 const keysOf = () => { const ks = []; let wi = 0; for (let m = f.lo; m <= f.hi; m++) { const blk = FALL_BLACK.includes(m % 12); ks.push({ m, blk, wi: blk ? wi - 0.5 : wi }); if (!blk) wi++; } return { ks, nW: wi }; };
 let lay = keysOf();
 const handOk = n => f.hand === "both" || (f.hand === "r" ? n[3] !== 1 : n[3] === 1);
@@ -7798,35 +7849,40 @@ const sound = (m, dur) => { try { synthNote(m, getAudioCtx().currentTime + 0.01,
 const light = (m, kind) => f.lit.set(m, { u: performance.now() + (kind === "tap" ? 220 : 420), c: kind });
 const info = s => { const x = el.querySelector('[data-f="info"]'); if (x) x.textContent = s; };
 const flash = (m, txt, col) => { const k = keyOf(m), g = geo(); f.fx.push({ x: k ? keyX(k) + keyW(k) / 2 : g.W / 2, txt, col, t0: performance.now() }); };
-const sameNote = (a, b, src) => a === b || (src === "mic" && a % 12 === b % 12 && Math.abs(a - b) === 12);
+const sameNote = (a, b, src) => a === b || (src === "mic" && a % 12 === b % 12 && Math.abs(a - b) <= 24); // o microfone às vezes erra a oitava
 const due = () => { // próximas notas que o aluno precisa tocar no modo "esperar"
 const list = mine(); while (f.waitIdx < list.length && list[f.waitIdx][1] < f.t - 0.05) f.waitIdx++;
 const n = list[f.waitIdx]; if (!n) return null;
 return list.filter(x => Math.abs(x[1] - n[1]) < 0.04);
 };
 // Uma nota ouvida (microfone, teclado ligado ou toque na tela): confere com a música.
-const hear = (m, src, by) => {
+// Do microfone só aponta nota errada quando ela veio forte e firme (sure), aparece no teclado da tela
+// e não é a mesma nota (em qualquer oitava) de uma que o aluno acabou de tocar ou vai tocar agora:
+// ressonância e harmônico das notas certas não viram "erro".
+const nearMine = m => { const w = 1.0 * f.rate; return f.notes.some(n => handOk(n) && n[0] % 12 === m % 12 && Math.abs(n[1] - f.t) < w); };
+const wrongOk = (m, src, sure) => src !== "mic" || (sure && m >= f.lo && m <= f.hi && !nearMine(m));
+const hear = (m, src, sure) => {
 const now = performance.now();
 if (src === "mic" && (f.appPlayed.get(m) || 0) + 250 > now) return; // o som do próprio app
 if (src === "mic") f.heard = { m, at: now };
 if (f.rec || !f.playing || f.done) { light(m, "tap"); return; }
 if (f.mode === "wait") {
 const grp = due(), hits = grp ? grp.filter(n => sameNote(n[0], m, src)) : [];
-if (by != null && !(hits.length && grp.some(n => sameNote(n[0], by, src)))) return;
 if (hits.length) { hits.forEach(n => f.pressed.set(n[0], now)); light(m, "ok"); }
-else if (by == null) { light(m, "bad"); f.wrong++; }
+else if (wrongOk(m, src, sure)) { light(m, "bad"); f.wrong++; }
 return;
 }
-const tH = f.t - (src === "mic" ? 0.1 * f.rate : 0);
+// Seguir a música: o microfone chega um pouco atrasado; o app mede esse atraso nos acertos
+const lat = src === "mic" ? f.lat : 0, tH = f.t - lat * f.rate;
 let best = -1;
-f.notes.forEach((n, i) => { if (f.st[i] || !handOk(n) || !sameNote(n[0], m, src)) return; const d = n[1] - tH; if (d > 0.35 * f.rate || d < -0.45 * f.rate) return; if (best < 0 || Math.abs(d) < Math.abs(f.notes[best][1] - tH)) best = i; });
-if (by != null && !(best >= 0 && f.notes.some((n, i) => i !== best && handOk(n) && sameNote(n[0], by, src) && Math.abs(n[1] - f.notes[best][1]) < 0.06))) return;
+f.notes.forEach((n, i) => { if (f.st[i] || !handOk(n) || !sameNote(n[0], m, src)) return; const d = n[1] - tH; if (d > 0.3 * f.rate || d < -0.45 * f.rate) return; if (best < 0 || Math.abs(d) < Math.abs(f.notes[best][1] - tH)) best = i; });
 if (best >= 0) {
 const tb = f.notes[best][1];
+if (src === "mic") { f.lats.push((f.t - tb) / f.rate); if (f.lats.length > 9) f.lats.shift(); const s2 = f.lats.slice().sort((a, b) => a - b); f.lat = Math.max(0.05, Math.min(0.45, s2[s2.length >> 1])); }
 f.notes.forEach((n, i) => { if (!f.st[i] && handOk(n) && sameNote(n[0], m, src) && Math.abs(n[1] - tb) < 0.06) { f.st[i] = 1; f.hits++; f.streak++; } });
 light(m, "ok"); flash(m, hiTr("Certo!"), "#34d399");
 }
-else if (by == null) { light(m, "bad"); f.wrong++; }
+else if (wrongOk(m, src, sure)) { light(m, "bad"); f.wrong++; }
 };
 const press = (m, src) => {
 if (src !== "mic") sound(m, 0.6);
@@ -7836,7 +7892,7 @@ hear(m, src);
 const startMic = async () => {
 if (f.mic || f.micBusy || !f.useMic) return;
 f.micBusy = true;
-try { const mic = await fallMicOpen(); if (fall !== f || !f.useMic) { mic.stop(); return; } f.mic = mic; info("Ouvindo o seu piano. Toque as notas que chegam no teclado."); }
+try { const mic = await fallMicOpen(); if (fall !== f || !f.useMic) { mic.stop(); return; } f.mic = mic; info("Ouvindo o seu piano. Deixe o celular perto dele e toque as notas que chegam no teclado."); }
 catch(e) { f.useMic = false; const b = el.querySelector('[data-f="mic"]'); if (b) b.classList.remove("on"); info("Sem permissão para o microfone. Libere nas configurações do aparelho, ou toque nas teclas da tela."); }
 finally { f.micBusy = false; }
 };
@@ -7913,7 +7969,12 @@ if (f.rec && f.recOn) { ctx2.fillStyle = "#f87171"; ctx2.beginPath(); ctx2.arc(1
 };
 const tick = ts => {
 const dt = f.last ? Math.min(0.1, (ts - f.last) / 1000) : 0; f.last = ts;
-if (f.mic) { try { f.mic.step(ts).forEach(c => hear(c.m, "mic", c.by)); } catch(e) {} }
+if (f.mic) {
+// avisa o microfone quais notas o aluno deve tocar agora (aceita essas com menos certeza)
+const w0 = f.t - 0.7 * f.rate, w1 = f.t + 0.5 * f.rate, grp = f.mode === "wait" && f.playing ? due() : null;
+f.mic.expect = new Set((grp || f.notes.filter(n => handOk(n) && n[1] > w0 && n[1] < w1)).map(n => n[0]));
+try { f.mic.step(ts).forEach(c => hear(c.m, "mic", c.sure)); } catch(e) {}
+}
 if (f.playing) {
 let nt = f.t + dt * f.rate;
 if (f.mode === "wait") {
