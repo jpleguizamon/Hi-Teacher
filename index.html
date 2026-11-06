@@ -3924,7 +3924,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.69";
+const APP_VERSION = "8.70";
 // Idioma (8.42): troca entre português e inglês e recarrega. Fica guardado neste aparelho.
 function langSwitchLabel(){ return APP_LANG === "en" ? "🌐 Mudar para português" : "🌐 Switch to English"; }
 function langSwitch(){
@@ -7830,7 +7830,13 @@ const ctx = getAudioCtx(); try { await ctx.resume(); } catch(e) {}
 const src = ctx.createMediaStreamSource(stream), an = ctx.createAnalyser();
 an.fftSize = 8192; an.smoothingTimeConstant = 0; src.connect(an);
 const ear = fallEar(ctx.sampleRate, an.fftSize), db = new Float32Array(an.frequencyBinCount), go = ear.step;
-ear.stop = () => { try { src.disconnect(); } catch(e) {} stream.getTracks().forEach(t => t.stop()); };
+// 8.70: na gravação, também guarda o som cru (até 6 min) para o reconhecedor de notas ouvir depois (acordes)
+const sp = ctx.createScriptProcessor ? ctx.createScriptProcessor(4096, 1, 1) : null, mute = ctx.createGain(); mute.gain.value = 0;
+let parts = null, got = 0;
+if (sp) { src.connect(sp); sp.connect(mute); mute.connect(ctx.destination); sp.onaudioprocess = e => { if (parts && got < ctx.sampleRate * 360) { const a = new Float32Array(e.inputBuffer.getChannelData(0)); parts.push(a); got += a.length; } }; }
+ear.capture = on => { parts = on ? [] : null; got = 0; };
+ear.take = () => { const all = parts || []; parts = null; const x = new Float32Array(all.reduce((n, a) => n + a.length, 0)); let o = 0; all.forEach(a => { x.set(a, o); o += a.length; }); return { x, sr: ctx.sampleRate }; };
+ear.stop = () => { try { src.disconnect(); sp && sp.disconnect(); mute.disconnect(); } catch(e) {} parts = null; stream.getTracks().forEach(t => t.stop()); };
 ear.step = now => { an.getFloatFrequencyData(db); for (let i = ear.b0 - 1; i <= ear.b1 + 1; i++) ear.mag[i] = db[i] > -160 ? Math.pow(10, db[i] / 20) : 0; return go(now); };
 return ear;
 }
@@ -7901,8 +7907,9 @@ const K = 88, at = (r, c) => r * K + c;
 for (let c = 0; c < K; c++) {
 const v = []; for (let r = 0; r < n; r += 4) v.push(F[at(r, c)]); v.sort((a, b) => a - b);
 const base = v[Math.floor(v.length * 0.2)] || 0; if (base <= 0.13) continue;
-const k = Math.max(0, Math.min(1, (0.45 - base) / 0.3));
-for (let r = 0; r < n; r++) { F[at(r, c)] = Math.max(0, F[at(r, c)] - (base - 0.1)); O[at(r, c)] *= k; }
+// bem alto quase o tempo todo (acima de 0,35): é só zumbido, a tecla sai inteira
+const k = Math.max(0, Math.min(1, (0.45 - base) / 0.3)), all = base > 0.35;
+for (let r = 0; r < n; r++) { F[at(r, c)] = all ? 0 : Math.max(0, F[at(r, c)] - (base - 0.1)); O[at(r, c)] *= k; }
 }
 // ataques também onde o som da tecla sobe de repente
 const D = new Float32Array(n * K); let oMax = 0, dMax = 0;
@@ -8003,25 +8010,35 @@ async function fallAudioNotes(file, prog){
 const SR = 22050, MAXSEC = 360;
 const AC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
 if (!AC) throw new Error("Este aparelho não consegue abrir áudio aqui.");
-const render = oc => new Promise((ok, no) => { oc.oncomplete = e => ok(e.renderedBuffer); const p = oc.startRendering(); if (p && p.then) p.then(ok, no); });
 let buf = await fallDecode(file, AC, SR, MAXSEC, prog);
 const long = buf.duration > MAXSEC || !!buf.cutLong;
-// um canal só, na taxa certa (o navegador mistura os canais e converte)
-const oc = new AC(1, Math.max(SR, Math.ceil(Math.min(buf.duration, MAXSEC) * SR)), SR), bs = oc.createBufferSource();
+const x = await fallMono(buf, SR, MAXSEC); buf = null;
+const notes = await fallSamplesNotes(x, SR, prog, true);
+if (!notes || notes.length < 2) throw new Error("Não achei notas nesse áudio. Funciona melhor com piano sozinho, sem voz nem bateria.");
+return { notes, long };
+}
+// Um canal só, na taxa certa (o navegador mistura os canais e converte)
+async function fallMono(buf, SR, maxSec){
+const AC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+const oc = new AC(1, Math.max(SR, Math.ceil(Math.min(buf.duration, maxSec) * SR)), SR), bs = oc.createBufferSource();
 bs.buffer = buf; bs.connect(oc.destination); bs.start(0);
-const x = (await render(oc)).getChannelData(0); buf = null;
-// 1º o reconhecedor de notas (acerta acordes); sem internet, ou num aparelho lento com áudio longo, o ouvido do microfone
+return (await new Promise((ok, no) => { oc.oncomplete = e => ok(e.renderedBuffer); const p = oc.startRendering(); if (p && p.then) p.then(ok, no); })).getChannelData(0);
+}
+// Som (um canal, 22050 Hz) → notas [nota, início, duração, mão], a 1ª em 0 s.
+// 1º o reconhecedor de notas (acerta acordes); sem internet, ou num aparelho lento com áudio longo,
+// o ouvido do microfone (só se ear = true; senão devolve null).
+async function fallSamplesNotes(x, SR, prog, ear){
 let notes = null;
 try {
 if (prog) prog(0, "Preparando o reconhecedor de notas… (só demora na primeira vez)");
 await fallBpLoad(); await window.tf.ready();
 if (window.tf.getBackend() !== "cpu" || x.length < 60 * SR) notes = (await fallBasicPitch(x, prog)).map(n => [n.m, n.t, n.d, n.m < 60 ? 1 : 0]);
 } catch(e) { if (e.message === "cancel") throw e; console.warn("Pôr áudio: reconhecedor indisponível", e); }
-if (!notes) notes = await fallEarNotes(x, SR, prog);
-if (notes.length < 2) throw new Error("Não achei notas nesse áudio. Funciona melhor com piano sozinho, sem voz nem bateria.");
+if (!notes && ear) notes = await fallEarNotes(x, SR, prog);
+if (!notes || !notes.length) return notes;
 notes.sort((a, b) => a[1] - b[1] || a[0] - b[0]);
 const t0 = notes[0][1];
-return { notes: notes.slice(0, 4000).map(n => [n[0], Math.round((n[1] - t0) * 100) / 100, Math.round(Math.max(0.08, Math.min(8, n[2])) * 100) / 100, n[3]]), long };
+return notes.slice(0, 4000).map(n => [n[0], Math.round((n[1] - t0) * 100) / 100, Math.round(Math.max(0.08, Math.min(8, n[2])) * 100) / 100, n[3]]);
 }
 // O ouvido do microfone passando pelo arquivo, quadro a quadro (só melodia; acordes ele confunde)
 async function fallEarNotes(x, SR, prog){
@@ -8280,11 +8297,28 @@ if (f.recWait) return;
 if (!f.recOn) {
 // Pelo microfone: liga e escuta 1 segundo de silêncio para aprender o barulho da sala
 if (f.useMic && !f.mic) { f.recWait = true; q("rec").textContent = "…"; await startMic(); if (f.mic) { q("info").textContent = "Escutando a sala… espere um pouco sem tocar."; await new Promise(r => setTimeout(r, 1200)); } f.recWait = false; if (fall !== f) return; }
-f.recOn = true; f.recStart = performance.now(); f.recNotes = []; q("rec").textContent = "■ Parar"; q("info").textContent = f.mic ? "Gravando pelo microfone… toque a música no seu piano." : "Gravando… toque a música."; return;
+f.recOn = true; f.recStart = performance.now(); f.recNotes = []; if (f.mic && f.mic.capture) f.mic.capture(true); q("rec").textContent = "■ Parar"; q("info").textContent = f.mic ? "Gravando pelo microfone… toque a música no seu piano." : "Gravando… toque a música."; return;
 }
 f.recOn = false; q("rec").textContent = "● Gravar";
-if (f.recNotes.length < 2) { q("info").textContent = "Poucas notas. Toque em Gravar e tente de novo."; return; }
-const ns = fallRecNotes(f.recNotes);
+// Pelo microfone (8.70): o som gravado passa pelo reconhecedor de notas do "Pôr áudio", que acerta acordes.
+// Sem ele (sem internet), ficam as notas que o app foi anotando na hora.
+let ns = null;
+const cap = f.mic && f.mic.take ? f.mic.take() : null;
+if (cap && cap.x.length > cap.sr * 0.5) {
+f.recWait = true; q("rec").disabled = true;
+try {
+const b = getAudioCtx().createBuffer(1, cap.x.length, cap.sr);
+b.getChannelData(0).set(cap.x);
+const x = await fallMono(b, 22050, 360);
+ns = await fallSamplesNotes(x, 22050, (v, msg) => { if (fall === f) q("info").textContent = hiTr(msg || `Reconhecendo as notas… ${Math.round(v * 100)}%`); }, false);
+} catch(e) { console.warn("Gravar tocando: reconhecedor", e); ns = null; }
+f.recWait = false; q("rec").disabled = false;
+if (fall !== f) return;
+if (ns && ns.length < 2) ns = null;
+}
+if (!ns && f.recNotes.length < 2) { q("info").textContent = "Poucas notas. Toque em Gravar e tente de novo."; return; }
+if (!ns) ns = fallRecNotes(f.recNotes);
+q("info").textContent = hiTr(`Pronto: ${ns.length} notas.`);
 const name = (prompt("Nome desta música ou exercício:", "") || "").trim();
 if (!name) { q("info").textContent = "Gravação descartada (sem nome)."; return; }
 const x = { id: "f" + Date.now().toString(36), title: name.slice(0, 80), notes: ns };

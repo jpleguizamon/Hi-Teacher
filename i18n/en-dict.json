@@ -4210,5 +4210,8 @@
 "Abrindo o áudio… {0}%": "Opening the audio\u2026 {0}%",
 "Pôr áudio: não abriu direto (1)": null,
 "Pôr áudio: não abriu direto (2)": null,
-"Pôr áudio: não tocou": null
+"Pôr áudio: não tocou": null,
+"Reconhecendo as notas… {0}%": "Recognizing the notes… {0}%",
+"Pronto: {0} notas.": "Done: {0} notes.",
+"Gravar tocando: reconhecedor": null
 }

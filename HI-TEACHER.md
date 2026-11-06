@@ -540,6 +540,12 @@ Versão do app 8.46; o arquivo do servidor desta rodada é `supabase/schema-v8.4
 - As linhas "Meu plano", "Indique um professor" e "Assinaturas" (só do dono do app) estavam parando dentro da pasta Dados e backup, porque não estavam na lista de nenhuma pasta de Configurações. Agora ficam em **Conta**. Linha nova em Configurações: pôr o id dela na lista `rows` de uma pasta em `SETTINGS_FOLDERS`, senão ela cai em Dados e backup.
 - Dono do app = linha em `app_admins` com o e-mail com que ele entra (não é só o do arquivo SQL). Para incluir: `insert into public.app_admins (user_id) select id from auth.users where lower(email)=lower('EMAIL') on conflict do nothing;`
 
+## Gravar tocando reconhece acordes (8.70)
+- Jp: gravando pelo microfone, o app não pegava os acordes (o ouvido ao vivo é feito para melodia). Agora, enquanto grava, o microfone também guarda o som cru (`mic.capture`/`mic.take`, ScriptProcessor, até 6 min). Ao tocar em Parar, esse som passa pelo mesmo reconhecedor do "Pôr áudio" (`fallSamplesNotes`, Basic Pitch) e mostra "Reconhecendo as notas… N%". Sem internet (ou aparelho lento com gravação longa), ficam as notas anotadas ao vivo, como antes.
+- `fallAudioNotes` foi dividido: `fallMono` (um canal a 22050 Hz) e `fallSamplesNotes` (som → notas), usados pelo arquivo e pela gravação.
+- Zumbido: tecla com nível de fundo acima de 0,35 em 80% do tempo sai inteira (antes só baixava; o motor do ventilador ainda virava notas soltas no Sol grave).
+- Teste pelo microfone de mentira do navegador (som de piano gerado aqui): acordes e arpejos 65 de 72 notas (ao vivo pegava 48 notas, muitas erradas), com ventilador 59 de 72, melodia + baixo 44 de 46. Sem internet ficam as notas ao vivo.
+
 ## Pôr áudio abre mais arquivos (8.69)
 - Jp tentou um M4A no celular e deu "não consegui abrir". O app agora tenta três jeitos (`fallDecode`): abrir direto em 22050 Hz; abrir direto no áudio normal do app; e, se o aparelho não deixar, tocar o arquivo sem som 2× mais rápido sem corrigir o tom (`fallDecodeByPlaying`: elemento de áudio/vídeo → `createMediaElementSource` → ScriptProcessor) e ler as amostras na metade da taxa, o que volta ao som original. O celular toca mais formatos do que deixa abrir direto. Nesse 3º jeito demora metade do tempo da música e mostra "Abrindo o áudio… N%".
 - Teste (navegador daqui, forçando o 3º jeito com MP3 de acordes): 81 notas, alturas e tempos iguais aos do 1º jeito. O navegador de teste daqui não toca M4A/AAC, então o M4A em si não foi testado aqui.
