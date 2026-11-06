@@ -3924,7 +3924,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.66";
+const APP_VERSION = "8.67";
 // Idioma (8.42): troca entre português e inglês e recarrega. Fica guardado neste aparelho.
 function langSwitchLabel(){ return APP_LANG === "en" ? "🌐 Mudar para português" : "🌐 Switch to English"; }
 function langSwitch(){
@@ -7711,11 +7711,11 @@ const LO = 36, HI = 96, st = [], sal = new Float32Array(HI + 1), fest = new Floa
 for (let m = 0; m <= HI; m++) st.push({ up: false, pk: 0, fl: 0, at: 0 });
 const b0 = Math.max(2, Math.floor(55 / hz)), b1 = Math.min(N - 2, Math.floor(6500 / hz));
 const devs = [];
-let pend = [], recent = [], ref = 0, frames = 0, t0 = 0, lastT = 0, epend = [], said = [];
+let pend = [], recent = [], ref = 0, frames = 0, t0 = 0, lastT = 0, epend = [], said = [], offs = [];
 const ex = new Map();
 const fq = m => 440 * Math.pow(2, (m - 69 + mic.tune) / 12);
 const mic = {
-level: 0, tune: 0, expect: null,
+level: 0, tune: 0, expect: null, rec: false,
 stop(){ try { src.disconnect(); } catch(e) {} stream.getTracks().forEach(t => t.stop()); },
 step(now){
 an.getFloatFrequencyData(db);
@@ -7738,16 +7738,13 @@ const used = new Uint8Array(pf.length);
 const near = f => { let best = -1; for (let j = 0; j < pf.length; j++) { if (used[j]) continue; const c = 12 * Math.log2(pf[j] / f); if (c > -0.5 && c < 0.5 && (best < 0 || pa[j] > pa[best])) best = j; } return best; };
 sal.fill(0);
 let first = 0;
+const score = m => { const f0 = fq(m), hs = []; let s = 0; for (let h = 1; h <= 8; h++) { const j = near(f0 * h); hs.push(j); if (j >= 0) s += pa[j] / Math.sqrt(h); } const n4 = hs.slice(0, 4).filter(j => j >= 0).length, n6 = hs.slice(0, 6).filter(j => j >= 0).length; return { s, hs, ok: (hs[0] >= 0 && n4 >= 2) || n6 >= 3 }; };
 for (let round = 0; round < 5 && pf.length; round++) {
 let bm = -1, bs = 0, bh = null;
 for (let m = LO; m <= HI; m++) {
 if (sal[m]) continue;
-const f0 = fq(m), hs = [];
-let s = 0;
-for (let h = 1; h <= 8; h++) { const j = near(f0 * h); hs.push(j); if (j >= 0) s += pa[j] / Math.sqrt(h); }
-const n4 = hs.slice(0, 4).filter(j => j >= 0).length, n6 = hs.slice(0, 6).filter(j => j >= 0).length;
-if (!((hs[0] >= 0 && n4 >= 2) || n6 >= 3)) continue;
-if (s > bs) { bs = s; bm = m; bh = hs; }
+const r = score(m);
+if (r.ok && r.s > bs) { bs = r.s; bm = m; bh = r.hs; }
 }
 if (bm < 0 || bs < first * 0.15) break;
 if (!first) first = bs;
@@ -7761,13 +7758,20 @@ fest[bm] = pf[jb] / hb;
 const evid = m => { const f0 = fq(m); let e = 0; for (let h = 1; h <= 8; h++) { const b = f0 * h / hz; if (b >= b1) break; const w = Math.max(1, b * 0.02); let mx = 0, nn = 1; for (let i = Math.max(b0, Math.floor(b - w)); i <= Math.ceil(b + w); i++) if (mag[i] > mx) { mx = mag[i]; nn = nb[i]; } e += Math.max(0, Math.min(4, Math.log2(mx / (nn * 1.6 + 1e-9)))); } return e; };
 for (let m = LO; m <= HI; m++) {
 const s = sal[m], x = st[m];
+// fim da nota (para a gravação): a força cai para 1/5 do pico
+if (x.on) { if (s > x.on.pk) x.on.pk = s; else if (s < x.on.pk * 0.2) { offs.push({ m, off: true, t: now }); x.on = null; } }
 if (x.up) { if (s > x.pk) x.pk = s; else if (s < x.pk * 0.7) { x.up = false; x.fl = s; } }
 else if (s > 0 && s >= x.fl * 1.5 && now - x.at > 100 && (now - x.at > 400 || s > x.pk * 0.75)) { x.up = true; x.pk = s; x.at = now; if (!warm) pend.push({ m, t: now, s, f: fest[m] }); }
 else if (s < x.fl || x.fl === 0) x.fl = s;
 }
 recent = recent.concat(pend.filter(c => !c.seen)).filter(c => now - c.t < 400); pend.forEach(c => c.seen = 1);
 // força máxima e quanto cada nota pendente ficou firme (presente e na mesma altura) desde o ataque
-pend.forEach(c => { c.nf = (c.nf || 0) + 1; if (sal[c.m] > c.s) c.s = sal[c.m]; if (sal[c.m] > 0 && fest[c.m]) { c.ok = (c.ok || 0) + 1; c.dr = Math.max(c.dr || 0, Math.abs(12 * Math.log2(fest[c.m] / c.f))); } });
+pend.forEach(c => {
+c.nf = (c.nf || 0) + 1; if (sal[c.m] > c.s) c.s = sal[c.m];
+if (sal[c.m] > 0 && fest[c.m]) { c.ok = (c.ok || 0) + 1; if (c.nf > 2) (c.fs = c.fs || []).push(fest[c.m]); } // a altura só vale depois do ataque
+// "escorregou": menos de 70% das medidas perto da mediana (voz sobe e desce; piano fica parado)
+const fs = c.fs || []; if (fs.length >= 2) { const md = fs.slice().sort((a, b) => a - b)[fs.length >> 1]; c.f = md; c.dr = fs.filter(v => Math.abs(12 * Math.log2(v / md)) < 0.2).length >= fs.length * 0.7 ? 0 : 1; }
+});
 const out = [];
 pend = pend.filter(c => {
 const age = now - c.t;
@@ -7780,18 +7784,19 @@ const steady = (c.ok || 0) >= c.nf * 0.7 && (c.dr || 0) < 0.25;
 const exp = mic.expect && [...mic.expect].some(e => e % 12 === c.m % 12);
 if (said.some(o => o.m % 12 === c.m % 12 && now - o.t < 350) || harmOf || c.s < mx * 0.3) return false;
 let sure = false;
-if (exp && c.s >= ref * 0.06 && (steady || c.s >= ref * 0.25)) sure = steady && c.s >= ref * 0.3;
+if (mic.rec) { if (!(steady && c.s >= ref * 0.1)) return age < 200; sure = true; } // gravando: aceita notas curtas e fracas, mas firmes
+else if (exp && c.s >= ref * 0.06 && (steady || c.s >= ref * 0.25)) sure = steady && c.s >= ref * 0.3;
 else if (age < 250) return true; // nota que não era a esperada: espera mais para ter certeza (voz e barulho somem)
 else if (steady && c.s >= ref * 0.3) sure = true;
 else return false;
-out.push({ m: c.m, s: c.s, sure }); said.push({ m: c.m, t: now });
+out.push({ m: c.m, s: c.s, sure, t: c.t }); said.push({ m: c.m, t: now }); st[c.m].on = { pk: c.s };
 ref = Math.max(ref, c.s);
 if (steady && c.f) { const d = 12 * Math.log2(c.f / (440 * Math.pow(2, (c.m - 69) / 12))); if (Math.abs(d) < 0.7) { devs.push(d); if (devs.length > 15) devs.shift(); if (devs.length >= 3) { const s2 = devs.slice().sort((a, b) => a - b); mic.tune = Math.max(-0.6, Math.min(0.6, s2[s2.length >> 1])); } } }
 return false;
 });
 // Notas esperadas (as que o aluno deve tocar agora): aceita pela evidência dos harmônicos subindo
 // acima do barulho, mesmo quando o ventilador esconde a fundamental. Nunca vira "nota errada".
-if (mic.expect && mic.expect.size && !warm) {
+if (mic.expect && mic.expect.size && !warm && !mic.rec) {
 mic.expect.forEach(e => {
 if (e < LO || e > HI) return;
 const v = evid(e), x = ex.get(e) || { h: [], at: 0 };
@@ -7808,6 +7813,7 @@ if (c.ok >= c.nf * 0.6 && !said.some(o => o.m % 12 === c.m % 12 && now - o.t < 3
 return false;
 });
 said = said.filter(o => now - o.t < 1000);
+if (offs.length) { out.push(...offs); offs = []; }
 return out;
 }
 };
@@ -7815,13 +7821,13 @@ return mic;
 }
 function fallOpen(song, opts = {}){
 fallClose();
-const rec = !!opts.record, canMic = !rec && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+const rec = !!opts.record, canMic = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
 const el = document.createElement("div");
 el.className = "fall-overlay";
 el.innerHTML = `<div class="fall-top"><div class="fall-title">${escapeHtml(rec ? "Gravar tocando" : song.title)}</div><button type="button" class="fall-x" aria-label="Fechar">✕</button></div>
 <div class="fall-stage"><canvas class="fall-canvas"></canvas><div class="fall-end" hidden></div></div>
 <div class="fall-bar">${rec
-? `<button type="button" class="fall-btn fall-main" data-f="rec">● Gravar</button><button type="button" class="fall-btn" data-f="oct-">◀ Oitava</button><button type="button" class="fall-btn" data-f="oct+">Oitava ▶</button><span class="fall-info" data-f="info">Toque nas teclas ou num teclado ligado ao aparelho.</span>`
+? `<button type="button" class="fall-btn fall-main" data-f="rec">● Gravar</button><button type="button" class="fall-btn" data-f="oct-">◀ Oitava</button><button type="button" class="fall-btn" data-f="oct+">Oitava ▶</button>${canMic ? `<button type="button" class="fall-chip on" data-f="mic">🎤 Pelo microfone</button>` : ""}<span class="fall-info" data-f="info">${canMic ? "Toque no seu piano de verdade: o app ouve pelo microfone e anota as notas. Ou toque nas teclas da tela." : "Toque nas teclas ou num teclado ligado ao aparelho."}</span>`
 : `<button type="button" class="fall-btn fall-main" data-f="play">▶ Tocar</button><button type="button" class="fall-btn" data-f="restart">⟲ Do começo</button>
 <span class="fall-group">${[["wait", "Esperar eu tocar"], ["follow", "Seguir a música"]].map(([k, l]) => `<button type="button" class="fall-chip${k === "wait" ? " on" : ""}" data-mode="${k}">${l}</button>`).join("")}</span>
 <span class="fall-group">${[0.5, 0.75, 1].map(r => `<button type="button" class="fall-chip${r === 1 ? " on" : ""}" data-rate="${r}">${Math.round(r * 100)}%</button>`).join("")}</span>
@@ -7884,15 +7890,16 @@ light(m, "ok"); flash(m, hiTr("Certo!"), "#34d399");
 }
 else if (wrongOk(m, src, sure)) { light(m, "bad"); f.wrong++; }
 };
-const press = (m, src) => {
+const press = (m, src, at) => {
+if (src === "mic" && (f.appPlayed.get(m) || 0) + 250 > performance.now()) return; // o som do próprio app
 if (src !== "mic") sound(m, 0.6);
-if (f.rec) { light(m, "tap"); if (f.recOn) f.recNotes.push([m, Math.round((performance.now() - f.recStart) / 10) / 100, 0.35, m < 60 ? 1 : 0]); return; }
+if (f.rec) { light(m, "tap"); if (src === "mic") f.heard = { m, at: performance.now() }; if (f.recOn) { const t = Math.max(0, Math.round(((at || performance.now()) - f.recStart) / 10) / 100); f.recNotes.push([m, t, 0, m < 60 ? 1 : 0]); } return; }
 hear(m, src);
 };
 const startMic = async () => {
 if (f.mic || f.micBusy || !f.useMic) return;
 f.micBusy = true;
-try { const mic = await fallMicOpen(); if (fall !== f || !f.useMic) { mic.stop(); return; } f.mic = mic; info("Ouvindo o seu piano. Deixe o celular perto dele e toque as notas que chegam no teclado."); }
+try { const mic = await fallMicOpen(); if (fall !== f || !f.useMic) { mic.stop(); return; } mic.rec = f.rec; f.mic = mic; info(f.rec ? "Microfone ligado. Deixe o celular perto do piano e toque em Gravar." : "Ouvindo o seu piano. Deixe o celular perto dele e toque as notas que chegam no teclado."); }
 catch(e) { f.useMic = false; const b = el.querySelector('[data-f="mic"]'); if (b) b.classList.remove("on"); info("Sem permissão para o microfone. Libere nas configurações do aparelho, ou toque nas teclas da tela."); }
 finally { f.micBusy = false; }
 };
@@ -7972,8 +7979,11 @@ const dt = f.last ? Math.min(0.1, (ts - f.last) / 1000) : 0; f.last = ts;
 if (f.mic) {
 // avisa o microfone quais notas o aluno deve tocar agora (aceita essas com menos certeza)
 const w0 = f.t - 0.7 * f.rate, w1 = f.t + 0.5 * f.rate, grp = f.mode === "wait" && f.playing ? due() : null;
-f.mic.expect = new Set((grp || f.notes.filter(n => handOk(n) && n[1] > w0 && n[1] < w1)).map(n => n[0]));
-try { f.mic.step(ts).forEach(c => hear(c.m, "mic", c.sure)); } catch(e) {}
+f.mic.expect = f.rec ? null : new Set((grp || f.notes.filter(n => handOk(n) && n[1] > w0 && n[1] < w1)).map(n => n[0]));
+try { f.mic.step(ts).forEach(c => {
+if (c.off) { if (f.rec && f.recOn) { const n = f.recNotes.slice().reverse().find(x => x[0] === c.m && !x.end); if (n) n.end = Math.round((c.t - f.recStart) / 10) / 100; } return; }
+if (f.rec) press(c.m, "mic", c.t); else hear(c.m, "mic", c.sure);
+}); } catch(e) {}
 }
 if (f.playing) {
 let nt = f.t + dt * f.rate;
@@ -8009,7 +8019,7 @@ if (hit) { e.preventDefault(); press(hit.m, "tap"); }
 try { if (navigator.requestMIDIAccess) navigator.requestMIDIAccess().then(acc => {
 if (fall !== f) return; f.midi = acc;
 acc.inputs.forEach(inp => inp.onmidimessage = ev => { if (fall !== f) return; const [st, m, v] = ev.data; if ((st & 0xf0) === 0x90 && v > 0) press(m, "midi"); });
-if (acc.inputs.size && !f.rec && !f.mic) { f.useMic = false; const b = el.querySelector('[data-f="mic"]'); if (b) b.classList.remove("on"); info("Teclado ligado ao aparelho: toque nele."); }
+if (acc.inputs.size && !f.mic) { f.useMic = false; const b = el.querySelector('[data-f="mic"]'); if (b) b.classList.remove("on"); info("Teclado ligado ao aparelho: toque nele."); }
 }).catch(() => {}); } catch(e) {}
 el.querySelector(".fall-x").onclick = fallClose;
 el.querySelectorAll("[data-rate]").forEach(b => b.onclick = () => { f.rate = Number(b.dataset.rate); el.querySelectorAll("[data-rate]").forEach(x => x.classList.toggle("on", x === b)); });
@@ -8022,12 +8032,19 @@ if (q("mic")) q("mic").onclick = () => { f.useMic = !f.useMic; q("mic").classLis
 const shift = d => { const nl = f.lo + d * 12; if (nl < 24 || nl + 23 > 108) return; f.lo = nl; f.hi = nl + 23; lay = keysOf(); };
 if (q("oct-")) q("oct-").onclick = () => shift(-1);
 if (q("oct+")) q("oct+").onclick = () => shift(1);
-if (q("rec")) q("rec").onclick = () => {
+if (q("rec")) q("rec").onclick = async () => {
 getAudioCtx();
-if (!f.recOn) { f.recOn = true; f.recStart = performance.now(); f.recNotes = []; q("rec").textContent = "■ Parar"; q("info").textContent = "Gravando… toque a música."; return; }
+if (f.recWait) return;
+if (!f.recOn) {
+// Pelo microfone: liga e escuta 1 segundo de silêncio para aprender o barulho da sala
+if (f.useMic && !f.mic) { f.recWait = true; q("rec").textContent = "…"; await startMic(); if (f.mic) { q("info").textContent = "Escutando a sala… espere um pouco sem tocar."; await new Promise(r => setTimeout(r, 1200)); } f.recWait = false; if (fall !== f) return; }
+f.recOn = true; f.recStart = performance.now(); f.recNotes = []; q("rec").textContent = "■ Parar"; q("info").textContent = f.mic ? "Gravando pelo microfone… toque a música no seu piano." : "Gravando… toque a música."; return;
+}
 f.recOn = false; q("rec").textContent = "● Gravar";
 if (f.recNotes.length < 2) { q("info").textContent = "Poucas notas. Toque em Gravar e tente de novo."; return; }
-const t0 = f.recNotes[0][1], ns = f.recNotes.map((n, i, a) => { const nx = a.find((x, j) => j > i && x[0] === n[0]); return [n[0], Math.round((n[1] - t0) * 100) / 100, Math.max(0.15, Math.min(1.5, nx ? nx[1] - n[1] - 0.05 : 0.6)), n[3]]; });
+// Duração: até a nota parar de soar (microfone) ou até ela tocar de novo; sem isso, 0,6 s
+f.recNotes.sort((a, b) => a[1] - b[1]);
+const t0 = f.recNotes[0][1], ns = f.recNotes.map((n, i, a) => { const nx = a.find((x, j) => j > i && x[0] === n[0]); let d = n.end ? n.end - n[1] : nx ? nx[1] - n[1] - 0.05 : 0.6; if (nx) d = Math.min(d, nx[1] - n[1] - 0.05); return [n[0], Math.round((n[1] - t0) * 100) / 100, Math.round(Math.max(0.12, Math.min(n.end ? 4 : 1.5, d)) * 100) / 100, n[3]]; });
 const name = (prompt("Nome desta música ou exercício:", "") || "").trim();
 if (!name) { q("info").textContent = "Gravação descartada (sem nome)."; return; }
 const x = { id: "f" + Date.now().toString(36), title: name.slice(0, 80), notes: ns };

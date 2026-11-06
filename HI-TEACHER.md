@@ -540,6 +540,12 @@ Versão do app 8.46; o arquivo do servidor desta rodada é `supabase/schema-v8.4
 - As linhas "Meu plano", "Indique um professor" e "Assinaturas" (só do dono do app) estavam parando dentro da pasta Dados e backup, porque não estavam na lista de nenhuma pasta de Configurações. Agora ficam em **Conta**. Linha nova em Configurações: pôr o id dela na lista `rows` de uma pasta em `SETTINGS_FOLDERS`, senão ela cai em Dados e backup.
 - Dono do app = linha em `app_admins` com o e-mail com que ele entra (não é só o do arquivo SQL). Para incluir: `insert into public.app_admins (user_id) select id from auth.users where lower(email)=lower('EMAIL') on conflict do nothing;`
 
+## Gravar tocando pelo microfone (8.67)
+- Professor: Tocar junto → Gravar tocando agora tem "🎤 Pelo microfone" (ligado quando o aparelho tem microfone e não há teclado por cabo). Ao tocar em Gravar, o app escuta a sala ~1 s em silêncio (aprende o barulho) e depois anota as notas tocadas no piano de verdade (`mic.rec`: aceita notas curtas e fracas, desde que firmes por 80 ms). Usa o horário do ataque (`c.t`) e o fim da nota (força cai a 1/5 do pico; evento `off`) para a duração (até 4 s). Som do próprio app (toque na tela) não é gravado de novo.
+- "Firme" agora compara as medidas de altura com a mediana delas depois do ataque (antes comparava com o 1º quadro, que ainda tinha o fim da nota anterior, e jogava fora notas certas em sequência).
+- Teste: Ode à Alegria tocada (som de piano gravado) em sala silenciosa: 62 de 62 notas na ordem certa, início ±60 ms, durações certas. Com ventilador médio: 56 de 62 notas, todas certas. Com gente falando, aparecem notas na oitava errada: gravar em lugar silencioso.
+- Jp pediu o MIDI de "Filho do Deus Vivo": não há arquivo grátis e liberado; não baixamos de sites que copiam músicas com dono. Opções para ele: comprar a partitura (lojas oficiais), MuseScore (arranjos liberados, exporta MIDI) ou gravar tocando.
+
 ## Tocar junto: ouvido mais preciso (8.66)
 - Jp testou no quarto (ventilador) e na escola: o app via notas que ninguém tocou (dava "erro") e às vezes não reconhecia nota certa. Refeito o `fallMicOpen`:
   - Aprende o barulho de fundo de cada faixa do som (média de ~1 s; som forte entra devagar, ~8 s) e só usa picos 3× acima dele. Ventilador, motor e chiado somem.
