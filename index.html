@@ -3924,7 +3924,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.67";
+const APP_VERSION = "8.68";
 // Idioma (8.42): troca entre português e inglês e recarrega. Fica guardado neste aparelho.
 function langSwitchLabel(){ return APP_LANG === "en" ? "🌐 Mudar para português" : "🌐 Switch to English"; }
 function langSwitch(){
@@ -7645,18 +7645,23 @@ mk("b:hbd", APP_LANG === "en" ? "Happy Birthday" : "Parabéns pra você", 100, [
 function fallLib(){ return Array.isArray(appSettings.fallLib) ? appSettings.fallLib : []; }
 function fallLibSave(list){ appSettings.fallLib = list.length ? list : undefined; saveAppSettings(); }
 function fallById(id){ return FALL_BUILTIN.find(x => x.id === id) || fallLib().find(x => x.id === id) || null; }
-// Lê um arquivo MIDI (formato 0 ou 1): notas em segundos, respeitando as mudanças de andamento.
+// Lê um arquivo MIDI (formato 0 ou 1, também .kar e .rmi): notas em segundos, respeitando as mudanças de andamento.
+// 8.68: aceita arquivo com cabeçalho RIFF, blocos estranhos no meio, arquivo cortado no fim e tempo SMPTE.
 function fallParseMidi(buf){
-const d = new DataView(buf), u8 = new Uint8Array(buf);
+let u8 = new Uint8Array(buf);
 const str = (o, n) => String.fromCharCode(...u8.slice(o, o + n));
-if (str(0, 4) !== "MThd") throw new Error("Esse arquivo não é MIDI.");
+let h = 0; while (h < Math.min(u8.length - 4, 4096) && str(h, 4) !== "MThd") h++;
+if (u8.length < 14 || str(h, 4) !== "MThd") throw new Error("Esse arquivo não é MIDI.");
+u8 = u8.slice(h); const d = new DataView(u8.buffer);
 const ntrk = d.getUint16(10), div = d.getUint16(12);
-if (div & 0x8000) throw new Error("Esse tipo de arquivo MIDI não é aceito.");
+// SMPTE: quadros por segundo × divisões por quadro; o andamento não muda nada
+const smpte = div & 0x8000 ? (256 - (div >> 8)) * (div & 0xff) : 0;
 let o = 8 + d.getUint32(4);
 const tempos = [[0, 500000]], tracks = [];
-for (let tr = 0; tr < ntrk && o + 8 <= u8.length; tr++) {
-if (str(o, 4) !== "MTrk") break;
-const len = d.getUint32(o + 4); let p = o + 8; const end = p + len; o = end;
+for (let tr = 0; tr < ntrk && o + 8 <= u8.length; ) {
+const id = str(o, 4), len = d.getUint32(o + 4); let p = o + 8; const end = Math.min(u8.length, p + len); o = p + len;
+if (id !== "MTrk") continue; // bloco que não é de notas: pula
+tr++;
 let tick = 0, status = 0; const on = {}, notes = [];
 const vlq = () => { let v = 0, b; do { b = u8[p++]; v = (v << 7) | (b & 0x7f); } while (b & 0x80 && p < end); return v; };
 while (p < end) {
@@ -7672,11 +7677,13 @@ if (ch === 9) continue; // canal 10 = bateria
 if (type === 0x90 && v > 0) (on[a] ??= []).push(tick);
 else if (type === 0x80 || (type === 0x90 && v === 0)) { const st = on[a] && on[a].shift(); if (st !== undefined) notes.push([a, st, tick]); }
 }
+// nota que nunca terminou: vai até o fim da trilha
+Object.keys(on).forEach(a => { if (+a >= 0 && +a < 128) on[a].forEach(st => notes.push([+a, st, Math.max(tick, st + 1)])); });
 if (notes.length) tracks.push(notes);
 }
 if (!tracks.length) throw new Error("Não achei notas nesse arquivo.");
 tempos.sort((a, b) => a[0] - b[0]);
-const sec = t => { let s = 0, lt = 0, us = 500000; for (const [tt, v] of tempos) { if (tt > t) break; s += (tt - lt) * us / div / 1e6; lt = tt; us = v; } return s + (t - lt) * us / div / 1e6; };
+const sec = t => { if (smpte) return t / smpte; let s = 0, lt = 0, us = 500000; for (const [tt, v] of tempos) { if (tt > t) break; s += (tt - lt) * us / div / 1e6; lt = tt; us = v; } return s + (t - lt) * us / div / 1e6; };
 // Mãos: com duas ou mais trilhas, a de som mais agudo é a direita; com uma só, abaixo do Dó central é a esquerda.
 const avg = n => n.reduce((x, y) => x + y[0], 0) / n.length;
 const order = tracks.map((n, i) => [i, avg(n)]).sort((a, b) => b[1] - a[1]).map(x => x[0]);
@@ -7701,29 +7708,27 @@ let fall = null;
 // 4. Uma nota "tocou" quando a força sobe de repente (ataque) e continua firme ~80 ms depois, na
 //    mesma altura (voz e barulho escorregam). Volta [{ m, s, sure }]; "sure" = forte e firme, o único
 //    caso em que o app aponta nota errada. mic.expect (Set de notas) deixa mais fácil aceitar essas.
-async function fallMicOpen(){
-const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
-const ctx = getAudioCtx(); try { await ctx.resume(); } catch(e) {}
-const src = ctx.createMediaStreamSource(stream), an = ctx.createAnalyser();
-an.fftSize = 8192; an.smoothingTimeConstant = 0; src.connect(an);
-const N = an.frequencyBinCount, db = new Float32Array(N), mag = new Float32Array(N), nb = new Float32Array(N), hz = ctx.sampleRate / an.fftSize;
+// fallEar recebe a força de cada faixa do som (mag) a cada quadro; serve para o microfone e para
+// um arquivo de áudio (Pôr áudio, 8.68).
+function fallEar(sr, size){
+const N = size / 2, mag = new Float32Array(N), nb = new Float32Array(N), hz = sr / size;
 const LO = 36, HI = 96, st = [], sal = new Float32Array(HI + 1), fest = new Float32Array(HI + 1);
 for (let m = 0; m <= HI; m++) st.push({ up: false, pk: 0, fl: 0, at: 0 });
 const b0 = Math.max(2, Math.floor(55 / hz)), b1 = Math.min(N - 2, Math.floor(6500 / hz));
 const devs = [];
-let pend = [], recent = [], ref = 0, frames = 0, t0 = 0, lastT = 0, epend = [], said = [], offs = [];
+let pend = [], recent = [], ref = 0, frames = 0, t0 = 0, lastT = 0, epend = [], said = [], offs = [], primed = false;
 const ex = new Map();
 const fq = m => 440 * Math.pow(2, (m - 69 + mic.tune) / 12);
 const mic = {
-level: 0, tune: 0, expect: null, rec: false,
-stop(){ try { src.disconnect(); } catch(e) {} stream.getTracks().forEach(t => t.stop()); },
+level: 0, tune: 0, expect: null, rec: false, mag, b0, b1,
+// arquivo de áudio: o barulho de fundo já vem medido no arquivo todo (não espera o 1º segundo)
+prime(v){ nb.set(v); primed = true; },
 step(now){
-an.getFloatFrequencyData(db);
 if (!t0) t0 = now;
-const warm = now - t0 < 900;
+const warm = !primed && now - t0 < 900;
 let top = 0;
 for (let i = b0 - 1; i <= b1 + 1; i++) {
-const v = db[i] > -160 ? Math.pow(10, db[i] / 20) : 0; mag[i] = v; if (v > top) top = v;
+const v = mag[i]; if (v > top) top = v;
 // barulho de fundo desta faixa: média dos últimos ~1 s; som bem mais forte (nota) entra bem devagar (~8 s)
 if (!nb[i]) nb[i] = v; else if (warm) nb[i] = nb[i] * 0.85 + v * 0.15; else nb[i] += (v - nb[i]) * (v < nb[i] * 3 ? 0.02 : 0.002);
 }
@@ -7818,6 +7823,202 @@ return out;
 }
 };
 return mic;
+}
+async function fallMicOpen(){
+const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+const ctx = getAudioCtx(); try { await ctx.resume(); } catch(e) {}
+const src = ctx.createMediaStreamSource(stream), an = ctx.createAnalyser();
+an.fftSize = 8192; an.smoothingTimeConstant = 0; src.connect(an);
+const ear = fallEar(ctx.sampleRate, an.fftSize), db = new Float32Array(an.frequencyBinCount), go = ear.step;
+ear.stop = () => { try { src.disconnect(); } catch(e) {} stream.getTracks().forEach(t => t.stop()); };
+ear.step = now => { an.getFloatFrequencyData(db); for (let i = ear.b0 - 1; i <= ear.b1 + 1; i++) ear.mag[i] = db[i] > -160 ? Math.pow(10, db[i] / 20) : 0; return go(now); };
+return ear;
+}
+// Notas gravadas [nota, início, 0, mão] (+ .end quando se ouviu o fim) → notas com duração, a 1ª em 0 s.
+// Duração: até a nota parar de soar, ou até ela tocar de novo; sem isso, 0,6 s.
+function fallRecNotes(list){
+list.sort((a, b) => a[1] - b[1]);
+const t0 = list[0][1];
+return list.map((n, i, a) => { const nx = a.find((x, j) => j > i && x[0] === n[0]); let d = n.end ? n.end - n[1] : nx ? nx[1] - n[1] - 0.05 : 0.6; if (nx) d = Math.min(d, nx[1] - n[1] - 0.05); return [n[0], Math.round((n[1] - t0) * 100) / 100, Math.round(Math.max(0.12, Math.min(n.end ? 4 : 1.5, d)) * 100) / 100, n[3]]; });
+}
+// Pôr áudio (8.68): ouve um arquivo de áudio ou vídeo com o mesmo ouvido do microfone e devolve as notas.
+// Tudo no próprio aparelho, nada é enviado. O áudio vira um canal só a 22050 Hz; cada quadro (1/60 s)
+// passa pela mesma conta do analisador do navegador (janela Blackman + FFT de 4096 pontos).
+// O barulho de fundo de cada faixa é medido antes no arquivo todo (o mais baixo que ela fica).
+function fallFFT(n){
+const lev = Math.round(Math.log2(n)), rev = new Uint32Array(n), cs = new Float64Array(n / 2), sn = new Float64Array(n / 2);
+for (let i = 0; i < n; i++) { let r = 0; for (let b = 0; b < lev; b++) r |= ((i >> b) & 1) << (lev - 1 - b); rev[i] = r; }
+for (let i = 0; i < n / 2; i++) { cs[i] = Math.cos(2 * Math.PI * i / n); sn[i] = -Math.sin(2 * Math.PI * i / n); }
+return (re, im) => {
+for (let i = 0; i < n; i++) { const j = rev[i]; if (j > i) { let t = re[i]; re[i] = re[j]; re[j] = t; t = im[i]; im[i] = im[j]; im[j] = t; } }
+for (let size = 2; size <= n; size <<= 1) {
+const half = size >> 1, stp = n / size;
+for (let i = 0; i < n; i += size) for (let j = 0, k = 0; j < half; j++, k += stp) {
+const a = i + j, b = a + half, tr = re[b] * cs[k] - im[b] * sn[k], ti = re[b] * sn[k] + im[b] * cs[k];
+re[b] = re[a] - tr; im[b] = im[a] - ti; re[a] += tr; im[a] += ti;
+}
+}
+};
+}
+// Pôr áudio com o modelo Basic Pitch (Spotify, licença Apache 2.0): uma rede neural pequena que
+// acha as notas (inclusive acordes) num áudio de 22050 Hz. A biblioteca e o modelo só carregam
+// quando o professor usa o botão (≈ 2 MB, ficam guardados no aparelho depois).
+const FALL_TF = "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js";
+const FALL_BP = "https://cdn.jsdelivr.net/npm/@spotify/basic-pitch@1.0.1/model/model.json";
+let fallBpModel = null;
+function fallBpLoad(){
+if (!fallBpModel) fallBpModel = new Promise((ok, no) => {
+if (window.tf) return ok();
+const el = document.createElement("script"); el.src = FALL_TF; el.onload = ok; el.onerror = () => no(new Error("net")); document.head.appendChild(el);
+}).then(() => window.tf.loadGraphModel(FALL_BP)).catch(e => { fallBpModel = null; throw e; });
+return fallBpModel;
+}
+async function fallBasicPitch(x, prog){
+const model = await fallBpLoad(), tf = window.tf;
+// janelas de 2 s que se sobrepõem um pouco; 4 de cada vez
+const NS = 43844, OVL = 7680, HOP = NS - OVL, FPS = 86, K = 88, CUT = 15, BATCH = 4;
+const nOut = Math.floor(x.length * FPS / 22050), nWin = Math.ceil((x.length + OVL / 2) / HOP);
+const F = new Float32Array(nOut * K), O = new Float32Array(nOut * K);
+let got = 0;
+for (let w = 0; w < nWin && got < nOut; w += BATCH) {
+const nb = Math.min(BATCH, nWin - w), win = new Float32Array(nb * NS);
+for (let q = 0; q < nb; q++) { const s0 = (w + q) * HOP - OVL / 2; for (let i = 0; i < NS; i++) { const s = s0 + i; if (s >= 0 && s < x.length) win[q * NS + i] = x[s]; } }
+const [fr, on] = tf.tidy(() => model.execute(tf.tensor3d(win, [nb, NS, 1]), ["Identity_1", "Identity_2"]).map(t => t.slice([0, CUT, 0], [nb, t.shape[1] - 2 * CUT, K])));
+const a = await fr.data(), b = await on.data(); fr.dispose(); on.dispose();
+const n = Math.min(a.length / K, nOut - got);
+F.set(a.subarray(0, n * K), got * K); O.set(b.subarray(0, n * K), got * K); got += n;
+if (prog && prog(Math.min(1, (w + nb) / nWin)) === false) throw new Error("cancel");
+await new Promise(r => setTimeout(r, 0));
+}
+return fallBpNotes(F, O, got);
+}
+// Das probabilidades (por quadro de 1/86 s e por tecla) às notas — igual ao outputToNotesPoly do Basic Pitch.
+function fallBpNotes(F, O, n){
+const onT = 0.5, frT = 0.3, minLen = 5, tol = 11;
+const K = 88, at = (r, c) => r * K + c;
+// tecla que soa quase o tempo todo (zumbido de motor, ventilador, geladeira): tira esse "fundo".
+// Tecla em silêncio fica perto de 0,1; o nível de 20% do tempo acima disso é barulho constante.
+for (let c = 0; c < K; c++) {
+const v = []; for (let r = 0; r < n; r += 4) v.push(F[at(r, c)]); v.sort((a, b) => a - b);
+const base = v[Math.floor(v.length * 0.2)] || 0; if (base <= 0.13) continue;
+const k = Math.max(0, Math.min(1, (0.45 - base) / 0.3));
+for (let r = 0; r < n; r++) { F[at(r, c)] = Math.max(0, F[at(r, c)] - (base - 0.1)); O[at(r, c)] *= k; }
+}
+// ataques também onde o som da tecla sobe de repente
+const D = new Float32Array(n * K); let oMax = 0, dMax = 0;
+for (let r = 0; r < n; r++) for (let c = 0; c < K; c++) {
+const v = F[at(r, c)], d = r < 2 ? 0 : Math.max(0, Math.min(v - F[at(r - 1, c)], v - F[at(r - 2, c)]));
+D[at(r, c)] = d; if (d > dMax) dMax = d; if (O[at(r, c)] > oMax) oMax = O[at(r, c)];
+}
+const I = new Float32Array(n * K);
+for (let i = 0; i < n * K; i++) I[i] = Math.max(O[i], dMax ? D[i] * oMax / dMax : 0);
+const starts = [];
+for (let r = 0; r < n; r++) for (let c = 0; c < K; c++) { const v = I[at(r, c)]; if (v > onT && (r === 0 || v > I[at(r - 1, c)]) && (r === n - 1 || v > I[at(r + 1, c)])) starts.push([r, c]); }
+const R = F.slice(), notes = [];
+const clear = (r, c) => { R[at(r, c)] = 0; if (c < K - 1) R[at(r, c + 1)] = 0; if (c > 0) R[at(r, c - 1)] = 0; };
+for (let s = starts.length - 1; s >= 0; s--) {
+const [r0, c] = starts[s]; if (r0 >= n - 1) continue;
+let i = r0 + 1, k = 0;
+while (i < n - 1 && k < tol) { k = R[at(i, c)] < frT ? k + 1 : 0; i++; }
+i -= k;
+if (i - r0 <= minLen) continue;
+let amp = 0; for (let j = r0; j < i; j++) { amp += F[at(j, c)]; clear(j, c); }
+notes.push([c + 21, r0, i - r0, amp / (i - r0)]);
+}
+// "truque da melodia": energia que sobrou e é forte vira nota mesmo sem ataque claro
+const cand = []; for (let i = 0; i < n * K; i++) if (R[i] > frT) cand.push(i);
+cand.sort((a, b) => R[b] - R[a]);
+for (const p of cand) {
+if (R[p] <= frT) continue;
+const rm = Math.floor(p / K), c = p % K; R[p] = 0;
+let i = rm + 1, k = 0;
+while (i < n - 1 && k < tol) { k = R[at(i, c)] < frT ? k + 1 : 0; clear(i, c); i++; }
+const iEnd = i - 1 - k;
+i = rm - 1; k = 0;
+while (i > 0 && k < tol) { k = R[at(i, c)] < frT ? k + 1 : 0; clear(i, c); i--; }
+const iStart = i + 1 + k;
+if (iEnd - iStart <= minLen) continue;
+let amp = 0; for (let j = iStart; j < iEnd; j++) amp += F[at(j, c)];
+notes.push([c + 21, iStart, iEnd - iStart, amp / (iEnd - iStart)]);
+}
+const tm = f => f * 256 / 22050 - 0.0103 * Math.floor(f / 172);
+// mesma tecla começando de novo logo depois (< 0,15 s): é a mesma nota, só fica mais longa
+notes.sort((a, b) => a[1] - b[1]);
+const keep = [], lastOf = {};
+for (const x of notes) {
+const p = lastOf[x[0]];
+if (p && x[1] - p[1] < 13) { p[2] = Math.max(p[2], x[1] + x[2] - p[1]); p[3] = Math.max(p[3], x[3]); continue; }
+keep.push(x); lastOf[x[0]] = x;
+}
+// "fantasma" uma oitava (ou 12ª, 15ª) acima de uma nota grave que começou junto e bem mais forte: é harmônico dela
+const ghost = x => keep.some(y => [12, 24].includes(x[0] - y[0]) && Math.abs(x[1] - y[1]) <= 5 && x[3] < y[3] * 0.5);
+return keep.filter(x => !ghost(x)).map(([m, f, d, a]) => ({ m, t: tm(f), d: tm(f + d) - tm(f), a }));
+}
+async function fallAudioNotes(raw, prog){
+const SR = 22050, MAXSEC = 360;
+const AC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+if (!AC) throw new Error("Este aparelho não consegue abrir áudio aqui.");
+const render = oc => new Promise((ok, no) => { oc.oncomplete = e => ok(e.renderedBuffer); const p = oc.startRendering(); if (p && p.then) p.then(ok, no); });
+let buf;
+try {
+const dc = new AC(1, SR, SR);
+buf = await new Promise((ok, no) => { const p = dc.decodeAudioData(raw, ok, no); if (p && p.then) p.then(ok, no); });
+} catch(e) { throw new Error("Não consegui abrir esse áudio. Tente um arquivo MP3, M4A ou WAV."); }
+const long = buf.duration > MAXSEC;
+// um canal só, na taxa certa (o navegador mistura os canais e converte)
+const oc = new AC(1, Math.max(SR, Math.ceil(Math.min(buf.duration, MAXSEC) * SR)), SR), bs = oc.createBufferSource();
+bs.buffer = buf; bs.connect(oc.destination); bs.start(0);
+const x = (await render(oc)).getChannelData(0); buf = null;
+// 1º o reconhecedor de notas (acerta acordes); sem internet, ou num aparelho lento com áudio longo, o ouvido do microfone
+let notes = null;
+try {
+if (prog) prog(0, "Preparando o reconhecedor de notas… (só demora na primeira vez)");
+await fallBpLoad(); await window.tf.ready();
+if (window.tf.getBackend() !== "cpu" || x.length < 60 * SR) notes = (await fallBasicPitch(x, prog)).map(n => [n.m, n.t, n.d, n.m < 60 ? 1 : 0]);
+} catch(e) { if (e.message === "cancel") throw e; console.warn("Pôr áudio: reconhecedor indisponível", e); }
+if (!notes) notes = await fallEarNotes(x, SR, prog);
+if (notes.length < 2) throw new Error("Não achei notas nesse áudio. Funciona melhor com piano sozinho, sem voz nem bateria.");
+notes.sort((a, b) => a[1] - b[1] || a[0] - b[0]);
+const t0 = notes[0][1];
+return { notes: notes.slice(0, 4000).map(n => [n[0], Math.round((n[1] - t0) * 100) / 100, Math.round(Math.max(0.08, Math.min(8, n[2])) * 100) / 100, n[3]]), long };
+}
+// O ouvido do microfone passando pelo arquivo, quadro a quadro (só melodia; acordes ele confunde)
+async function fallEarNotes(x, SR, prog){
+const SIZE = 4096, HOP = Math.round(SR / 60);
+const L = x.length, ear = fallEar(SR, SIZE), B0 = ear.b0 - 1, B1 = ear.b1 + 1, NB = B1 - B0 + 1;
+const win = new Float64Array(SIZE); for (let i = 0; i < SIZE; i++) win[i] = 0.42 - 0.5 * Math.cos(2 * Math.PI * i / SIZE) + 0.08 * Math.cos(4 * Math.PI * i / SIZE);
+const fft = fallFFT(SIZE), re = new Float64Array(SIZE), im = new Float64Array(SIZE), m2 = new Float32Array(NB);
+const nF = Math.ceil((L + SIZE) / HOP) + 30;
+// dois quadros de uma vez (um na parte real, outro na imaginária) e separa depois
+const fill = (k, arr) => { const e = k * HOP; for (let i = 0; i < SIZE; i++) { const s = e - SIZE + i; arr[i] = s >= 0 && s < L ? x[s] * win[i] : 0; } };
+const two = (k, a, b) => {
+fill(k, re); if (k + 1 < nF) fill(k + 1, im); else im.fill(0);
+fft(re, im);
+for (let i = B0; i <= B1; i++) { const r1 = re[i], i1 = im[i], r2 = re[SIZE - i], i2 = im[SIZE - i];
+a[i - B0] = Math.hypot(r1 + r2, i1 - i2) / (2 * SIZE); b[i - B0] = Math.hypot(r1 - r2, i1 + i2) / (2 * SIZE); }
+};
+// 1) barulho de fundo: o nível mais baixo (10%) de cada faixa em até 600 quadros espalhados
+const S = Math.min(600, nF >> 1), samp = new Float32Array(S * 2 * NB), tA = new Float32Array(NB), tB = new Float32Array(NB);
+for (let j = 0; j < S; j++) { two(Math.floor(j * (nF - 1) / S), tA, tB); samp.set(tA, j * 2 * NB); samp.set(tB, (j * 2 + 1) * NB); }
+const floor = new Float32Array(SIZE / 2), col = new Float32Array(S * 2);
+for (let i = 0; i < NB; i++) { for (let j = 0; j < S * 2; j++) col[j] = samp[j * NB + i]; col.sort(); floor[B0 + i] = Math.max(col[Math.floor(S * 2 * 0.1)], 1e-7); }
+ear.prime(floor); ear.rec = true; ear.file = true;
+// 2) passa o arquivo todo, quadro a quadro
+const out = [], at = k => 1000 + k * HOP / SR * 1000;
+const take = (k, arr) => {
+ear.mag.set(arr, B0);
+ear.step(at(k)).forEach(c => {
+const t = (c.t - 1000) / 1000;
+if (c.off) { const n = out.slice().reverse().find(y => y[0] === c.m && !y.end); if (n) n.end = t; return; }
+out.push([c.m, Math.max(0, t), 0, c.m < 60 ? 1 : 0]);
+});
+};
+let last = performance.now();
+for (let k = 1; k < nF; k += 2) {
+two(k, tA, m2); take(k, tA); if (k + 1 < nF) take(k + 1, m2);
+if (performance.now() - last > 60) { last = performance.now(); if (prog && prog(k / nF) === false) throw new Error("cancel"); await new Promise(r => setTimeout(r, 0)); }
+}
+return out.length < 2 ? [] : fallRecNotes(out);
 }
 function fallOpen(song, opts = {}){
 fallClose();
@@ -8042,9 +8243,7 @@ f.recOn = true; f.recStart = performance.now(); f.recNotes = []; q("rec").textCo
 }
 f.recOn = false; q("rec").textContent = "● Gravar";
 if (f.recNotes.length < 2) { q("info").textContent = "Poucas notas. Toque em Gravar e tente de novo."; return; }
-// Duração: até a nota parar de soar (microfone) ou até ela tocar de novo; sem isso, 0,6 s
-f.recNotes.sort((a, b) => a[1] - b[1]);
-const t0 = f.recNotes[0][1], ns = f.recNotes.map((n, i, a) => { const nx = a.find((x, j) => j > i && x[0] === n[0]); let d = n.end ? n.end - n[1] : nx ? nx[1] - n[1] - 0.05 : 0.6; if (nx) d = Math.min(d, nx[1] - n[1] - 0.05); return [n[0], Math.round((n[1] - t0) * 100) / 100, Math.round(Math.max(0.12, Math.min(n.end ? 4 : 1.5, d)) * 100) / 100, n[3]]; });
+const ns = fallRecNotes(f.recNotes);
 const name = (prompt("Nome desta música ou exercício:", "") || "").trim();
 if (!name) { q("info").textContent = "Gravação descartada (sem nome)."; return; }
 const x = { id: "f" + Date.now().toString(36), title: name.slice(0, 80), notes: ns };
@@ -8077,24 +8276,42 @@ main.querySelectorAll("[data-fall]").forEach(b => b.onclick = () => { const x = 
 }
 // ---------- Professor: biblioteca e liberação ----------
 function fallReleasedTo(id){ return students.filter(s => (s.fallOn || []).includes(id)); }
+let fallAudioBusy = "";
 function openFallLibrary(){
 const body = document.createElement("div");
 const draw = () => {
 const mine = fallLib();
-body.innerHTML = `<div class="demo-actions" style="margin:0 0 0.75rem"><label class="btn-historico file-pick">Pôr arquivo MIDI<input type="file" id="fallMidi" accept=".mid,.midi,audio/midi,audio/x-midi" hidden></label><button type="button" class="btn-historico" id="fallRec">Gravar tocando</button></div>
-<div class="field-hint" style="margin-bottom:0.75rem">MIDI é o arquivo de partitura tocável (termina em .mid). Dá para achar de quase toda música buscando "nome da música midi piano".</div>
+body.innerHTML = `<div class="demo-actions" style="margin:0 0 0.75rem"><label class="btn-historico file-pick">Pôr arquivo MIDI<input type="file" id="fallMidi" accept=".mid,.midi,.kar,.rmi,audio/midi,audio/x-midi" hidden></label><label class="btn-historico file-pick">Pôr áudio<input type="file" id="fallAudio" accept="audio/*,video/*,.mp3,.m4a,.wav,.ogg,.opus,.aac,.flac" hidden></label><button type="button" class="btn-historico" id="fallRec">Gravar tocando</button></div>
+<div class="field-hint" style="margin-bottom:0.75rem">MIDI é o arquivo de partitura tocável (termina em .mid ou .kar). Sem MIDI, use Pôr áudio: escolha uma gravação de piano (sua, de WhatsApp, MP3 ou vídeo do celular) e o app anota as notas. Fica melhor com piano sozinho, sem voz nem bateria.</div>
+<div class="field-hint" id="fallBusy" style="margin-bottom:0.75rem;color:var(--accent,#4F7DFF)"${fallAudioBusy ? "" : " hidden"}>${escapeHtml(fallAudioBusy)}</div>
 <div class="settings-group-label" style="margin-top:0">Prontas no app (todos os alunos com a ferramenta veem)</div>
 ${FALL_BUILTIN.map(x => `<div class="fall-lib-row"><div class="fall-lib-name">${escapeHtml(x.title)}</div><button type="button" class="btn-link-inline" data-fl-play="${x.id}">Ver</button></div>`).join("")}
 <div class="settings-group-label">Suas músicas</div>
-${mine.length ? mine.map(x => { const n = fallReleasedTo(x.id).length; return `<div class="fall-lib-row"><div class="fall-lib-name">${escapeHtml(x.title)}<div class="stu-muted">${n ? `Liberada para ${n} aluno${n > 1 ? "s" : ""}` : "Ainda não liberada"}</div></div><button type="button" class="btn-link-inline" data-fl-play="${x.id}">Ver</button><button type="button" class="btn-link-inline" data-fl-rel="${x.id}">Liberar</button><button type="button" class="btn-link-inline danger" data-fl-del="${x.id}">Tirar</button></div>`; }).join("") : `<div class="stu-muted">Nenhuma ainda. Ponha um arquivo MIDI ou grave tocando.</div>`}
+${mine.length ? mine.map(x => { const n = fallReleasedTo(x.id).length; return `<div class="fall-lib-row"><div class="fall-lib-name">${escapeHtml(x.title)}<div class="stu-muted">${n ? `Liberada para ${n} aluno${n > 1 ? "s" : ""}` : "Ainda não liberada"}</div></div><button type="button" class="btn-link-inline" data-fl-play="${x.id}">Ver</button><button type="button" class="btn-link-inline" data-fl-rel="${x.id}">Liberar</button><button type="button" class="btn-link-inline danger" data-fl-del="${x.id}">Tirar</button></div>`; }).join("") : `<div class="stu-muted">Nenhuma ainda. Ponha um arquivo MIDI ou um áudio, ou grave tocando.</div>`}
 <div class="auth-error" id="fallErr"></div>`;
 body.querySelector("#fallMidi").onchange = async e => {
 const file = e.target.files && e.target.files[0]; if (!file) return;
 try {
 const notes = fallParseMidi(await file.arrayBuffer());
-const x = { id: "f" + Date.now().toString(36), title: file.name.replace(/\.(mid|midi)$/i, "").replace(/[_-]+/g, " ").trim().slice(0, 80) || "Música", notes };
+const x = { id: "f" + Date.now().toString(36), title: file.name.replace(/\.(mid|midi|kar|rmi)$/i, "").replace(/[_-]+/g, " ").trim().slice(0, 80) || "Música", notes };
 fallLibSave(fallLib().concat([x])); draw();
 } catch(err) { body.querySelector("#fallErr").textContent = err.message || "Não consegui ler esse arquivo."; }
+};
+body.querySelector("#fallAudio").onchange = async e => {
+const file = e.target.files && e.target.files[0]; e.target.value = ""; if (!file) return;
+const err = body.querySelector("#fallErr");
+if (fallAudioBusy) { err.textContent = "Espere terminar o áudio que está sendo ouvido."; return; }
+if (file.size > 200 * 1024 * 1024) { err.textContent = hiTr("Arquivo grande demais. Use um áudio mais curto."); return; }
+const busy = t => { fallAudioBusy = t; const b = body.querySelector("#fallBusy"); if (b) { b.hidden = !t; b.textContent = t; } };
+err.textContent = ""; busy(hiTr("Abrindo o áudio…"));
+try {
+const r = await fallAudioNotes(await file.arrayBuffer(), (v, msg) => busy(hiTr(msg || `Ouvindo o áudio… ${Math.round(v * 100)}%`)));
+const x = { id: "f" + Date.now().toString(36), title: file.name.replace(/\.[a-z0-9]{2,5}$/i, "").replace(/[_-]+/g, " ").trim().slice(0, 80) || "Música", notes: r.notes };
+fallLibSave(fallLib().concat([x]));
+busy(""); draw();
+body.querySelector("#fallErr").textContent = "";
+const ok = body.querySelector("#fallBusy"); if (ok) { ok.hidden = false; ok.textContent = hiTr(r.long ? `Pronto: ${r.notes.length} notas (só os 6 primeiros minutos). Toque em Ver para conferir.` : `Pronto: ${r.notes.length} notas. Toque em Ver para conferir.`); }
+} catch(ex) { busy(""); const e2 = body.querySelector("#fallErr"); if (e2) e2.textContent = hiTr(ex.message || "Não consegui abrir esse áudio. Tente um arquivo MP3, M4A ou WAV."); }
 };
 body.querySelector("#fallRec").onclick = () => { closeQuickModal(); fallOpen(null, { record: true, onSaved: () => setTimeout(openFallLibrary, 50) }); };
 body.querySelectorAll("[data-fl-play]").forEach(b => b.onclick = () => { const x = fallById(b.dataset.flPlay); if (x) fallOpen(x); });

@@ -4192,5 +4192,19 @@
 "Toque no seu piano de verdade: o app ouve pelo microfone e anota as notas. Ou toque nas teclas da tela.": "Play your real piano: the app listens through the microphone and writes down the notes. Or tap the keys on the screen.",
 "Microfone ligado. Deixe o celular perto do piano e toque em Gravar.": "Microphone on. Keep the phone close to the piano and tap Record.",
 "Escutando a sala… espere um pouco sem tocar.": "Listening to the room… wait a moment without playing.",
-"Gravando pelo microfone… toque a música no seu piano.": "Recording through the microphone… play the song on your piano."
+"Gravando pelo microfone… toque a música no seu piano.": "Recording through the microphone… play the song on your piano.",
+"Pôr áudio": "Add audio",
+"MIDI é o arquivo de partitura tocável (termina em .mid ou .kar). Sem MIDI, use Pôr áudio: escolha uma gravação de piano (sua, de WhatsApp, MP3 ou vídeo do celular) e o app anota as notas. Fica melhor com piano sozinho, sem voz nem bateria.": "MIDI is the playable score file (ends in .mid or .kar). No MIDI? Use Add audio: pick a piano recording (your own, a WhatsApp audio, an MP3 or a phone video) and the app writes down the notes. Works best with solo piano, no singing or drums.",
+"Espere terminar o áudio que está sendo ouvido.": "Wait until the current audio is finished.",
+"Arquivo grande demais. Use um áudio mais curto.": "File too large. Use a shorter audio.",
+"Abrindo o áudio…": "Opening the audio…",
+"Ouvindo o áudio… {0}%": "Listening to the audio… {0}%",
+"Preparando o reconhecedor de notas… (só demora na primeira vez)": "Getting the note recognizer ready… (slow only the first time)",
+"Pronto: {0} notas (só os 6 primeiros minutos). Toque em Ver para conferir.": "Done: {0} notes (first 6 minutes only). Tap View to check.",
+"Pronto: {0} notas. Toque em Ver para conferir.": "Done: {0} notes. Tap View to check.",
+"Este aparelho não consegue abrir áudio aqui.": "This device can't open audio here.",
+"Não consegui abrir esse áudio. Tente um arquivo MP3, M4A ou WAV.": "Couldn't open this audio. Try an MP3, M4A or WAV file.",
+"Não achei notas nesse áudio. Funciona melhor com piano sozinho, sem voz nem bateria.": "No notes found in this audio. Works best with solo piano, no singing or drums.",
+"Pôr áudio: reconhecedor indisponível": null,
+"Nenhuma ainda. Ponha um arquivo MIDI ou um áudio, ou grave tocando.": "None yet. Add a MIDI file or an audio, or record by playing."
 }
