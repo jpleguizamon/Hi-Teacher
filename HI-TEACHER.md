@@ -540,6 +540,10 @@ Versão do app 8.46; o arquivo do servidor desta rodada é `supabase/schema-v8.4
 - As linhas "Meu plano", "Indique um professor" e "Assinaturas" (só do dono do app) estavam parando dentro da pasta Dados e backup, porque não estavam na lista de nenhuma pasta de Configurações. Agora ficam em **Conta**. Linha nova em Configurações: pôr o id dela na lista `rows` de uma pasta em `SETTINGS_FOLDERS`, senão ela cai em Dados e backup.
 - Dono do app = linha em `app_admins` com o e-mail com que ele entra (não é só o do arquivo SQL). Para incluir: `insert into public.app_admins (user_id) select id from auth.users where lower(email)=lower('EMAIL') on conflict do nothing;`
 
+## Pôr áudio abre mais arquivos (8.69)
+- Jp tentou um M4A no celular e deu "não consegui abrir". O app agora tenta três jeitos (`fallDecode`): abrir direto em 22050 Hz; abrir direto no áudio normal do app; e, se o aparelho não deixar, tocar o arquivo sem som 2× mais rápido sem corrigir o tom (`fallDecodeByPlaying`: elemento de áudio/vídeo → `createMediaElementSource` → ScriptProcessor) e ler as amostras na metade da taxa, o que volta ao som original. O celular toca mais formatos do que deixa abrir direto. Nesse 3º jeito demora metade do tempo da música e mostra "Abrindo o áudio… N%".
+- Teste (navegador daqui, forçando o 3º jeito com MP3 de acordes): 81 notas, alturas e tempos iguais aos do 1º jeito. O navegador de teste daqui não toca M4A/AAC, então o M4A em si não foi testado aqui.
+
 ## Pôr áudio no Tocar junto (8.68)
 - Jp: quase todo MIDI na internet é pago e o que ele baixou não abriu. Ideia dele: buscar no YouTube e transcrever. Não dá: o YouTube não deixa outro site pegar o som dos vídeos (as regras proíbem) e as músicas têm dono. Caminho prático combinado: tocar o vídeo perto do celular e usar Gravar tocando → 🎤 Pelo microfone, ou o botão novo.
 - Professor: Tocar junto → "Pôr áudio". Escolhe um áudio ou vídeo do aparelho (gravação dele, áudio de WhatsApp, MP3, M4A, vídeo do celular) e o app vira teclas caindo, tudo no próprio aparelho (nada é enviado). Até 6 minutos (o resto é ignorado, com aviso). A música entra em "Suas músicas" com o nome do arquivo.
