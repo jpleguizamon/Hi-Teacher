@@ -540,6 +540,10 @@ Versão do app 8.46; o arquivo do servidor desta rodada é `supabase/schema-v8.4
 - As linhas "Meu plano", "Indique um professor" e "Assinaturas" (só do dono do app) estavam parando dentro da pasta Dados e backup, porque não estavam na lista de nenhuma pasta de Configurações. Agora ficam em **Conta**. Linha nova em Configurações: pôr o id dela na lista `rows` de uma pasta em `SETTINGS_FOLDERS`, senão ela cai em Dados e backup.
 - Dono do app = linha em `app_admins` com o e-mail com que ele entra (não é só o do arquivo SQL). Para incluir: `insert into public.app_admins (user_id) select id from auth.users where lower(email)=lower('EMAIL') on conflict do nothing;`
 
+## Logo sem repetir na tela grande (8.71)
+- Jp: no tablet a logo aparecia duas vezes (menu sempre aberto + topo). Ele escolheu tirar a do topo: de 900 px para cima, o topo mostra só o nome da página (Início, Agenda…) em letra de título; a logo fica no menu. No celular nada muda (menu escondido, logo no topo).
+- A logo do menu cortava o "teacher": agora ocupa a largura do menu menos a coruja (até 11,1 rem).
+
 ## Gravar tocando reconhece acordes (8.70)
 - Jp: gravando pelo microfone, o app não pegava os acordes (o ouvido ao vivo é feito para melodia). Agora, enquanto grava, o microfone também guarda o som cru (`mic.capture`/`mic.take`, ScriptProcessor, até 6 min). Ao tocar em Parar, esse som passa pelo mesmo reconhecedor do "Pôr áudio" (`fallSamplesNotes`, Basic Pitch) e mostra "Reconhecendo as notas… N%". Sem internet (ou aparelho lento com gravação longa), ficam as notas anotadas ao vivo, como antes.
 - `fallAudioNotes` foi dividido: `fallMono` (um canal a 22050 Hz) e `fallSamplesNotes` (som → notas), usados pelo arquivo e pela gravação.

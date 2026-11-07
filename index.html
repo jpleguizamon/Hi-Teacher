@@ -222,7 +222,7 @@ header{
 .top{display:flex;align-items:center;gap:0.8125rem;padding-left:3.3125rem}
 .top > div:first-of-type{flex:1;min-width:0}
 .header-app-title{display:block;height:1.75rem;width:auto}
-.side-logo-img{display:block;height:1.875rem;width:auto}
+.side-logo-img{display:block;flex:none;width:calc(100% - 3.5rem);max-width:11.1rem;height:auto} /* 8.71: cabe no menu (antes cortava o "teacher") */
 .brand-owl{display:block;flex:none;color:var(--accent)}
 .auth-owl{width:5.5rem;height:5.5rem;margin:0 auto 0.75rem}
 .side-owl{width:2.875rem;height:2.875rem}
@@ -1889,6 +1889,9 @@ body.kid-mode #stuMain .actions button{padding:1rem;font-size:1rem}
   }
   .top{padding-left:1.25rem}
   main{max-width:56rem;margin:0 auto}
+  /* 8.71: o menu fica sempre aberto com a logo; o topo mostra só o nome da página */
+  header .header-brand{display:none}
+  header .date{margin-top:0;font-family:var(--font-display);font-size:1.375rem;font-weight:750;color:var(--heading);letter-spacing:-0.02em}
 }
 
 /* Acessibilidade: menos transparência / menos movimento quando o sistema pedir */
@@ -3924,7 +3927,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.70";
+const APP_VERSION = "8.71";
 // Idioma (8.42): troca entre português e inglês e recarrega. Fica guardado neste aparelho.
 function langSwitchLabel(){ return APP_LANG === "en" ? "🌐 Mudar para português" : "🌐 Switch to English"; }
 function langSwitch(){
