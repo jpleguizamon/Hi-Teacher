@@ -2522,9 +2522,12 @@ body.pdf-open{overflow:hidden}
 </select>
 </div>
 <div class="field"><label>Cidade</label><input type="text" id="onbCity" placeholder="Ex.: Rio de Janeiro"></div>
-<div class="field" style="display:none"><label>O que você ensina?</label>
+<div class="field"><label>O que você ensina?</label>
 <div class="choice-chips" id="onbSubjectOptions">
 <button type="button" class="filter-chip selected" data-subject="Música" aria-pressed="true">Música</button>
+<button type="button" class="filter-chip" disabled>Idiomas <span class="badge-soon">Em breve</span></button>
+<button type="button" class="filter-chip" disabled>Reforço escolar <span class="badge-soon">Em breve</span></button>
+<button type="button" class="filter-chip" disabled>Outros <span class="badge-soon">Em breve</span></button>
 </div>
 </div>
 <div class="field">
@@ -2989,6 +2992,7 @@ body.pdf-open{overflow:hidden}
 </button>
 <div class="nav-sub">
 <button class="nav-item" data-page="planner">Organizador de Aulas</button>
+<button class="nav-item" disabled>Criador de Aulas <span class="badge-soon">Em breve</span></button>
 </div>
 </div>
 
@@ -3625,6 +3629,7 @@ body.pdf-open{overflow:hidden}
 <div class="choice-chips">
 <button type="button" class="filter-chip" id="langPt" data-no-tr>Português (Brasil)</button>
 <button type="button" class="filter-chip" id="langEn" data-no-tr>English</button>
+<button type="button" class="filter-chip" disabled>Español <span class="badge-soon">Em breve</span></button>
 </div>
 </div>
 <div class="field-hint">Toque no idioma para trocar. O app recarrega na hora e seus dados continuam iguais.</div>
@@ -3923,7 +3928,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.73";
+const APP_VERSION = "8.74";
 // Idioma (8.42): troca entre português e inglês e recarrega. Fica guardado neste aparelho.
 function langSwitchLabel(){ return APP_LANG === "en" ? "🌐 Mudar para português" : "🌐 Switch to English"; }
 function langSwitch(){
