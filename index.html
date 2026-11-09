@@ -2522,12 +2522,9 @@ body.pdf-open{overflow:hidden}
 </select>
 </div>
 <div class="field"><label>Cidade</label><input type="text" id="onbCity" placeholder="Ex.: Rio de Janeiro"></div>
-<div class="field"><label>O que você ensina?</label>
+<div class="field" style="display:none"><label>O que você ensina?</label>
 <div class="choice-chips" id="onbSubjectOptions">
 <button type="button" class="filter-chip selected" data-subject="Música" aria-pressed="true">Música</button>
-<button type="button" class="filter-chip" disabled>Idiomas <span class="badge-soon">Em breve</span></button>
-<button type="button" class="filter-chip" disabled>Reforço escolar <span class="badge-soon">Em breve</span></button>
-<button type="button" class="filter-chip" disabled>Outros <span class="badge-soon">Em breve</span></button>
 </div>
 </div>
 <div class="field">
@@ -2992,7 +2989,6 @@ body.pdf-open{overflow:hidden}
 </button>
 <div class="nav-sub">
 <button class="nav-item" data-page="planner">Organizador de Aulas</button>
-<button class="nav-item" disabled>Criador de Aulas <span class="badge-soon">Em breve</span></button>
 </div>
 </div>
 
@@ -3629,7 +3625,6 @@ body.pdf-open{overflow:hidden}
 <div class="choice-chips">
 <button type="button" class="filter-chip" id="langPt" data-no-tr>Português (Brasil)</button>
 <button type="button" class="filter-chip" id="langEn" data-no-tr>English</button>
-<button type="button" class="filter-chip" disabled>Español <span class="badge-soon">Em breve</span></button>
 </div>
 </div>
 <div class="field-hint">Toque no idioma para trocar. O app recarrega na hora e seus dados continuam iguais.</div>
@@ -3928,7 +3923,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.72";
+const APP_VERSION = "8.73";
 // Idioma (8.42): troca entre português e inglês e recarrega. Fica guardado neste aparelho.
 function langSwitchLabel(){ return APP_LANG === "en" ? "🌐 Mudar para português" : "🌐 Switch to English"; }
 function langSwitch(){
@@ -7639,11 +7634,56 @@ const ode = [...odeA, [E4,1.5],[D4,0.5],[D4,2], ...odeA, [D4,1.5],[C4,0.5],[C4,2
 const hb = [[G4,0.75],[G4,0.25],[A4,1],[G4,1],[C5,1],[B4,2],[G4,0.75],[G4,0.25],[A4,1],[G4,1],[D5,1],[C5,2],[G4,0.75],[G4,0.25],[G5,1],[E5,1],[C5,1],[B4,1],[A4,2],[F4+12,0.75],[F4+12,0.25],[E5,1],[C5,1],[D5,1],[C5,2]];
 // Escala de Dó maior com as duas mãos (mão esquerda uma oitava abaixo), subindo e descendo.
 const up = [0, 2, 4, 5, 7, 9, 11, 12], sc = up.concat(up.slice(0, -1).reverse());
+// 8.73: notas por nome ("F#4:0.5" = Fá# 4 por meio tempo; "r" = pausa; "|" só separa compassos).
+const PC = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+const nm = p => { const x = /^([A-G])(#|b)?(\d)$/.exec(p); return 12 * (+x[3] + 1) + PC[x[1]] + (x[2] === "#" ? 1 : x[2] === "b" ? -1 : 0); };
+const ns = s => s.split(/\s+/).filter(t => t && t !== "|").map(t => { const [p, d] = t.split(":"); return [p === "r" ? 0 : nm(p), +d]; });
+const oct = (seq, k) => seq.map(([m, b]) => [m ? m + 12 * k : 0, b]);
+// Mary Had a Little Lamb (tradicional), em Dó; mão esquerda com a nota do acorde.
+const mary = ns("E4:1 D4:1 C4:1 D4:1 | E4:1 E4:1 E4:2 | D4:1 D4:1 D4:2 | E4:1 G4:1 G4:2 | E4:1 D4:1 C4:1 D4:1 | E4:1 E4:1 E4:1 E4:1 | D4:1 D4:1 E4:1 D4:1 | C4:4");
+const maryL = ns("C3:4 | C3:4 | G3:4 | C3:4 | C3:4 | C3:4 | G3:4 | C3:4");
+// Frère Jacques (tradicional), em cânone: a mão esquerda entra 2 compassos depois, uma oitava abaixo.
+const fj = ns("C4:1 D4:1 E4:1 C4:1 | C4:1 D4:1 E4:1 C4:1 | E4:1 F4:1 G4:2 | E4:1 F4:1 G4:2 | G4:0.5 A4:0.5 G4:0.5 F4:0.5 E4:1 C4:1 | G4:0.5 A4:0.5 G4:0.5 F4:0.5 E4:1 C4:1 | C4:1 G3:1 C4:2 | C4:1 G3:1 C4:2");
+// Bate o sino / Jingle Bells (J. L. Pierpont, 1857), refrão em Dó.
+const jbA = "E4:1 E4:1 E4:2 | E4:1 E4:1 E4:2 | E4:1 G4:1 C4:1.5 D4:0.5 | E4:4 | F4:1 F4:1 F4:1.5 F4:0.5 | F4:1 E4:1 E4:1 E4:0.5 E4:0.5 |";
+const jb = ns(jbA + " E4:1 D4:1 D4:1 E4:1 | D4:2 G4:2 | " + jbA + " G4:1 G4:1 F4:1 D4:1 | C4:4");
+const jbL = ns("C3:4 | C3:4 | C3:4 | C3:4 | F3:4 | C3:4 | D3:4 | G3:4 | C3:4 | C3:4 | C3:4 | C3:4 | F3:4 | C3:4 | G3:4 | C3:4");
+// Noite Feliz (F. Gruber, 1818), em Dó, 6/8 (aqui 1 tempo = colcheia).
+const sil = ns("G4:3 A4:1 G4:2 | E4:6 | G4:3 A4:1 G4:2 | E4:6 | D5:4 D5:2 | B4:6 | C5:4 C5:2 | G4:6 | A4:4 A4:2 | C5:3 B4:1 A4:2 | G4:3 A4:1 G4:2 | E4:6 | A4:4 A4:2 | C5:3 B4:1 A4:2 | G4:3 A4:1 G4:2 | E4:6 | D5:4 D5:2 | F5:3 D5:1 B4:2 | C5:6 | E5:6 | C5:3 G4:1 E4:2 | G4:3 F4:1 D4:2 | C4:6");
+const silL = ns("C3:12 C3:12 G3:12 C3:12 F3:12 C3:12 F3:12 C3:12 G3:12 C3:12 C3:6 G3:6 C3:6");
+// Minueto em Sol (Christian Petzold, do caderno de Anna Magdalena Bach), mão direita.
+const mnA = "D5:1 G4:0.5 A4:0.5 B4:0.5 C5:0.5 | D5:1 G4:1 G4:1 | E5:1 C5:0.5 D5:0.5 E5:0.5 F#5:0.5 | G5:1 G4:1 G4:1 | C5:1 D5:0.5 C5:0.5 B4:0.5 A4:0.5 | B4:1 C5:0.5 B4:0.5 A4:0.5 G4:0.5 |";
+const mn = ns(mnA + " F#4:1 G4:0.5 A4:0.5 B4:0.5 G4:0.5 | A4:3 | " + mnA + " A4:1 B4:0.5 A4:0.5 G4:0.5 F#4:0.5 | G4:3");
+// Cânone em Ré (J. Pachelbel), simplificado: o baixo que se repete e as duas primeiras frases do violino.
+const cnB = ns("D4:1 A3:1 B3:1 F#3:1 G3:1 D3:1 G3:1 A3:1");
+const cn1 = ns("F#5:1 E5:1 D5:1 C#5:1 B4:1 A4:1 B4:1 C#5:1"), cn2 = ns("D5:1 C#5:1 B4:1 A4:1 G4:1 F#4:1 G4:1 E4:1");
+// Na Gruta do Rei da Montanha (E. Grieg, Peer Gynt), o tema, em Si menor.
+const hm = ns("B3:0.5 C#4:0.5 D4:0.5 E4:0.5 F#4:0.5 D4:0.5 F#4:1 | F4:0.5 C#4:0.5 F4:1 E4:0.5 C4:0.5 E4:1 | B3:0.5 C#4:0.5 D4:0.5 E4:0.5 F#4:0.5 D4:0.5 F#4:0.5 B4:0.5 | A4:0.5 F#4:0.5 D4:0.5 F#4:0.5 A4:2");
+// Für Elise (Beethoven), primeira parte com a repetição, 3/8.
+const feR1 = "E5:0.25 D#5:0.25 E5:0.25 B4:0.25 D5:0.25 C5:0.25 | A4:0.5 r:0.25 C4:0.25 E4:0.25 A4:0.25 | B4:0.5 r:0.25 E4:0.25 G#4:0.25 B4:0.25 | C5:0.5 r:0.25 E4:0.25 E5:0.25 D#5:0.25 | E5:0.25 D#5:0.25 E5:0.25 B4:0.25 D5:0.25 C5:0.25 | A4:0.5 r:0.25 C4:0.25 E4:0.25 A4:0.25 | B4:0.5 r:0.25 E4:0.25 C5:0.25 B4:0.25 |";
+const feL1 = "r:1.5 | A2:0.25 E3:0.25 A3:0.25 r:0.75 | E2:0.25 E3:0.25 G#3:0.25 r:0.75 | A2:0.25 E3:0.25 A3:0.25 r:0.75 | r:1.5 | A2:0.25 E3:0.25 A3:0.25 r:0.75 | E2:0.25 E3:0.25 G#3:0.25 r:0.75 |";
+const fe = ns("E5:0.25 D#5:0.25 | " + feR1 + " A4:0.5 r:0.5 E5:0.25 D#5:0.25 | " + feR1 + " A4:1.5");
+const feL = ns("r:0.5 | " + feL1 + " A2:0.25 E3:0.25 A3:0.25 r:0.75 | " + feL1 + " A2:0.25 E3:0.25 A3:1");
+// Prelúdio em Dó (J. S. Bach, BWV 846), compassos 1 a 19: cada compasso é um acorde arpejado duas vezes.
+const pr = "C4 E4 G4 C5 E5|C4 D4 A4 D5 F5|B3 D4 G4 D5 F5|C4 E4 G4 C5 E5|C4 E4 A4 E5 A5|C4 D4 F#4 A4 D5|B3 D4 G4 D5 G5|B3 C4 E4 G4 C5|A3 C4 E4 G4 C5|D3 A3 D4 F#4 C5|G3 B3 D4 G4 B4|G3 Bb3 E4 G4 C#5|F3 A3 D4 A4 D5|F3 Ab3 D4 F4 B4|E3 G3 C4 G4 C5|E3 F3 A3 C4 F4|D3 F3 A3 C4 F4|G2 D3 G3 B3 F4|C3 E3 G3 C4 E4".split("|").map(b => b.split(" ").map(nm));
+const prA = [], prB = [], prR = [];
+pr.forEach(([a, b, c, d, e]) => { for (let k = 0; k < 2; k++) { prA.push([a, 2]); prB.push([0, 0.25], [b, 1.75]); prR.push([0, 0.5], [c, 0.25], [d, 0.25], [e, 0.25], [c, 0.25], [d, 0.25], [e, 0.25]); } });
+const prEnd = pr[pr.length - 1];
 return [
 mk("b:scale", APP_LANG === "en" ? "C major scale (both hands)" : "Escala de Dó maior (duas mãos)", 80, [[0, sc.map(x => [C4 + x, 1])], [1, sc.map(x => [C4 - 12 + x, 1])]]),
+mk("b:scaleg", APP_LANG === "en" ? "G major scale (both hands)" : "Escala de Sol maior (duas mãos)", 80, [[0, sc.map(x => [G4 + x, 1])], [1, sc.map(x => [G3 + x, 1])]]),
 mk("b:twinkle", APP_LANG === "en" ? "Twinkle, Twinkle, Little Star" : "Brilha, brilha, estrelinha", 100, [[0, [...tw, ...twMid, ...twMid, ...tw]]]),
+mk("b:mary", "Mary Had a Little Lamb", 100, [[0, mary], [1, maryL]]),
 mk("b:ode", APP_LANG === "en" ? "Ode to Joy (Beethoven)" : "Ode à Alegria (Beethoven)", 110, [[0, ode]]),
-mk("b:hbd", APP_LANG === "en" ? "Happy Birthday" : "Parabéns pra você", 100, [[0, hb]])
+mk("b:hbd", APP_LANG === "en" ? "Happy Birthday" : "Parabéns pra você", 100, [[0, hb]]),
+mk("b:jacques", APP_LANG === "en" ? "Frère Jacques (as a round)" : "Frère Jacques (em cânone)", 100, [[0, [...fj, ...fj]], [1, [[0, 8], ...oct(fj, -1), ...oct(fj, -1)]]]),
+mk("b:jingle", APP_LANG === "en" ? "Jingle Bells" : "Bate o sino (Jingle Bells)", 120, [[0, jb], [1, jbL]]),
+mk("b:silent", APP_LANG === "en" ? "Silent Night" : "Noite Feliz", 150, [[0, sil], [1, silL]]),
+mk("b:minuet", APP_LANG === "en" ? "Minuet in G (Petzold/Bach)" : "Minueto em Sol (Petzold/Bach)", 104, [[0, mn]]),
+mk("b:canon", APP_LANG === "en" ? "Canon in D (Pachelbel, simplified)" : "Cânone em Ré (Pachelbel, simplificado)", 66, [[1, [...cnB, ...cnB, ...cnB, ...cnB, ...cnB, [nm("D3"), 4]]], [0, [[0, 8], ...cn1, ...cn2, ...cn1, ...cn2, [nm("D5"), 4]]]]),
+mk("b:mountain", APP_LANG === "en" ? "In the Hall of the Mountain King (Grieg, theme)" : "Na Gruta do Rei da Montanha (Grieg, tema)", 92, [[0, [...hm, ...hm, [nm("B3"), 4]]]]),
+mk("b:elise", "Für Elise (Beethoven)", 66, [[0, fe], [1, feL]]),
+mk("b:prelude", APP_LANG === "en" ? "Prelude in C (Bach, opening)" : "Prelúdio em Dó (Bach, início)", 66, [[1, [...prA, [prEnd[0], 4]]], [1, [...prB, [prEnd[1], 4]]], [0, [...prR, [prEnd[2], 4]]], [0, [[0, 76], [prEnd[3], 4]]], [0, [[0, 76], [prEnd[4], 4]]]])
 ];
 })();
 function fallLib(){ return Array.isArray(appSettings.fallLib) ? appSettings.fallLib : []; }
