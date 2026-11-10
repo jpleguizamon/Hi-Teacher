@@ -4221,5 +4221,17 @@
 "Minueto em Sol (Petzold/Bach)": "Minuet in G (Petzold/Bach)",
 "Cânone em Ré (Pachelbel, simplificado)": "Canon in D (Pachelbel, simplified)",
 "Na Gruta do Rei da Montanha (Grieg, tema)": "In the Hall of the Mountain King (Grieg, theme)",
-"Prelúdio em Dó (Bach, início)": "Prelude in C (Bach, opening)"
+"Prelúdio em Dó (Bach, início)": "Prelude in C (Bach, opening)",
+"Ex.: (21) 99999-9999": "E.g.: (555) 123-4567",
+"Pelo menos 6 caracteres": "At least 6 characters",
+"E-mail da conta": "Account email",
+"Entra com": "Signs in with",
+"Conta criada em": "Account created on",
+"Trocar senha": "Change password",
+"Repita a nova senha": "Repeat the new password",
+"E-mail e senha": "Email and password",
+"Google": null,
+"Apple": null,
+"Criar uma senha": "Create a password",
+"Senha trocada. Da próxima vez, entre com a senha nova.": "Password changed. Next time, sign in with the new password."
 }

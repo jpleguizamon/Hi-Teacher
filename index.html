@@ -224,6 +224,9 @@ header{
 .header-app-title{display:block;height:1.75rem;width:auto}
 .side-logo-img{display:block;flex:none;width:calc(100% - 3.5rem);max-width:11.1rem;height:auto} /* 8.71: cabe no menu (antes cortava o "teacher") */
 .brand-owl{display:block;flex:none;color:var(--accent)}
+.prof-acc-row{display:flex;justify-content:space-between;gap:0.75rem;padding:0.375rem 0;border-bottom:1px solid var(--glass-border);font-size:0.875rem}
+.prof-acc-row span{color:var(--text-muted,inherit);opacity:.8}
+.prof-acc-row b{font-weight:600;text-align:right;overflow-wrap:anywhere}
 .auth-owl{width:3.85rem;height:5.5rem;margin:0 auto 0.75rem}
 .side-owl{width:2rem;height:2.875rem}
 .header-owl{width:1.75rem;height:2.5rem}
@@ -3368,6 +3371,20 @@ body.pdf-open{overflow:hidden}
 <div class="field"><label>Nome</label><input id="profName" placeholder="Ex.: Professora Ana"></div>
 <div class="field"><label>Nome completo (aparece no recibo)</label><input id="profFullName" placeholder="Ex.: Ana Paula Souza"></div>
 <div class="field"><label>CPF ou CNPJ (opcional, aparece no recibo)</label><input id="profDocument" inputmode="numeric" placeholder="Ex.: 123.456.789-00"></div>
+<div class="field"><label>Telefone / WhatsApp</label><input id="profPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="Ex.: (21) 99999-9999"></div>
+<div id="profAccount" hidden>
+<div class="settings-group-label" style="margin:0.75rem 0 0.5rem">Conta</div>
+<div class="prof-acc-row"><span>E-mail da conta</span><b id="profAccEmail" data-no-tr></b></div>
+<div class="prof-acc-row"><span>Entra com</span><b id="profAccVia"></b></div>
+<div class="prof-acc-row"><span>Conta criada em</span><b id="profAccSince"></b></div>
+<button type="button" class="btn-historico" id="profPwdBtn" style="margin-top:0.5rem">Trocar senha</button>
+<div id="profPwdBox" hidden style="margin-top:0.5rem">
+<div class="field"><label>Nova senha</label><input id="profPwd1" type="password" autocomplete="new-password" placeholder="Pelo menos 6 caracteres"></div>
+<div class="field"><label>Repita a nova senha</label><input id="profPwd2" type="password" autocomplete="new-password"></div>
+<button type="button" class="btn-historico" id="profPwdSave">Salvar nova senha</button>
+</div>
+<div class="field-hint" id="profPwdMsg" role="status"></div>
+</div>
 <div class="actions"><button class="cancel" id="profCancelBtn">Cancelar</button><button class="save" id="profSaveBtn">Salvar</button></div>
 </div>
 </div>
@@ -3928,7 +3945,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.74";
+const APP_VERSION = "8.75";
 // Idioma (8.42): troca entre português e inglês e recarrega. Fica guardado neste aparelho.
 function langSwitchLabel(){ return APP_LANG === "en" ? "🌐 Mudar para português" : "🌐 Switch to English"; }
 function langSwitch(){
@@ -18608,11 +18625,48 @@ document.getElementById("settingsProfileCard").onclick = () => {
 document.getElementById("profName").value = appSettings.profile.name;
 document.getElementById("profFullName").value = appSettings.profile.fullName || "";
 document.getElementById("profDocument").value = appSettings.profile.document || "";
+document.getElementById("profPhone").value = appSettings.profile.phone || "";
+profFillAccount();
 profPhotoWorking = null;
 renderProfileAvatarInto(document.getElementById("profPhotoPreview"));
 document.getElementById("profileModal").classList.add("show");
 };
 document.getElementById("profCancelBtn").onclick = () => document.getElementById("profileModal").classList.remove("show");
+// 8.75: dados da conta no Editar perfil (e-mail, jeito de entrar, data) e trocar senha.
+function profFillAccount(){
+const u = typeof authCurrentUser !== "undefined" ? authCurrentUser : null;
+const box = document.getElementById("profAccount");
+box.hidden = !u;
+document.getElementById("profPwdBox").hidden = true;
+document.getElementById("profPwdMsg").textContent = "";
+if (!u) return;
+const prov = (u.app_metadata && u.app_metadata.providers) || [u.app_metadata && u.app_metadata.provider].filter(Boolean);
+const names = { email: "E-mail e senha", google: "Google", apple: "Apple" };
+document.getElementById("profAccEmail").textContent = u.email || "—";
+document.getElementById("profAccVia").textContent = prov.length ? prov.map(p => names[p] || p).join(" e ") : "E-mail e senha";
+document.getElementById("profAccSince").textContent = u.created_at ? (d => `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}/${d.getFullYear()}`)(new Date(u.created_at)) : "—";
+document.getElementById("profPwdBtn").textContent = prov.length && !prov.includes("email") ? "Criar uma senha" : "Trocar senha";
+}
+document.getElementById("profPwdBtn").onclick = () => {
+const b = document.getElementById("profPwdBox"); b.hidden = !b.hidden;
+document.getElementById("profPwdMsg").textContent = "";
+if (!b.hidden) document.getElementById("profPwd1").focus();
+};
+document.getElementById("profPwdSave").onclick = async () => {
+const p1 = document.getElementById("profPwd1").value, p2 = document.getElementById("profPwd2").value;
+const msg = document.getElementById("profPwdMsg"); msg.style.color = "";
+if (p1.length < 6) { msg.textContent = "A senha precisa ter pelo menos 6 caracteres."; return; }
+if (p1 !== p2) { msg.textContent = "As senhas não são iguais."; return; }
+const btn = document.getElementById("profPwdSave"); btn.disabled = true;
+try {
+const { error } = await supabaseClient.auth.updateUser({ password: p1 });
+if (error) { msg.textContent = authErrorMessage(error); return; }
+document.getElementById("profPwd1").value = document.getElementById("profPwd2").value = "";
+document.getElementById("profPwdBox").hidden = true;
+msg.style.color = "#4ade80"; msg.textContent = "Senha trocada. Da próxima vez, entre com a senha nova.";
+} catch (e) { msg.textContent = authErrorMessage(e); }
+finally { btn.disabled = false; }
+};
 
 document.getElementById("profPhotoInput").onchange = (e) => {
 const file = e.target.files[0];
@@ -18650,6 +18704,8 @@ appSettings.profile.name = name;
 appSettings.profile.fullName = document.getElementById("profFullName").value.trim();
 const doc = document.getElementById("profDocument").value.trim();
 if (doc) appSettings.profile.document = doc; else delete appSettings.profile.document;
+const phone = document.getElementById("profPhone").value.trim();
+if (phone) appSettings.profile.phone = phone; else delete appSettings.profile.phone;
 if (profPhotoWorking !== null) appSettings.profile.photo = profPhotoWorking || undefined;
 saveAppSettings();
 renderSettingsSummary();
