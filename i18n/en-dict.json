@@ -4341,5 +4341,15 @@
 "Mover para antes": "Move earlier",
 "Mover para depois": "Move later",
 "Remover imagem": "Remove image",
-"Algum link não parece um endereço de site e vai ficar de fora. Salvar mesmo assim?": "Some links don't look like website addresses and will be left out. Save anyway?"
+"Algum link não parece um endereço de site e vai ficar de fora. Salvar mesmo assim?": "Some links don't look like website addresses and will be left out. Save anyway?",
+"Marcar várias matérias para vincular a alunos": "Select several topics to link to students",
+"Vincular várias": "Link several",
+"Toque nas matérias para marcar": "Tap topics to select them",
+"1 matéria marcada": "1 topic selected",
+"{0} matérias marcadas": "{0} topics selected",
+"O que o aluno já tem fica como está. Para tirar um tema, use Desempenho.": "What the student already has stays as it is. To remove a topic, use Performance.",
+"{0} matérias": "{0} topics",
+"1 matéria": "1 topic",
+"Pronto: {0} vinculada{1} a {2}.": "Done: {0} linked to {2}.",
+"{0} já tinha{1} essas matérias.": "{0} already had these topics."
 }

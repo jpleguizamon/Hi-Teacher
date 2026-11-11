@@ -1272,6 +1272,13 @@ body.lead-open #authGate,body.lead-open #onboardingGate{display:none!important}
 .planr-links a:hover{border-color:var(--accent-line)}
 .planr-stu{display:flex;flex-wrap:wrap;gap:0.375rem}
 .planr-stu .filter-chip{cursor:default;font-size:0.75rem;color:var(--text)}
+.planr-sel-btn{width:auto!important;padding:0 0.75rem;font-size:0.75rem;font-weight:700;white-space:nowrap}
+.planr-sel-btn.active{background:var(--accent-fill);color:var(--accent-ink);border-color:var(--accent)}
+.planr-selbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(1rem + var(--sab, 0px));width:min(36rem,calc(100% - 2rem));z-index:25;display:flex;align-items:center;flex-wrap:wrap;gap:0.5rem;padding:0.625rem 0.75rem;border-radius:var(--radius-md);background:var(--glass-raised);border:0.0625rem solid var(--accent-line);box-shadow:var(--glow-sm);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
+.planr-selbar span{flex:1;min-width:8rem;font-size:0.8125rem;font-weight:700;color:var(--text)}
+.planr-selbar .planr-main-btn:disabled{opacity:.45;cursor:default}
+.lesson-card.picked,.lesson-card-mini.picked{border-color:var(--accent);box-shadow:0 0 0 0.125rem var(--accent),var(--glow-sm);position:relative}
+.lesson-card.picked::after,.lesson-card-mini.picked::after{content:"✓";position:absolute;top:-0.4rem;right:-0.4rem;width:1.5rem;height:1.5rem;border-radius:50%;background:var(--accent);color:#fff;font-size:0.8125rem;font-weight:800;display:grid;place-items:center;z-index:5}
 .planr-pick{display:flex;flex-direction:column;gap:0.25rem;max-height:50vh;overflow-y:auto}
 @media (max-width: 760px){
   .planr-view{flex-direction:column;overflow-y:auto}
@@ -2884,6 +2891,7 @@ body.pdf-open{overflow:hidden}
 <div class="page-title-bar" style="margin-top:0">
 <h2 class="page-title-text">Organização de Aulas<button type="button" class="help-icon" data-help="Guarde aqui cada aula: imagens (mapas mentais, fotos do quadro), o roteiro, links e em que pasta ela fica. Toque numa aula para ver, apresentar em tela cheia ou vincular a alunos. Temas sem imagem aparecem em 'Pequenos Temas'.">!</button></h2>
 <div class="icon-controls-group">
+<button class="icon-btn-ctrl planr-sel-btn" id="plannerSelBtn" title="Marcar várias matérias para vincular a alunos">Vincular várias</button>
 <button class="icon-btn-ctrl" id="addPlanBtn" title="Nova aula">+</button>
 </div>
 </div>
@@ -2893,6 +2901,7 @@ body.pdf-open{overflow:hidden}
 <select id="plannerSort" class="planr-sort" aria-label="Ordem das aulas"><option value="manual">Minha ordem</option><option value="az">A a Z</option><option value="new">Mais recentes</option><option value="used">Mais usadas</option></select>
 </div>
 <div class="planr-folders" id="plannerFolders" hidden></div>
+<div class="planr-selbar" id="plannerSelBar" hidden><span id="plannerSelCount"></span><button type="button" class="planr-main-btn" id="plannerSelGo">Vincular a alunos</button><button type="button" class="edit" id="plannerSelCancel">Cancelar</button></div>
 <div class="lesson-grid" id="plannerList"></div>
 <div class="page-title-bar" style="margin-top:28px" id="plannerMiniTitle"><h2 class="page-title-text">Pequenos Temas <span class="planr-count" id="plannerMiniCount"></span></h2></div>
 <div class="lesson-grid-mini" id="plannerListNoAttachment"></div>
@@ -4052,7 +4061,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.79";
+const APP_VERSION = "8.80";
 // Idioma (8.42): troca entre português e inglês e recarrega. Fica guardado neste aparelho.
 function langSwitchLabel(){ return APP_LANG === "en" ? "🌐 Mudar para português" : "🌐 Switch to English"; }
 function langSwitch(){
@@ -16484,7 +16493,7 @@ renderPlannerNoAttachment(uses);
 renderPlannerPresets();
 
 const filtering = !!plannerQuery || !!plannerFolder;
-const canDrag = plannerSort() === "manual" && !filtering;
+const canDrag = plannerSort() === "manual" && !filtering && !plannerSel;
 const attachedPlans = plannerOrdered(lessonPlans.filter(p => themeHasAttachment(p) && planMatches(p)), uses);
 
 if (attachedPlans.length === 0) {
@@ -16519,7 +16528,8 @@ ${isStacked ? `<span class="file-count-badge"><svg class="inline-icon" viewBox="
 <div class="lesson-title-out">${escapeHtml(plan.topic)}</div>
 ${planMetaHTML(plan, uses)}
 `;
-el.onclick = () => openPlanViewer(plan.id);
+el.onclick = () => plannerSel ? plannerPick(plan.id, el) : openPlanViewer(plan.id);
+if (plannerSel && plannerSel.has(plan.id)) el.classList.add("picked");
 el.onkeydown = e => { if ((e.key === "Enter" || e.key === " ") && e.target === el) { e.preventDefault(); openPlanViewer(plan.id); } };
 container.appendChild(el);
 if (!canDrag) return;
@@ -16753,6 +16763,54 @@ ${unlock.length ? `<section class="planr-sec"><h3>Libera no app do aluno</h3><di
 side.querySelector("#vPlanLink").onclick = () => openPlanLinkStudents(plan);
 }
 // Vincular a aula a vários alunos de uma vez (o mesmo vínculo de Desempenho; tirar continua por lá).
+// Vincular várias matérias a vários alunos de uma vez (8.80): "Vincular várias" → tocar nas matérias → escolher os alunos.
+let plannerSel = null;   // Set com os ids marcados (aulas do professor e Matérias prontas "mp:...")
+function plannerSelBar(){
+const bar = document.getElementById("plannerSelBar"), n = plannerSel ? plannerSel.size : 0;
+bar.hidden = !plannerSel;
+document.getElementById("plannerSelBtn").classList.toggle("active", !!plannerSel);
+document.getElementById("plannerSelCount").textContent = n === 0 ? "Toque nas matérias para marcar" : n === 1 ? "1 matéria marcada" : `${n} matérias marcadas`;
+document.getElementById("plannerSelGo").disabled = !n;
+}
+function plannerPick(id, el){
+if (plannerSel.has(id)) plannerSel.delete(id); else plannerSel.add(id);
+el.classList.toggle("picked", plannerSel.has(id));
+plannerSelBar();
+}
+function plannerSelEnd(){ plannerSel = null; plannerSelBar(); renderPlanner(); }
+document.getElementById("plannerSelBtn").onclick = () => { if (plannerSel) { plannerSelEnd(); return; } plannerSel = new Set(); plannerSelBar(); renderPlanner(); };
+document.getElementById("plannerSelCancel").onclick = plannerSelEnd;
+document.getElementById("plannerSelGo").onclick = () => { if (plannerSel && plannerSel.size) planLinkMany([...plannerSel], plannerSelEnd); };
+// Liga as matérias aos alunos marcados (pula o que o aluno já tem) e libera no app o que elas liberam.
+function planLinkMany(ids, done){
+const plans = ids.map(getThemeById).filter(Boolean);
+const act = students.filter(s => s.active !== false).sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+const body = document.createElement("div");
+if (!act.length) { body.innerHTML = `<div class="field-hint">Nenhum aluno ativo.</div>`; openQuickModal("Vincular a alunos", "", body, null, "Fechar"); return; }
+body.innerHTML = `${act.length > 8 ? `<div class="field"><input type="search" id="plSearch" placeholder="Buscar aluno" aria-label="Buscar aluno" autocomplete="off"></div>` : ""}<div class="planr-pick">${act.map(s => `<label class="join-diff" data-pn="${escapeHtml(plannerNorm(s.name))}"><input type="checkbox" value="${escapeHtml(String(s.id))}"> <span>${escapeHtml(s.name)}</span></label>`).join("")}</div>
+<div class="field-hint" style="margin-top:0.5rem">O que o aluno já tem fica como está. Para tirar um tema, use Desempenho.</div>`;
+const q = body.querySelector("#plSearch");
+if (q) q.oninput = () => { const v = plannerNorm(q.value); body.querySelectorAll("[data-pn]").forEach(l => { l.hidden = v && !l.dataset.pn.includes(v); }); };
+openQuickModal("Vincular a alunos", plans.length === 1 ? plans[0].topic : `${plans.length} matérias`, body, () => {
+const picked = [...body.querySelectorAll("input[type=checkbox]:checked")].map(i => act.find(s => String(s.id) === i.value)).filter(Boolean);
+if (!picked.length) { alert("Marque pelo menos um aluno."); return; }
+let added = 0;
+picked.forEach(s => {
+s.themes = Array.isArray(s.themes) ? s.themes : [];
+plans.forEach(plan => {
+if (s.themes.some(t => t.themeId === plan.id)) return;
+const a = { themeId: plan.id, rating: null, date: todayBr() };
+s.themes.push(a); added++;
+if (matUnlock(plan).length) matRelease(s, a, true);
+});
+});
+saveStudents();
+closeQuickModal();
+const names = picked.map(s => firstName(s.name)).join(", ");
+showCloudWarning(added ? `Pronto: ${plans.length === 1 ? "1 matéria" : `${plans.length} matérias`} vinculada${plans.length === 1 ? "" : "s"} a ${names}.` : `${names} já tinha${picked.length > 1 ? "m" : ""} essas matérias.`);
+if (done) done(); else renderPlanner();
+}, "Cancelar", "Vincular");
+}
 function openPlanLinkStudents(plan){
 const act = students.filter(s => s.active !== false).sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
 const body = document.createElement("div");
@@ -17702,7 +17760,7 @@ if (title) title.hidden = hide || !groups.size;
 box.hidden = hide || !groups.size;
 box.innerHTML = [...groups].map(([g, list]) => `<details class="settings-card month-group"${matPresetOpen === g || (q && groups.size <= 3) ? " open" : ""} data-mgroup="${escapeHtml(g)}"><summary class="month-sum"><span>${escapeHtml(g)}</span><span class="stu-muted">${list.length}</span><span class="settings-row-chevron" aria-hidden="true">›</span></summary><div class="month-body"><div class="mat-preset-list">${list.map(p => `<button type="button" class="lesson-card-mini" data-mpid="${escapeHtml(p.id)}"><span class="lesson-title-mini">${escapeHtml(p.topic)}</span>${p.topic !== p.baseTopic ? `<span class="mat-renamed">${escapeHtml(p.baseTopic)}</span>` : ""}</button>`).join("")}</div></div></details>`).join("");
 box.querySelectorAll("details[data-mgroup]").forEach(d => d.addEventListener("toggle", () => { if (d.open) matPresetOpen = d.dataset.mgroup; else if (matPresetOpen === d.dataset.mgroup) matPresetOpen = null; }));
-box.querySelectorAll("[data-mpid]").forEach(b => b.onclick = () => openMateriaEditor(b.dataset.mpid));
+box.querySelectorAll("[data-mpid]").forEach(b => { if (plannerSel && plannerSel.has(b.dataset.mpid)) b.classList.add("picked"); b.onclick = () => plannerSel ? plannerPick(b.dataset.mpid, b) : openMateriaEditor(b.dataset.mpid); });
 }
 
 // Considera "sem anexo" um tema/aula sem nenhuma imagem — conteúdos mais simples,
@@ -17955,7 +18013,8 @@ el.type = "button";
 el.className = "lesson-card-mini planr-mini";
 const f = planFolder(plan);
 el.innerHTML = `<span class="lesson-title-mini">${escapeHtml(plan.topic)}</span>${f ? `<span class="planr-mini-folder">${escapeHtml(f)}</span>` : ""}${planMetaHTML(plan, uses)}`;
-el.onclick = () => openPlanViewer(plan.id);
+el.onclick = () => plannerSel ? plannerPick(plan.id, el) : openPlanViewer(plan.id);
+if (plannerSel && plannerSel.has(plan.id)) el.classList.add("picked");
 container.appendChild(el);
 });
 }
