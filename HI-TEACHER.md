@@ -540,6 +540,11 @@ Versão do app 8.46; o arquivo do servidor desta rodada é `supabase/schema-v8.4
 - As linhas "Meu plano", "Indique um professor" e "Assinaturas" (só do dono do app) estavam parando dentro da pasta Dados e backup, porque não estavam na lista de nenhuma pasta de Configurações. Agora ficam em **Conta**. Linha nova em Configurações: pôr o id dela na lista `rows` de uma pasta em `SETTINGS_FOLDERS`, senão ela cai em Dados e backup.
 - Dono do app = linha em `app_admins` com o e-mail com que ele entra (não é só o do arquivo SQL). Para incluir: `insert into public.app_admins (user_id) select id from auth.users where lower(email)=lower('EMAIL') on conflict do nothing;`
 
+## Slides em página, rastro do laser e vários motivos de saída (8.78)
+- **Slides da aula** virou página própria (`data-page="slides"`, `#slidesPage`, `renderSlidesPage`), no jeito do Organizador de Aulas: grade de capas (primeiro slide, pilha quando tem mais de um, selo "N slides"), tocar na capa apresenta, Renomear/Apagar embaixo, "+" no topo abre "Pôr PDF" / "Pôr fotos". `openSlidesLibrary()` agora só abre a página. Guardado igual à 8.76 (nada muda nas apresentações já guardadas).
+- **Laser com rastro:** canvas `.slide-trail` por cima do slide; os pontos do laser somem em 550 ms, afinando e apagando.
+- **Motivo da saída: pode marcar mais de um.** `exitReason` continua texto; vários motivos ficam juntos com vírgula (`"price,schedule"`). Um motivo só (dado antigo) funciona igual. Helpers: `exitKeys`, `exitChipsFill`, `exitChipsRead`. Pergunta da saída, cadastro do aluno inativo e "Inativar" de vários usam botões que ligam/desligam ("Pular" vira "Salvar" ao marcar). Estatísticas, resumo do mês e painel da escola contam cada motivo. Motivo fora da lista (ex.: "Plano grátis") fica guardado como está.
+
 ## Mensalidade de quem paga no fim do mês (8.77)
 - Jp viu o Matheus duas vezes em "Mensalidades deste mês" (out/2026 vence 15/11 e nov/2026 vence 15/12). Aluno com "Paga no fim do mês das aulas" agora só aparece no Início depois que o mês das aulas acabou: em novembro aparece a de outubro; a de novembro só em dezembro. Nada muda na ficha do aluno nem no que já foi pago.
 

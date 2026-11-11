@@ -4264,5 +4264,14 @@
 "🔴 Laser": "🔴 Laser",
 "✏️ Caneta": "✏️ Pen",
 "Apagar desenho": "Clear drawing",
-"Tela cheia": "Full screen"
+"Tela cheia": "Full screen",
+"Feito no PowerPoint, Google Apresentações ou Canva? Salve ou baixe como PDF e ponha aqui com o +. Na aula online, compartilhe a tela, toque na apresentação e use as setas do teclado (ou toque nas laterais) para passar. L liga o laser, C a caneta. Os slides ficam guardados neste aparelho.": "Made in PowerPoint, Google Slides or Canva? Save or download it as PDF and add it here with +. In an online lesson, share your screen, tap the presentation and use the keyboard arrows (or tap the sides) to move. L turns on the laser, C the pen. Slides are kept on this device.",
+"Pôr PDF ou fotos": "Add PDF or photos",
+"(pode marcar mais de um)": "(you can pick more than one)",
+"Apresentar {2}": "Present {2}",
+"Nenhuma apresentação guardada. Toque no '+' acima para pôr um PDF ou fotos dos seus slides.": "No presentations yet. Tap '+' above to add a PDF or photos of your slides.",
+"PowerPoint, Google Apresentações ou Canva: salve ou baixe como PDF. Fotos entram na ordem do nome do arquivo.": "PowerPoint, Google Slides or Canva: save or download as PDF. Photos go in file name order.",
+"Nova apresentação": "New presentation",
+"[data-s=\"{0}\"]": null,
+"Pode marcar mais de um. Ajuda a ver, nas Estatísticas, por que os alunos saem.": "You can pick more than one. It helps you see in Statistics why students leave."
 }

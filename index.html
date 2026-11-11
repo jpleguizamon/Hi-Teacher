@@ -402,10 +402,14 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .fall-info{font-size:0.8125rem;color:var(--muted)}
 .fall-list{display:flex;flex-direction:column;gap:0.375rem}
 .fall-item{display:flex;justify-content:space-between;align-items:center;gap:0.5rem;text-align:left;padding:0.75rem 0.875rem;border-radius:0.875rem;border:0.0625rem solid var(--glass-border-soft);background:var(--glass-inset);color:var(--text);font:inherit;font-weight:600;cursor:pointer}
-.slide-lib-row{display:flex;align-items:center;gap:0.75rem;padding:0.625rem 0;border-bottom:0.0625rem solid var(--hairline);flex-wrap:wrap}
-.slide-thumb{width:5.5rem;height:3.1rem;object-fit:contain;background:#000;border-radius:0.375rem;flex:none}
-.slide-lib-row .fall-lib-name{flex:1;min-width:8rem}
-.slide-lib-btns{display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap}
+.slide-card{cursor:pointer}
+.slide-card .slide-cover{aspect-ratio:16/9;height:auto;background:#000}
+.slide-card .slide-cover img{object-fit:contain;background:#000}
+.slide-play{position:absolute;left:50%;top:50%;width:2.75rem;height:2.75rem;margin:-1.375rem 0 0 -1.375rem;border-radius:50%;display:flex;align-items:center;justify-content:center;padding-left:0.2rem;background:rgba(79,125,255,.92);color:#fff;font-size:1rem;opacity:0;transform:scale(.85);transition:opacity .2s,transform .2s;z-index:3;box-shadow:0 0.375rem 1rem rgba(0,0,0,.4)}
+.slide-card:hover .slide-play,.slide-card:focus-visible .slide-play{opacity:1;transform:scale(1)}
+.slide-card-btns{display:flex;justify-content:center;gap:0.875rem;margin-top:0.375rem}
+.slide-card-btns .btn-link-inline{font-size:0.75rem}
+.slide-trail{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .btn-link-inline.slide-del{color:#f87171}
 .slide-show{position:fixed;inset:0;z-index:2000;background:#000;display:flex;flex-direction:column;user-select:none;-webkit-user-select:none}
 .slide-stage{position:relative;flex:1;min-height:0;display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:none}
@@ -2821,6 +2825,19 @@ body.pdf-open{overflow:hidden}
 <div id="plannerPresets"></div>
 </main>
 
+<main id="slidesPage" style="display:none">
+<div class="page-title-bar" style="margin-top:0">
+<h2 class="page-title-text">Slides da aula<button type="button" class="help-icon" data-help="Feito no PowerPoint, Google Apresentações ou Canva? Salve ou baixe como PDF e ponha aqui com o +. Na aula online, compartilhe a tela, toque na apresentação e use as setas do teclado (ou toque nas laterais) para passar. L liga o laser, C a caneta. Os slides ficam guardados neste aparelho.">!</button></h2>
+<div class="icon-controls-group">
+<button class="icon-btn-ctrl" id="addSlidesBtn" title="Pôr PDF ou fotos">+</button>
+</div>
+</div>
+<div class="field-hint" id="slBusy" style="margin-bottom:0.75rem;color:var(--accent)" hidden></div>
+<div class="auth-error" id="slErr" style="margin-bottom:0.75rem"></div>
+<div class="lesson-grid" id="slidesList"></div>
+<input type="file" id="slPdf" accept="application/pdf,.pdf" hidden><input type="file" id="slImg" accept="image/*" multiple hidden>
+</main>
+
 <main id="agendaPage" style="display:none">
 <div class="page-title-bar" style="margin-top:0">
 <h2 class="page-title-text">Agenda<button type="button" class="help-icon" data-help="Veja seus dias de aula no calendário, junto com feriados nacionais e da sua cidade (configure em Configurações → Localização).">!</button></h2>
@@ -3016,7 +3033,7 @@ body.pdf-open{overflow:hidden}
 </button>
 <div class="nav-sub">
 <button class="nav-item" data-page="planner">Organizador de Aulas</button>
-<button class="nav-item" id="navSlides">Slides da aula</button>
+<button class="nav-item" data-page="slides">Slides da aula</button>
 <button class="nav-item" disabled>Criador de Aulas <span class="badge-soon">Em breve</span></button>
 </div>
 </div>
@@ -3223,7 +3240,7 @@ body.pdf-open{overflow:hidden}
 <div class="field" style="flex:1"><label>Data de entrada</label><input id="fEntry" type="date"></div>
 <div class="field" id="exitDateFieldWrapper" style="flex:1;display:none"><label>Data de saída</label><input id="fExit" type="date"></div>
 </div>
-<div class="field" id="exitReasonField" style="display:none"><label>Motivo da saída</label><select id="fExitReason"></select></div>
+<div class="field" id="exitReasonField" style="display:none"><label>Motivo da saída <span class="field-hint" style="display:inline;margin:0">(pode marcar mais de um)</span></label><div class="choice-chips" id="fExitReason"></div></div>
 <div class="field" id="fPaymentsField" style="display:none"><label id="fPaymentsLabel">Mensalidades pagas</label>
 <div class="pay-months" id="fPayMonths"></div>
 <div class="field-hint" id="fPaymentsHint" style="margin-top:0.375rem">Toque no mês pra marcar como pago ou não pago.</div>
@@ -3967,7 +3984,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.77";
+const APP_VERSION = "8.78";
 // Idioma (8.42): troca entre português e inglês e recarrega. Fica guardado neste aparelho.
 function langSwitchLabel(){ return APP_LANG === "en" ? "🌐 Mudar para português" : "🌐 Switch to English"; }
 function langSwitch(){
@@ -8491,71 +8508,85 @@ c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
 return await canvasJpeg(c);
 } finally { URL.revokeObjectURL(url); }
 }
-let slidesBusy = "";
-function openSlidesLibrary(){
-const body = document.createElement("div");
-const urls = [];
-const draw = async () => {
-urls.splice(0).forEach(u => URL.revokeObjectURL(u));
+let slidesBusy = "", slidesUrls = [];
+// Página dos slides (8.78): capas em grade, como o Organizador de Aulas. Tocar na capa apresenta.
+async function renderSlidesPage(){
+const box = document.getElementById("slidesList"); if (!box) return;
 const decks = await slidesAll();
-body.innerHTML = `<div class="demo-actions" style="margin:0 0 0.75rem"><label class="btn-historico file-pick">Pôr PDF<input type="file" id="slPdf" accept="application/pdf,.pdf" hidden></label><label class="btn-historico file-pick">Pôr fotos<input type="file" id="slImg" accept="image/*" multiple hidden></label></div>
-<div class="field-hint" style="margin-bottom:0.75rem">Feito no PowerPoint, Google Apresentações ou Canva? Salve ou baixe como PDF e ponha aqui. Na aula online, compartilhe a tela, toque em Apresentar e use as setas do teclado (ou toque nas laterais) para passar. Os slides ficam guardados neste aparelho.</div>
-<div class="field-hint" id="slBusy" style="margin-bottom:0.75rem;color:var(--accent)"${slidesBusy ? "" : " hidden"}>${escapeHtml(slidesBusy)}</div>
-<div class="settings-group-label" style="margin-top:0">Suas apresentações</div>
-${decks.length ? decks.map(d => { const u = d.pages[0] ? URL.createObjectURL(d.pages[0]) : ""; if (u) urls.push(u); return `<div class="slide-lib-row"><img class="slide-thumb" alt="" src="${u}"><div class="fall-lib-name">${escapeHtml(d.title)}<div class="stu-muted">${d.pages.length === 1 ? "1 slide" : `${d.pages.length} slides`}</div></div><div class="slide-lib-btns"><button type="button" class="btn-historico" data-sl-play="${d.id}">Apresentar</button><button type="button" class="btn-link-inline" data-sl-ren="${d.id}">Renomear</button><button type="button" class="btn-link-inline slide-del" data-sl-del="${d.id}">Apagar</button></div></div>`; }).join("") : `<div class="stu-empty">Nenhuma ainda. Ponha um PDF ou fotos dos seus slides.</div>`}
-<div class="auth-error" id="slErr"></div>`;
-const err = body.querySelector("#slErr");
-const busy = t => { slidesBusy = t; const b = body.querySelector("#slBusy"); if (b) { b.hidden = !t; b.textContent = t; } };
+slidesUrls.splice(0).forEach(u => URL.revokeObjectURL(u));
+const busyEl = document.getElementById("slBusy"); busyEl.hidden = !slidesBusy; busyEl.textContent = slidesBusy;
+box.innerHTML = decks.length ? decks.map(d => {
+const u = d.pages[0] ? URL.createObjectURL(d.pages[0]) : ""; if (u) slidesUrls.push(u);
+const n = d.pages.length;
+return `<div class="lesson-card slide-card${n > 1 ? " stacked" : ""}" data-sl-play="${d.id}" role="button" tabindex="0" aria-label="Apresentar ${escapeHtml(d.title)}">
+<div class="lesson-img-wrap slide-cover"><img src="${u}" class="lesson-img" loading="lazy" alt=""><span class="file-count-badge">${n === 1 ? "1 slide" : `${n} slides`}</span><span class="slide-play" aria-hidden="true">▶</span></div>
+<div class="lesson-title-out">${escapeHtml(d.title)}</div>
+<div class="slide-card-btns"><button type="button" class="btn-link-inline" data-sl-ren="${d.id}">Renomear</button><button type="button" class="btn-link-inline slide-del" data-sl-del="${d.id}">Apagar</button></div>
+</div>`; }).join("") : "<div style='color:var(--muted);font-size:13px;grid-column:1/-1;text-align:center;padding:30px 0'>Nenhuma apresentação guardada. Toque no '+' acima para pôr um PDF ou fotos dos seus slides.</div>";
+const find = async id => (await slidesAll()).find(x => x.id === id);
+box.querySelectorAll("[data-sl-play]").forEach(c => {
+const play = async () => { const d = await find(c.dataset.slPlay); if (d) slidesShow(d); };
+c.onclick = e => { if (!e.target.closest("button")) play(); };
+c.onkeydown = e => { if ((e.key === "Enter" || e.key === " ") && e.target === c) { e.preventDefault(); play(); } };
+});
+box.querySelectorAll("[data-sl-ren]").forEach(b => b.onclick = async () => {
+const d = await find(b.dataset.slRen); if (!d) return;
+const t = prompt("Nome da apresentação", d.title); if (t === null || !t.trim()) return;
+await slidesPut({ ...d, title: t.trim().slice(0, 80) }); renderSlidesPage();
+});
+box.querySelectorAll("[data-sl-del]").forEach(b => b.onclick = async () => {
+const d = await find(b.dataset.slDel); if (!d) return;
+if (!confirm(`Apagar "${d.title}" deste aparelho?`)) return;
+await slidesDel(d.id); renderSlidesPage();
+});
+}
+function openSlidesLibrary(){ openPage("slides"); }
+(function(){
+const err = () => document.getElementById("slErr");
+const busy = t => { slidesBusy = t; const b = document.getElementById("slBusy"); if (b) { b.hidden = !t; b.textContent = t; } };
 const save = async (title, pages) => {
-if (!pages.length) { err.textContent = "Não achei páginas nesse arquivo."; return; }
+if (!pages.length) { err().textContent = "Não achei páginas nesse arquivo."; return; }
 const ok = await slidesPut({ id: "s" + Date.now().toString(36), title: title.slice(0, 80) || "Apresentação", pages, created: Date.now() });
-if (!ok) err.textContent = "Não consegui guardar no aparelho. Pode ser falta de espaço: apague uma apresentação antiga e tente de novo.";
+if (!ok) err().textContent = "Não consegui guardar no aparelho. Pode ser falta de espaço: apague uma apresentação antiga e tente de novo.";
 };
-body.querySelector("#slPdf").onchange = async e => {
+const refresh = () => { if (currentPage === "slides") renderSlidesPage(); };
+document.getElementById("addSlidesBtn").onclick = () => {
+const body = document.createElement("div");
+body.innerHTML = `<div class="demo-actions" style="margin:0"><button type="button" class="btn-historico" data-pick="slPdf">Pôr PDF</button><button type="button" class="btn-historico" data-pick="slImg">Pôr fotos</button></div><div class="field-hint" style="margin-top:0.75rem">PowerPoint, Google Apresentações ou Canva: salve ou baixe como PDF. Fotos entram na ordem do nome do arquivo.</div>`;
+body.querySelectorAll("[data-pick]").forEach(b => b.onclick = () => { closeQuickModal(); document.getElementById(b.dataset.pick).click(); });
+openQuickModal("Nova apresentação", "", body, null, "Fechar");
+};
+document.getElementById("slPdf").onchange = async e => {
 const file = e.target.files && e.target.files[0]; e.target.value = ""; if (!file) return;
-if (slidesBusy) { err.textContent = "Espere terminar o arquivo que está sendo aberto."; return; }
-err.textContent = "";
+if (slidesBusy) { err().textContent = "Espere terminar o arquivo que está sendo aberto."; return; }
+err().textContent = "";
 try {
 busy("Abrindo o PDF…");
 const r = await slidesFromPdf(file, (i, n) => busy(`Preparando os slides… ${i} de ${n}`));
 await save(file.name.replace(/\.pdf$/i, "").replace(/[_-]+/g, " ").trim(), r.pages);
-if (r.cut) err.textContent = "Esse PDF tem mais de 300 páginas: guardei só as 300 primeiras.";
-} catch(x) { console.warn("Slides: PDF", x); err.textContent = /internet/.test(x && x.message) ? "Preciso de internet na primeira vez para abrir PDF." : "Não consegui abrir esse PDF. Se ele tiver senha, salve uma cópia sem senha."; }
+if (r.cut) err().textContent = "Esse PDF tem mais de 300 páginas: guardei só as 300 primeiras.";
+} catch(x) { console.warn("Slides: PDF", x); err().textContent = /internet/.test(x && x.message) ? "Preciso de internet na primeira vez para abrir PDF." : "Não consegui abrir esse PDF. Se ele tiver senha, salve uma cópia sem senha."; }
 finally { busy(""); }
-if (body.isConnected) draw();
+refresh();
 };
-body.querySelector("#slImg").onchange = async e => {
+document.getElementById("slImg").onchange = async e => {
 const files = [...(e.target.files || [])].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true })); e.target.value = ""; if (!files.length) return;
-if (slidesBusy) { err.textContent = "Espere terminar o arquivo que está sendo aberto."; return; }
-err.textContent = "";
+if (slidesBusy) { err().textContent = "Espere terminar o arquivo que está sendo aberto."; return; }
+err().textContent = "";
 try {
 const pages = [];
 for (let i = 0; i < files.length; i++) { busy(`Preparando os slides… ${i + 1} de ${files.length}`); try { pages.push(await slidesFromImage(files[i])); } catch(x) {} }
 await save(files.length === 1 ? files[0].name.replace(/\.[^.]+$/, "") : "Apresentação " + new Date().toLocaleDateString("pt-BR"), pages);
 } finally { busy(""); }
-if (body.isConnected) draw();
+refresh();
 };
-body.querySelectorAll("[data-sl-play]").forEach(b => b.onclick = async () => { const d = (await slidesAll()).find(x => x.id === b.dataset.slPlay); if (d) slidesShow(d); });
-body.querySelectorAll("[data-sl-ren]").forEach(b => b.onclick = async () => {
-const d = (await slidesAll()).find(x => x.id === b.dataset.slRen); if (!d) return;
-const t = prompt("Nome da apresentação", d.title); if (t === null || !t.trim()) return;
-await slidesPut({ ...d, title: t.trim().slice(0, 80) }); draw();
-});
-body.querySelectorAll("[data-sl-del]").forEach(b => b.onclick = async () => {
-const d = (await slidesAll()).find(x => x.id === b.dataset.slDel); if (!d) return;
-if (!confirm(`Apagar "${d.title}" deste aparelho?`)) return;
-await slidesDel(d.id); draw();
-});
-};
-draw();
-openQuickModal("Slides da aula", "Apresente em tela cheia na aula online, com laser e caneta.", body, null, "Fechar");
-}
+})();
 // Tela de apresentação: setas/espaço/clicador passam; L laser, C caneta, X apaga o desenho, B tela preta, F tela cheia, Esc sai.
 function slidesShow(deck){
 const el = document.createElement("div");
 el.className = "slide-show";
 el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", deck.title);
-el.innerHTML = `<div class="slide-stage"><img class="slide-img" alt=""><canvas class="slide-ink"></canvas><div class="slide-black" hidden></div><div class="slide-laser" hidden></div></div>
+el.innerHTML = `<div class="slide-stage"><img class="slide-img" alt=""><canvas class="slide-ink"></canvas><div class="slide-black" hidden></div><canvas class="slide-trail"></canvas><div class="slide-laser" hidden></div></div>
 <div class="slide-bar"><button type="button" data-s="prev" aria-label="Slide anterior">◀</button><span class="slide-count" data-s="count"></span><button type="button" data-s="next" aria-label="Próximo slide">▶</button><span class="slide-sep"></span><button type="button" data-s="laser">🔴 Laser</button><button type="button" data-s="pen">✏️ Caneta</button><button type="button" data-s="clear">Apagar desenho</button><button type="button" data-s="full">Tela cheia</button><button type="button" data-s="exit">Sair</button></div>`;
 document.body.appendChild(el);
 const img = el.querySelector(".slide-img"), ink = el.querySelector(".slide-ink"), ictx = ink.getContext("2d"), laser = el.querySelector(".slide-laser"), black = el.querySelector(".slide-black"), stage = el.querySelector(".slide-stage");
@@ -8563,6 +8594,29 @@ const q = s => el.querySelector(`[data-s="${s}"]`);
 const urls = deck.pages.map(b => URL.createObjectURL(b));
 const strokes = deck.pages.map(() => []);   // desenho de cada slide, só enquanto a apresentação está aberta
 let i = 0, tool = "", drawing = null, hideT = 0;
+// Rastro do laser (8.78): os últimos pontos somem em meio segundo, afinando e apagando.
+const trail = el.querySelector(".slide-trail"), tctx = trail.getContext("2d"), TRAIL_MS = 550;
+let tpts = [], traf = 0;
+const trailDraw = () => {
+traf = 0;
+const dpr = window.devicePixelRatio || 1, w = Math.round(trail.clientWidth * dpr), h = Math.round(trail.clientHeight * dpr);
+if (trail.width !== w || trail.height !== h) { trail.width = w; trail.height = h; }
+tctx.clearRect(0, 0, w, h);
+const now = performance.now();
+tpts = tpts.filter(p => now - p.t < TRAIL_MS);
+if (tpts.length > 1) {
+tctx.lineCap = "round"; tctx.lineJoin = "round";
+for (let k = 1; k < tpts.length; k++) {
+const a = tpts[k - 1], b = tpts[k], life = 1 - (now - b.t) / TRAIL_MS;
+tctx.strokeStyle = `rgba(255,45,45,${(0.85 * life).toFixed(3)})`;
+tctx.lineWidth = Math.max(1, 9 * dpr * life);
+tctx.shadowColor = "rgba(255,30,30,.8)"; tctx.shadowBlur = 10 * dpr * life;
+tctx.beginPath(); tctx.moveTo(a.x * dpr, a.y * dpr); tctx.lineTo(b.x * dpr, b.y * dpr); tctx.stroke();
+}
+}
+if (tpts.length) traf = requestAnimationFrame(trailDraw);
+};
+const trailAdd = (x, y) => { tpts.push({ x, y, t: performance.now() }); if (!traf) traf = requestAnimationFrame(trailDraw); };
 const fit = () => {
 const r = img.getBoundingClientRect(), sr = stage.getBoundingClientRect();
 ink.style.left = (r.left - sr.left) + "px"; ink.style.top = (r.top - sr.top) + "px";
@@ -8592,7 +8646,7 @@ const showBar = () => { el.classList.remove("idle"); clearTimeout(hideT); hideT 
 const pos = e => { const r = ink.getBoundingClientRect(); return [(e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height]; };
 stage.addEventListener("pointermove", e => {
 showBar();
-if (tool === "laser") { const sr = stage.getBoundingClientRect(); laser.hidden = false; laser.style.transform = `translate(${e.clientX - sr.left}px, ${e.clientY - sr.top}px)`; }
+if (tool === "laser") pointerMoveLaser(e);
 if (tool === "pen" && drawing) { drawing.push(pos(e)); paint(); }
 });
 stage.addEventListener("pointerdown", e => {
@@ -8601,7 +8655,7 @@ if (tool === "laser") { pointerMoveLaser(e); return; }
 // sem ferramenta: tocar na metade esquerda volta, na direita avança
 const r = stage.getBoundingClientRect(); go(i + (e.clientX - r.left < r.width / 3 ? -1 : 1));
 });
-const pointerMoveLaser = e => { const sr = stage.getBoundingClientRect(); laser.hidden = false; laser.style.transform = `translate(${e.clientX - sr.left}px, ${e.clientY - sr.top}px)`; };
+const pointerMoveLaser = e => { const sr = stage.getBoundingClientRect(), x = e.clientX - sr.left, y = e.clientY - sr.top; laser.hidden = false; laser.style.transform = `translate(${x}px, ${y}px)`; trailAdd(x, y); };
 const endDraw = () => { drawing = null; };
 stage.addEventListener("pointerup", endDraw); stage.addEventListener("pointercancel", endDraw);
 stage.addEventListener("pointerleave", () => { if (tool === "laser") laser.hidden = true; });
@@ -8609,7 +8663,7 @@ const full = () => { try { if (document.fullscreenElement) document.exitFullscre
 const close = () => {
 document.removeEventListener("keydown", onKey); window.removeEventListener("resize", fit); document.removeEventListener("fullscreenchange", fit);
 try { if (document.fullscreenElement) document.exitFullscreen(); } catch(x) {}
-clearTimeout(hideT); urls.forEach(u => URL.revokeObjectURL(u)); el.remove();
+clearTimeout(hideT); cancelAnimationFrame(traf); urls.forEach(u => URL.revokeObjectURL(u)); el.remove();
 };
 const onKey = e => {
 if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
@@ -16014,12 +16068,13 @@ const list = bulkStudents();
 if (!list.length) return;
 const body = document.createElement("div");
 body.innerHTML = `<div class="field"><label>Data de saída (a mesma pra todos)</label><input type="date" class="bulk-exit" value="${isoOf(new Date())}"></div>
-<div class="field"><label>Motivo da saída</label><select class="bulk-why">${exitReasonOptions("")}</select></div>`;
+<div class="field"><label>Motivo da saída <span class="field-hint" style="display:inline;margin:0">(pode marcar mais de um)</span></label><div class="choice-chips bulk-why"></div></div>`;
+exitChipsFill(body.querySelector(".bulk-why"), "");
 openQuickModal(`Inativar ${list.length} aluno${list.length > 1 ? "s" : ""}`, list.map(x => x.name).join(", "), body, () => {
 const date = body.querySelector(".bulk-exit").value;
 if (!date) { alert("Escolha a data de saída."); return; }
 if (!confirm(`Inativar ${list.length} aluno${list.length > 1 ? "s" : ""} com saída em ${formatDateShort(date)}?`)) return;
-const why = body.querySelector(".bulk-why").value;
+const why = exitChipsRead(body.querySelector(".bulk-why"));
 const snaps = snapshotFields(list, ["active", "exit", "exitReason"]);
 list.forEach(x => { x.active = false; x.exit = date; if (why) x.exitReason = why; });
 closeQuickModal();
@@ -16784,7 +16839,7 @@ growthCard("Crescimento de alunos", statsGrowth(stuSeries), "alunos", "Precisa d
 card("Entradas e saídas", `+${joined} / −${left}`, `Nos últimos 12 meses. Saldo: ${joined - left > 0 ? "+" : ""}${joined - left}.`),
 (() => {
 const why = {};
-students.filter(s => s.active === false && s.exit && s.exit > yearAgo && s.exit <= todayIso).forEach(s => { const k = s.exitReason || ""; why[k] = (why[k] || 0) + 1; });
+students.filter(s => s.active === false && s.exit && s.exit > yearAgo && s.exit <= todayIso).forEach(s => { const ks = exitKeys(s); if (!ks.length) why[""] = (why[""] || 0) + 1; ks.forEach(k => { why[k] = (why[k] || 0) + 1; }); });
 const list = Object.entries(why).filter(([k]) => k).sort((a, b) => b[1] - a[1]), none = why[""] || 0;
 return card("Por que saíram", list.length ? escapeHtml(EXIT_REASONS[list[0][0]] || "Outro motivo") : "—", list.length ? list.map(([k, n]) => `${escapeHtml(EXIT_REASONS[k] || "Outro motivo")}: ${n}`).join(" · ") + (none ? ` · sem motivo: ${none}` : "") + ". Nos últimos 12 meses." : (left ? "Marque o motivo quando um aluno sair." : "Ninguém saiu nos últimos 12 meses."));
 })(),
@@ -17729,14 +17784,14 @@ currentPage = page;
 sessSet("jp_active_page", page);
 // As páginas da escola (8.25) usam a mesma tela, cada uma mostrando uma parte do painel.
 const mainOf = SCHOOL_PAGES.includes(page) ? "school" : page;
-["homePage","agendaPage","goalsPage","schoolPage","studentsPage","announcementsPage","studentAppPage","evaluationPage","evolutionFinancialPage","evolutionQuantitativePage","evolutionStatsPage","studentsPerformancePage","plannerPage","settingsPage"].forEach(id => {
+["homePage","agendaPage","goalsPage","schoolPage","studentsPage","announcementsPage","studentAppPage","evaluationPage","evolutionFinancialPage","evolutionQuantitativePage","evolutionStatsPage","studentsPerformancePage","plannerPage","slidesPage","settingsPage"].forEach(id => {
 document.getElementById(id).style.display = (id.replace("Page","")===mainOf) ? "block" : "none"
 });
 
 document.getElementById("dateLabel").textContent = {
 home:"Início", agenda:"Agenda", goals:"Metas", students:"Alunos", evaluation:"Avaliação",
 evolutionFinancial:"Evolução Financeira", evolutionQuantitative:"Evolução Quantitativa", evolutionStats:"Estatísticas",
-studentsPerformance:"Desempenho", planner:"Organização de Aulas", settings:"Configurações", announcements:"Avisos para os alunos", studentApp:"Liberar no app",
+studentsPerformance:"Desempenho", planner:"Organização de Aulas", slides:"Slides da aula", settings:"Configurações", announcements:"Avisos para os alunos", studentApp:"Liberar no app",
 school:"Início", schoolTeam:"Professores", schoolMoney:"Evolução Financeira da escola", schoolQty:"Evolução Quantitativa da escola", schoolStats:"Estatísticas da escola", schoolNotices:"Avisos da escola"
 }[page] || "Início";
 
@@ -17771,6 +17826,7 @@ else if(page==="announcements") renderAnnouncementsPage();
 else if(SCHOOL_PAGES.includes(page)) renderSchoolPage();
 else if(page==="studentApp") renderStudentAppPage();
 else if(page==="planner") renderPlanner();
+else if(page==="slides") renderSlidesPage();
 else if(page==="settings" && typeof renderSettingsSummary==="function") renderSettingsSummary();
 try { teacherBellUpdate(); } catch(e) {}
 }
@@ -17790,7 +17846,6 @@ b.onclick = () => openPage(b.dataset.page);
 
 document.getElementById("settingsNavBtn").onclick = () => openPage("settings");
 document.getElementById("navFall").onclick = () => { closeMenu(); openFallLibrary(); };
-document.getElementById("navSlides").onclick = () => { closeMenu(); openSlidesLibrary(); };
 document.getElementById("settingsBackBtn").onclick = () => { if (settingsFolderCur) settingsFolderOpen(null); else openPage("home"); };
 // Configurações em pastas (8.13): a tela inicial mostra o perfil e as pastas; cada pasta abre
 // as linhas de antes (os mesmos elementos, movidos pra dentro dela, então tudo continua igual).
@@ -18333,7 +18388,7 @@ document.getElementById("fEvalFreq").value = s?.evalFrequency || "";
 document.getElementById("exitDateFieldWrapper").style.display = (s && s.active === false) ? "block" : "none";
 document.getElementById("exitReasonField").style.display = (s && s.active === false) ? "block" : "none";
 try { schoolRoomFieldOpen(s); } catch(e) {}
-document.getElementById("fExitReason").innerHTML = exitReasonOptions(s?.exitReason);
+exitChipsFill(document.getElementById("fExitReason"), s?.exitReason);
 
 if (s && s.value !== undefined && s.value !== getDefaultValueFor(s)) {
 valSelect.value = "outro";
@@ -18490,7 +18545,7 @@ delete obj.needsReview;
 if (document.getElementById("fRoomField").style.display !== "none") { const room = document.getElementById("fRoom").value; if (room) obj.room = room; else delete obj.room; }
 if (!isActive) {
 obj.exit = document.getElementById("fExit").value || currentObj?.exit || isoOf(new Date());
-const why = document.getElementById("fExitReason").value;
+const why = exitChipsRead(document.getElementById("fExitReason"));
 if (why) obj.exitReason = why; else delete obj.exitReason;
 } else {
 delete obj.exit;
@@ -19367,14 +19422,24 @@ updateModalFormatPreview();
 // diferença; sem horário de preferência vale o dia todo; sem dia vale qualquer dia)
 // ===== Motivo da saída (8.24) =====
 const EXIT_REASONS = { price: "Preço", schedule: "Horário", time: "Falta de tempo", interest: "Perdeu o interesse", moved: "Mudou de cidade", teacher: "Mudou de professor", health: "Saúde", school: "Foi para outra escola", other: "Outro motivo" };
-function exitReasonLabel(s){ return s && s.exitReason ? (EXIT_REASONS[s.exitReason] || "Outro motivo") + (s.exitNote ? ` (${s.exitNote})` : "") : ""; }
-function exitReasonOptions(cur){ return `<option value="">Não informar</option>` + Object.entries(EXIT_REASONS).map(([k, v]) => `<option value="${k}"${cur === k ? " selected" : ""}>${v}</option>`).join(""); }
+// Mais de um motivo (8.78): as chaves ficam juntas, separadas por vírgula ("price,schedule"). Um motivo só continua igual a antes.
+function exitKeys(v){ const t = typeof v === "string" ? v : (v && v.exitReason) || ""; return [...new Set(String(t).split(",").map(x => x.trim()).filter(Boolean))]; }
+function exitReasonLabel(s){ const ks = exitKeys(s); return ks.length ? [...new Set(ks.map(k => EXIT_REASONS[k] || "Outro motivo"))].join(", ") + (s.exitNote ? ` (${s.exitNote})` : "") : ""; }
+// Botões de motivo que ligam e desligam. Motivo antigo fora da lista (ex.: "Plano grátis") fica guardado como está.
+function exitChipsFill(box, cur, onChange){
+const ks = exitKeys(cur || ""), extra = ks.filter(k => !EXIT_REASONS[k]);
+box.dataset.extra = extra.join(",");
+box.innerHTML = Object.entries(EXIT_REASONS).map(([k, v]) => `<button type="button" class="filter-chip${ks.includes(k) ? " selected" : ""}" data-why="${k}" aria-pressed="${ks.includes(k)}">${v}</button>`).join("");
+box.querySelectorAll("[data-why]").forEach(b => b.onclick = () => { const on = !b.classList.contains("selected"); b.classList.toggle("selected", on); b.setAttribute("aria-pressed", on); onChange && onChange(); });
+}
+function exitChipsRead(box){ return exitKeys((box.dataset.extra || "") + "," + [...box.querySelectorAll("[data-why].selected")].map(b => b.dataset.why).join(",")).join(","); }
 function askExitReason(name, done){
 const body = document.createElement("div");
-body.innerHTML = `<div class="choice-chips">${Object.entries(EXIT_REASONS).map(([k, v]) => `<button type="button" class="filter-chip" data-why="${k}">${v}</button>`).join("")}</div>
-<div class="field-hint" style="margin-top:0.625rem">Ajuda a ver, nas Estatísticas, por que os alunos saem.</div>`;
-body.querySelectorAll("[data-why]").forEach(b => b.onclick = () => { closeQuickModal(); done(b.dataset.why); });
-openQuickModal(`Por que ${firstName(name)} saiu?`, "", body, () => { closeQuickModal(); done(null); }, "Cancelar", "Pular");
+body.innerHTML = `<div class="choice-chips"></div>
+<div class="field-hint" style="margin-top:0.625rem">Pode marcar mais de um. Ajuda a ver, nas Estatísticas, por que os alunos saem.</div>`;
+const box = body.querySelector(".choice-chips"), btn = () => document.getElementById("quickLessonSave");
+exitChipsFill(box, "", () => { btn().textContent = exitChipsRead(box) ? "Salvar" : "Pular"; });
+openQuickModal(`Por que ${firstName(name)} saiu?`, "", body, () => { const w = exitChipsRead(box); closeQuickModal(); done(w || null); }, "Cancelar", "Pular");
 }
 function offerWaitlistFor(s){
 if (s.lessonFrequency === "single") return;
@@ -21289,7 +21354,7 @@ const o = out[k], [y, m] = k.split("-").map(Number);
 const first = k + "-01", last = isoOf(new Date(y, m, 0)), endIso = last < todayIso ? last : todayIso;
 o.studentLessons += given[k] || 0;
 if (s.entry && String(s.entry).slice(0, 7) === k) o.joined++;
-if (s.active === false && s.exit && String(s.exit).slice(0, 7) === k) { o.left++; const w = s.exitReason || ""; o.why[w] = (o.why[w] || 0) + 1; }
+if (s.active === false && s.exit && String(s.exit).slice(0, 7) === k) { o.left++; const ws = exitKeys(s); (ws.length ? ws : [""]).forEach(w => { o.why[w] = (o.why[w] || 0) + 1; }); }
 const inMonth = (!s.entry || s.entry <= last) && (s.active !== false || (s.exit && s.exit >= first));
 if ((!s.entry || s.entry <= endIso) && (s.active !== false || (s.exit && s.exit > endIso))) o.active++;
 if (s.payTo === "none") return;
@@ -21930,7 +21995,7 @@ ${card("Faturamento previsto", `R$ ${moneyText(Math.round(t.revenue))}`, was(`R$
 </div>`;
 // Por que saíram: últimos 12 meses.
 const why = {};
-Array.from({ length: 12 }, (_, i) => addMonths(ctx.cur, -i)).forEach(k => ctx.team.forEach(m => { const x = ctx.monthOf(m, k); if (x && x.why) Object.entries(x.why).forEach(([w, n]) => { if (w) why[w] = (why[w] || 0) + n; }); }));
+Array.from({ length: 12 }, (_, i) => addMonths(ctx.cur, -i)).forEach(k => ctx.team.forEach(m => { const x = ctx.monthOf(m, k); if (x && x.why) Object.entries(x.why).forEach(([w, n]) => exitKeys(w).forEach(k => { why[k] = (why[k] || 0) + n; })); }));
 const list = Object.entries(why).sort((a, b) => b[1] - a[1]);
 if (list.length) { const all = list.reduce((a, [, n]) => a + n, 0); html += `<div class="settings-group-label">Por que os alunos saíram (últimos 12 meses)</div><div class="settings-card school-sec-body"><div class="school-lines school-pad">${list.map(([k, n]) => `<span>${escapeHtml(EXIT_REASONS[k] || "Outro motivo")} <b>${n}</b> <i>(${Math.round(n * 100 / all)}%)</i></span>`).join("")}</div></div>`; }
 return html;
