@@ -3967,7 +3967,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.76";
+const APP_VERSION = "8.77";
 // Idioma (8.42): troca entre português e inglês e recarrega. Fica guardado neste aparelho.
 function langSwitchLabel(){ return APP_LANG === "en" ? "🌐 Mudar para português" : "🌐 Switch to English"; }
 function langSwitch(){
@@ -14955,7 +14955,8 @@ unpaidMonths(s).forEach(key => rows.push({ s, key, late: isPastDue(s, key), q: p
 if (rows.length === 0 && !allReceivables().length) { box.innerHTML = ""; bindReceivables(box); return; }
 rows.sort((a,b) => a.s.name.localeCompare(b.s.name) || a.key.localeCompare(b.key));
 const late = rows.filter(r => r.s.payAtEnd ? r.late : r.key < cur);
-const now = rows.filter(r => r.s.payAtEnd ? !r.late : r.key === cur);
+// 8.77: quem paga no fim do mês só aparece aqui depois que o mês das aulas acabou (antes saía o mês corrente junto, vencendo só no mês seguinte).
+const now = rows.filter(r => r.s.payAtEnd ? !r.late && r.key < cur : r.key === cur);
 const row = r => {
 const due = Number(r.s.dueDay) > 0 ? r.s.dueDay : null;
 const status = r.s.payAtEnd ? (r.late ? `<span class="pay-late">Atrasada · ${monthLabel(r.key)}</span>` : `<span class="pay-due">${monthLabel(r.key)} · ${feeDueText(r.s, r.key)}</span>`)
