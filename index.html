@@ -1212,6 +1212,73 @@ body.lead-open #authGate,body.lead-open #onboardingGate{display:none!important}
 }
 .lesson-card-mini:hover{ transform: translateY(-0.1875rem); border-color: var(--accent-line); box-shadow: var(--edge-light), var(--glow-sm); }
 .lesson-card-mini .lesson-title-mini{ font-size: 0.8125rem; font-weight: 650; color: var(--text); line-height: 1.3; word-break: break-word; }
+/* Organizador de Aulas (8.79): busca, pastas, informações no card e tela da aula com roteiro ao lado */
+#plannerPage [hidden],#modalViewPlanBg [hidden]{display:none!important}
+.planr-stats{color:var(--muted);font-size:0.8125rem;margin:-0.25rem 0 0.875rem;line-height:1.45}
+.planr-tools{display:flex;gap:0.5rem;align-items:stretch;margin-bottom:0.75rem}
+.planr-tools .song-search input{margin:0}
+.planr-sort{flex:none;max-width:40%;background:var(--glass-field);border:0.0625rem solid rgba(148,163,184,.18);border-radius:var(--radius-sm);color:var(--text);padding:0 0.75rem;font:600 0.8125rem var(--font-body,inherit);cursor:pointer}
+.planr-sort:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 0.1875rem rgba(79,125,255,.18)}
+.planr-folders{display:flex;flex-wrap:wrap;align-items:center;gap:0.4375rem;margin-bottom:1rem}
+.planr-folders .filter-chip{font-size:0.75rem;padding:0.4375rem 0.75rem;display:inline-flex;align-items:center;gap:0.375rem}
+.planr-chip-n{font-size:0.6875rem;opacity:.7;font-weight:600}
+.planr-fold-acts{display:inline-flex;gap:0.75rem;margin-left:0.25rem}
+.planr-fold-acts .btn-link-inline{font-size:0.75rem}
+.planr-count{font-size:0.8125rem;font-weight:600;color:var(--muted);margin-left:0.375rem}
+.lesson-card.no-drag{cursor:pointer}
+.lesson-card:focus-visible,.planr-mini:focus-visible{outline:0.125rem solid var(--accent);outline-offset:0.125rem}
+.planr-tag{position:absolute;top:0.5rem;left:0.5rem;max-width:calc(100% - 1rem);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:rgba(7,10,17,.82);border:0.0625rem solid rgba(255,255,255,.14);color:#EAF0FF;font-size:0.6875rem;font-weight:700;padding:0.1875rem 0.5rem;border-radius:var(--radius-pill);z-index:3;-webkit-backdrop-filter:blur(0.25rem);backdrop-filter:blur(0.25rem)}
+.planr-meta{display:flex;flex-wrap:wrap;justify-content:center;gap:0.25rem 0.625rem;margin-top:0.375rem;font-size:0.6875rem;font-weight:600;color:var(--muted)}
+.planr-meta span{display:inline-flex;align-items:center;gap:0.25rem}
+.planr-meta .inline-icon{width:0.8125rem;height:0.8125rem}
+.planr-empty{grid-column:1/-1;display:flex;flex-direction:column;align-items:center;gap:0.5rem;text-align:center;padding:2rem 1rem;color:var(--muted);font-size:0.8125rem;line-height:1.45;border:0.0625rem dashed var(--glass-border);border-radius:var(--radius-lg)}
+.planr-empty b{color:var(--text);font-size:0.9375rem}
+.planr-empty .btn-historico{margin-top:0.375rem}
+.planr-empty-ic{width:2rem;height:2rem;color:var(--accent)}
+.planr-mini{flex-direction:column;gap:0.3125rem;font:inherit;color:inherit;width:100%}
+.planr-mini .planr-meta{margin-top:0}
+.planr-mini-folder{font-size:0.6875rem;font-weight:700;color:var(--accent);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.planr-drop{display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;margin-top:0.625rem;padding:0.625rem 0.75rem;border:0.0625rem dashed var(--glass-border);border-radius:var(--radius-md);transition:border-color .15s,background .15s}
+.planr-drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.planr-drop label.btn-historico.file-pick{display:inline-block;margin:0}
+.planr-cover-tag{position:absolute;left:0.25rem;top:0.25rem;background:var(--accent);color:#fff;font-size:0.625rem;font-weight:700;padding:0.0625rem 0.375rem;border-radius:var(--radius-pill)}
+.planr-thumb-move{position:absolute;left:0.25rem;right:0.25rem;bottom:0.25rem;display:flex;justify-content:space-between}
+.planr-thumb-move button{width:1.5rem;height:1.5rem;border-radius:50%;border:0;background:rgba(7,10,17,.8);color:#fff;font-size:1rem;line-height:1;display:grid;place-items:center;cursor:pointer}
+.planr-thumb-move button[data-mv="1"]{margin-left:auto}
+#modalViewPlanBg{padding:0}
+#modalViewPlanBg .modal-fullscreen{max-width:none;max-height:none;height:100%;width:100%}
+#modalViewPlanBg .fullscreen-header-bar{padding-top:calc(1rem + var(--sat, 0px))}
+.planr-view-title{font-size:1.125rem;font-weight:800;color:var(--text);margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.planr-view-sub{font-size:0.75rem;color:var(--muted);margin-top:0.125rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.planr-view-bar{display:flex;flex-wrap:wrap;gap:0.5rem;padding:0.625rem 1.25rem;border-bottom:0.0625rem solid var(--glass-border-soft)}
+.planr-view-bar .edit{padding:0.4375rem 0.875rem;font-size:0.75rem}
+.planr-main-btn{background:var(--accent-fill);color:var(--accent-ink);border:0.0625rem solid rgba(255,255,255,.2);border-radius:var(--radius-pill);padding:0.4375rem 1rem;font-size:0.75rem;font-weight:700;box-shadow:inset 0 0.0625rem 0 rgba(255,255,255,.35),var(--glow-sm);cursor:pointer}
+.planr-main-btn:hover{filter:brightness(1.06)}
+.planr-del-btn{margin-left:auto;background:rgba(248,113,113,.1);color:var(--danger);border:0.0625rem solid var(--danger-border);border-radius:var(--radius-pill);padding:0.4375rem 0.875rem;font-size:0.75rem;font-weight:700;cursor:pointer}
+.planr-del-btn:hover{background:rgba(248,113,113,.2)}
+.planr-view{flex:1;min-height:0;display:flex;background:var(--bg-deep)}
+.planr-view .fullscreen-img-container{min-width:0;align-items:flex-start}
+.planr-view .viewer-gallery{max-height:none}
+.planr-side{width:21rem;flex:none;overflow-y:auto;padding:1.25rem;border-left:0.0625rem solid var(--glass-border-soft);background:var(--glass-fill)}
+.planr-view.no-img .fullscreen-img-container{display:none}
+.planr-view.no-img .planr-side{width:100%;max-width:40rem;margin:0 auto;border-left:0;background:transparent}
+.planr-sec+.planr-sec{margin-top:1.25rem;padding-top:1.25rem;border-top:0.0625rem solid var(--hairline)}
+.planr-sec h3{font-size:0.6875rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin:0 0 0.5rem}
+.planr-sec .btn-historico{margin-top:0.75rem}
+.planr-notes{white-space:pre-wrap;word-break:break-word;font-size:0.875rem;line-height:1.55;color:var(--text)}
+.planr-links{display:flex;flex-direction:column;gap:0.375rem}
+.planr-links a{display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;border-radius:var(--radius-sm);background:var(--glass-inset);border:0.0625rem solid var(--glass-border-soft);color:var(--accent);font-size:0.8125rem;font-weight:600;text-decoration:none;min-width:0}
+.planr-links a span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.planr-links a:hover{border-color:var(--accent-line)}
+.planr-stu{display:flex;flex-wrap:wrap;gap:0.375rem}
+.planr-stu .filter-chip{cursor:default;font-size:0.75rem;color:var(--text)}
+.planr-pick{display:flex;flex-direction:column;gap:0.25rem;max-height:50vh;overflow-y:auto}
+@media (max-width: 760px){
+  .planr-view{flex-direction:column;overflow-y:auto}
+  .planr-view .fullscreen-img-container{flex:none;overflow:visible;padding:1rem}
+  .planr-side{width:auto;border-left:0;border-top:0.0625rem solid var(--glass-border-soft);overflow:visible}
+  .planr-view-bar{padding:0.625rem 1rem}
+}
 
 /* ===== Modais: o fundo só escurece e o próprio painel é o vidro fosco.
    (Desfocar os dois não funciona: um backdrop-filter dentro de outro só enxerga o pai.) ===== */
@@ -2397,6 +2464,8 @@ body.pdf-open{overflow:hidden}
 [data-theme="light"] .social-btn#authApple{border-color:#000}
 [data-theme="light"] .lesson-img-wrap{box-shadow:var(--shadow-sm)}
 [data-theme="light"] .viewer-gallery img{box-shadow:var(--shadow-lg)}
+[data-theme="light"] .lesson-card.stacked .lesson-img-wrap::before{background:#E3E9F4}
+[data-theme="light"] .lesson-card.stacked .lesson-img-wrap::after{background:#D3DCEC}
 [data-theme="light"] .breath-text{text-shadow:none}
 [data-theme="light"] .nav-badge,[data-theme="light"] .stu-bell-badge{color:#fff}
 [data-theme="light"] .rec-on,[data-theme="light"] .ear-wrong{color:#fff!important}
@@ -2813,15 +2882,21 @@ body.pdf-open{overflow:hidden}
 
 <main id="plannerPage" style="display:none">
 <div class="page-title-bar" style="margin-top:0">
-<h2 class="page-title-text">Organização de Aulas<button type="button" class="help-icon" data-help="Guarde mapas mentais e materiais de aula com imagem. Temas simples, sem anexo, aparecem separados em 'Pequenos Temas' aqui embaixo.">!</button></h2>
+<h2 class="page-title-text">Organização de Aulas<button type="button" class="help-icon" data-help="Guarde aqui cada aula: imagens (mapas mentais, fotos do quadro), o roteiro, links e em que pasta ela fica. Toque numa aula para ver, apresentar em tela cheia ou vincular a alunos. Temas sem imagem aparecem em 'Pequenos Temas'.">!</button></h2>
 <div class="icon-controls-group">
-<button class="icon-btn-ctrl" id="addPlanBtn" title="Adicionar aula/tema">+</button>
+<button class="icon-btn-ctrl" id="addPlanBtn" title="Nova aula">+</button>
 </div>
 </div>
+<div class="planr-stats" id="plannerStats"></div>
+<div class="planr-tools">
+<div class="song-search field"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg><input type="search" id="plannerSearch" placeholder="Buscar aula" aria-label="Buscar aula, pasta ou anotação" autocomplete="off"></div>
+<select id="plannerSort" class="planr-sort" aria-label="Ordem das aulas"><option value="manual">Minha ordem</option><option value="az">A a Z</option><option value="new">Mais recentes</option><option value="used">Mais usadas</option></select>
+</div>
+<div class="planr-folders" id="plannerFolders" hidden></div>
 <div class="lesson-grid" id="plannerList"></div>
-<div class="page-title-bar" style="margin-top:28px"><h2 class="page-title-text">Pequenos Temas</h2></div>
+<div class="page-title-bar" style="margin-top:28px" id="plannerMiniTitle"><h2 class="page-title-text">Pequenos Temas <span class="planr-count" id="plannerMiniCount"></span></h2></div>
 <div class="lesson-grid-mini" id="plannerListNoAttachment"></div>
-<div class="page-title-bar" style="margin-top:28px"><h2 class="page-title-text">Matérias prontas<button type="button" class="help-icon" data-help="Matérias que já vêm no app, uma para cada função: afinação, metrônomo, cada escala, acordes... Toque numa para trocar o nome ou escolher o que ela libera no app do aluno. Quando você vincula a matéria a um aluno (em Desempenho), o que ela libera aparece no app dele.">!</button></h2></div>
+<div class="page-title-bar" style="margin-top:28px" id="plannerPresetsTitle"><h2 class="page-title-text">Matérias prontas<button type="button" class="help-icon" data-help="Matérias que já vêm no app, uma para cada função: afinação, metrônomo, cada escala, acordes... Toque numa para trocar o nome ou escolher o que ela libera no app do aluno. Quando você vincula a matéria a um aluno (em Desempenho), o que ela libera aparece no app dele.">!</button></h2></div>
 <div id="plannerPresets"></div>
 </main>
 
@@ -3909,47 +3984,34 @@ body.pdf-open{overflow:hidden}
 </div>
 </div>
 
-<div class="modal-bg" id="modalPlanBg">
-<div class="modal">
-<h2>Upload de Mapa Mental / Aula</h2>
-<div class="field">
-<label>Título da Aula / Tema</label>
-<input id="pTopic" placeholder="Ex: Campo Harmônico para Iniciantes">
-</div>
-<div class="field">
-<label>Selecione as Imagens dos Mapas Mentais / Aulas (opcional)</label>
-<input type="file" id="pMindMapFile" accept="image/*" multiple>
-</div>
-<div style="font-size:0.75rem;color:var(--muted);margin-top:-0.5rem;margin-bottom:0.5rem">Sem imagem, o tema é salvo em "Pequenos Temas".</div>
-<div id="uploadPreviewWrap" style="display:none; margin-top:10px;">
-<label style="font-size:12px; color:var(--muted); font-weight:600;">Imagens Selecionadas:</label>
-<div id="uploadPreviewGrid" class="images-edit-grid"></div>
-</div>
-<div class="actions">
-<button class="cancel" id="cancelPlanBtn">Cancelar</button>
-<button class="save" id="savePlanBtn">Salvar Aula</button>
-</div>
-</div>
-</div>
-
 <div class="modal-bg" id="modalEditPlanBg">
 <div class="modal">
-<h2>Editar Aula</h2>
+<h2 id="pEditHead">Editar aula</h2>
 <div class="field">
-<label>Título da Aula / Tema</label>
-<input id="pEditTopic" placeholder="Ex: Campo Harmônico para Iniciantes">
+<label for="pEditTopic">Título da aula ou tema</label>
+<input id="pEditTopic" maxlength="160" placeholder="Ex: Campo Harmônico para Iniciantes">
 </div>
 <div class="field">
-<label>Imagens Atuais (Clique em ✕ para remover)</label>
+<label for="pEditFolder">Pasta (opcional)</label>
+<input id="pEditFolder" maxlength="40" list="pEditFolderList" placeholder="Ex.: Iniciantes, Teoria, Repertório" autocomplete="off"><datalist id="pEditFolderList"></datalist>
+</div>
+<div class="field">
+<label>Imagens (mapas mentais, fotos do quadro, partituras)</label>
 <div id="editImagesGrid" class="images-edit-grid"></div>
+<div class="planr-drop" id="pEditDrop"><label class="btn-historico file-pick">Pôr imagens<input type="file" id="pEditMindMapFiles" accept="image/*" multiple hidden></label><span class="field-hint" style="margin:0">Ou arraste e solte aqui. A primeira imagem é a capa.</span></div>
 </div>
-<div class="field" style="margin-top:14px;">
-<label>Adicionar Novas Imagens</label>
-<input type="file" id="pEditMindMapFiles" accept="image/*" multiple>
+<div class="field">
+<label for="pEditNotes">Roteiro e anotações (opcional)</label>
+<textarea id="pEditNotes" rows="5" maxlength="5000" placeholder="Objetivo, passo a passo, exercícios, tarefa para casa..."></textarea>
 </div>
+<div class="field">
+<label for="pEditLinks">Links (opcional, um por linha)</label>
+<textarea id="pEditLinks" rows="2" placeholder="https://www.youtube.com/..."></textarea>
+</div>
+<div class="field-hint" style="margin-top:-0.25rem">Sem imagem, a aula fica em "Pequenos Temas".</div>
 <div class="actions">
 <button class="cancel" id="cancelEditPlanBtn">Cancelar</button>
-<button class="save" id="saveEditPlanBtn">Salvar Alterações</button>
+<button class="save" id="saveEditPlanBtn">Salvar</button>
 </div>
 </div>
 </div>
@@ -3958,16 +4020,22 @@ body.pdf-open{overflow:hidden}
 <div class="modal modal-fullscreen">
 <div class="fullscreen-header-bar">
 <div style="flex:1; min-width:0;">
-<h2 id="vPlanTitle" style="font-size:18px; font-weight:800; color:var(--text); margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Título da Aula</h2>
+<h2 id="vPlanTitle" class="planr-view-title">Título da Aula</h2>
+<div class="planr-view-sub" id="vPlanSub"></div>
 </div>
-<div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
-<button class="edit" id="btnFuncPlanView" style="padding:6px 14px; font-size:12px;">Libera no app</button>
-<button class="edit" id="btnEditPlanView" style="padding:6px 14px; font-size:12px;">Editar</button>
-<button class="btn-delete" id="btnDeletePlanView" style="width:auto; margin:0; padding:8px 14px; font-size:12px;">Excluir</button>
 <button class="close-btn-inline" id="closeViewPlanBtn" aria-label="Fechar">✕</button>
 </div>
+<div class="planr-view-bar">
+<button type="button" class="planr-main-btn" id="btnPresentPlanView">▶ Apresentar</button>
+<button type="button" class="edit" id="btnEditPlanView">Editar</button>
+<button type="button" class="edit" id="btnFuncPlanView">Libera no app</button>
+<button type="button" class="edit" id="btnDupPlanView">Duplicar</button>
+<button type="button" class="planr-del-btn" id="btnDeletePlanView">Excluir</button>
 </div>
+<div class="planr-view" id="vPlanBody">
 <div class="fullscreen-img-container"></div>
+<aside class="planr-side" id="vPlanSide"></aside>
+</div>
 </div>
 </div>
 
@@ -3984,7 +4052,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.78";
+const APP_VERSION = "8.79";
 // Idioma (8.42): troca entre português e inglês e recarrega. Fica guardado neste aparelho.
 function langSwitchLabel(){ return APP_LANG === "en" ? "🌐 Mudar para português" : "🌐 Switch to English"; }
 function langSwitch(){
@@ -8591,7 +8659,7 @@ el.innerHTML = `<div class="slide-stage"><img class="slide-img" alt=""><canvas c
 document.body.appendChild(el);
 const img = el.querySelector(".slide-img"), ink = el.querySelector(".slide-ink"), ictx = ink.getContext("2d"), laser = el.querySelector(".slide-laser"), black = el.querySelector(".slide-black"), stage = el.querySelector(".slide-stage");
 const q = s => el.querySelector(`[data-s="${s}"]`);
-const urls = deck.pages.map(b => URL.createObjectURL(b));
+const urls = deck.pages.map(b => typeof b === "string" ? b : URL.createObjectURL(b));   // Organizador (8.79) manda as imagens já como endereço
 const strokes = deck.pages.map(() => []);   // desenho de cada slide, só enquanto a apresentação está aberta
 let i = 0, tool = "", drawing = null, hideT = 0;
 // Rastro do laser (8.78): os últimos pontos somem em meio segundo, afinando e apagando.
@@ -8663,7 +8731,7 @@ const full = () => { try { if (document.fullscreenElement) document.exitFullscre
 const close = () => {
 document.removeEventListener("keydown", onKey); window.removeEventListener("resize", fit); document.removeEventListener("fullscreenchange", fit);
 try { if (document.fullscreenElement) document.exitFullscreen(); } catch(x) {}
-clearTimeout(hideT); cancelAnimationFrame(traf); urls.forEach(u => URL.revokeObjectURL(u)); el.remove();
+clearTimeout(hideT); cancelAnimationFrame(traf); urls.forEach(u => { if (u.startsWith("blob:")) URL.revokeObjectURL(u); }); el.remove();
 };
 const onKey = e => {
 if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
@@ -11946,7 +12014,6 @@ function getDefaultValueFor(s){
   return dv.group[size] || dv.group[2];
 }
 
-let pendingImageDataList = [];
 let dragSrcIndex = null;
 let activeTouchDragIndex = null;
 let touchDropTargetIndex = null;
@@ -16342,16 +16409,88 @@ c.classList.remove("show-indicator-left", "show-indicator-right");
 });
 }
 
+// ---------- Organizador de Aulas (8.79): busca, pastas, ordem, roteiro, links, alunos e apresentar ----------
+// Campos novos na aula (todos opcionais, aula antiga continua igual): folder (pasta), notes (roteiro), links.
+const PLANNER_NONE = "\u0000none";   // filtro "Sem pasta"
+let plannerQuery = "", plannerFolder = "";
+function savePlans(){ localStorage.setItem("jp_lesson_plans_v5", JSON.stringify(lessonPlans)); }
+function plannerSort(){ try { return localStorage.getItem("jp_planner_sort_v1") || "manual"; } catch(e) { return "manual"; } }
+function planFolder(p){ return p && typeof p.folder === "string" ? p.folder.trim() : ""; }
+function planFolders(){ const m = new Map(); lessonPlans.forEach(p => { const f = planFolder(p); if (f) m.set(f, (m.get(f) || 0) + 1); }); return [...m].sort((a, b) => a[0].localeCompare(b[0], "pt-BR")); }
+function planLinks(p){ return (Array.isArray(p && p.links) ? p.links : []).filter(u => /^https?:\/\/\S+$/i.test(String(u))); }
+function planStudents(id){ return students.filter(s => s.active !== false && (s.themes || []).some(t => t.themeId === id)); }
+function planUseCounts(){ const m = new Map(); students.forEach(s => { if (s.active === false) return; (s.themes || []).forEach(t => m.set(t.themeId, (m.get(t.themeId) || 0) + 1)); }); return m; }
+const plannerNorm = t => stripAccents(String(t || "")).toLowerCase();
+function planMatches(p){
+const f = planFolder(p);
+if (plannerFolder === PLANNER_NONE) { if (f) return false; }
+else if (plannerFolder && f !== plannerFolder) return false;
+if (!plannerQuery) return true;
+const q = plannerNorm(plannerQuery);
+return [p.topic, f, p.notes].some(x => plannerNorm(x).includes(q));
+}
+function plannerOrdered(list, uses){
+const k = plannerSort(), out = list.slice();
+if (k === "az") out.sort((a, b) => String(a.topic).localeCompare(String(b.topic), "pt-BR", { numeric: true }));
+else if (k === "new") out.sort((a, b) => (Number(b.id) || 0) - (Number(a.id) || 0));
+else if (k === "used") out.sort((a, b) => (uses.get(b.id) || 0) - (uses.get(a.id) || 0));
+return out;
+}
+function planMetaHTML(p, uses){
+const n = uses.get(p.id) || 0, L = planLinks(p).length, bits = [];
+if (n) bits.push(`<span title="Alunos com este tema"><svg class="inline-icon" viewBox="0 0 24 24"><use href="#icon-user"/></svg>${n === 1 ? "1 aluno" : `${n} alunos`}</span>`);
+if (p.notes) bits.push(`<span><svg class="inline-icon" viewBox="0 0 24 24"><use href="#icon-file-text"/></svg>Roteiro</span>`);
+if (L) bits.push(`<span><svg class="inline-icon" viewBox="0 0 24 24"><use href="#icon-globe"/></svg>${L === 1 ? "1 link" : `${L} links`}</span>`);
+return bits.length ? `<div class="planr-meta">${bits.join("")}</div>` : "";
+}
+function renderPlannerTools(){
+const folders = planFolders();
+if (plannerFolder && plannerFolder !== PLANNER_NONE && !folders.some(([f]) => f === plannerFolder)) plannerFolder = "";
+const nImg = lessonPlans.filter(themeHasAttachment).length, nMini = lessonPlans.length - nImg;
+const linked = students.filter(s => s.active !== false && (s.themes || []).some(t => lessonPlans.some(p => p.id === t.themeId))).length;
+const parts = [nImg === 1 ? "1 aula com imagem" : `${nImg} aulas com imagem`, nMini === 1 ? "1 pequeno tema" : `${nMini} pequenos temas`];
+if (folders.length) parts.push(folders.length === 1 ? "1 pasta" : `${folders.length} pastas`);
+if (linked) parts.push(linked === 1 ? "1 aluno estudando estes temas" : `${linked} alunos estudando estes temas`);
+document.getElementById("plannerStats").textContent = lessonPlans.length ? parts.join(" · ") : "";
+const sortSel = document.getElementById("plannerSort"); if (sortSel.value !== plannerSort()) sortSel.value = plannerSort();
+const box = document.getElementById("plannerFolders");
+box.hidden = !folders.length;
+if (!folders.length) { box.innerHTML = ""; return; }
+const none = lessonPlans.filter(p => !planFolder(p)).length;
+const chip = (val, label, n) => `<button type="button" class="filter-chip${plannerFolder === val ? " selected" : ""}" data-pfold="${escapeHtml(val)}" aria-pressed="${plannerFolder === val}">${escapeHtml(label)} <span class="planr-chip-n">${n}</span></button>`;
+box.innerHTML = chip("", "Todas", lessonPlans.length) + folders.map(([f, n]) => chip(f, f, n)).join("") + (none ? chip(PLANNER_NONE, "Sem pasta", none) : "")
++ (plannerFolder && plannerFolder !== PLANNER_NONE ? `<span class="planr-fold-acts"><button type="button" class="btn-link-inline" id="plannerFoldRen">Renomear pasta</button><button type="button" class="btn-link-inline" id="plannerFoldDel">Desfazer pasta</button></span>` : "");
+box.querySelectorAll("[data-pfold]").forEach(b => b.onclick = () => { plannerFolder = b.dataset.pfold; renderPlanner(); });
+const ren = document.getElementById("plannerFoldRen");
+if (ren) ren.onclick = () => {
+const t = prompt("Novo nome da pasta", plannerFolder); if (t === null) return;
+const name = plainText(t, 40); if (!name || name === plannerFolder) return;
+lessonPlans.forEach(p => { if (planFolder(p) === plannerFolder) p.folder = name; });
+plannerFolder = name; savePlans(); renderPlanner();
+};
+const del = document.getElementById("plannerFoldDel");
+if (del) del.onclick = () => {
+if (!confirm(`Desfazer a pasta "${plannerFolder}"? As aulas continuam guardadas, só saem da pasta.`)) return;
+lessonPlans.forEach(p => { if (planFolder(p) === plannerFolder) delete p.folder; });
+plannerFolder = ""; savePlans(); renderPlanner();
+};
+}
 function renderPlanner() {
 const container = document.getElementById("plannerList");
 container.innerHTML = "";
-renderPlannerNoAttachment();
+const uses = planUseCounts();
+renderPlannerTools();
+renderPlannerNoAttachment(uses);
 renderPlannerPresets();
 
-const attachedPlans = lessonPlans.filter(p => themeHasAttachment(p));
+const filtering = !!plannerQuery || !!plannerFolder;
+const canDrag = plannerSort() === "manual" && !filtering;
+const attachedPlans = plannerOrdered(lessonPlans.filter(p => themeHasAttachment(p) && planMatches(p)), uses);
 
 if (attachedPlans.length === 0) {
-container.innerHTML = "<div style='color:var(--muted);font-size:13px;grid-column:1/-1;text-align:center;padding:30px 0'>Nenhuma aula/mapa armazenado. Clique no '+' acima para enviar.</div>";
+container.innerHTML = filtering ? `<div class="planr-empty">Nenhuma aula com imagem encontrada.</div>`
+: `<div class="planr-empty"><svg class="inline-icon planr-empty-ic" viewBox="0 0 24 24"><use href="#icon-clipboard"/></svg><b>Nenhuma aula com imagem ainda</b><span>Guarde aqui mapas mentais, fotos do quadro, o roteiro e os links de cada aula.</span><button type="button" class="btn-historico" id="plannerFirstBtn">Criar uma aula</button></div>`;
+const fb = document.getElementById("plannerFirstBtn"); if (fb) fb.onclick = () => openEditPlanModal(null);
 return;
 }
 
@@ -16360,21 +16499,30 @@ const index = lessonPlans.findIndex(p => p.id === plan.id);
 const images = getPlanImages(plan);
 const isStacked = images.length > 1;
 const mainImg = images[0] || "";
+const folder = planFolder(plan);
 
 const el = document.createElement("div");
-el.className = `lesson-card ${isStacked ? 'stacked' : ''}`;
-el.draggable = true;
+el.className = `lesson-card ${isStacked ? 'stacked' : ''}${canDrag ? '' : ' no-drag'}`;
+el.draggable = canDrag;
 el.dataset.index = index;
+el.tabIndex = 0;
+el.setAttribute("role", "button");
 
 el.innerHTML = `
 <div class="drop-indicator drop-left"></div>
 <div class="drop-indicator drop-right"></div>
 <div class="lesson-img-wrap">
-<img src="${mainImg}" class="lesson-img" loading="lazy" alt="Mapa Mental">
+<img src="${escapeHtml(mainImg)}" class="lesson-img" loading="lazy" alt="">
+${folder ? `<span class="planr-tag">${escapeHtml(folder)}</span>` : ""}
 ${isStacked ? `<span class="file-count-badge"><svg class="inline-icon" viewBox="0 0 24 24"><use href="#icon-camera"/></svg> ${images.length}</span>` : ''}
 </div>
-<div class="lesson-title-out">${plan.topic}</div>
+<div class="lesson-title-out">${escapeHtml(plan.topic)}</div>
+${planMetaHTML(plan, uses)}
 `;
+el.onclick = () => openPlanViewer(plan.id);
+el.onkeydown = e => { if ((e.key === "Enter" || e.key === " ") && e.target === el) { e.preventDefault(); openPlanViewer(plan.id); } };
+container.appendChild(el);
+if (!canDrag) return;
 
 el.addEventListener("dragstart", (e) => {
 dragSrcIndex = index;
@@ -16407,7 +16555,7 @@ let targetIdx = index;
 if (dragSrcIndex < index) targetIdx--;
 if (!isLeft) targetIdx++;
 lessonPlans.splice(targetIdx, 0, item);
-localStorage.setItem("jp_lesson_plans_v5", JSON.stringify(lessonPlans));
+savePlans();
 renderPlanner();
 }
 });
@@ -16456,56 +16604,15 @@ let targetIdx = touchDropTargetIndex;
 if (activeTouchDragIndex < touchDropTargetIndex) targetIdx--;
 if (touchDropPosition === "right") targetIdx++;
 lessonPlans.splice(targetIdx, 0, item);
-localStorage.setItem("jp_lesson_plans_v5", JSON.stringify(lessonPlans));
+savePlans();
 renderPlanner();
 }
 activeTouchDragIndex = null;
 touchDropTargetIndex = null;
 });
-
-el.onclick = () => openPlanViewer(plan.id);
-
-container.appendChild(el);
 });
 }
 
-function renderUploadPreviews() {
-const wrap = document.getElementById("uploadPreviewWrap");
-const grid = document.getElementById("uploadPreviewGrid");
-grid.innerHTML = "";
-if (pendingImageDataList.length === 0) { wrap.style.display = "none"; return; }
-wrap.style.display = "block";
-pendingImageDataList.forEach((src, idx) => {
-const item = document.createElement("div");
-item.className = "img-thumb-wrap";
-item.innerHTML = `<img src="${src}"><button class="img-thumb-del" title="Remover">✕</button>`;
-item.querySelector("button").onclick = () => {
-pendingImageDataList.splice(idx, 1);
-renderUploadPreviews();
-};
-grid.appendChild(item);
-});
-}
-
-function openPlanEditor() {
-document.getElementById("pTopic").value = "";
-document.getElementById("pMindMapFile").value = "";
-pendingImageDataList = [];
-renderUploadPreviews();
-document.getElementById("modalPlanBg").classList.add("show");
-}
-
-document.getElementById("pMindMapFile").onchange = async (e) => {
-const files = Array.from(e.target.files);
-if (!files.length) return;
-const results = await Promise.all(files.map(processImageFile));
-const validResults = results.filter(Boolean);
-pendingImageDataList = [...pendingImageDataList, ...validResults];
-renderUploadPreviews();
-e.target.value = "";
-};
-
-document.getElementById("addPlanBtn").onclick = openPlanEditor;
 
 // --- Agenda ---
 document.getElementById("agendaPrevBtn").onclick = () => {
@@ -16551,18 +16658,30 @@ saveAgendaEvents();
 renderAgenda();
 openAgendaDayModal(agendaModalDate);
 };
-document.getElementById("cancelPlanBtn").onclick = () => document.getElementById("modalPlanBg").classList.remove("show");
-
-document.getElementById("savePlanBtn").onclick = () => {
-const topic = document.getElementById("pTopic").value.trim();
-if (!topic) { alert("Informe o título da aula."); return; }
-
-const obj = { id: Date.now(), topic, imgUrls: [...pendingImageDataList] };
-lessonPlans.unshift(obj);
-localStorage.setItem("jp_lesson_plans_v5", JSON.stringify(lessonPlans));
-document.getElementById("modalPlanBg").classList.remove("show");
-renderPlanner();
-};
+// Busca, ordem e o "+" do Organizador (8.79).
+document.getElementById("plannerSearch").addEventListener("input", e => { plannerQuery = e.target.value.trim(); renderPlanner(); });
+document.getElementById("plannerSort").onchange = e => { try { localStorage.setItem("jp_planner_sort_v1", e.target.value); } catch(x) {} renderPlanner(); };
+document.getElementById("addPlanBtn").onclick = () => openEditPlanModal(null);
+// Imagens da aula: pôr pelo botão, arrastar e soltar ou colar (Ctrl+V) com a janela aberta.
+async function addPlanImages(files){
+const imgs = [...files].filter(f => f && /^image\//.test(f.type));
+if (!imgs.length) return;
+const results = (await Promise.all(imgs.map(processImageFile))).filter(Boolean);
+currentEditImages = [...currentEditImages, ...results];
+renderEditImagesGrid();
+modalDirty.add(document.getElementById("modalEditPlanBg"));
+}
+(function(){
+const drop = document.getElementById("pEditDrop"), modal = document.getElementById("modalEditPlanBg");
+modal.addEventListener("dragover", e => { if (e.dataTransfer && [...e.dataTransfer.types].includes("Files")) { e.preventDefault(); drop.classList.add("over"); } });
+modal.addEventListener("dragleave", e => { if (e.target === modal || !modal.contains(e.relatedTarget)) drop.classList.remove("over"); });
+modal.addEventListener("drop", e => { if (!e.dataTransfer || !e.dataTransfer.files.length) return; e.preventDefault(); drop.classList.remove("over"); addPlanImages(e.dataTransfer.files); });
+document.addEventListener("paste", e => {
+if (!modal.classList.contains("show") || !e.clipboardData) return;
+const files = [...e.clipboardData.items].filter(i => i.kind === "file" && /^image\//.test(i.type)).map(i => i.getAsFile()).filter(Boolean);
+if (files.length) { e.preventDefault(); addPlanImages(files); }
+});
+})();
 
 function openPlanViewer(planId) {
 const plan = lessonPlans.find(p => p.id === planId);
@@ -16571,12 +16690,15 @@ editingPlanId = planId;
 
 const images = getPlanImages(plan);
 document.getElementById("vPlanTitle").textContent = plan.topic;
+const created = Number(plan.id) > 1e12 ? new Date(Number(plan.id)) : null;
+const sub = [planFolder(plan) ? `Pasta: ${planFolder(plan)}` : "", images.length ? (images.length === 1 ? "1 imagem" : `${images.length} imagens`) : "Sem imagem", created && !isNaN(created) ? `Criada em ${formatDateShort(isoOf(created))}` : ""].filter(Boolean);
+document.getElementById("vPlanSub").textContent = sub.join(" · ");
 
-const container = document.querySelector("#modalViewPlanBg .fullscreen-img-container");
+const body = document.getElementById("vPlanBody");
+body.classList.toggle("no-img", !images.length);
+const container = body.querySelector(".fullscreen-img-container");
 container.innerHTML = "";
-if(images.length === 0){
-container.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3rem 1rem;color:var(--muted);gap:0.5rem;"><span style="font-size:3rem;">🎵</span><span style="font-size:0.85rem;">Tema sem anexo (mapa mental/imagem)</span></div>`;
-} else {
+if (images.length) {
 const gallery = document.createElement("div");
 gallery.className = "viewer-gallery";
 images.forEach(imgUrl => {
@@ -16587,23 +16709,75 @@ gallery.appendChild(img);
 });
 container.appendChild(gallery);
 }
+renderPlanSide(plan);
 
+const present = document.getElementById("btnPresentPlanView");
+present.hidden = !images.length;
+present.onclick = () => slidesShow({ title: plan.topic, pages: getPlanImages(plan) });
 document.getElementById("btnFuncPlanView").onclick = () => openMateriaEditor(planId);
 document.getElementById("btnEditPlanView").onclick = () => {
 document.getElementById("modalViewPlanBg").classList.remove("show");
 openEditPlanModal(planId);
 };
-
+document.getElementById("btnDupPlanView").onclick = () => {
+const copy = JSON.parse(JSON.stringify(plan));
+copy.id = Date.now();
+copy.topic = `${plan.topic} (cópia)`.slice(0, 160);
+lessonPlans.splice(lessonPlans.indexOf(plan) + 1, 0, copy);
+savePlans();
+renderPlanner();
+openPlanViewer(copy.id);
+};
 document.getElementById("btnDeletePlanView").onclick = () => {
-if(confirm("Tem certeza que deseja excluir esta aula?")){
+const n = planStudents(planId).length;
+if(confirm(n ? `Excluir esta aula? Ela está vinculada a ${n === 1 ? "1 aluno" : `${n} alunos`} e vai sair da ficha ${n === 1 ? "dele" : "deles"} como "Tema removido".` : "Tem certeza que deseja excluir esta aula?")){
 lessonPlans = lessonPlans.filter(p => p.id !== planId);
-localStorage.setItem("jp_lesson_plans_v5", JSON.stringify(lessonPlans));
+savePlans();
 document.getElementById("modalViewPlanBg").classList.remove("show");
 renderPlanner();
 }
 };
 
 document.getElementById("modalViewPlanBg").classList.add("show");
+}
+function planLinkLabel(u){
+try { const x = new URL(u), path = x.pathname.length > 1 ? x.pathname : ""; return x.hostname.replace(/^www\./, "") + (path.length > 22 ? path.slice(0, 22) + "…" : path); } catch(e) { return u; }
+}
+function renderPlanSide(plan){
+const side = document.getElementById("vPlanSide");
+const links = planLinks(plan), st = planStudents(plan.id), unlock = matUnlock(plan);
+side.innerHTML = `<section class="planr-sec"><h3>Roteiro e anotações</h3>${plan.notes ? `<div class="planr-notes">${escapeHtml(plan.notes)}</div>` : `<div class="field-hint" style="margin:0">Ainda sem roteiro. Toque em Editar para escrever o objetivo e o passo a passo da aula.</div>`}</section>
+${links.length ? `<section class="planr-sec"><h3>Links</h3><div class="planr-links">${links.map(u => `<a href="${escapeHtml(u)}" target="_blank" rel="noopener noreferrer"><svg class="inline-icon" viewBox="0 0 24 24"><use href="#icon-globe"/></svg><span>${escapeHtml(planLinkLabel(u))}</span></a>`).join("")}</div></section>` : ""}
+<section class="planr-sec"><h3>Alunos com este tema</h3>${st.length ? `<div class="planr-stu">${st.map(s => `<span class="filter-chip">${escapeHtml(s.name)}</span>`).join("")}</div>` : `<div class="field-hint" style="margin:0">Nenhum aluno ainda.</div>`}<button type="button" class="btn-historico" id="vPlanLink">Vincular a alunos</button></section>
+${unlock.length ? `<section class="planr-sec"><h3>Libera no app do aluno</h3><div class="planr-notes">${escapeHtml(matUnlockText(unlock))}</div></section>` : ""}`;
+side.querySelector("#vPlanLink").onclick = () => openPlanLinkStudents(plan);
+}
+// Vincular a aula a vários alunos de uma vez (o mesmo vínculo de Desempenho; tirar continua por lá).
+function openPlanLinkStudents(plan){
+const act = students.filter(s => s.active !== false).sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+const body = document.createElement("div");
+if (!act.length) { body.innerHTML = `<div class="field-hint">Nenhum aluno ativo.</div>`; openQuickModal("Vincular a alunos", plan.topic, body, null, "Fechar"); return; }
+const has = s => (s.themes || []).some(t => t.themeId === plan.id);
+body.innerHTML = `${act.length > 8 ? `<div class="field"><input type="search" id="plSearch" placeholder="Buscar aluno" aria-label="Buscar aluno" autocomplete="off"></div>` : ""}<div class="planr-pick">${act.map(s => `<label class="join-diff" data-pn="${escapeHtml(plannerNorm(s.name))}"><input type="checkbox" value="${escapeHtml(String(s.id))}"${has(s) ? " checked disabled" : ""}> <span>${escapeHtml(s.name)}${has(s) ? ` <span class="stu-muted">(já tem)</span>` : ""}</span></label>`).join("")}</div>
+<div class="field-hint" style="margin-top:0.5rem">Para tirar o tema de um aluno, use Desempenho.</div>`;
+const q = body.querySelector("#plSearch");
+if (q) q.oninput = () => { const v = plannerNorm(q.value); body.querySelectorAll("[data-pn]").forEach(l => { l.hidden = v && !l.dataset.pn.includes(v); }); };
+openQuickModal("Vincular a alunos", plan.topic, body, () => {
+const picked = [...body.querySelectorAll("input[type=checkbox]:checked:not(:disabled)")].map(i => act.find(s => String(s.id) === i.value)).filter(Boolean);
+if (!picked.length) { closeQuickModal(); return; }
+const unlock = matUnlock(plan);
+picked.forEach(s => {
+s.themes = Array.isArray(s.themes) ? s.themes : [];
+const a = { themeId: plan.id, rating: null, date: todayBr() };
+s.themes.push(a);
+if (unlock.length) matRelease(s, a, true);
+});
+saveStudents();
+closeQuickModal();
+if (unlock.length) showCloudWarning(`Liberado no app: ${matUnlockText(unlock)}.`);
+renderPlanSide(plan);
+renderPlanner();
+}, "Cancelar", "Vincular");
 }
 
 document.getElementById("closeViewPlanBtn").onclick = () => document.getElementById("modalViewPlanBg").classList.remove("show");
@@ -16612,58 +16786,79 @@ function renderEditImagesGrid() {
 const grid = document.getElementById("editImagesGrid");
 grid.innerHTML = "";
 if (currentEditImages.length === 0) {
-grid.innerHTML = "<div style='color:var(--muted); font-size:12px;'>Nenhuma imagem restante.</div>";
+grid.innerHTML = "<div class='field-hint' style='margin:0;grid-column:1/-1'>Nenhuma imagem.</div>";
 return;
 }
+const last = currentEditImages.length - 1;
 currentEditImages.forEach((src, idx) => {
 const item = document.createElement("div");
 item.className = "img-thumb-wrap";
-item.innerHTML = `<img src="${src}"><button class="img-thumb-del" title="Remover">✕</button>`;
-item.querySelector("button").onclick = () => {
+item.innerHTML = `<img src="${escapeHtml(src)}" alt="">${idx === 0 && last > 0 ? `<span class="planr-cover-tag">Capa</span>` : ""}<button type="button" class="img-thumb-del" title="Remover" aria-label="Remover imagem">✕</button>
+${last > 0 ? `<div class="planr-thumb-move">${idx > 0 ? `<button type="button" data-mv="-1" aria-label="Mover para antes">‹</button>` : ""}${idx < last ? `<button type="button" data-mv="1" aria-label="Mover para depois">›</button>` : ""}</div>` : ""}`;
+item.querySelector(".img-thumb-del").onclick = () => {
 currentEditImages.splice(idx, 1);
 renderEditImagesGrid();
 };
+item.querySelectorAll("[data-mv]").forEach(b => b.onclick = () => {
+const j = idx + Number(b.dataset.mv);
+[currentEditImages[idx], currentEditImages[j]] = [currentEditImages[j], currentEditImages[idx]];
+renderEditImagesGrid();
+});
 grid.appendChild(item);
 });
 }
 
+// Abre a janela de aula: planId null = aula nova (8.79: a mesma janela para criar e editar).
 function openEditPlanModal(planId) {
-const plan = lessonPlans.find(p => p.id === planId);
-if (!plan) return;
-editingPlanId = planId;
-currentEditImages = [...getPlanImages(plan)];
-document.getElementById("pEditTopic").value = plan.topic;
+const plan = planId === null ? null : lessonPlans.find(p => p.id === planId);
+if (planId !== null && !plan) return;
+editingPlanId = plan ? planId : null;
+currentEditImages = plan ? [...getPlanImages(plan)] : [];
+document.getElementById("pEditHead").textContent = plan ? "Editar aula" : "Nova aula";
+document.getElementById("pEditTopic").value = plan ? plan.topic : "";
+document.getElementById("pEditFolder").value = plan ? planFolder(plan) : (plannerFolder && plannerFolder !== PLANNER_NONE ? plannerFolder : "");
+document.getElementById("pEditFolderList").innerHTML = planFolders().map(([f]) => `<option value="${escapeHtml(f)}"></option>`).join("");
+document.getElementById("pEditNotes").value = plan && plan.notes ? plan.notes : "";
+document.getElementById("pEditLinks").value = plan ? planLinks(plan).join("\n") : "";
 document.getElementById("pEditMindMapFiles").value = "";
 renderEditImagesGrid();
 document.getElementById("modalEditPlanBg").classList.add("show");
+if (!plan) setTimeout(() => document.getElementById("pEditTopic").focus(), 50);
 }
 
 document.getElementById("pEditMindMapFiles").onchange = async (e) => {
 const files = Array.from(e.target.files);
-if (!files.length) return;
-const results = await Promise.all(files.map(processImageFile));
-const validResults = results.filter(Boolean);
-currentEditImages = [...currentEditImages, ...validResults];
-renderEditImagesGrid();
 e.target.value = "";
+await addPlanImages(files);
 };
 
 document.getElementById("cancelEditPlanBtn").onclick = () => document.getElementById("modalEditPlanBg").classList.remove("show");
 
 document.getElementById("saveEditPlanBtn").onclick = () => {
-const topic = document.getElementById("pEditTopic").value.trim();
+const topic = plainText(document.getElementById("pEditTopic").value, 160);
 if (!topic) { alert("Informe o título da aula."); return; }
+const folder = plainText(document.getElementById("pEditFolder").value, 40);
+const notes = String(document.getElementById("pEditNotes").value || "").trim().slice(0, 5000);
+const raw = String(document.getElementById("pEditLinks").value || "").split(/\s+/).map(x => x.trim()).filter(Boolean);
+const links = [...new Set(raw.map(u => /^https?:\/\//i.test(u) ? u : (/^[\w-]+(\.[\w-]+)+(\/\S*)?$/.test(u) ? "https://" + u : "")).filter(Boolean))].slice(0, 12);
+if (raw.length > links.length && !confirm("Algum link não parece um endereço de site e vai ficar de fora. Salvar mesmo assim?")) return;
 
-const planIndex = lessonPlans.findIndex(p => p.id === editingPlanId);
-if (planIndex !== -1) {
-lessonPlans[planIndex].topic = topic;
-lessonPlans[planIndex].imgUrls = [...currentEditImages];
-delete lessonPlans[planIndex].imgUrl;
-localStorage.setItem("jp_lesson_plans_v5", JSON.stringify(lessonPlans));
-}
-document.getElementById("modalEditPlanBg").classList.remove("show");
+let plan = editingPlanId === null ? null : lessonPlans.find(p => p.id === editingPlanId);
+const isNew = !plan;
+if (isNew) { plan = { id: Date.now(), topic, imgUrls: [] }; lessonPlans.unshift(plan); }
+plan.topic = topic;
+plan.imgUrls = [...currentEditImages];
+delete plan.imgUrl;
+if (folder) plan.folder = folder; else delete plan.folder;
+if (notes) plan.notes = notes; else delete plan.notes;
+if (links.length) plan.links = links; else delete plan.links;
+savePlans();
+const modal = document.getElementById("modalEditPlanBg");
+modalDirty.delete(modal);
+modal.classList.remove("show");
+if (isNew && !planMatches(plan)) { plannerQuery = ""; plannerFolder = ""; document.getElementById("plannerSearch").value = ""; }
 renderPlanner();
-openPlanViewer(editingPlanId);
+openPlanViewer(plan.id);
 };
 
 // Faturamento estimado do mês: mensalidade de quem paga por mês, as aulas avulsas dadas
@@ -17499,8 +17694,13 @@ function renderPlannerPresets(){
 const box = document.getElementById("plannerPresets");
 if (!box) return;
 const groups = new Map();
-materiaPresets().map(presetPlan).forEach(p => { if (!groups.has(p.group)) groups.set(p.group, []); groups.get(p.group).push(p); });
-box.innerHTML = [...groups].map(([g, list]) => `<details class="settings-card month-group"${matPresetOpen === g ? " open" : ""} data-mgroup="${escapeHtml(g)}"><summary class="month-sum"><span>${escapeHtml(g)}</span><span class="stu-muted">${list.length}</span><span class="settings-row-chevron" aria-hidden="true">›</span></summary><div class="month-body"><div class="mat-preset-list">${list.map(p => `<button type="button" class="lesson-card-mini" data-mpid="${escapeHtml(p.id)}"><span class="lesson-title-mini">${escapeHtml(p.topic)}</span>${p.topic !== p.baseTopic ? `<span class="mat-renamed">${escapeHtml(p.baseTopic)}</span>` : ""}</button>`).join("")}</div></div></details>`).join("");
+const q = typeof plannerQuery === "string" ? plannerNorm(plannerQuery) : "";
+const hide = typeof plannerFolder === "string" && !!plannerFolder;
+materiaPresets().map(presetPlan).filter(p => !q || plannerNorm(p.topic).includes(q) || plannerNorm(p.group).includes(q)).forEach(p => { if (!groups.has(p.group)) groups.set(p.group, []); groups.get(p.group).push(p); });
+const title = document.getElementById("plannerPresetsTitle");
+if (title) title.hidden = hide || !groups.size;
+box.hidden = hide || !groups.size;
+box.innerHTML = [...groups].map(([g, list]) => `<details class="settings-card month-group"${matPresetOpen === g || (q && groups.size <= 3) ? " open" : ""} data-mgroup="${escapeHtml(g)}"><summary class="month-sum"><span>${escapeHtml(g)}</span><span class="stu-muted">${list.length}</span><span class="settings-row-chevron" aria-hidden="true">›</span></summary><div class="month-body"><div class="mat-preset-list">${list.map(p => `<button type="button" class="lesson-card-mini" data-mpid="${escapeHtml(p.id)}"><span class="lesson-title-mini">${escapeHtml(p.topic)}</span>${p.topic !== p.baseTopic ? `<span class="mat-renamed">${escapeHtml(p.baseTopic)}</span>` : ""}</button>`).join("")}</div></div></details>`).join("");
 box.querySelectorAll("details[data-mgroup]").forEach(d => d.addEventListener("toggle", () => { if (d.open) matPresetOpen = d.dataset.mgroup; else if (matPresetOpen === d.dataset.mgroup) matPresetOpen = null; }));
 box.querySelectorAll("[data-mpid]").forEach(b => b.onclick = () => openMateriaEditor(b.dataset.mpid));
 }
@@ -17736,23 +17936,25 @@ renderStudentsPerformance();
 if(currentPage === "planner") renderPlanner();
 };
 
-// Lista, no Organizador de Aulas, os temas SEM anexo (sem imagem) — conteúdos mais simples,
-// geralmente criados via modal de Desempenho — logo abaixo da lista de aulas com anexo.
-function renderPlannerNoAttachment(){
+function renderPlannerNoAttachment(uses){
 const container = document.getElementById("plannerListNoAttachment");
 if(!container) return;
 container.innerHTML = "";
-const noAttachmentPlans = lessonPlans.filter(p => !themeHasAttachment(p));
-
-if(noAttachmentPlans.length === 0){
-container.innerHTML = "<div style='color:var(--muted);font-size:13px;grid-column:1/-1;text-align:center;padding:20px 0'>Nenhum tema sem anexo ainda.</div>";
+uses = uses || planUseCounts();
+const all = lessonPlans.filter(p => !themeHasAttachment(p));
+const list = plannerOrdered(all.filter(planMatches), uses);
+const filtering = !!plannerQuery || !!plannerFolder;
+document.getElementById("plannerMiniCount").textContent = all.length ? (filtering ? `${list.length} de ${all.length}` : String(all.length)) : "";
+if(list.length === 0){
+container.innerHTML = `<div style='color:var(--muted);font-size:13px;grid-column:1/-1;text-align:center;padding:20px 0'>${filtering ? "Nenhum tema encontrado." : "Nenhum tema sem anexo ainda."}</div>`;
 return;
 }
-
-noAttachmentPlans.forEach(plan => {
-const el = document.createElement("div");
-el.className = "lesson-card-mini";
-el.innerHTML = `<div class="lesson-title-mini">${plan.topic}</div>`;
+list.forEach(plan => {
+const el = document.createElement("button");
+el.type = "button";
+el.className = "lesson-card-mini planr-mini";
+const f = planFolder(plan);
+el.innerHTML = `<span class="lesson-title-mini">${escapeHtml(plan.topic)}</span>${f ? `<span class="planr-mini-folder">${escapeHtml(f)}</span>` : ""}${planMetaHTML(plan, uses)}`;
 el.onclick = () => openPlanViewer(plan.id);
 container.appendChild(el);
 });
