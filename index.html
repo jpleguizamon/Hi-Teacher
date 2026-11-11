@@ -402,6 +402,27 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .fall-info{font-size:0.8125rem;color:var(--muted)}
 .fall-list{display:flex;flex-direction:column;gap:0.375rem}
 .fall-item{display:flex;justify-content:space-between;align-items:center;gap:0.5rem;text-align:left;padding:0.75rem 0.875rem;border-radius:0.875rem;border:0.0625rem solid var(--glass-border-soft);background:var(--glass-inset);color:var(--text);font:inherit;font-weight:600;cursor:pointer}
+.slide-lib-row{display:flex;align-items:center;gap:0.75rem;padding:0.625rem 0;border-bottom:0.0625rem solid var(--hairline);flex-wrap:wrap}
+.slide-thumb{width:5.5rem;height:3.1rem;object-fit:contain;background:#000;border-radius:0.375rem;flex:none}
+.slide-lib-row .fall-lib-name{flex:1;min-width:8rem}
+.slide-lib-btns{display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap}
+.btn-link-inline.slide-del{color:#f87171}
+.slide-show{position:fixed;inset:0;z-index:2000;background:#000;display:flex;flex-direction:column;user-select:none;-webkit-user-select:none}
+.slide-stage{position:relative;flex:1;min-height:0;display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:none}
+.slide-img{max-width:100%;max-height:100%;object-fit:contain;display:block;pointer-events:none}
+.slide-ink{position:absolute;pointer-events:none}
+.slide-black{position:absolute;inset:0;background:#000}
+.slide-laser{position:absolute;left:0;top:0;width:1.125rem;height:1.125rem;margin:-0.5625rem 0 0 -0.5625rem;border-radius:50%;background:radial-gradient(circle,#fff 0 18%,#ff2d2d 40%,rgba(255,45,45,.0) 72%);box-shadow:0 0 0.9rem 0.35rem rgba(255,30,30,.75);pointer-events:none}
+.slide-show.tool-laser .slide-stage{cursor:none}
+.slide-show.tool-pen .slide-stage{cursor:crosshair}
+.slide-bar{position:absolute;left:50%;bottom:0.75rem;transform:translateX(-50%);display:flex;align-items:center;gap:0.25rem;padding:0.375rem;border-radius:999px;background:rgba(20,24,36,.88);border:1px solid rgba(79,125,255,.35);max-width:calc(100% - 1.5rem);overflow-x:auto;transition:opacity .3s}
+.slide-show.idle .slide-bar{opacity:0;pointer-events:none}
+.slide-bar button{background:transparent;border:0;color:#EAF0FF;font:600 0.8125rem var(--font-body,inherit);padding:0.5rem 0.75rem;border-radius:999px;white-space:nowrap;cursor:pointer}
+.slide-bar button:hover{background:rgba(255,255,255,.08)}
+.slide-bar button.on{background:#4F7DFF;color:#fff}
+.slide-bar button:disabled{opacity:.35;cursor:default}
+.slide-count{color:#EAF0FF;font:600 0.8125rem var(--font-body,inherit);min-width:3.5rem;text-align:center}
+.slide-sep{width:1px;height:1.25rem;background:rgba(255,255,255,.18);margin:0 0.25rem}
 .fall-lib-row{display:flex;align-items:center;gap:0.75rem;padding:0.5rem 0;border-bottom:0.0625rem solid var(--hairline)}
 .fall-lib-name{flex:1;min-width:0;font-weight:600;color:var(--text)}
 .btn-link-inline.danger{color:var(--danger)}
@@ -2995,6 +3016,7 @@ body.pdf-open{overflow:hidden}
 </button>
 <div class="nav-sub">
 <button class="nav-item" data-page="planner">Organizador de Aulas</button>
+<button class="nav-item" id="navSlides">Slides da aula</button>
 <button class="nav-item" disabled>Criador de Aulas <span class="badge-soon">Em breve</span></button>
 </div>
 </div>
@@ -3945,7 +3967,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.75";
+const APP_VERSION = "8.76";
 // Idioma (8.42): troca entre português e inglês e recarrega. Fica guardado neste aparelho.
 function langSwitchLabel(){ return APP_LANG === "en" ? "🌐 Mudar para português" : "🌐 Switch to English"; }
 function langSwitch(){
@@ -8404,6 +8426,211 @@ cancelAnimationFrame(fall.raf); fall.offR && fall.offR();
 try { fall.stopMic && fall.stopMic(); } catch(e) {}
 try { if (fall.midi) fall.midi.inputs.forEach(i => i.onmidimessage = null); } catch(e) {}
 fall.el.remove(); fall = null;
+}
+// ---------- Slides da aula (8.76) ----------
+// O professor põe um PDF (ou fotos) e apresenta em tela cheia na aula online, com laser e caneta.
+// Cada página vira uma imagem JPEG guardada neste aparelho (IndexedDB "hi_slides_v1"), não vai para a nuvem.
+const SLIDES_DB = "hi_slides_v1";
+const PDFJS = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js";
+const PDFJS_WORKER = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
+let slidesMem = [];   // demonstração: só na memória
+function slidesOwner(){ return (authCurrentUser && authCurrentUser.id) || "local"; }
+function slidesDb(){
+return new Promise((res, rej) => {
+if (!window.indexedDB) return rej(new Error("sem IndexedDB"));
+const r = indexedDB.open(SLIDES_DB, 1);
+r.onupgradeneeded = () => { if (!r.result.objectStoreNames.contains("decks")) r.result.createObjectStore("decks", { keyPath: "id" }); };
+r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+});
+}
+async function slidesAll(){
+if (demoMode) return slidesMem.slice();
+try { const db = await slidesDb(); return await new Promise((res, rej) => { const q = db.transaction("decks").objectStore("decks").getAll(); q.onsuccess = () => res((q.result || []).filter(x => x.owner === slidesOwner()).sort((a, b) => b.created - a.created)); q.onerror = () => rej(q.error); }); }
+catch(e) { return []; }
+}
+async function slidesPut(d){
+d = { ...d, owner: slidesOwner() };
+if (demoMode) { slidesMem = slidesMem.filter(x => x.id !== d.id).concat([d]); return true; }
+try { const db = await slidesDb(); await new Promise((res, rej) => { const t = db.transaction("decks", "readwrite"); t.objectStore("decks").put(d); t.oncomplete = res; t.onerror = () => rej(t.error); }); return true; }
+catch(e) { return false; }
+}
+async function slidesDel(id){
+if (demoMode) { slidesMem = slidesMem.filter(x => x.id !== id); return; }
+try { const db = await slidesDb(); await new Promise(res => { const t = db.transaction("decks", "readwrite"); t.objectStore("decks").delete(id); t.oncomplete = res; t.onerror = res; }); } catch(e) {}
+}
+let pdfjsReady = null;
+function slidesPdfLoad(){
+if (window.pdfjsLib) return Promise.resolve(window.pdfjsLib);
+if (!pdfjsReady) pdfjsReady = new Promise((res, rej) => { const s = document.createElement("script"); s.src = PDFJS; s.onload = () => { try { window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER; res(window.pdfjsLib); } catch(e) { rej(e); } }; s.onerror = () => { pdfjsReady = null; rej(new Error("sem internet")); }; document.head.appendChild(s); });
+return pdfjsReady;
+}
+const canvasJpeg = c => new Promise(res => c.toBlob(b => res(b), "image/jpeg", 0.86));
+// Página do PDF ou foto → imagem de até 1920 px de largura.
+async function slidesFromPdf(file, prog){
+const lib = await slidesPdfLoad();
+const pdf = await lib.getDocument({ data: await file.arrayBuffer() }).promise;
+const n = Math.min(pdf.numPages, 300), out = [];
+for (let i = 1; i <= n; i++) {
+prog(i, n);
+const page = await pdf.getPage(i), v1 = page.getViewport({ scale: 1 });
+const scale = Math.min(3, 1920 / v1.width), vp = page.getViewport({ scale });
+const c = document.createElement("canvas"); c.width = Math.round(vp.width); c.height = Math.round(vp.height);
+const ctx = c.getContext("2d"); ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, c.width, c.height);
+await page.render({ canvasContext: ctx, viewport: vp }).promise;
+out.push(await canvasJpeg(c)); page.cleanup();
+}
+return { pages: out, cut: pdf.numPages > n };
+}
+async function slidesFromImage(file){
+const url = URL.createObjectURL(file);
+try {
+const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = url; });
+const k = Math.min(1, 1920 / img.naturalWidth), c = document.createElement("canvas");
+c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+return await canvasJpeg(c);
+} finally { URL.revokeObjectURL(url); }
+}
+let slidesBusy = "";
+function openSlidesLibrary(){
+const body = document.createElement("div");
+const urls = [];
+const draw = async () => {
+urls.splice(0).forEach(u => URL.revokeObjectURL(u));
+const decks = await slidesAll();
+body.innerHTML = `<div class="demo-actions" style="margin:0 0 0.75rem"><label class="btn-historico file-pick">Pôr PDF<input type="file" id="slPdf" accept="application/pdf,.pdf" hidden></label><label class="btn-historico file-pick">Pôr fotos<input type="file" id="slImg" accept="image/*" multiple hidden></label></div>
+<div class="field-hint" style="margin-bottom:0.75rem">Feito no PowerPoint, Google Apresentações ou Canva? Salve ou baixe como PDF e ponha aqui. Na aula online, compartilhe a tela, toque em Apresentar e use as setas do teclado (ou toque nas laterais) para passar. Os slides ficam guardados neste aparelho.</div>
+<div class="field-hint" id="slBusy" style="margin-bottom:0.75rem;color:var(--accent)"${slidesBusy ? "" : " hidden"}>${escapeHtml(slidesBusy)}</div>
+<div class="settings-group-label" style="margin-top:0">Suas apresentações</div>
+${decks.length ? decks.map(d => { const u = d.pages[0] ? URL.createObjectURL(d.pages[0]) : ""; if (u) urls.push(u); return `<div class="slide-lib-row"><img class="slide-thumb" alt="" src="${u}"><div class="fall-lib-name">${escapeHtml(d.title)}<div class="stu-muted">${d.pages.length === 1 ? "1 slide" : `${d.pages.length} slides`}</div></div><div class="slide-lib-btns"><button type="button" class="btn-historico" data-sl-play="${d.id}">Apresentar</button><button type="button" class="btn-link-inline" data-sl-ren="${d.id}">Renomear</button><button type="button" class="btn-link-inline slide-del" data-sl-del="${d.id}">Apagar</button></div></div>`; }).join("") : `<div class="stu-empty">Nenhuma ainda. Ponha um PDF ou fotos dos seus slides.</div>`}
+<div class="auth-error" id="slErr"></div>`;
+const err = body.querySelector("#slErr");
+const busy = t => { slidesBusy = t; const b = body.querySelector("#slBusy"); if (b) { b.hidden = !t; b.textContent = t; } };
+const save = async (title, pages) => {
+if (!pages.length) { err.textContent = "Não achei páginas nesse arquivo."; return; }
+const ok = await slidesPut({ id: "s" + Date.now().toString(36), title: title.slice(0, 80) || "Apresentação", pages, created: Date.now() });
+if (!ok) err.textContent = "Não consegui guardar no aparelho. Pode ser falta de espaço: apague uma apresentação antiga e tente de novo.";
+};
+body.querySelector("#slPdf").onchange = async e => {
+const file = e.target.files && e.target.files[0]; e.target.value = ""; if (!file) return;
+if (slidesBusy) { err.textContent = "Espere terminar o arquivo que está sendo aberto."; return; }
+err.textContent = "";
+try {
+busy("Abrindo o PDF…");
+const r = await slidesFromPdf(file, (i, n) => busy(`Preparando os slides… ${i} de ${n}`));
+await save(file.name.replace(/\.pdf$/i, "").replace(/[_-]+/g, " ").trim(), r.pages);
+if (r.cut) err.textContent = "Esse PDF tem mais de 300 páginas: guardei só as 300 primeiras.";
+} catch(x) { console.warn("Slides: PDF", x); err.textContent = /internet/.test(x && x.message) ? "Preciso de internet na primeira vez para abrir PDF." : "Não consegui abrir esse PDF. Se ele tiver senha, salve uma cópia sem senha."; }
+finally { busy(""); }
+if (body.isConnected) draw();
+};
+body.querySelector("#slImg").onchange = async e => {
+const files = [...(e.target.files || [])].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true })); e.target.value = ""; if (!files.length) return;
+if (slidesBusy) { err.textContent = "Espere terminar o arquivo que está sendo aberto."; return; }
+err.textContent = "";
+try {
+const pages = [];
+for (let i = 0; i < files.length; i++) { busy(`Preparando os slides… ${i + 1} de ${files.length}`); try { pages.push(await slidesFromImage(files[i])); } catch(x) {} }
+await save(files.length === 1 ? files[0].name.replace(/\.[^.]+$/, "") : "Apresentação " + new Date().toLocaleDateString("pt-BR"), pages);
+} finally { busy(""); }
+if (body.isConnected) draw();
+};
+body.querySelectorAll("[data-sl-play]").forEach(b => b.onclick = async () => { const d = (await slidesAll()).find(x => x.id === b.dataset.slPlay); if (d) slidesShow(d); });
+body.querySelectorAll("[data-sl-ren]").forEach(b => b.onclick = async () => {
+const d = (await slidesAll()).find(x => x.id === b.dataset.slRen); if (!d) return;
+const t = prompt("Nome da apresentação", d.title); if (t === null || !t.trim()) return;
+await slidesPut({ ...d, title: t.trim().slice(0, 80) }); draw();
+});
+body.querySelectorAll("[data-sl-del]").forEach(b => b.onclick = async () => {
+const d = (await slidesAll()).find(x => x.id === b.dataset.slDel); if (!d) return;
+if (!confirm(`Apagar "${d.title}" deste aparelho?`)) return;
+await slidesDel(d.id); draw();
+});
+};
+draw();
+openQuickModal("Slides da aula", "Apresente em tela cheia na aula online, com laser e caneta.", body, null, "Fechar");
+}
+// Tela de apresentação: setas/espaço/clicador passam; L laser, C caneta, X apaga o desenho, B tela preta, F tela cheia, Esc sai.
+function slidesShow(deck){
+const el = document.createElement("div");
+el.className = "slide-show";
+el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", deck.title);
+el.innerHTML = `<div class="slide-stage"><img class="slide-img" alt=""><canvas class="slide-ink"></canvas><div class="slide-black" hidden></div><div class="slide-laser" hidden></div></div>
+<div class="slide-bar"><button type="button" data-s="prev" aria-label="Slide anterior">◀</button><span class="slide-count" data-s="count"></span><button type="button" data-s="next" aria-label="Próximo slide">▶</button><span class="slide-sep"></span><button type="button" data-s="laser">🔴 Laser</button><button type="button" data-s="pen">✏️ Caneta</button><button type="button" data-s="clear">Apagar desenho</button><button type="button" data-s="full">Tela cheia</button><button type="button" data-s="exit">Sair</button></div>`;
+document.body.appendChild(el);
+const img = el.querySelector(".slide-img"), ink = el.querySelector(".slide-ink"), ictx = ink.getContext("2d"), laser = el.querySelector(".slide-laser"), black = el.querySelector(".slide-black"), stage = el.querySelector(".slide-stage");
+const q = s => el.querySelector(`[data-s="${s}"]`);
+const urls = deck.pages.map(b => URL.createObjectURL(b));
+const strokes = deck.pages.map(() => []);   // desenho de cada slide, só enquanto a apresentação está aberta
+let i = 0, tool = "", drawing = null, hideT = 0;
+const fit = () => {
+const r = img.getBoundingClientRect(), sr = stage.getBoundingClientRect();
+ink.style.left = (r.left - sr.left) + "px"; ink.style.top = (r.top - sr.top) + "px";
+ink.style.width = r.width + "px"; ink.style.height = r.height + "px";
+const dpr = window.devicePixelRatio || 1; ink.width = Math.max(1, Math.round(r.width * dpr)); ink.height = Math.max(1, Math.round(r.height * dpr));
+paint();
+};
+const paint = () => {
+ictx.clearRect(0, 0, ink.width, ink.height);
+ictx.lineCap = ictx.lineJoin = "round"; ictx.strokeStyle = "#ff2d2d"; ictx.lineWidth = Math.max(3, ink.width / 300);
+strokes[i].forEach(st => { ictx.beginPath(); st.forEach(([x, y], k) => k ? ictx.lineTo(x * ink.width, y * ink.height) : ictx.moveTo(x * ink.width, y * ink.height)); ictx.stroke(); });
+};
+const go = n => {
+i = Math.max(0, Math.min(urls.length - 1, n));
+img.src = urls[i]; q("count").textContent = `${i + 1} / ${urls.length}`;
+q("prev").disabled = i === 0; q("next").disabled = i === urls.length - 1;
+black.hidden = true;
+};
+img.onload = fit;
+const setTool = t => {
+tool = tool === t ? "" : t;
+q("laser").classList.toggle("on", tool === "laser"); q("pen").classList.toggle("on", tool === "pen");
+el.classList.toggle("tool-laser", tool === "laser"); el.classList.toggle("tool-pen", tool === "pen");
+if (tool !== "laser") laser.hidden = true;
+};
+const showBar = () => { el.classList.remove("idle"); clearTimeout(hideT); hideT = setTimeout(() => el.classList.add("idle"), 2500); };
+const pos = e => { const r = ink.getBoundingClientRect(); return [(e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height]; };
+stage.addEventListener("pointermove", e => {
+showBar();
+if (tool === "laser") { const sr = stage.getBoundingClientRect(); laser.hidden = false; laser.style.transform = `translate(${e.clientX - sr.left}px, ${e.clientY - sr.top}px)`; }
+if (tool === "pen" && drawing) { drawing.push(pos(e)); paint(); }
+});
+stage.addEventListener("pointerdown", e => {
+if (tool === "pen") { drawing = [pos(e)]; strokes[i].push(drawing); try { stage.setPointerCapture(e.pointerId); } catch(x) {} return; }
+if (tool === "laser") { pointerMoveLaser(e); return; }
+// sem ferramenta: tocar na metade esquerda volta, na direita avança
+const r = stage.getBoundingClientRect(); go(i + (e.clientX - r.left < r.width / 3 ? -1 : 1));
+});
+const pointerMoveLaser = e => { const sr = stage.getBoundingClientRect(); laser.hidden = false; laser.style.transform = `translate(${e.clientX - sr.left}px, ${e.clientY - sr.top}px)`; };
+const endDraw = () => { drawing = null; };
+stage.addEventListener("pointerup", endDraw); stage.addEventListener("pointercancel", endDraw);
+stage.addEventListener("pointerleave", () => { if (tool === "laser") laser.hidden = true; });
+const full = () => { try { if (document.fullscreenElement) document.exitFullscreen(); else (el.requestFullscreen || el.webkitRequestFullscreen).call(el); } catch(x) {} };
+const close = () => {
+document.removeEventListener("keydown", onKey); window.removeEventListener("resize", fit); document.removeEventListener("fullscreenchange", fit);
+try { if (document.fullscreenElement) document.exitFullscreen(); } catch(x) {}
+clearTimeout(hideT); urls.forEach(u => URL.revokeObjectURL(u)); el.remove();
+};
+const onKey = e => {
+if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+const k = e.key;
+if (["ArrowRight", "ArrowDown", "PageDown", " ", "Enter"].includes(k)) { e.preventDefault(); go(i + 1); }
+else if (["ArrowLeft", "ArrowUp", "PageUp", "Backspace"].includes(k)) { e.preventDefault(); go(i - 1); }
+else if (k === "Home") go(0); else if (k === "End") go(urls.length - 1);
+else if (/^[lL]$/.test(k)) setTool("laser"); else if (/^[cC]$/.test(k)) setTool("pen");
+else if (/^[xX]$/.test(k)) { strokes[i] = []; paint(); }
+else if (/^[bB.]$/.test(k)) black.hidden = !black.hidden;
+else if (/^[fF]$/.test(k)) full();
+else if (k === "Escape" && !document.fullscreenElement) close();
+showBar();
+};
+q("prev").onclick = () => go(i - 1); q("next").onclick = () => go(i + 1);
+q("laser").onclick = () => setTool("laser"); q("pen").onclick = () => setTool("pen");
+q("clear").onclick = () => { strokes[i] = []; paint(); };
+q("full").onclick = full; q("exit").onclick = close;
+document.addEventListener("keydown", onKey); window.addEventListener("resize", fit); document.addEventListener("fullscreenchange", fit);
+go(0); showBar();
+full();
 }
 // ---------- Aluno: página da ferramenta ----------
 function stuFallSongs(){ const v = (stuCur && stuCur.view) || {}; return FALL_BUILTIN.concat((Array.isArray(v.fall) ? v.fall : []).filter(x => x && x.t && Array.isArray(x.n)).map(x => ({ id: x.id, title: x.t, notes: x.n }))); }
@@ -17562,6 +17789,7 @@ b.onclick = () => openPage(b.dataset.page);
 
 document.getElementById("settingsNavBtn").onclick = () => openPage("settings");
 document.getElementById("navFall").onclick = () => { closeMenu(); openFallLibrary(); };
+document.getElementById("navSlides").onclick = () => { closeMenu(); openSlidesLibrary(); };
 document.getElementById("settingsBackBtn").onclick = () => { if (settingsFolderCur) settingsFolderOpen(null); else openPage("home"); };
 // Configurações em pastas (8.13): a tela inicial mostra o perfil e as pastas; cada pasta abre
 // as linhas de antes (os mesmos elementos, movidos pra dentro dela, então tudo continua igual).
