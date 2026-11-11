@@ -4061,7 +4061,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.80";
+const APP_VERSION = "8.81";
 // Idioma (8.42): troca entre português e inglês e recarrega. Fica guardado neste aparelho.
 function langSwitchLabel(){ return APP_LANG === "en" ? "🌐 Mudar para português" : "🌐 Switch to English"; }
 function langSwitch(){
@@ -5628,8 +5628,17 @@ const sel = el.querySelector("select#sfInstrument");
 if (sel) sel.onchange = () => { el.querySelector("#sfInstrumentOther").style.display = sel.value ? "none" : ""; };
 const birth = el.querySelector("#sfBirth"), minor = el.querySelector("#sfMinor");
 if (minor) birth.onchange = () => { const a = ageYears(birth.value); const m = a !== null && a < 18; minor.style.display = m ? "" : "none"; el.querySelector("#sfGuardianConsentRow").style.display = m ? "" : "none"; };
-el.querySelector("#sfOtherKey").onclick = () => { writeEntry({ code: "", teacherName: null }); stuEntryCode(); };
-el.querySelector("#sfLogout").onclick = stuSignOut;
+// Rascunho (8.81): o que o aluno já digitou fica guardado neste aparelho; se ele sair do app e voltar, os campos voltam preenchidos.
+// Os "li e concordo" não são guardados: precisam ser marcados de novo.
+const SF_FIELDS = ["sfName", "sfPhone", "sfBirth", "sfInstrument", "sfInstrumentOther", "sfGuardianName", "sfGuardianPhone"];
+const sfSave = () => { const d = {}; SF_FIELDS.forEach(id => { const x = el.querySelector("#" + id); if (x && x.value) d[id] = x.value; }); writeEntry({ draft: Object.keys(d).length ? d : null }); };
+const dr = e.draft && typeof e.draft === "object" ? e.draft : {};
+SF_FIELDS.forEach(id => { const x = el.querySelector("#" + id); if (x && typeof dr[id] === "string") x.value = dr[id]; });
+if (sel && sel.value === "" && dr.sfInstrumentOther) el.querySelector("#sfInstrumentOther").style.display = "";
+if (minor && birth.value) birth.onchange();
+el.querySelectorAll("input, select").forEach(x => { if (SF_FIELDS.includes(x.id)) { x.addEventListener("input", sfSave); x.addEventListener("change", sfSave); } });
+el.querySelector("#sfOtherKey").onclick = () => { writeEntry({ code: "", teacherName: null, draft: null }); stuEntryCode(); };
+el.querySelector("#sfLogout").onclick = () => { writeEntry({ draft: null }); stuSignOut(); };
 el.querySelector("#sfSend").onclick = async () => {
 const v = id => (el.querySelector("#" + id)?.value || "").trim();
 const err = el.querySelector("#sfError");
@@ -5672,7 +5681,7 @@ err.textContent = /pendente para este professor/i.test(m) ? "Você já tem um pe
 : /fetch|network/i.test(m) ? "Sem conexão. Tente de novo." : "Não foi possível enviar. Tente de novo.";
 return;
 }
-writeEntry({ code: "", teacherName: null, instruments: null, kind: null });
+writeEntry({ code: "", teacherName: null, instruments: null, kind: null, draft: null });
 startStudentMode(true);
 };
 }

@@ -540,6 +540,9 @@ Versão do app 8.46; o arquivo do servidor desta rodada é `supabase/schema-v8.4
 - As linhas "Meu plano", "Indique um professor" e "Assinaturas" (só do dono do app) estavam parando dentro da pasta Dados e backup, porque não estavam na lista de nenhuma pasta de Configurações. Agora ficam em **Conta**. Linha nova em Configurações: pôr o id dela na lista `rows` de uma pasta em `SETTINGS_FOLDERS`, senão ela cai em Dados e backup.
 - Dono do app = linha em `app_admins` com o e-mail com que ele entra (não é só o do arquivo SQL). Para incluir: `insert into public.app_admins (user_id) select id from auth.users where lower(email)=lower('EMAIL') on conflict do nothing;`
 
+## Rascunho do pedido de acesso do aluno (8.81)
+- Jp: se o aluno sai do app no meio dos dados (antes de pedir acesso ao professor), perdia o que tinha digitado. Agora nome, telefone, nascimento, instrumento e dados do responsável ficam guardados neste aparelho (`jp_entry_v1`, campo `draft`) a cada toque e voltam ao reabrir. Os "li e concordo" não são guardados (marcar de novo). O rascunho some ao enviar, ao sair da conta ou ao trocar de chave. Nada novo na nuvem.
+
 ## Vincular várias matérias a vários alunos (8.80)
 - Jp, numa aula em grupo, queria ligar muitas matérias a dois alunos de uma vez. Organizador de Aulas → botão **Vincular várias** (`plannerSel`): tocar nas aulas, Pequenos Temas e Matérias prontas marca (✓); barra embaixo "N matérias marcadas · Vincular a alunos · Cancelar" → escolher os alunos (`planLinkMany`). Pula o que o aluno já tem, libera no app o que cada matéria libera (`matRelease`), mesma forma do vínculo de Desempenho. Arrastar fica desligado enquanto marca.
 
