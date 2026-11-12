@@ -9,7 +9,7 @@
 //  - Notificações (8.14): mostra o que a função send-push mandou e, ao tocar, abre (ou traz pra
 //    frente) o app já na página certa (?p=inicio | aulas | avisos | financeiro).
 const VERSION = new URL(self.location.href).searchParams.get("v") || "dev";
-const SW_REV = "8.83";   // sobe junto com o APP_VERSION quando o próprio service worker muda
+const SW_REV = "8.84";   // sobe junto com o APP_VERSION quando o próprio service worker muda
 const CACHE = `hi-teacher-${SW_REV}-${VERSION}`;
 const CORE = ["./", "./index.html", "./privacidade.html", "./privacy.html", "./i18n/en.js", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/logo-text-light.png", "./icons/icon-512.png", "./icons/icon-maskable-512.png", "./icons/apple-touch-icon.png", "./icons/favicon-32.png", "./icons/logo-text.png", "./fonts/poppins-500.woff2", "./fonts/poppins-600.woff2", "./fonts/poppins-700.woff2"];
 const LIB_HOSTS = /(^|\.)(cdn\.jsdelivr\.net|cdn\.sheetjs\.com|unpkg\.com|tessdata\.projectnaptha\.com)$/;
@@ -22,7 +22,28 @@ self.addEventListener("install", e => {
 self.addEventListener("activate", e => {
   e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k.startsWith("hi-teacher") && k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
-self.addEventListener("message", e => { if (e.data && e.data.type === "SKIP_WAITING") self.skipWaiting(); });
+// Novidades desta versão (8.84): o app mostra no aviso "Nova versão". Trocar a cada versão.
+const NEWS = [
+  "Matérias prontas e Pequenos Temas juntos, em pastas de meia largura que abrem por cima",
+  "Matérias prontas podem ser editadas, movidas de pasta e excluídas (e trazidas de volta)",
+  "Botão \"+ Pasta\" para criar pastas novas",
+  "Organizador: segurar e arrastar volta a reordenar; segurar e soltar marca",
+  "Início: dias fechados com o card completo, menor e sem o \"Para casa\", abrindo aos poucos",
+  "Aviso de versão nova maior, no meio da tela, mostrando o que mudou"
+];
+const NEWS_EN = [
+  "Ready-made topics and Small Topics together, in half-width folders that open on top",
+  "Ready-made topics can be edited, moved to folders and deleted (and brought back)",
+  "\"+ Folder\" button to create new folders",
+  "Lesson organizer: hold and drag reorders again; hold and release selects",
+  "Home: closed days show the full card, smaller and without homework, opening smoothly",
+  "Bigger update notice in the middle of the screen showing what changed"
+];
+self.addEventListener("message", e => {
+  const d = e.data || {};
+  if (d.type === "SKIP_WAITING") self.skipWaiting();
+  if (d.type === "news" && e.ports && e.ports[0]) e.ports[0].postMessage({ version: SW_REV, news: NEWS, newsEn: NEWS_EN });
+});
 
 function put(req, res){ caches.open(CACHE).then(c => c.put(req, res)).catch(() => {}); }
 // Página: rede primeiro. A cópia fica guardada sem os parâmetros da URL (?armazenamento=...,
