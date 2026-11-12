@@ -2315,9 +2315,14 @@ body.pdf-open{overflow:hidden}
 .school-sec-body .ann-row:last-child{border-bottom:0.0625rem solid var(--hairline)}
 .school-pad{padding:0.75rem 1rem}
 .school-demo-bar{margin-bottom:1rem;border-color:rgba(251,191,36,.35)}
-.taught-themes{display:flex;flex-wrap:wrap;gap:0.375rem;margin-top:0.5rem;align-items:center}
-.taught-themes .filter-chip{font-size:0.75rem;padding:0.3125rem 0.625rem}
-.taught-pick{max-width:100%;font-size:0.75rem;padding:0.3125rem 0.5rem;border-radius:var(--radius-pill);background:var(--glass-inset);color:var(--text-2);border:0.0625rem solid var(--hairline)}
+.tema-box{display:flex;flex-direction:column;gap:0.375rem}
+.tema-chips{display:flex;flex-wrap:wrap;gap:0.375rem}
+.tema-chips:empty{display:none}
+.tema-chip{display:inline-flex;align-items:center;gap:0.25rem;padding:0.25rem 0.25rem 0.25rem 0.625rem;border-radius:var(--radius-pill);background:var(--accent-soft-2);color:var(--text);font-size:0.8125rem;font-weight:600;border:0.0625rem solid var(--accent-line)}
+.tema-chip button{background:none;border:none;color:var(--text-2);font-size:1rem;line-height:1;padding:0 0.375rem;cursor:pointer;min-height:1.5rem}
+.tema-sug{display:flex;flex-wrap:wrap;gap:0.375rem}
+.tema-sug .filter-chip{font-size:0.75rem;padding:0.3125rem 0.625rem}
+.tema-sug .tema-new{border-style:dashed}
 .school-pay-months{display:flex;flex-wrap:wrap;gap:0.375rem;margin-top:0.375rem}
 .school-tcard{cursor:pointer}
 .school-key-card{text-align:center;padding:1.25rem 1rem;border-radius:var(--radius-lg);background:linear-gradient(145deg,rgba(79,125,255,.14),rgba(79,125,255,.03));border:0.0625rem solid var(--glass-border);margin-bottom:1rem}
@@ -4061,7 +4066,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.81";
+const APP_VERSION = "8.82";
 // Idioma (8.42): troca entre português e inglês e recarrega. Fica guardado neste aparelho.
 function langSwitchLabel(){ return APP_LANG === "en" ? "🌐 Mudar para português" : "🌐 Switch to English"; }
 function langSwitch(){
@@ -4142,7 +4147,9 @@ const q = new URLSearchParams(location.search), p = q.get("p");
 if (!p) return;
 // Resumo do dia (8.32): abre depois que o app carregar.
 if (p === "dia" || p === "resumo") sessionStorage.setItem("jp_open_summary", p);
-const map = { inicio: ["home", "home"], agenda: ["agenda", "lessons"], aulas: ["agenda", "lessons"], avisos: ["announcements", "home"], financeiro: ["home", "money"] }[p];
+// Pedido de entrada (8.82): abre direto o card "Pedidos para entrar" quando os pedidos chegarem.
+if (p === "pedidos") sessionStorage.setItem("jp_open_joins", "1");
+const map = { pedidos: ["home", "home"], inicio: ["home", "home"], agenda: ["agenda", "lessons"], aulas: ["agenda", "lessons"], avisos: ["announcements", "home"], financeiro: ["home", "money"] }[p];
 if (map) { sessionStorage.setItem("jp_active_page", map[0]); sessionStorage.setItem("jp_stu_active_page", map[1]); }
 q.delete("p");
 history.replaceState(history.state, "", location.pathname + (q.toString() ? "?" + q : "") + location.hash);
@@ -10282,6 +10289,7 @@ inboxJournalsAt = maxAt || new Date().toISOString();
 } catch(e) {}
 } catch(e) { console.warn("Não consegui buscar os pedidos dos alunos:", e); }
 renderStudentInbox();
+try { if (sessionStorage.getItem("jp_open_joins")) { sessionStorage.removeItem("jp_open_joins"); openJoinsNow(); } } catch(e) {}
 teacherPublish();
 try { pushLatePayments(); } catch(e) {}
 }
@@ -10399,6 +10407,11 @@ return answerRequest(r, "accepted", Object.keys(p.changes || {}).length ? "Dados
 }
 
 // ---------- Pedidos de entrada ----------
+// Toque no aviso de pedido de entrada (8.82): abre o card dos pedidos; sem pedido, mostra a caixa do Início.
+function openJoinsNow(){
+if (pendingJoins().length) { openJoinRequests(); return; }
+openPage("home"); setTimeout(() => { const el = document.getElementById("studentInboxBox"); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); }, 60);
+}
 function openJoinRequests(){
 const body = document.createElement("div");
 const render = () => {
@@ -12583,7 +12596,7 @@ const last = getStudentTimeline(s).find(l => isoFromBr(l.date) <= todayIso);
 const ultima = last ? sheetSection("Última aula", [
 sheetPair("Data", `${last.date.slice(0,5)} · ${WEEKDAY_FULL[dateFromIso(isoFromBr(last.date)).getDay()]}`),
 sheetPair("Status", escapeHtml(lessonStateText(s, last))),
-(last.taught || last.homework) ? `<div class="sheet-pair wide sheet-notes">${lessonNotesHTML(last)}</div>` : ""
+hasLessonNotes(last, s) ? `<div class="sheet-pair wide sheet-notes">${lessonNotesHTML(last, s)}</div>` : ""
 ]) : "";
 
 const about = sheetSection("Objetivo e observações", [
@@ -12807,43 +12820,142 @@ if (fixed) chooseReason(fixed);
 return wrap;
 }
 
-function lessonNotesHTML(lesson){
+// Anotações da aula (8.82): "Tema da aula" (fica em lesson.taught, que o aluno vê como antes) e
+// "Anotações para a próxima aula" (só o professor vê: s.lessonNotes["dd/mm/aaaa|reposição"]).
+// "Para estudar em casa" só aparece se a aula já tinha esse texto (dado antigo continua igual).
+function lessonNoteKey(br, makeupId){ return `${br}|${makeupId || ""}`; }
+function getLessonNote(student, lesson){ const n = student && student.lessonNotes; return (n && lesson && n[lessonNoteKey(lesson.date, lesson.makeupId)]) || ""; }
+function setLessonNote(student, br, makeupId, text){
+const k = lessonNoteKey(br, makeupId), n = { ...(student.lessonNotes || {}) };
+text = String(text || "").trim();
+if ((n[k] || "") === text) return false;
+if (text) n[k] = text; else delete n[k];
+if (Object.keys(n).length) student.lessonNotes = n; else delete student.lessonNotes;
+return true;
+}
+// Anotação para a próxima aula deixada na aula anterior (a mais recente antes de beforeIso).
+function prevLessonNote(student, beforeIso){
+let best = null;
+Object.entries((student && student.lessonNotes) || {}).forEach(([k, text]) => {
+const br = k.split("|")[0], iso = isoFromBr(br);
+if (!text || (beforeIso && iso >= beforeIso)) return;
+if (!best || iso > best.iso) best = { iso, date: br, text };
+});
+return best;
+}
+function prevNoteHTML(student, beforeIso){
+const p = prevLessonNote(student, beforeIso);
+return p ? `<div class="prev-homework"><span class="lesson-note-label">Anotações para esta aula (${p.date.slice(0, 5)})</span>${escapeHtml(p.text)}</div>` : "";
+}
+function lessonNotesHTML(lesson, student){
 const parts = [];
-if (lesson.taught && String(lesson.taught).trim()) parts.push(`<div class="lesson-note"><span class="lesson-note-label">O que foi dado</span>${escapeHtml(lesson.taught)}</div>`);
+if (lesson.taught && String(lesson.taught).trim()) parts.push(`<div class="lesson-note"><span class="lesson-note-label">Tema da aula</span>${escapeHtml(lesson.taught)}</div>`);
+const note = getLessonNote(student, lesson);
+if (note) parts.push(`<div class="lesson-note"><span class="lesson-note-label">Anotações para a próxima aula</span>${escapeHtml(note)}</div>`);
 if (lesson.homework && String(lesson.homework).trim()) parts.push(`<div class="lesson-note"><span class="lesson-note-label">Para estudar em casa</span>${escapeHtml(lesson.homework)}</div>`);
 return parts.length ? `<div class="lesson-notes">${parts.join("")}</div>` : "";
 }
-// Temas do Organizador de Aulas para preencher "O que foi dado" com um toque (8.27):
-// primeiro os temas ligados ao aluno, depois os outros numa lista.
-function taughtThemesHTML(student){
-const mine = [], seen = new Set();
-((student && student.themes) || []).slice().reverse().forEach(a => { const t = getThemeById(a.themeId); if (t && t.topic && !seen.has(t.topic)) { seen.add(t.topic); mine.push(t.topic); } });
-const others = lessonPlans.map(p => p.topic).filter(t => t && !seen.has(t)).filter((t, i, a) => a.indexOf(t) === i).sort((a, b) => a.localeCompare(b));
-if (!mine.length && !others.length) return "";
-return `<div class="taught-themes">${mine.slice(0, 8).map(t => `<button type="button" class="filter-chip" data-taught-chip="${escapeHtml(t)}">+ ${escapeHtml(t)}</button>`).join("")}${others.length ? `<select class="taught-pick" aria-label="Tema do Organizador de Aulas"><option value="">${mine.length ? "Outro tema…" : "Tema do Organizador de Aulas…"}</option>${others.map(t => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join("")}</select>` : ""}</div>`;
+function hasLessonNotes(lesson, student){ return !!(lesson.taught || lesson.homework || getLessonNote(student, lesson)); }
+// Campo "Tema da aula": pesquisa no Organizador de Aulas (temas do aluno primeiro) e cria tema novo.
+// Os temas escolhidos ficam numa caixa escondida (class = cls), separados por vírgula.
+function temaSplit(v){ return String(v || "").split(/\s*,\s*/).map(t => t.trim()).filter(Boolean); }
+function temaFieldHTML(value, cls, student){
+return `<div class="field"><label>Tema da aula</label><div class="tema-box"${student ? ` data-tema-stu="${escapeHtml(String(student.id))}"` : ""}>
+<input type="hidden" class="${cls}" value="${escapeHtml(value || "")}">
+<div class="tema-chips">${temaChipsHTML(value)}</div>
+<input type="search" class="tema-q" placeholder="Pesquisar ou criar tema" aria-label="Pesquisar ou criar tema" autocomplete="off" enterkeyhint="done">
+<div class="tema-sug" hidden></div>
+</div></div>`;
 }
-function taughtAdd(el, text){
-const field = el.closest(".field"), ta = field && field.querySelector("textarea");
-if (!ta || !text) return;
-const cur = ta.value.trim();
-if (cur.split(/\s*,\s*/).includes(text)) return;
-ta.value = cur ? `${cur.replace(/[,;.\s]+$/, "")}, ${text}` : text;
-ta.dispatchEvent(new Event("input", { bubbles: true }));
-ta.dispatchEvent(new Event("change", { bubbles: true }));
+function temaChipsHTML(value){ return temaSplit(value).map((t, i) => `<span class="tema-chip">${escapeHtml(t)}<button type="button" data-tema-del="${i}" aria-label="Tirar ${escapeHtml(t)}">×</button></span>`).join(""); }
+function temaStudent(box){ const id = box.dataset.temaStu; return id ? students.find(x => String(x.id) === id) : null; }
+function temaSet(box, value){
+const h = box.querySelector("input[type=hidden]");
+h.value = value;
+box.querySelector(".tema-chips").innerHTML = temaChipsHTML(value);
+h.dispatchEvent(new Event("change", { bubbles: true }));
 }
-document.addEventListener("click", e => { const b = e.target.closest("[data-taught-chip]"); if (b) { e.preventDefault(); e.stopPropagation(); taughtAdd(b, b.dataset.taughtChip); } }, true);
-document.addEventListener("change", e => { const sel = e.target.closest && e.target.closest(".taught-pick"); if (sel && sel.value) { taughtAdd(sel, sel.value); sel.value = ""; } });
+function temaAdd(box, topic){
+topic = String(topic || "").replace(/\s+/g, " ").trim();
+if (!topic) return;
+const cur = temaSplit(box.querySelector("input[type=hidden]").value);
+if (!cur.some(t => plannerNorm(t) === plannerNorm(topic))) temaSet(box, cur.concat(topic).join(", "));
+const q = box.querySelector(".tema-q"); q.value = ""; temaSuggest(box);
+}
+function temaSuggest(box){
+const q = box.querySelector(".tema-q"), sug = box.querySelector(".tema-sug");
+const v = plannerNorm(q.value.trim()), s = temaStudent(box);
+const chosen = new Set(temaSplit(box.querySelector("input[type=hidden]").value).map(plannerNorm));
+const seen = new Set(), list = [];
+const push = t => { const k = plannerNorm(t); if (!t || seen.has(k) || chosen.has(k)) return; seen.add(k); if (!v || k.includes(v)) list.push(t); };
+((s && s.themes) || []).slice().reverse().forEach(a => { const t = getThemeById(a.themeId); if (t) push(t.topic); });
+if (v) allMaterias().forEach(p => push(p.topic));
+const show = list.slice(0, 8);
+const exact = v && (seen.has(v) || chosen.has(v));
+let html = show.map(t => `<button type="button" class="filter-chip" data-tema-pick="${escapeHtml(t)}">+ ${escapeHtml(t)}</button>`).join("");
+if (v && !exact) html += `<button type="button" class="filter-chip tema-new" data-tema-new="1">+ Criar tema “${escapeHtml(q.value.trim())}”</button>`;
+sug.innerHTML = html;
+sug.hidden = !html || (!v && document.activeElement !== q);
+}
+// Tema novo vai para o Organizador de Aulas (sem imagem) e fica vinculado ao aluno ao salvar.
+function temaCreate(box){
+const q = box.querySelector(".tema-q"), topic = plainText(q.value.replace(/\s+/g, " ").trim(), 160);
+if (!topic) return;
+if (!allMaterias().some(p => plannerNorm(p.topic) === plannerNorm(topic))) { lessonPlans.unshift({ id: Date.now(), topic, imgUrls: [] }); savePlans(); }
+temaAdd(box, topic);
+}
+document.addEventListener("click", e => {
+const t = e.target.closest && e.target.closest("[data-tema-pick],[data-tema-new],[data-tema-del]");
+if (!t) return;
+const box = t.closest(".tema-box");
+if (!box) return;
+e.preventDefault(); e.stopPropagation();
+if (t.dataset.temaPick) temaAdd(box, t.dataset.temaPick);
+else if (t.dataset.temaNew) temaCreate(box);
+else { const cur = temaSplit(box.querySelector("input[type=hidden]").value); cur.splice(+t.dataset.temaDel, 1); temaSet(box, cur.join(", ")); temaSuggest(box); }
+}, true);
+document.addEventListener("input", e => { const q = e.target.closest && e.target.closest(".tema-q"); if (q) temaSuggest(q.closest(".tema-box")); });
+document.addEventListener("focusin", e => { const q = e.target.closest && e.target.closest(".tema-q"); if (q) temaSuggest(q.closest(".tema-box")); });
+document.addEventListener("keydown", e => {
+const q = e.target.closest && e.target.closest(".tema-q");
+if (!q || e.key !== "Enter") return;
+e.preventDefault();
+const box = q.closest(".tema-box"), v = plannerNorm(q.value.trim());
+if (!v) return;
+const hit = allMaterias().find(p => plannerNorm(p.topic) === v);
+if (hit) temaAdd(box, hit.topic); else temaCreate(box);
+});
+document.addEventListener("click", e => { document.querySelectorAll(".tema-sug:not([hidden])").forEach(sug => { const box = sug.closest(".tema-box"); if (!box.contains(e.target) && !box.querySelector(".tema-q").value.trim()) sug.hidden = true; }); });
+// Ao salvar: temas que existem no Organizador de Aulas ficam vinculados ao aluno (o que já tinha fica igual).
+function linkTaughtThemes(student, taught){
+const items = temaSplit(taught);
+if (!items.length || !student) return false;
+const all = allMaterias();
+let added = false;
+student.themes = Array.isArray(student.themes) ? student.themes : [];
+items.forEach(t => {
+const plan = all.find(p => plannerNorm(p.topic) === plannerNorm(t));
+if (!plan || student.themes.some(a => a.themeId === plan.id)) return;
+const a = { themeId: plan.id, rating: null, date: todayBr() };
+student.themes.push(a); added = true;
+try { if (matUnlock(plan).length) matRelease(student, a, true); } catch(e) {}
+});
+return added;
+}
 function notesEditorHTML(lesson, student){
+const hw = lesson.homework && String(lesson.homework).trim();
 return `
 <div class="notes-editor">
-<div class="field"><label>O que foi dado</label><textarea rows="2" class="note-taught" placeholder="Ex.: escala de Dó maior, música X">${escapeHtml(lesson.taught || "")}</textarea>${taughtThemesHTML(student)}</div>
-<div class="field"><label>Para estudar em casa</label><textarea rows="2" class="note-homework" placeholder="Ex.: praticar a escala 10 min por dia">${escapeHtml(lesson.homework || "")}</textarea></div>
+${temaFieldHTML(lesson.taught || "", "note-taught", student)}
+<div class="field"><label>Anotações para a próxima aula</label><textarea rows="3" class="note-next" placeholder="Ex.: revisar a escala, começar a música X">${escapeHtml(getLessonNote(student, lesson))}</textarea></div>
+${hw ? `<div class="field"><label>Para estudar em casa</label><textarea rows="2" class="note-homework">${escapeHtml(lesson.homework)}</textarea></div>` : ""}
 </div>`;
 }
 function readNotes(container){
 const taught = (container.querySelector(".note-taught")?.value || "").trim();
 const homework = (container.querySelector(".note-homework")?.value || "").trim();
-return { taught, homework };
+const next = (container.querySelector(".note-next")?.value || "").trim();
+return { taught, homework, next };
 }
 function makeupStatusText(student, lesson){
 if (!lesson.makeupCreated) return "";
@@ -12894,9 +13006,9 @@ div.innerHTML = header(`<span class="badge-evaluated">Avaliada</span>`) + `
 <div class="lesson-criteria-grid">
 ${lessonCriteria(lesson).map(c=>`<div class="criterion-row"><span>${escapeHtml(c.label)}</span><div class="criterion-stars">${starsDisplayHTML(Number(lesson[c.key]))}</div></div>`).join('')}
 </div>
-${lessonNotesHTML(lesson)}
+${lessonNotesHTML(lesson, student)}
 <div class="reason-slot"></div>
-<div class="history-actions"><button type="button" class="btn-edit-toggle btn-noclass btn-subtle">Não teve aula</button><button type="button" class="btn-edit-toggle btn-notes">${lesson.taught || lesson.homework ? "Editar anotações" : "Anotar a aula"}</button></div>`;
+<div class="history-actions"><button type="button" class="btn-edit-toggle btn-noclass btn-subtle">Não teve aula</button><button type="button" class="btn-edit-toggle btn-notes">${hasLessonNotes(lesson, student) ? "Editar anotações" : "Anotar a aula"}</button></div>`;
 attachNoClassButton(div, student, lesson, rerender);
 attachNotesToggle(div, student, lesson, rerender);
 try { attachSubButton(div, student, lesson, rerender); } catch(e) {}
@@ -12923,14 +13035,15 @@ return div;
 const isPending = lesson.status === "pending";
 const prevHw = isPending ? getLastHomework(student, isoFromBr(lesson.date)) : null;
 div.innerHTML = header(isPending ? `<span class="badge-not-evaluated">Aguardando avaliação</span>` : `<span class="badge-given">Aula dada</span>`) +
+(isPending ? prevNoteHTML(student, isoFromBr(lesson.date)) : "") +
 (prevHw ? `<div class="prev-homework"><span class="lesson-note-label">Para casa da aula anterior (${prevHw.date})</span>${escapeHtml(prevHw.homework)}</div>` : "") +
-(isPending ? `<div class="eval-criteria-wrap"></div>${notesEditorHTML(lesson, student)}` : lessonNotesHTML(lesson)) +
+(isPending ? `<div class="eval-criteria-wrap"></div>${notesEditorHTML(lesson, student)}` : lessonNotesHTML(lesson, student)) +
 `<div class="reason-slot"></div>
 <div class="history-actions">
 <button type="button" class="btn-edit-toggle btn-noclass${lesson.virtual ? "" : " btn-subtle"}">Não teve aula</button>
 ${isPending
 ? `<button type="button" class="btn-edit-toggle btn-skip-eval">Pular avaliação</button><button type="button" class="save btn-save-eval">Salvar avaliação</button>`
-: `<button type="button" class="btn-edit-toggle btn-notes">${lesson.taught || lesson.homework ? "Editar anotações" : "Anotar a aula"}</button>`}
+: `<button type="button" class="btn-edit-toggle btn-notes">${hasLessonNotes(lesson, student) ? "Editar anotações" : "Anotar a aula"}</button>`}
 </div>`;
 
 attachNoClassButton(div, student, lesson, rerender);
@@ -12956,6 +13069,9 @@ const fields = { status:"evaluated", ...values };
 if (notes.taught) fields.taught = notes.taught;
 if (notes.homework) fields.homework = notes.homework;
 upsertLessonRecord(student, lesson, fields);
+setLessonNote(student, lesson.date, lesson.makeupId, notes.next);
+linkTaughtThemes(student, notes.taught);
+saveStudents();
 rerender();
 };
 try { attachSubButton(div, student, lesson, rerender); } catch(e) {}
@@ -12995,9 +13111,12 @@ if (lesson.virtual) fields.status = "given";
 const rec = upsertLessonRecord(student, lesson, fields);
 if (!rec.taught) delete rec.taught;
 if (!rec.homework) delete rec.homework;
+setLessonNote(student, lesson.date, lesson.makeupId, notes.next);
+linkTaughtThemes(student, notes.taught);
+saveStudents();
 rerender();
 };
-holder.querySelector('.note-taught').focus();
+holder.querySelector('.note-next').focus();
 };
 }
 
@@ -13629,7 +13748,7 @@ return getStudentTimeline(s).find(l => isoFromBr(l.date) < beforeIso) || null;
 function lastLessonHTML(s, beforeIso){
 const last = lastLessonRecordBefore(s, beforeIso);
 if (!last) return `<div class="lp-last"><div class="lp-last-title">Última aula</div><div class="lp-last-empty">Nenhuma aula antes desta.</div></div>`;
-const notes = lessonNotesHTML(last);
+const notes = lessonNotesHTML(last, s);
 const miss = isNoClass(last) ? `<div class="lp-last-miss">${escapeHtml(last.auto ? (last.offLabel || "Feriado/férias") : noClassNote(s, last))}</div>` : "";
 return `<div class="lp-last"><div class="lp-last-title">Última aula (${last.date.slice(0,5)})</div>${miss}${notes || `<div class="lp-last-empty">Sem anotações na última aula</div>`}</div>`;
 }
@@ -13756,24 +13875,29 @@ function todayNotesHTML(x, date, i, canCopy){
 const rec = todayRecordOf(x, date) || noteDraftOf(x, date) || {};
 return `<div class="lp-notes" data-lp-notes="${i}">
 <div class="lp-last-title">${new Date() < lessonEnd(date, x.time, x.student) ? "Anotações da aula (em andamento)" : "Anotações de hoje"}</div>
-<div class="field"><label>O que foi dado</label><textarea rows="2" class="lp-taught" placeholder="Ex.: escala de Dó maior, música X">${escapeHtml(rec.taught || "")}</textarea>${taughtThemesHTML(x.student)}</div>
+${temaFieldHTML(rec.taught || "", "lp-taught", x.student)}
+<div class="field"><label>Anotações para a próxima aula</label><textarea rows="3" class="lp-next" placeholder="Ex.: revisar a escala, começar a música X">${escapeHtml(x.student.lessonNotes ? (x.student.lessonNotes[noteDraftKey(x, date)] || "") : "")}</textarea></div>
 ${canCopy ? `<div class="lp-copy-row"><button type="button" class="btn-link-inline lp-copy">Copiar para todos</button></div>` : ""}
-<div class="field"><label>Para estudar em casa</label><textarea rows="2" class="lp-homework" placeholder="Ex.: praticar a escala 10 min por dia">${escapeHtml(rec.homework || "")}</textarea></div>
+${rec.homework ? `<div class="field"><label>Para estudar em casa</label><textarea rows="2" class="lp-homework">${escapeHtml(rec.homework)}</textarea></div>` : ""}
 <div class="lp-saved" aria-live="polite"></div>
 </div>`;
 }
 // Salva as anotações da aula de hoje. Aula sem registro (dada automática) ganha um registro
 // com o mesmo estado dela: "given", ou "pending" se ainda vai ser avaliada.
-function saveTodayNotes(x, date, taught, homework){
+function saveTodayNotes(x, date, taught, homework, next){
 const s = x.student;
-if (!todayRecordOf(x, date) && new Date() < lessonEnd(date, x.time, s)) return setNoteDraft(x, date, taught, homework);
+if (homework === null || homework === undefined) homework = (todayRecordOf(x, date) || noteDraftOf(x, date) || {}).homework || "";
+let noted = false;
+if (typeof next === "string" && setLessonNote(s, brOf(date), x.makeupId, next)) { saveStudents(); noted = true; }
+if (taught && linkTaughtThemes(s, taught)) { saveStudents(); noted = true; }
+if (!todayRecordOf(x, date) && new Date() < lessonEnd(date, x.time, s)) return setNoteDraft(x, date, taught, homework) || noted;
 let rec = todayRecordOf(x, date);
 if (!rec) {
-if (!taught && !homework) return false;
+if (!taught && !homework) return noted;
 const e = entryForLesson({ ...x, record: null }, date);
 rec = upsertLessonRecord(s, e, { status: e.status === "pending" ? "pending" : "given" });
 }
-if ((rec.taught || "") === taught && (rec.homework || "") === homework) return false;
+if ((rec.taught || "") === taught && (rec.homework || "") === homework) return noted;
 if (taught) rec.taught = taught; else delete rec.taught;
 if (homework) rec.homework = homework; else delete rec.homework;
 saveStudents();
@@ -13785,18 +13909,19 @@ const itemOf = (box) => noteable[boxes.indexOf(box)];
 const flash = (box, text) => { const el = box.querySelector(".lp-saved"); el.textContent = text; clearTimeout(el._t); el._t = setTimeout(() => el.textContent = "", 2500); };
 const save = (box) => {
 const x = itemOf(box);
-if (x && saveTodayNotes(x, date, box.querySelector(".lp-taught").value.trim(), box.querySelector(".lp-homework").value.trim())) { flash(box, "Salvo ✓"); refreshStudentSheet(); }
+const hw = box.querySelector(".lp-homework");
+if (x && saveTodayNotes(x, date, box.querySelector(".lp-taught").value.trim(), hw ? hw.value.trim() : null, box.querySelector(".lp-next").value.trim())) { flash(box, "Salvo ✓"); refreshStudentSheet(); }
 };
 boxes.forEach(box => {
-box.querySelectorAll("textarea").forEach(t => { t.addEventListener("change", () => save(box)); t.addEventListener("input", () => { clearTimeout(box._t); box._t = setTimeout(() => save(box), 1500); }); });
+box.querySelectorAll("textarea, input.lp-taught").forEach(t => { t.addEventListener("change", () => save(box)); t.addEventListener("input", () => { clearTimeout(box._t); box._t = setTimeout(() => save(box), 1500); }); });
 const copy = box.querySelector(".lp-copy");
 if (copy) copy.onclick = () => {
-const text = box.querySelector(".lp-taught").value.trim();
+const text = box.querySelector(".lp-taught").value.trim(), next = box.querySelector(".lp-next").value.trim();
 const others = boxes.filter(b => b !== box);
-const clash = others.filter(b => { const v = b.querySelector(".lp-taught").value.trim(); return v && v !== text; });
-if (clash.length && !confirm(`Trocar o "O que foi dado" de ${clash.map(b => sn(itemOf(b).student)).join(", ")} por este?`)) return;
+const clash = others.filter(b => { const v = b.querySelector(".lp-taught").value.trim(), n = b.querySelector(".lp-next").value.trim(); return (v && v !== text) || (n && n !== next); });
+if (clash.length && !confirm(`Trocar o tema e as anotações de ${clash.map(b => sn(itemOf(b).student)).join(", ")} por estes?`)) return;
 save(box);
-others.forEach(b => { b.querySelector(".lp-taught").value = text; save(b); });
+others.forEach(b => { b.querySelector(".lp-next").value = next; const tb = b.querySelector(".tema-box"); if (tb) temaSet(tb, text); save(b); });
 flash(box, "Copiado para todos ✓");
 };
 });
@@ -19013,11 +19138,12 @@ div.innerHTML = `
 <div class="name">${escapeHtml(s.name)}${entry.makeupId ? ` <span class="badge-makeup">${extraLabel(s, entry.makeupId)}</span>` : ""}</div>
 <button type="button" class="btn-edit-toggle btn-popup-noclass" style="margin-left:auto">Não teve aula</button>
 </div>
+${prevNoteHTML(s, isoFromBr(group.date))}
 ${prevHw ? `<div class="prev-homework"><span class="lesson-note-label">Para casa da aula anterior (${prevHw.date})</span>${escapeHtml(prevHw.homework)}</div>` : ""}
 <div class="reason-slot"></div>
 <div class="eval-criteria-wrap"></div>
-<button type="button" class="notes-toggle">${preNotes.taught || preNotes.homework ? "− Esconder anotações" : "+ Anotações da aula (opcional)"}</button>
-<div class="notes-slot"${preNotes.taught || preNotes.homework ? "" : ' style="display:none"'}>${notesEditorHTML(preNotes, s)}</div>
+<button type="button" class="notes-toggle">− Esconder anotações</button>
+<div class="notes-slot">${notesEditorHTML({ ...preNotes, date: group.date, makeupId: entry.makeupId }, s)}</div>
 `;
 container.appendChild(div);
 
@@ -19038,7 +19164,8 @@ st.noClass = on;
 noClassBtn.classList.toggle("active", on);
 critWrap.style.display = on ? "none" : "";
 notesToggle.style.display = on ? "none" : "";
-if (on) div.querySelector(".notes-slot").style.display = "none";
+div.querySelector(".notes-slot").style.display = on ? "none" : "";
+notesToggle.textContent = "− Esconder anotações";
 reasonSlot.innerHTML = "";
 st.reason = null; st.withMakeup = false;
 if (on) reasonSlot.appendChild(buildReasonPicker((reason, withMakeup) => {
@@ -19050,7 +19177,7 @@ notesToggle.onclick = () => {
 const slot = div.querySelector(".notes-slot");
 const open = slot.style.display === "none";
 slot.style.display = open ? "" : "none";
-notesToggle.textContent = open ? "− Esconder anotações" : "+ Anotações da aula (opcional)";
+notesToggle.textContent = open ? "− Esconder anotações" : "+ Tema e anotações";
 };
 st.el = div;
 });
@@ -19078,6 +19205,8 @@ const fields = { status:"evaluated", ...st.values };
 if (notes.taught) fields.taught = notes.taught;
 if (notes.homework) fields.homework = notes.homework;
 upsertLessonRecord(student, entry, fields);
+setLessonNote(student, group.date, entry.makeupId, notes.next);
+linkTaughtThemes(student, notes.taught);
 });
 saveStudents();
 evalQueueIndex++;
@@ -20938,6 +21067,7 @@ setTimeout(() => el.remove(), 15000);
 // (8.31) O app Android chama hiAppOpenPage quando a pessoa toca no aviso com o app aberto.
 function hiAppOpenPage(p){
 if (p === "dia" || p === "resumo") { try { if (!studentMode) openDaySummary(p === "dia" ? "start" : "end"); } catch(x) {} return; }
+if (p === "pedidos") { if (!studentMode) { try { openPage("home"); sessionStorage.setItem("jp_open_joins", "1"); inboxLoad(); } catch(x) {} } return; }
 const map = { inicio: ["home", "home"], agenda: ["agenda", "lessons"], aulas: ["agenda", "lessons"], avisos: ["announcements", "home"], financeiro: ["home", "money"] }[p];
 if (!map) return;
 try { if (studentMode && !demoMode) { startStudentMode(true); stuOpenPage(map[1]); } else if (!studentMode) openPage(map[0]); } catch(x) {}
@@ -21127,7 +21257,8 @@ else if (rec && isNoClass(rec) && absentNoMakeup(s, rec)) { st = `${cardReasonTe
 else if (rec && isNoClass(rec)) { st = cardReasonText(s, rec); missed++; }
 else if (end > now) st = "Ainda vai acontecer";
 else { st = "Dada"; given++; val = lessonValueEstimate(s, d, x.kind); total += val; }
-const notes = rec ? [rec.taught && `<div class="day-sum-note"><span>O que foi dado:</span> ${escapeHtml(rec.taught)}</div>`, rec.homework && `<div class="day-sum-note"><span>Para casa:</span> ${escapeHtml(rec.homework)}</div>`].filter(Boolean).join("") : "";
+const nx = s.lessonNotes && s.lessonNotes[lessonNoteKey(brOf(d), x.makeupId)];
+const notes = [rec && rec.taught && `<div class="day-sum-note"><span>Tema:</span> ${escapeHtml(rec.taught)}</div>`, nx && `<div class="day-sum-note"><span>Próxima aula:</span> ${escapeHtml(nx)}</div>`, rec && rec.homework && `<div class="day-sum-note"><span>Para casa:</span> ${escapeHtml(rec.homework)}</div>`].filter(Boolean).join("");
 return `<div class="day-sum-row"><div><b>${escapeHtml(x.time)}</b> ${escapeHtml(sn(s))} <span class="stu-muted">· ${escapeHtml(st)}${val ? ` · R$ ${moneyText(Math.round(val * 100) / 100)}` : ""}</span></div>${notes || (st === "Dada" ? `<div class="day-sum-note stu-muted">Sem anotação da aula.</div>` : "")}</div>`;
 });
 body.innerHTML = `<div class="day-sum-total"><div><b>${given}</b><span>aula${given === 1 ? "" : "s"} dada${given === 1 ? "" : "s"}</span></div><div><b>R$ ${moneyText(Math.round(total))}</b><span>gerados</span></div><div><b>${missed}</b><span>falta${missed === 1 ? "" : "s"} ou cancelamento${missed === 1 ? "" : "s"}</span></div></div>
@@ -21363,7 +21494,8 @@ const toHome = id => () => { openPage("home"); setTimeout(() => { const el = doc
 try { if (schoolInboxList.length) add("user", `${schoolInboxList.length} aluno${schoolInboxList.length > 1 ? "s" : ""} ou interessado${schoolInboxList.length > 1 ? "s" : ""} mandado${schoolInboxList.length > 1 ? "s" : ""} para você pela escola`, openSchoolInbox, true); } catch(e) {}
 try { const u = schoolNoticeUnread(); if (u.length) add("bell", `Aviso da escola: ${escapeHtml(u[0].title)}${u.length > 1 ? ` (+${u.length - 1})` : ""}`, openSchoolNotices, true); } catch(e) {}
 try { if (schoolIsOwner() && schoolPendingN) add("user", (schoolPendingN > 1 ? `${schoolPendingN} professores pedindo para entrar na escola` : "1 professor pedindo para entrar na escola"), () => openPage("schoolTeam"), true); } catch(e) {}
-try { const n = pendingJoins().length + inbox.requests.length; if (n) add("user", `${n} pedido${n > 1 ? "s" : ""} de aluno esperando resposta`, toHome("studentInboxBox"), true); } catch(e) {}
+try { const n = pendingJoins().length; if (n) add("user", `${n} pedido${n > 1 ? "s" : ""} para entrar no app`, openJoinRequests, true); } catch(e) {}
+try { const n = inbox.requests.length; if (n) add("user", `${n} recado${n > 1 ? "s" : ""} de aluno esperando resposta`, toHome("studentInboxBox"), true); } catch(e) {}
 try {
 let late = 0; students.filter(s => s.active !== false && paysMe(s)).forEach(s => unpaidMonths(s).forEach(k => { if (isPastDue(s, k)) late++; }));
 if (late) add("dollar", `${late} mensalidade${late > 1 ? "s" : ""} vencida${late > 1 ? "s" : ""}`, toHome("pendingPaymentsBox"), true);
@@ -22498,7 +22630,7 @@ body.innerHTML = `<div class="field"><label>Para qual professor?</label><select 
 openQuickModal(`Passar ${firstName(s.name)} para outro professor`, "", body, async () => {
 const to = body.querySelector("#trTo").value;
 const copy = JSON.parse(JSON.stringify(s));
-["id", "needsReview", "charges", "paidMonths", "paidMonth", "paidDates", "noteDrafts", "movedTo", "exit", "exitReason", "exitNote", "fromTeacher", "practiceLog"].forEach(k => delete copy[k]);
+["id", "needsReview", "charges", "paidMonths", "paidMonth", "paidDates", "noteDrafts", "lessonNotes", "movedTo", "exit", "exitReason", "exitNote", "fromTeacher", "practiceLog"].forEach(k => delete copy[k]);
 const { data: tid, error } = await supabaseClient.rpc("hi_school_send", { p_to: to, p_kind: "student", p_data: { ref: String(s.id), name: s.name, student: copy } });
 if (error) { body.querySelector("#trErr").textContent = schoolErrText(error); return; }
 pushNotify("school_transfer", tid);

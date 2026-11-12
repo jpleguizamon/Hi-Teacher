@@ -141,7 +141,7 @@ export async function plan(db: DB, uid: string, type: string, id: string): Promi
     if (!j) return notFound;
     if (j.user_id !== uid) return denied;
     if (j.status !== "pending") return { error: "Pedido não está pendente", status: 409 };
-    return { recipients: [{ user_id: j.teacher_id }], title: "Pedido de entrada", body: `${firstName(j.student_name)} quer entrar`, url: "./?p=inicio", pref: "join", dedupe: `join:${j.id}` };
+    return { recipients: [{ user_id: j.teacher_id }], title: "Pedido de entrada", body: `${firstName(j.student_name)} quer entrar`, url: "./?p=pedidos", pref: "join", dedupe: `join:${j.id}` };
   }
   if (type === "lesson") {
     const { data: l } = await db.from("lessons").select("id, student_id, teacher_id, date, status, reason, deleted").eq("id", id).maybeSingle();

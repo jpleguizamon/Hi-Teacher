@@ -4351,5 +4351,20 @@
 "{0} matérias": "{0} topics",
 "1 matéria": "1 topic",
 "Pronto: {0} vinculada{1} a {2}.": "Done: {0} linked to {2}.",
-"{0} já tinha{1} essas matérias.": "{0} already had these topics."
+"{0} já tinha{1} essas matérias.": "{0} already had these topics.",
+"Anotações para esta aula ({0})": "Notes for this lesson ({0})",
+"Tema da aula": "Lesson topic",
+"Anotações para a próxima aula": "Notes for the next lesson",
+"data-tema-stu=\"{0}\"": null,
+"Pesquisar ou criar tema": "Search or create a topic",
+"+ Criar tema “{0}”": "+ Create topic “{0}”",
+"Ex.: revisar a escala, começar a música X": "E.g.: review the scale, start song X",
+"textarea, input.lp-taught": null,
+"Trocar o tema e as anotações de {0} por estes?": "Replace the topic and notes of {0} with these?",
+"+ Tema e anotações": "+ Topic and notes",
+"Tema:": "Topic:",
+"Próxima aula:": "Next lesson:",
+"{0} pedido{1} para entrar no app": "{0} request{1} to join the app",
+"{0} recado{1} de aluno esperando resposta": "{0} student message{1} waiting for a reply",
+"Tirar {0}": "Remove {0}"
 }
