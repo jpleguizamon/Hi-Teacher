@@ -182,6 +182,32 @@ public class AppBridge {
         }
     }
 
+    /**
+     * Salva em Downloads trocando o arquivo de mesmo nome que o próprio app gravou antes
+     * (backup automático 8.83: fica um arquivo só). Android 9 ou mais antigo: devolve false.
+     */
+    @JavascriptInterface
+    public boolean saveFileReplace(String name, String mime, String b64) {
+        if (Build.VERSION.SDK_INT < 29) return false;
+        try {
+            String n = safeName(name);
+            try {
+                act.getContentResolver().delete(MediaStore.Downloads.EXTERNAL_CONTENT_URI,
+                        MediaStore.Downloads.DISPLAY_NAME + "=?", new String[]{ n });
+            } catch (Exception ignored) { /* arquivo de outra instalação: fica como está */ }
+            ContentValues v = new ContentValues();
+            v.put(MediaStore.Downloads.DISPLAY_NAME, n);
+            v.put(MediaStore.Downloads.MIME_TYPE, mime == null || mime.isEmpty() ? "application/octet-stream" : mime);
+            v.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS);
+            Uri u = act.getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, v);
+            if (u == null) return false;
+            try (OutputStream out = act.getContentResolver().openOutputStream(u)) { out.write(Base64.decode(b64, Base64.DEFAULT)); }
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     @JavascriptInterface
     public void openExternal(String url) {
         act.runOnUiThread(() -> act.openOutside(Uri.parse(url), true));

@@ -273,7 +273,15 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 @keyframes pageIn{from{transform:translateY(0.5rem)}to{transform:none}}
 
 /* ===== Início: aulas dos próximos dias ===== */
-.day-section{margin-bottom:1.375rem;cursor:pointer;padding:0.5rem;border-radius:var(--radius-lg);transition:background .2s ease}
+.day-section{margin-bottom:1.375rem;cursor:pointer;padding:0.5rem;border-radius:var(--radius-lg);transition:background .2s ease;-webkit-tap-highlight-color:transparent;outline:none}
+.day-section .card{-webkit-tap-highlight-color:transparent}
+/* Início (8.83): dia fechado mostra só hora e nome; os detalhes aparecem ao tocar no dia. */
+#nextDays .day-section:not(.focused) .card{padding:0.5rem 0.8125rem;margin-bottom:0.375rem}
+#nextDays .day-section:not(.focused) .card .instrument,
+#nextDays .day-section:not(.focused) .card .hw-line,
+#nextDays .day-section:not(.focused) .card .avatar-cluster,
+#nextDays .day-section:not(.focused) .card .student-avatar-btn,
+#nextDays .day-section:not(.focused) .card .status:not(.off){display:none}
 .day-head{margin:0.625rem 0.125rem;color:var(--muted);font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;transition:all .3s var(--ease-out);user-select:none}
 .card{
   display:flex;align-items:center;gap:0.8125rem;padding:0.875rem 0.8125rem;margin-bottom:0.6875rem;
@@ -623,11 +631,11 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 }
 .nav-sub button.nav-item { font-size: 0.8125rem; font-weight: 600; padding: 0.625rem 0.875rem; }
 .nav button.nav-item:hover:not(:disabled):not(.active) { background: rgba(79,125,255,.07); color: var(--text); }
-.nav button.nav-item.active {
-  background: linear-gradient(90deg, rgba(79,125,255,.22), rgba(47,85,212,.12));
-  border-color: var(--accent-line); color: var(--text); box-shadow: var(--glow);
-}
-.nav button.nav-item.active .nav-icon { color: var(--accent); filter: drop-shadow(0 0 0.25rem rgba(79,125,255,.7)); }
+/* 8.83: item ativo sem a pílula azul grande; só um risco fino à esquerda e o ícone azul. */
+.nav button.nav-item { position: relative; }
+.nav button.nav-item.active { color: var(--text); background: transparent; }
+.nav button.nav-item.active::before { content: ""; position: absolute; left: 0.1875rem; top: 28%; bottom: 28%; width: 0.125rem; border-radius: 0.125rem; background: var(--accent); }
+.nav button.nav-item.active .nav-icon { color: var(--accent); }
 .nav button.nav-item:disabled { opacity: 0.45; cursor: not-allowed; }
 .choice-chips{display:flex;flex-wrap:wrap;gap:0.4375rem}
 .choice-chips .filter-chip{font-size:0.8125rem;padding:0.5rem 0.875rem;display:inline-flex;align-items:center;gap:0.375rem}
@@ -1276,7 +1284,9 @@ body.lead-open #authGate,body.lead-open #onboardingGate{display:none!important}
 .planr-sel-btn.active{background:var(--accent-fill);color:var(--accent-ink);border-color:var(--accent)}
 .planr-selbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(1rem + var(--sab, 0px));width:min(36rem,calc(100% - 2rem));z-index:25;display:flex;align-items:center;flex-wrap:wrap;gap:0.5rem;padding:0.625rem 0.75rem;border-radius:var(--radius-md);background:var(--glass-raised);border:0.0625rem solid var(--accent-line);box-shadow:var(--glow-sm);-webkit-backdrop-filter:var(--blur);backdrop-filter:var(--blur)}
 .planr-selbar span{flex:1;min-width:8rem;font-size:0.8125rem;font-weight:700;color:var(--text)}
-.planr-selbar .planr-main-btn:disabled{opacity:.45;cursor:default}
+.planr-selbar .planr-main-btn:disabled,.planr-selbar .edit:disabled{opacity:.45;cursor:default}
+.planr-selbar .planr-sel-del{color:var(--danger)}
+.lesson-card,.lesson-card-mini,.student-square{-webkit-touch-callout:none}
 .lesson-card.picked,.lesson-card-mini.picked{border-color:var(--accent);box-shadow:0 0 0 0.125rem var(--accent),var(--glow-sm);position:relative}
 .lesson-card.picked::after,.lesson-card-mini.picked::after{content:"✓";position:absolute;top:-0.4rem;right:-0.4rem;width:1.5rem;height:1.5rem;border-radius:50%;background:var(--accent);color:#fff;font-size:0.8125rem;font-weight:800;display:grid;place-items:center;z-index:5}
 .planr-pick{display:flex;flex-direction:column;gap:0.25rem;max-height:50vh;overflow-y:auto}
@@ -1649,7 +1659,7 @@ button.metro-dot{width:1.75rem;height:1.75rem;padding:0;cursor:pointer}
 .mat-chip button{background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.875rem;padding:0;line-height:1}
 .mat-add{display:flex;flex-wrap:wrap;gap:0.375rem;align-items:center}
 .mat-add select{flex:1 1 40%;min-width:0}
-.mat-preset-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(9rem,1fr));gap:0.5rem;padding:0.25rem 0 0.5rem}
+.mat-preset-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(9rem,1fr));gap:0.5rem;padding:0.25rem 0.5rem 0.5rem}
 .mat-preset-list .lesson-card-mini{cursor:pointer;text-align:left}
 .mat-renamed{display:block;font-size:0.6875rem;color:var(--muted);font-weight:500;margin-top:0.125rem}
 .theme-unlock{display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-top:0.5rem;font-size:0.8125rem;color:var(--text-2)}
@@ -2906,7 +2916,7 @@ body.pdf-open{overflow:hidden}
 <select id="plannerSort" class="planr-sort" aria-label="Ordem das aulas"><option value="manual">Minha ordem</option><option value="az">A a Z</option><option value="new">Mais recentes</option><option value="used">Mais usadas</option></select>
 </div>
 <div class="planr-folders" id="plannerFolders" hidden></div>
-<div class="planr-selbar" id="plannerSelBar" hidden><span id="plannerSelCount"></span><button type="button" class="planr-main-btn" id="plannerSelGo">Vincular a alunos</button><button type="button" class="edit" id="plannerSelCancel">Cancelar</button></div>
+<div class="planr-selbar" id="plannerSelBar" hidden><span id="plannerSelCount"></span><button type="button" class="planr-main-btn" id="plannerSelGo">Vincular a alunos</button><button type="button" class="edit" id="plannerSelMove">Mover</button><button type="button" class="edit planr-sel-del" id="plannerSelDel">Excluir</button><button type="button" class="edit" id="plannerSelCancel">Cancelar</button></div>
 <div class="lesson-grid" id="plannerList"></div>
 <div class="page-title-bar" style="margin-top:28px" id="plannerMiniTitle"><h2 class="page-title-text">Pequenos Temas <span class="planr-count" id="plannerMiniCount"></span></h2></div>
 <div class="lesson-grid-mini" id="plannerListNoAttachment"></div>
@@ -2924,6 +2934,7 @@ body.pdf-open{overflow:hidden}
 <div class="field-hint" id="slBusy" style="margin-bottom:0.75rem;color:var(--accent)" hidden></div>
 <div class="auth-error" id="slErr" style="margin-bottom:0.75rem"></div>
 <div class="lesson-grid" id="slidesList"></div>
+<div class="planr-selbar" id="slidesSelBar" hidden><span id="slidesSelCount"></span><button type="button" class="edit planr-sel-del" id="slidesSelDel">Apagar</button><button type="button" class="edit" id="slidesSelCancel">Cancelar</button></div>
 <input type="file" id="slPdf" accept="application/pdf,.pdf" hidden><input type="file" id="slImg" accept="image/*" multiple hidden>
 </main>
 
@@ -4066,7 +4077,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.82";
+const APP_VERSION = "8.83";
 // Idioma (8.42): troca entre português e inglês e recarrega. Fica guardado neste aparelho.
 function langSwitchLabel(){ return APP_LANG === "en" ? "🌐 Mudar para português" : "🌐 Switch to English"; }
 function langSwitch(){
@@ -4543,7 +4554,8 @@ const data = {};
 CLOUD_SYNC_KEYS.forEach(k => { const v = localStorage.getItem(k); if (v !== null) data[k] = v; });
 const sum = dataSummary(k => data[k] ?? null);
 if (!sum.students && !sum.plans) return; // nada pra proteger
-const list = await listDeviceSnapshots();
+// 8.83: os backups automáticos (kind "backup") têm a própria fila (os 4 últimos) e não contam nas 3 cópias.
+const list = (await listDeviceSnapshots()).filter(x => x.kind !== "backup");
 if (list[0] && JSON.stringify(list[0].data) === JSON.stringify(data)) return; // igual à última
 const db = await snapDb();
 await snapTx(db, "readwrite", st => {
@@ -4551,6 +4563,21 @@ st.put({ id: Date.now(), at: new Date().toISOString(), reason, students: sum.stu
 list.slice(2).forEach(x => st.delete(x.id)); // fica com as 3 mais novas
 });
 } catch (e) { console.warn("Não consegui guardar a cópia no aparelho:", e); }
+}
+
+// Backup automático (8.83): guarda dentro do aparelho os 4 últimos backups, para poder voltar
+// ao da semana passada mesmo com um arquivo só na pasta Downloads.
+async function saveBackupCopy(data){
+try {
+const sum = dataSummary(k => data[k] ?? null);
+if (!sum.students && !sum.plans) return;
+const olds = (await listDeviceSnapshots()).filter(x => x.kind === "backup");
+const db = await snapDb();
+await snapTx(db, "readwrite", st => {
+st.put({ id: Date.now(), at: new Date().toISOString(), kind: "backup", reason: "Backup", students: sum.students, active: sum.active, lessons: sum.lessons, data });
+olds.slice(3).forEach(x => st.delete(x.id)); // fica com os 4 mais novos
+});
+} catch (e) { console.warn("Não consegui guardar o backup no aparelho:", e); }
 }
 
 // O supabase-js não lança erro: devolve { error }. Antes esse erro era ignorado, então um
@@ -8614,14 +8641,20 @@ const n = d.pages.length;
 return `<div class="lesson-card slide-card${n > 1 ? " stacked" : ""}" data-sl-play="${d.id}" role="button" tabindex="0" aria-label="Apresentar ${escapeHtml(d.title)}">
 <div class="lesson-img-wrap slide-cover"><img src="${u}" class="lesson-img" loading="lazy" alt=""><span class="file-count-badge">${n === 1 ? "1 slide" : `${n} slides`}</span><span class="slide-play" aria-hidden="true">▶</span></div>
 <div class="lesson-title-out">${escapeHtml(d.title)}</div>
-<div class="slide-card-btns"><button type="button" class="btn-link-inline" data-sl-ren="${d.id}">Renomear</button><button type="button" class="btn-link-inline slide-del" data-sl-del="${d.id}">Apagar</button></div>
+<div class="slide-card-btns"><button type="button" class="btn-link-inline" data-sl-add="${d.id}">Acrescentar</button><button type="button" class="btn-link-inline" data-sl-ren="${d.id}">Renomear</button><button type="button" class="btn-link-inline slide-del" data-sl-del="${d.id}">Apagar</button></div>
 </div>`; }).join("") : "<div style='color:var(--muted);font-size:13px;grid-column:1/-1;text-align:center;padding:30px 0'>Nenhuma apresentação guardada. Toque no '+' acima para pôr um PDF ou fotos dos seus slides.</div>";
 const find = async id => (await slidesAll()).find(x => x.id === id);
+slidesSelBar();
 box.querySelectorAll("[data-sl-play]").forEach(c => {
 const play = async () => { const d = await find(c.dataset.slPlay); if (d) slidesShow(d); };
-c.onclick = e => { if (!e.target.closest("button")) play(); };
+const id = c.dataset.slPlay;
+if (slidesSel && slidesSel.has(id)) c.classList.add("picked");
+const pick = () => { if (slidesSel.has(id)) slidesSel.delete(id); else slidesSel.add(id); c.classList.toggle("picked", slidesSel.has(id)); if (!slidesSel.size) { slidesSelEnd(); return; } slidesSelBar(); };
+holdToSelect(c, () => { if (!slidesSel) slidesSel = new Set(); if (!slidesSel.has(id)) pick(); });
+c.onclick = e => { if (slidesSel) { e.preventDefault(); pick(); return; } if (!e.target.closest("button")) play(); };
 c.onkeydown = e => { if ((e.key === "Enter" || e.key === " ") && e.target === c) { e.preventDefault(); play(); } };
 });
+box.querySelectorAll("[data-sl-add]").forEach(b => b.onclick = async () => { const d = await find(b.dataset.slAdd); if (d) slidesPick(d); });
 box.querySelectorAll("[data-sl-ren]").forEach(b => b.onclick = async () => {
 const d = await find(b.dataset.slRen); if (!d) return;
 const t = prompt("Nome da apresentação", d.title); if (t === null || !t.trim()) return;
@@ -8630,8 +8663,33 @@ await slidesPut({ ...d, title: t.trim().slice(0, 80) }); renderSlidesPage();
 box.querySelectorAll("[data-sl-del]").forEach(b => b.onclick = async () => {
 const d = await find(b.dataset.slDel); if (!d) return;
 if (!confirm(`Apagar "${d.title}" deste aparelho?`)) return;
-await slidesDel(d.id); renderSlidesPage();
+await slidesDel(d.id); slidesPos(d.id, 0); renderSlidesPage();
 });
+}
+// Tocar e segurar numa capa marca várias para apagar (8.83).
+let slidesSel = null;
+function slidesSelBar(){
+const bar = document.getElementById("slidesSelBar"), n = slidesSel ? slidesSel.size : 0;
+bar.hidden = !slidesSel || currentPage !== "slides";
+document.getElementById("slidesSelCount").textContent = n === 1 ? "1 apresentação marcada" : `${n} apresentações marcadas`;
+}
+function slidesSelEnd(){ slidesSel = null; slidesSelBar(); document.querySelectorAll("#slidesList .picked").forEach(c => c.classList.remove("picked")); }
+document.getElementById("slidesSelCancel").onclick = slidesSelEnd;
+document.getElementById("slidesSelDel").onclick = async () => {
+if (!slidesSel || !slidesSel.size) return;
+const ids = [...slidesSel];
+if (!confirm(`Apagar ${ids.length === 1 ? "1 apresentação" : `${ids.length} apresentações`} deste aparelho? Não dá para desfazer.`)) return;
+for (const id of ids) { await slidesDel(id); slidesPos(id, 0); }
+slidesSel = null; renderSlidesPage();
+};
+// "+" (apresentação nova) ou "Acrescentar" (8.83: põe mais slides no fim de uma que já existe).
+let slidesAppendTo = null;
+function slidesPick(deck){
+slidesAppendTo = deck ? deck.id : null;
+const body = document.createElement("div");
+body.innerHTML = `<div class="demo-actions" style="margin:0"><button type="button" class="btn-historico" data-pick="slPdf">Pôr PDF</button><button type="button" class="btn-historico" data-pick="slImg">Pôr fotos</button></div><div class="field-hint" style="margin-top:0.75rem">${deck ? "Os slides novos entram no fim desta apresentação. " : ""}PowerPoint, Google Apresentações ou Canva: salve ou baixe como PDF. Fotos entram na ordem do nome do arquivo.</div>`;
+body.querySelectorAll("[data-pick]").forEach(b => b.onclick = () => { closeQuickModal(); document.getElementById(b.dataset.pick).click(); });
+openQuickModal(deck ? "Acrescentar slides" : "Nova apresentação", deck ? deck.title : "", body, null, "Fechar");
 }
 function openSlidesLibrary(){ openPage("slides"); }
 (function(){
@@ -8639,16 +8697,20 @@ const err = () => document.getElementById("slErr");
 const busy = t => { slidesBusy = t; const b = document.getElementById("slBusy"); if (b) { b.hidden = !t; b.textContent = t; } };
 const save = async (title, pages) => {
 if (!pages.length) { err().textContent = "Não achei páginas nesse arquivo."; return; }
+const into = slidesAppendTo ? (await slidesAll()).find(x => x.id === slidesAppendTo) : null;
+slidesAppendTo = null;
+if (into) {
+const all = into.pages.concat(pages);
+const okA = await slidesPut({ ...into, pages: all.slice(0, 600) });
+if (!okA) err().textContent = "Não consegui guardar no aparelho. Pode ser falta de espaço: apague uma apresentação antiga e tente de novo.";
+else { slidesPos(into.id, into.pages.length); if (all.length > 600) err().textContent = "Essa apresentação chegou a 600 slides: o que passou disso ficou de fora."; showCloudWarning(`Pronto: ${pages.length === 1 ? "1 slide novo" : `${pages.length} slides novos`} em "${into.title}".`); }
+return;
+}
 const ok = await slidesPut({ id: "s" + Date.now().toString(36), title: title.slice(0, 80) || "Apresentação", pages, created: Date.now() });
 if (!ok) err().textContent = "Não consegui guardar no aparelho. Pode ser falta de espaço: apague uma apresentação antiga e tente de novo.";
 };
 const refresh = () => { if (currentPage === "slides") renderSlidesPage(); };
-document.getElementById("addSlidesBtn").onclick = () => {
-const body = document.createElement("div");
-body.innerHTML = `<div class="demo-actions" style="margin:0"><button type="button" class="btn-historico" data-pick="slPdf">Pôr PDF</button><button type="button" class="btn-historico" data-pick="slImg">Pôr fotos</button></div><div class="field-hint" style="margin-top:0.75rem">PowerPoint, Google Apresentações ou Canva: salve ou baixe como PDF. Fotos entram na ordem do nome do arquivo.</div>`;
-body.querySelectorAll("[data-pick]").forEach(b => b.onclick = () => { closeQuickModal(); document.getElementById(b.dataset.pick).click(); });
-openQuickModal("Nova apresentação", "", body, null, "Fechar");
-};
+document.getElementById("addSlidesBtn").onclick = () => slidesPick(null);
 document.getElementById("slPdf").onchange = async e => {
 const file = e.target.files && e.target.files[0]; e.target.value = ""; if (!file) return;
 if (slidesBusy) { err().textContent = "Espere terminar o arquivo que está sendo aberto."; return; }
@@ -8674,6 +8736,15 @@ await save(files.length === 1 ? files[0].name.replace(/\.[^.]+$/, "") : "Apresen
 refresh();
 };
 })();
+// Onde parou em cada apresentação (8.83): abre no slide em que estava (por aparelho).
+function slidesPos(id, i){
+let m = {}; try { m = JSON.parse(localStorage.getItem("jp_slides_pos_v1") || "{}") || {}; } catch(e) {}
+if (i === undefined) return Number(m[id]) || 0;
+if (m[id] === i) return i;
+if (i) m[id] = i; else delete m[id];
+try { localStorage.setItem("jp_slides_pos_v1", JSON.stringify(m)); } catch(e) {}
+return i;
+}
 // Tela de apresentação: setas/espaço/clicador passam; L laser, C caneta, X apaga o desenho, B tela preta, F tela cheia, Esc sai.
 function slidesShow(deck){
 const el = document.createElement("div");
@@ -8725,6 +8796,7 @@ strokes[i].forEach(st => { ictx.beginPath(); st.forEach(([x, y], k) => k ? ictx.
 const go = n => {
 i = Math.max(0, Math.min(urls.length - 1, n));
 img.src = urls[i]; q("count").textContent = `${i + 1} / ${urls.length}`;
+if (deck.id) slidesPos(deck.id, i);
 q("prev").disabled = i === 0; q("next").disabled = i === urls.length - 1;
 black.hidden = true;
 };
@@ -8776,7 +8848,7 @@ q("laser").onclick = () => setTool("laser"); q("pen").onclick = () => setTool("p
 q("clear").onclick = () => { strokes[i] = []; paint(); };
 q("full").onclick = full; q("exit").onclick = close;
 document.addEventListener("keydown", onKey); window.addEventListener("resize", fit); document.addEventListener("fullscreenchange", fit);
-go(0); showBar();
+go(deck.id ? slidesPos(deck.id) : 0); showBar();
 full();
 }
 // ---------- Aluno: página da ferramenta ----------
@@ -10637,7 +10709,8 @@ closeQuickModal();
 if (currentPage === "studentApp") renderStudentAppPage();
 }, "Cancelar", "Salvar");
 }
-function openAppFeaturesBulk(){
+function openAppFeaturesBulk(pre){
+if (!(pre instanceof Set)) pre = null;
 const list = students.filter(s => s.active !== false).sort((a, b) => String(a.name).localeCompare(String(b.name)));
 if (!list.length) { alert("Nenhum aluno ativo ainda."); return; }
 const body = document.createElement("div");
@@ -10646,6 +10719,7 @@ body.innerHTML = `<div class="field"><label>O que (marque uma ou mais)</label><d
 <div class="field"><label>Fazer</label><select id="sabDo"><option value="on">Liberar</option><option value="off">Desativar</option></select></div>
 <div class="field"><label>Para quem</label><div class="sab-list"><label class="sab-item"><input type="checkbox" id="sabAll"> <b>Todos</b></label>${list.map(s => `<label class="sab-item"><input type="checkbox" data-sab="${escapeHtml(String(s.id))}"> ${escapeHtml(s.name)}${s.instrument ? ` <span class="stu-muted">· ${escapeHtml(s.instrument)}</span>` : ""}</label>`).join("")}</div></div>
 <div class="field-hint" id="sabHint"></div><div class="auth-error" id="sabErr"></div>`;
+if (pre) body.querySelectorAll("[data-sab]").forEach(i => { i.checked = pre.has(i.dataset.sab); });
 const all = body.querySelector("#sabAll");
 all.onchange = () => body.querySelectorAll("[data-sab]").forEach(i => i.checked = all.checked);
 const whats = () => [...body.querySelectorAll("[data-sab-what]:checked")].map(i => i.dataset.sabWhat);
@@ -14297,10 +14371,10 @@ const offNote = live.length === 0 ? (g.find(x => x.off)?.off.label || "") : "";
 // O card fica só com a linha de cima; as ações (Cancelar aula / Não teve aula / Desfazer /
 // anotações) ficam no painel da aula, que abre ao tocar no card.
 card.classList.add("card-tappable");
-card.onclick = () => openLessonPanel(date, time);
+card.onclick = (e) => { if (!section.classList.contains("focused")) return; e.stopPropagation(); openLessonPanel(date, time); };
 card.innerHTML=`<div class="time">${time}</div>${avatarsHtml}<div class="info"><div class="name">${names}</div><div class="instrument">${escapeHtml(instruments)}${g.length>1?" · grupo":" · ind."}${extraKinds.map(k => " · " + k).join("")}${offNote ? " · " + escapeHtml(offNote) : ""}</div>${hwHtml}</div><div class="status ${statusClass}">${escapeHtml(statusText)}</div>`;
 card.querySelectorAll("[data-home-student]").forEach(b=>{
-b.onclick=(e)=>{ e.stopPropagation(); openStudentFromHome(Number(b.dataset.homeStudent)); }});
+b.onclick=(e)=>{ if (!section.classList.contains("focused")) return; e.stopPropagation(); openStudentFromHome(Number(b.dataset.homeStudent)); }});
 section.appendChild(card);
 });
 
@@ -16191,9 +16265,9 @@ page.classList.toggle("bulk-on", !!bulkSel);
 if (!bulkSel) { actions.style.display = "none"; actions.innerHTML = ""; return; }
 actions.style.display = "flex";
 actions.innerHTML = bulkSel.mode === "active"
-? `<button type="button" class="save" data-bulk-act="edit">Editar</button><button type="button" class="cancel" data-bulk-act="raise">Reajustar</button><button type="button" class="cancel" data-bulk-act="inactivate">Inativar</button>`
+? `<button type="button" class="save" data-bulk-act="edit">Editar</button><button type="button" class="cancel" data-bulk-act="raise">Reajustar</button><button type="button" class="cancel" data-bulk-act="release">Liberar funções</button><button type="button" class="cancel" data-bulk-act="inactivate">Inativar</button>`
 : `<button type="button" class="save" data-bulk-act="reactivate">Reativar</button>`;
-actions.querySelectorAll("[data-bulk-act]").forEach(b => b.onclick = () => ({ edit: openBulkEdit, raise: () => openRaiseModal(bulkStudents()), inactivate: openBulkInactivate, reactivate: bulkReactivate })[b.dataset.bulkAct]());
+actions.querySelectorAll("[data-bulk-act]").forEach(b => b.onclick = () => ({ edit: openBulkEdit, raise: () => openRaiseModal(bulkStudents()), inactivate: openBulkInactivate, reactivate: bulkReactivate, release: () => openAppFeaturesBulk(new Set(bulkStudents().map(x => String(x.id)))) })[b.dataset.bulkAct]());
 }
 // Guarda os campos que vão mudar (pra desfazer) e volta cada aluno como estava.
 function snapshotFields(list, keys){
@@ -16663,6 +16737,7 @@ ${isStacked ? `<span class="file-count-badge"><svg class="inline-icon" viewBox="
 ${planMetaHTML(plan, uses)}
 `;
 el.onclick = () => plannerSel ? plannerPick(plan.id, el) : openPlanViewer(plan.id);
+plannerHold(el, plan.id);
 if (plannerSel && plannerSel.has(plan.id)) el.classList.add("picked");
 el.onkeydown = e => { if ((e.key === "Enter" || e.key === " ") && e.target === el) { e.preventDefault(); openPlanViewer(plan.id); } };
 container.appendChild(el);
@@ -16898,6 +16973,28 @@ side.querySelector("#vPlanLink").onclick = () => openPlanLinkStudents(plan);
 }
 // Vincular a aula a vários alunos de uma vez (o mesmo vínculo de Desempenho; tirar continua por lá).
 // Vincular várias matérias a vários alunos de uma vez (8.80): "Vincular várias" → tocar nas matérias → escolher os alunos.
+// Tocar e segurar para marcar vários (8.83). Depois de marcar, o toque que solta não conta como clique.
+function holdToSelect(el, fn){
+let timer = null, sx = 0, sy = 0;
+const stop = () => { clearTimeout(timer); timer = null; };
+el.addEventListener("pointerdown", e => {
+if (e.button) return;
+sx = e.clientX; sy = e.clientY; el._lp = false; stop();
+timer = setTimeout(() => {
+timer = null; el._lp = true;
+if (navigator.vibrate) { try { navigator.vibrate(15); } catch(x) {} }
+const eat = ev => { ev.stopPropagation(); ev.preventDefault(); };
+window.addEventListener("click", eat, true);
+window.addEventListener("pointerdown", () => window.removeEventListener("click", eat, true), { capture: true, once: true });
+fn();
+}, 450);
+});
+el.addEventListener("pointermove", e => { if (timer && Math.hypot(e.clientX - sx, e.clientY - sy) > 10) stop(); });
+["pointerup", "pointercancel", "pointerleave"].forEach(ev => el.addEventListener(ev, stop));
+el.addEventListener("contextmenu", e => { if (el._lp) e.preventDefault(); });
+el.addEventListener("dragstart", e => { if (el._lp) e.preventDefault(); });
+}
+function plannerHold(el, id){ holdToSelect(el, () => { if (plannerSel) { if (!plannerSel.has(id)) { plannerSel.add(id); plannerSelBar(); renderPlanner(); } return; } plannerSel = new Set([id]); plannerSelBar(); renderPlanner(); }); }
 let plannerSel = null;   // Set com os ids marcados (aulas do professor e Matérias prontas "mp:...")
 function plannerSelBar(){
 const bar = document.getElementById("plannerSelBar"), n = plannerSel ? plannerSel.size : 0;
@@ -16905,6 +17002,34 @@ bar.hidden = !plannerSel;
 document.getElementById("plannerSelBtn").classList.toggle("active", !!plannerSel);
 document.getElementById("plannerSelCount").textContent = n === 0 ? "Toque nas matérias para marcar" : n === 1 ? "1 matéria marcada" : `${n} matérias marcadas`;
 document.getElementById("plannerSelGo").disabled = !n;
+const own = plannerSel ? [...plannerSel].filter(id => !String(id).startsWith("mp:")).length : 0;
+document.getElementById("plannerSelMove").disabled = !own;
+document.getElementById("plannerSelDel").disabled = !own;
+}
+// Mover / excluir várias (8.83): só as aulas do professor; Matérias prontas marcadas ficam como estão.
+function plannerSelOwn(){ return lessonPlans.filter(p => plannerSel && plannerSel.has(p.id)); }
+function plannerSelMove(){
+const list = plannerSelOwn(); if (!list.length) return;
+const body = document.createElement("div");
+body.innerHTML = `<div class="field"><label>Pasta</label><input id="psmFolder" maxlength="40" list="psmFolderList" placeholder="Nome da pasta (vazio = sem pasta)" autocomplete="off"><datalist id="psmFolderList">${planFolders().map(([f]) => `<option value="${escapeHtml(f)}"></option>`).join("")}</datalist></div>${planFolders().length ? `<div class="choice-chips">${planFolders().map(([f]) => `<button type="button" class="filter-chip" data-psm="${escapeHtml(f)}">${escapeHtml(f)}</button>`).join("")}</div>` : ""}`;
+body.querySelectorAll("[data-psm]").forEach(b => b.onclick = () => { body.querySelector("#psmFolder").value = b.dataset.psm; });
+openQuickModal("Mover para a pasta", list.length === 1 ? list[0].topic : `${list.length} aulas`, body, () => {
+const folder = plainText(body.querySelector("#psmFolder").value.replace(/\s+/g, " ").trim(), 40);
+list.forEach(p => { if (folder) p.folder = folder; else delete p.folder; });
+savePlans(); closeQuickModal();
+showCloudWarning(folder ? `Pronto: ${list.length === 1 ? "1 aula" : `${list.length} aulas`} na pasta "${folder}".` : `Pronto: ${list.length === 1 ? "1 aula ficou" : `${list.length} aulas ficaram`} sem pasta.`);
+plannerSelEnd();
+}, "Cancelar", "Mover");
+}
+function plannerSelDelete(){
+const list = plannerSelOwn(); if (!list.length) return;
+const linked = new Set(); list.forEach(p => planStudents(p.id).forEach(st => linked.add(st.id)));
+const n = linked.size;
+if (!confirm(`Excluir ${list.length === 1 ? "1 aula" : `${list.length} aulas`}?${n ? ` ${n === 1 ? "1 aluno tem" : `${n} alunos têm`} alguma delas, e ela vai aparecer na ficha como "Tema removido".` : ""} Não dá para desfazer.`)) return;
+const ids = new Set(list.map(p => p.id));
+lessonPlans = lessonPlans.filter(p => !ids.has(p.id));
+savePlans();
+plannerSelEnd();
 }
 function plannerPick(id, el){
 if (plannerSel.has(id)) plannerSel.delete(id); else plannerSel.add(id);
@@ -16914,6 +17039,8 @@ plannerSelBar();
 function plannerSelEnd(){ plannerSel = null; plannerSelBar(); renderPlanner(); }
 document.getElementById("plannerSelBtn").onclick = () => { if (plannerSel) { plannerSelEnd(); return; } plannerSel = new Set(); plannerSelBar(); renderPlanner(); };
 document.getElementById("plannerSelCancel").onclick = plannerSelEnd;
+document.getElementById("plannerSelMove").onclick = plannerSelMove;
+document.getElementById("plannerSelDel").onclick = plannerSelDelete;
 document.getElementById("plannerSelGo").onclick = () => { if (plannerSel && plannerSel.size) planLinkMany([...plannerSel], plannerSelEnd); };
 // Liga as matérias aos alunos marcados (pula o que o aluno já tem) e libera no app o que elas liberam.
 function planLinkMany(ids, done){
@@ -17894,7 +18021,7 @@ if (title) title.hidden = hide || !groups.size;
 box.hidden = hide || !groups.size;
 box.innerHTML = [...groups].map(([g, list]) => `<details class="settings-card month-group"${matPresetOpen === g || (q && groups.size <= 3) ? " open" : ""} data-mgroup="${escapeHtml(g)}"><summary class="month-sum"><span>${escapeHtml(g)}</span><span class="stu-muted">${list.length}</span><span class="settings-row-chevron" aria-hidden="true">›</span></summary><div class="month-body"><div class="mat-preset-list">${list.map(p => `<button type="button" class="lesson-card-mini" data-mpid="${escapeHtml(p.id)}"><span class="lesson-title-mini">${escapeHtml(p.topic)}</span>${p.topic !== p.baseTopic ? `<span class="mat-renamed">${escapeHtml(p.baseTopic)}</span>` : ""}</button>`).join("")}</div></div></details>`).join("");
 box.querySelectorAll("details[data-mgroup]").forEach(d => d.addEventListener("toggle", () => { if (d.open) matPresetOpen = d.dataset.mgroup; else if (matPresetOpen === d.dataset.mgroup) matPresetOpen = null; }));
-box.querySelectorAll("[data-mpid]").forEach(b => { if (plannerSel && plannerSel.has(b.dataset.mpid)) b.classList.add("picked"); b.onclick = () => plannerSel ? plannerPick(b.dataset.mpid, b) : openMateriaEditor(b.dataset.mpid); });
+box.querySelectorAll("[data-mpid]").forEach(b => { if (plannerSel && plannerSel.has(b.dataset.mpid)) b.classList.add("picked"); b.onclick = () => plannerSel ? plannerPick(b.dataset.mpid, b) : openMateriaEditor(b.dataset.mpid); plannerHold(b, b.dataset.mpid); });
 }
 
 // Considera "sem anexo" um tema/aula sem nenhuma imagem — conteúdos mais simples,
@@ -18148,6 +18275,7 @@ el.className = "lesson-card-mini planr-mini";
 const f = planFolder(plan);
 el.innerHTML = `<span class="lesson-title-mini">${escapeHtml(plan.topic)}</span>${f ? `<span class="planr-mini-folder">${escapeHtml(f)}</span>` : ""}${planMetaHTML(plan, uses)}`;
 el.onclick = () => plannerSel ? plannerPick(plan.id, el) : openPlanViewer(plan.id);
+plannerHold(el, plan.id);
 if (plannerSel && plannerSel.has(plan.id)) el.classList.add("picked");
 container.appendChild(el);
 });
@@ -18175,6 +18303,8 @@ group.classList.toggle("collapsed");
 function openPage(page){
 if (page === "schoolQueue" || page === "schoolRooms") page = "school"; // páginas da 8.25 que saíram na 8.27
 if (bulkSel && page !== "students") cancelBulk();
+if (slidesSel && page !== "slides") slidesSelEnd();
+if (plannerSel && page !== "planner") { plannerSel = null; plannerSelBar(); }
 currentPage = page;
 sessSet("jp_active_page", page);
 // As páginas da escola (8.25) usam a mesma tela, cada uma mostrando uma parte do painel.
@@ -19281,6 +19411,7 @@ document.getElementById("valDuracao").textContent = `${appSettings.lessonDuratio
 const lb = appSettings.lastBackupAt ? new Date(appSettings.lastBackupAt) : null;
 document.getElementById("valLastBackup").textContent = lb && !isNaN(lb) ? `Último backup: ${pad2(lb.getDate())}/${pad2(lb.getMonth()+1)}` : "Nenhum backup ainda";
 document.getElementById("valBackupReminder").textContent = BACKUP_LABELS[appSettings.backupReminder || "weekly"];
+try { document.querySelector("#rowBackupReminder .settings-row-title").textContent = hiTr(backupCanReplace() ? "Backup automático" : "Lembrar de fazer backup"); } catch(e) {}
 document.getElementById("valLessonReminder").textContent = lessonReminderLabel();
 listDeviceSnapshots().then(l => { document.getElementById("valSnapshots").textContent = l.length ? `${l.length} cópia${l.length > 1 ? "s" : ""} guardada${l.length > 1 ? "s" : ""} (a mais nova de ${pad2(new Date(l[0].at).getDate())}/${pad2(new Date(l[0].at).getMonth()+1)})` : "Nenhuma cópia ainda"; });
 document.getElementById("valMakeupDeadline").textContent = makeupDeadlineDays() ? `${makeupDeadlineDays()} dias` : "Sem prazo";
@@ -20619,11 +20750,31 @@ renderGoals();
 document.getElementById("rowExportarDados").onclick = () => doBackup(false);
 // Backup = o arquivo de "Exportar dados". share=true usa o compartilhar do celular (WhatsApp,
 // Drive, e-mail) quando dá; senão baixa. Guarda a data em appSettings.lastBackupAt.
+const BACKUP_FILE = "hi-teacher-backup.json";
+function backupCanReplace(){ try { return !!(HI_APP && typeof HI_APP.saveFileReplace === "function"); } catch(e) { return false; } }
+// Backup automático (8.83): na hora do lembrete, o app instalado grava o arquivo sozinho.
+// No navegador não dá para gravar sem toque: continua o lembrete com o botão.
+let autoBackupBusy = false, autoBackupTried = 0;
+async function autoBackup(){
+if (autoBackupBusy || demoMode || studentMode || !backupCanReplace() || Date.now() - autoBackupTried < 3600000) return;
+autoBackupBusy = true; autoBackupTried = Date.now();
+try { if (await doBackup("auto")) showCloudWarning(`Backup automático feito: ${BACKUP_FILE} na pasta Downloads.`); } catch(e) {}
+autoBackupBusy = false;
+}
 async function doBackup(share){
 const data = {};
 CLOUD_SYNC_KEYS.forEach(k => { const v = localStorage.getItem(k); if (v !== null) data[k] = v; });
 const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
 const name = `hi-teacher-backup-${isoOf(new Date())}.json`;
+// App Android 8.83+: um arquivo só em Downloads (hi-teacher-backup.json), que troca o anterior.
+if (backupCanReplace()) {
+let ok = false;
+try { ok = HI_APP.saveFileReplace(BACKUP_FILE, "application/json", await hiB64(blob)); } catch(e) {}
+if (ok) { await saveBackupCopy(data); markBackupDone(); if (share !== "auto") showCloudWarning(`Backup salvo em Downloads (${BACKUP_FILE}). Ele troca o backup anterior.`); return true; }
+if (share === "auto") return false;
+}
+if (share === "auto") return false;
+await saveBackupCopy(data);
 if (share && window.File && navigator.canShare) {
 const file = new File([blob], name, { type: "application/json" });
 if (navigator.canShare({ files: [file] })) {
@@ -20652,6 +20803,9 @@ const days = BACKUP_EVERY[freq] || 0;
 const last = appSettings.lastBackupAt ? new Date(appSettings.lastBackupAt) : null;
 const due = days && students.length && (!last || isNaN(last) || Date.now() - last > days * 86400000);
 if (!due) { box.innerHTML = ""; return; }
+if (backupCanReplace() && !autoBackupTried) { box.innerHTML = ""; autoBackup(); return; }
+// Navegador: o arquivo precisa de um toque, mas a cópia dentro do aparelho já é guardada sozinha.
+if (!backupCanReplace() && !demoMode && !studentMode) { try { const k = "jp_backup_copy_at", t = Number(localStorage.getItem(k)) || 0; if (Date.now() - t > days * 86400000) { localStorage.setItem(k, String(Date.now())); const data = {}; CLOUD_SYNC_KEYS.forEach(key => { const v = localStorage.getItem(key); if (v !== null) data[key] = v; }); saveBackupCopy(data); } } catch(e) {} }
 const what = freq === "monthly" ? "do mês" : freq === "biweekly" ? "da quinzena" : "da semana";
 box.innerHTML = `<div class="backup-line"><span><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-save"/></svg>Faça o backup ${what}${last && !isNaN(last) ? ` <span style="color:var(--muted);font-weight:500">· último em ${pad2(last.getDate())}/${pad2(last.getMonth()+1)}</span>` : ""}</span><button type="button" class="btn-edit-toggle">Fazer backup</button></div>`;
 box.querySelector("button").onclick = () => doBackup(true);
@@ -20683,7 +20837,7 @@ CLOUD_SYNC_KEYS.forEach(k => { if (x.data[k] !== undefined) localStorage.setItem
 if (supabaseClient && authCurrentUser) { clearTimeout(cloudSyncTimer); await pushCloudData(); }
 location.reload();
 });
-openQuickModal("Restaurar cópia do aparelho", "Cópias automáticas guardadas neste aparelho (as 3 últimas).", body, null, "Fechar");
+openQuickModal("Restaurar cópia do aparelho", "Guardados neste aparelho: os 4 últimos backups e as 3 últimas cópias automáticas.", body, null, "Fechar");
 };
 
 document.getElementById("rowImportarDados").onclick = () => {
