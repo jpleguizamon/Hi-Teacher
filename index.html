@@ -1294,7 +1294,7 @@ body.lead-open #authGate,body.lead-open #onboardingGate{display:none!important}
 .planr-fcell.open .planr-ftile{border-color:var(--accent-line);background:var(--glass-fill-raised)}
 .planr-fname{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .planr-fcount{flex:none;font-size:0.75rem;color:var(--muted);font-weight:600}
-.planr-fpop{position:absolute;left:0;right:0;top:calc(100% + 0.25rem);display:flex;flex-direction:column;gap:0.375rem;padding:0.5rem;max-height:60vh;overflow-y:auto;border-radius:var(--radius-md);border:0.0625rem solid var(--accent-line);background:var(--bg);box-shadow:var(--shadow-sm),var(--glow-sm);animation:fpopIn .18s var(--ease-out)}
+.planr-fpop{position:absolute;left:0;right:0;top:calc(100% + 0.25rem);display:flex;flex-direction:column;gap:0.375rem;padding:0.5rem;border-radius:var(--radius-md);border:0.0625rem solid var(--accent-line);background:var(--bg);box-shadow:var(--shadow-sm),var(--glow-sm);animation:fpopIn .18s var(--ease-out)}
 @keyframes fpopIn{from{opacity:0;transform:translateY(-0.25rem)}to{opacity:1;transform:none}}
 .planr-fpop .lesson-card-mini{width:100%;text-align:left;min-height:0;height:auto;padding:0.625rem 0.75rem;align-items:flex-start;justify-content:flex-start;flex:none}
 .planr-fpop .lesson-title-mini{text-align:left}
@@ -4099,7 +4099,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.84";
+const APP_VERSION = "8.85";
 // Idioma (8.42): troca entre português e inglês e recarrega. Fica guardado neste aparelho.
 function langSwitchLabel(){ return APP_LANG === "en" ? "🌐 Mudar para português" : "🌐 Switch to English"; }
 function langSwitch(){
@@ -18400,6 +18400,10 @@ loose.forEach(x => grid.appendChild(smallItemEl(x, uses, false)));
 container.appendChild(grid);
 } else if (!names.length) container.innerHTML = `<div class="planr-empty-mini">Nenhum tema sem anexo ainda.</div>`;
 restore();
+// 8.85: a pasta aberta passa por cima, mas a página cresce o quanto ela precisar (dava para não ver o fim).
+container.style.paddingBottom = "";
+const pop = container.querySelector(".planr-fpop");
+if (pop) requestAnimationFrame(() => { const extra = pop.getBoundingClientRect().bottom - container.getBoundingClientRect().bottom + 16; if (extra > 0) container.style.paddingBottom = extra + "px"; });
 }
 document.addEventListener("click", e => {
 if (!plannerOpenFolder || currentPage !== "planner") return;
