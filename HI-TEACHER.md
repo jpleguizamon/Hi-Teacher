@@ -540,6 +540,9 @@ Versão do app 8.46; o arquivo do servidor desta rodada é `supabase/schema-v8.4
 - As linhas "Meu plano", "Indique um professor" e "Assinaturas" (só do dono do app) estavam parando dentro da pasta Dados e backup, porque não estavam na lista de nenhuma pasta de Configurações. Agora ficam em **Conta**. Linha nova em Configurações: pôr o id dela na lista `rows` de uma pasta em `SETTINGS_FOLDERS`, senão ela cai em Dados e backup.
 - Dono do app = linha em `app_admins` com o e-mail com que ele entra (não é só o do arquivo SQL). Para incluir: `insert into public.app_admins (user_id) select id from auth.users where lower(email)=lower('EMAIL') on conflict do nothing;`
 
+## Slides: organizar cada apresentação (8.86)
+- Card novo: capa, nome, "N slides · parou no X", botão ▶ (apresenta) e menu ⋯ (Abrir e organizar, Apresentar, Acrescentar, Renomear, Duplicar, Apagar). Tocar no card abre o **organizador** (`openSlideOrganizer`, tela cheia `#slOrg`): todos os slides em miniatura numerados; **tocar marca**, **segurar e arrastar muda a ordem** (`slideThumbDrag`, com rolagem perto das bordas). Marcados: Apresentar daqui, Para o começo, Para o fim, Duplicar, Mandar para… (outra apresentação ou uma nova, com opção de deixar cópia), Apagar. Menu ⋯ do organizador: Renomear, Duplicar, Inverter a ordem, Apagar. Página ganhou busca e ordem (`jp_slides_sort_v1`: Mais recentes / A a Z / Mais antigas / Mais slides). Tocar e segurar na capa continua marcando várias para apagar. Tudo fica só no aparelho, como antes.
+
 ## Pasta aberta inteira (8.85)
 - A pasta aberta em Pequenos Temas não tem mais limite de altura; o espaço embaixo cresce para caber a pasta toda (Jp não via o fim da lista).
 

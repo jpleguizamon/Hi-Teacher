@@ -412,8 +412,42 @@ main{padding:1.5625rem 1.125rem 2.5rem;animation:pageIn .26s var(--ease-out)}
 .slide-card .slide-cover img{object-fit:contain;background:#000}
 .slide-play{position:absolute;left:50%;top:50%;width:2.75rem;height:2.75rem;margin:-1.375rem 0 0 -1.375rem;border-radius:50%;display:flex;align-items:center;justify-content:center;padding-left:0.2rem;background:rgba(79,125,255,.92);color:#fff;font-size:1rem;opacity:0;transform:scale(.85);transition:opacity .2s,transform .2s;z-index:3;box-shadow:0 0.375rem 1rem rgba(0,0,0,.4)}
 .slide-card:hover .slide-play,.slide-card:focus-visible .slide-play{opacity:1;transform:scale(1)}
-.slide-card-btns{display:flex;justify-content:center;gap:0.875rem;margin-top:0.375rem}
-.slide-card-btns .btn-link-inline{font-size:0.75rem}
+.slide-card .slide-play{opacity:1;transform:none;border:none;cursor:pointer;width:2.5rem;height:2.5rem;margin:0;left:auto;top:auto;right:0.5rem;bottom:0.5rem;font-size:0.875rem;box-shadow:0 0.25rem 0.75rem rgba(0,0,0,.45)}
+.slide-card-foot{display:flex;align-items:center;gap:0.375rem;padding:0.5rem 0.125rem 0.125rem}
+.slide-card-txt{flex:1;min-width:0}
+.slide-card-title{font-weight:700;font-size:0.875rem;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.slide-card-sub{font-size:0.75rem;color:var(--muted);margin-top:0.0625rem}
+.slide-more{flex:none;width:2.25rem;height:2.25rem;border-radius:50%;border:0.0625rem solid var(--glass-border-soft);background:var(--glass-inset);color:var(--text-2);font-size:1.125rem;line-height:1;cursor:pointer;display:grid;place-items:center}
+.slide-more:hover{border-color:var(--accent-line);color:var(--accent)}
+#slTools{margin-bottom:0.875rem}
+#slTools[hidden],.planr-selbar[hidden],.sl-org-bar[hidden]{display:none}
+.sl-menu{display:flex;flex-direction:column;gap:0.375rem}
+.sl-menu-item{text-align:left;padding:0.8125rem 0.875rem;border-radius:var(--radius-md);border:0.0625rem solid var(--glass-border-soft);background:var(--glass-fill);color:var(--text);font-weight:650;font-size:0.9375rem;cursor:pointer}
+.sl-menu-item:hover{border-color:var(--accent-line)}
+.sl-menu-item.danger{color:var(--danger)}
+.sl-org{position:fixed;inset:0;z-index:29;background:var(--bg);overflow-y:auto;padding:0 1rem calc(6rem + var(--sab, 0px))}
+body.sl-org-on{overflow:hidden}
+.sl-org-head{position:sticky;top:0;z-index:2;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;padding:calc(0.75rem + var(--sat, 0px)) 0 0.75rem;background:var(--bg);border-bottom:0.0625rem solid var(--hairline);margin-bottom:0.875rem}
+.sl-org-back{width:2.5rem;height:2.5rem;border-radius:50%;border:0.0625rem solid var(--glass-border-soft);background:var(--glass-inset);color:var(--text);font-size:1.5rem;line-height:1;cursor:pointer}
+.sl-org-tt{flex:1;min-width:10rem}
+.sl-org-title{font-family:Poppins,system-ui,sans-serif;font-weight:700;font-size:1.0625rem;color:var(--heading);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sl-org-sub{font-size:0.75rem;color:var(--muted)}
+.sl-org-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(10rem,1fr));gap:0.75rem}
+@media (max-width:30rem){.sl-org-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.sl-thumb{position:relative;aspect-ratio:16/9;border-radius:var(--radius-md);overflow:hidden;background:#000;border:0.125rem solid var(--glass-border-soft);cursor:pointer;touch-action:pan-y;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;transition:border-color .15s,transform .15s,opacity .15s}
+.sl-thumb img{width:100%;height:100%;object-fit:contain;display:block;pointer-events:none}
+.sl-num{position:absolute;left:0.375rem;top:0.375rem;min-width:1.5rem;height:1.5rem;padding:0 0.375rem;border-radius:var(--radius-pill);background:rgba(0,0,0,.7);color:#fff;font-size:0.75rem;font-weight:800;display:grid;place-items:center}
+.sl-here{position:absolute;right:0.375rem;bottom:0.375rem;padding:0.125rem 0.5rem;border-radius:var(--radius-pill);background:var(--accent);color:#fff;font-size:0.6875rem;font-weight:700}
+.sl-thumb.picked{border-color:var(--accent);box-shadow:0 0 0 0.125rem var(--accent)}
+.sl-thumb.picked::after{content:"✓";position:absolute;top:0.375rem;right:0.375rem;width:1.5rem;height:1.5rem;border-radius:50%;background:var(--accent);color:#fff;font-size:0.8125rem;font-weight:800;display:grid;place-items:center}
+.sl-thumb.dragging{opacity:.35}
+.sl-thumb.drop-before{box-shadow:-0.3125rem 0 0 var(--accent)}
+.sl-thumb.drop-after{box-shadow:0.3125rem 0 0 var(--accent)}
+.sl-ghost{position:fixed;z-index:3000;pointer-events:none;opacity:.9;transform:scale(1.05);box-shadow:0 0.75rem 2rem rgba(0,0,0,.6)}
+.sl-org-bar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(1rem + var(--sab, 0px));width:min(46rem,calc(100% - 2rem));z-index:3;display:flex;align-items:center;flex-wrap:wrap;gap:0.375rem;padding:0.625rem 0.75rem;border-radius:var(--radius-md);background:var(--bg);border:0.0625rem solid var(--accent-line);box-shadow:var(--glow-sm),var(--shadow-sm)}
+.sl-org-bar span{flex:1 1 100%;font-size:0.8125rem;font-weight:700;color:var(--text)}
+.sl-org-bar .edit{font-size:0.8125rem}
+.sl-org-bar .edit:disabled{opacity:.45}
 .slide-trail{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .btn-link-inline.slide-del{color:#f87171}
 .slide-show{position:fixed;inset:0;z-index:2000;background:#000;display:flex;flex-direction:column;user-select:none;-webkit-user-select:none}
@@ -2955,6 +2989,7 @@ body.pdf-open{overflow:hidden}
 </div>
 <div class="field-hint" id="slBusy" style="margin-bottom:0.75rem;color:var(--accent)" hidden></div>
 <div class="auth-error" id="slErr" style="margin-bottom:0.75rem"></div>
+<div class="planr-tools" id="slTools"><div class="song-search field"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/></svg><input type="search" id="slSearch" placeholder="Buscar apresentação" aria-label="Buscar apresentação" autocomplete="off"></div><select id="slSort" class="planr-sort" aria-label="Ordem"><option value="new">Mais recentes</option><option value="az">A a Z</option><option value="old">Mais antigas</option><option value="big">Mais slides</option></select></div>
 <div class="lesson-grid" id="slidesList"></div>
 <div class="planr-selbar" id="slidesSelBar" hidden><span id="slidesSelCount"></span><button type="button" class="edit planr-sel-del" id="slidesSelDel">Apagar</button><button type="button" class="edit" id="slidesSelCancel">Cancelar</button></div>
 <input type="file" id="slPdf" accept="application/pdf,.pdf" hidden><input type="file" id="slImg" accept="image/*" multiple hidden>
@@ -4099,7 +4134,7 @@ const supabaseClient = (typeof supabase !== "undefined" && SUPABASE_CONFIGURED)
 // Todas as chaves do localStorage que guardam dados do app (as mesmas sincronizadas na nuvem).
 const CLOUD_SYNC_KEYS = ["jp_students_v5","jp_settings_v1","jp_earnings_v3","jp_student_counts_v1","jp_agenda_events_v1","jp_feedback_v1","jp_lesson_plans_v5","jp_goals_v1"];
 // Constantes usadas já na primeira renderização (ficam aqui em cima por causa da ordem de carga).
-const APP_VERSION = "8.85";
+const APP_VERSION = "8.86";
 // Idioma (8.42): troca entre português e inglês e recarrega. Fica guardado neste aparelho.
 function langSwitchLabel(){ return APP_LANG === "en" ? "🌐 Mudar para português" : "🌐 Switch to English"; }
 function langSwitch(){
@@ -8668,41 +8703,258 @@ return await canvasJpeg(c);
 }
 let slidesBusy = "", slidesUrls = [];
 // Página dos slides (8.78): capas em grade, como o Organizador de Aulas. Tocar na capa apresenta.
+// 8.86: card com capa, nome, "N slides" e menu ⋯; tocar abre a apresentação para organizar.
+let slQuery = "";
+function slSortKey(){ try { return localStorage.getItem("jp_slides_sort_v1") || "new"; } catch(e) { return "new"; } }
 async function renderSlidesPage(){
 const box = document.getElementById("slidesList"); if (!box) return;
-const decks = await slidesAll();
+let decks = await slidesAll();
 slidesUrls.splice(0).forEach(u => URL.revokeObjectURL(u));
 const busyEl = document.getElementById("slBusy"); busyEl.hidden = !slidesBusy; busyEl.textContent = slidesBusy;
+const tools = document.getElementById("slTools"); tools.hidden = decks.length < 2;
+const sortEl = document.getElementById("slSort"); sortEl.value = slSortKey();
+const total = decks.length;
+if (slQuery) { const q = plannerNorm(slQuery); decks = decks.filter(d => plannerNorm(d.title).includes(q)); }
+const k = slSortKey();
+if (k === "az") decks.sort((a, b) => a.title.localeCompare(b.title, "pt-BR", { numeric: true }));
+else if (k === "old") decks.sort((a, b) => a.created - b.created);
+else if (k === "big") decks.sort((a, b) => b.pages.length - a.pages.length);
 box.innerHTML = decks.length ? decks.map(d => {
 const u = d.pages[0] ? URL.createObjectURL(d.pages[0]) : ""; if (u) slidesUrls.push(u);
-const n = d.pages.length;
-return `<div class="lesson-card slide-card${n > 1 ? " stacked" : ""}" data-sl-play="${d.id}" role="button" tabindex="0" aria-label="Apresentar ${escapeHtml(d.title)}">
-<div class="lesson-img-wrap slide-cover"><img src="${u}" class="lesson-img" loading="lazy" alt=""><span class="file-count-badge">${n === 1 ? "1 slide" : `${n} slides`}</span><span class="slide-play" aria-hidden="true">▶</span></div>
-<div class="lesson-title-out">${escapeHtml(d.title)}</div>
-<div class="slide-card-btns"><button type="button" class="btn-link-inline" data-sl-add="${d.id}">Acrescentar</button><button type="button" class="btn-link-inline" data-sl-ren="${d.id}">Renomear</button><button type="button" class="btn-link-inline slide-del" data-sl-del="${d.id}">Apagar</button></div>
-</div>`; }).join("") : "<div style='color:var(--muted);font-size:13px;grid-column:1/-1;text-align:center;padding:30px 0'>Nenhuma apresentação guardada. Toque no '+' acima para pôr um PDF ou fotos dos seus slides.</div>";
+const n = d.pages.length, at = slidesPos(d.id);
+return `<div class="lesson-card slide-card${n > 1 ? " stacked" : ""}" data-sl-open="${d.id}" role="button" tabindex="0" aria-label="Abrir ${escapeHtml(d.title)}">
+<div class="lesson-img-wrap slide-cover"><img src="${u}" class="lesson-img" loading="lazy" alt=""><button type="button" class="slide-play" data-sl-play="${d.id}" aria-label="Apresentar ${escapeHtml(d.title)}">▶</button></div>
+<div class="slide-card-foot"><div class="slide-card-txt"><div class="slide-card-title">${escapeHtml(d.title)}</div><div class="slide-card-sub">${n === 1 ? "1 slide" : `${n} slides`}${at ? ` · parou no ${at + 1}` : ""}</div></div><button type="button" class="slide-more" data-sl-more="${d.id}" aria-label="Mais opções">⋯</button></div>
+</div>`; }).join("") : `<div class="planr-empty-mini" style="grid-column:1/-1">${total ? "Nenhuma apresentação com esse nome." : "Nenhuma apresentação guardada. Toque no + acima para pôr um PDF ou fotos dos seus slides."}</div>`;
 const find = async id => (await slidesAll()).find(x => x.id === id);
 slidesSelBar();
-box.querySelectorAll("[data-sl-play]").forEach(c => {
-const play = async () => { const d = await find(c.dataset.slPlay); if (d) slidesShow(d); };
-const id = c.dataset.slPlay;
+box.querySelectorAll("[data-sl-open]").forEach(c => {
+const id = c.dataset.slOpen;
 if (slidesSel && slidesSel.has(id)) c.classList.add("picked");
 const pick = () => { if (slidesSel.has(id)) slidesSel.delete(id); else slidesSel.add(id); c.classList.toggle("picked", slidesSel.has(id)); if (!slidesSel.size) { slidesSelEnd(); return; } slidesSelBar(); };
 holdToSelect(c, () => { if (!slidesSel) slidesSel = new Set(); if (!slidesSel.has(id)) pick(); });
-c.onclick = e => { if (slidesSel) { e.preventDefault(); pick(); return; } if (!e.target.closest("button")) play(); };
-c.onkeydown = e => { if ((e.key === "Enter" || e.key === " ") && e.target === c) { e.preventDefault(); play(); } };
+c.onclick = e => { if (slidesSel) { e.preventDefault(); pick(); return; } if (!e.target.closest("button")) openSlideOrganizer(id); };
+c.onkeydown = e => { if ((e.key === "Enter" || e.key === " ") && e.target === c) { e.preventDefault(); openSlideOrganizer(id); } };
 });
-box.querySelectorAll("[data-sl-add]").forEach(b => b.onclick = async () => { const d = await find(b.dataset.slAdd); if (d) slidesPick(d); });
-box.querySelectorAll("[data-sl-ren]").forEach(b => b.onclick = async () => {
-const d = await find(b.dataset.slRen); if (!d) return;
-const t = prompt("Nome da apresentação", d.title); if (t === null || !t.trim()) return;
-await slidesPut({ ...d, title: t.trim().slice(0, 80) }); renderSlidesPage();
+box.querySelectorAll("[data-sl-play]").forEach(b => b.onclick = async e => { e.stopPropagation(); if (slidesSel) return; const d = await find(b.dataset.slPlay); if (d) slidesShow(d); });
+box.querySelectorAll("[data-sl-more]").forEach(b => b.onclick = async e => { e.stopPropagation(); if (slidesSel) return; const d = await find(b.dataset.slMore); if (d) slideDeckMenu(d); });
+}
+(function(){
+const q = document.getElementById("slSearch"), so = document.getElementById("slSort");
+q.oninput = () => { slQuery = q.value.trim(); renderSlidesPage(); };
+so.onchange = () => { try { localStorage.setItem("jp_slides_sort_v1", so.value); } catch(e) {} renderSlidesPage(); };
+})();
+async function slideDeckRename(d){
+const t = prompt("Nome da apresentação", d.title); if (t === null || !t.trim()) return false;
+await slidesPut({ ...d, title: t.trim().slice(0, 80) }); return true;
+}
+async function slideDeckDelete(d){
+if (!confirm(`Apagar "${d.title}" deste aparelho? Não dá para desfazer.`)) return false;
+await slidesDel(d.id); slidesPos(d.id, 0); return true;
+}
+async function slideDeckDuplicate(d){
+const ok = await slidesPut({ id: "s" + Date.now().toString(36), title: `${d.title} (cópia)`.slice(0, 80), pages: d.pages.slice(), created: Date.now() });
+if (!ok) showCloudWarning("Não consegui guardar no aparelho. Pode ser falta de espaço.");
+return ok;
+}
+function slideDeckMenu(d){
+const body = document.createElement("div");
+const opts = [["open", "Abrir e organizar os slides"], ["play", "Apresentar"], ["add", "Acrescentar slides"], ["ren", "Renomear"], ["dup", "Duplicar"], ["del", "Apagar"]];
+body.innerHTML = `<div class="sl-menu">${opts.map(([k, l]) => `<button type="button" class="sl-menu-item${k === "del" ? " danger" : ""}" data-k="${k}">${l}</button>`).join("")}</div>`;
+body.querySelectorAll("[data-k]").forEach(b => b.onclick = async () => {
+closeQuickModal();
+const k = b.dataset.k;
+if (k === "open") openSlideOrganizer(d.id);
+else if (k === "play") slidesShow(d);
+else if (k === "add") slidesPick(d);
+else if (k === "ren") { if (await slideDeckRename(d)) renderSlidesPage(); }
+else if (k === "dup") { if (await slideDeckDuplicate(d)) renderSlidesPage(); }
+else if (k === "del") { if (await slideDeckDelete(d)) renderSlidesPage(); }
 });
-box.querySelectorAll("[data-sl-del]").forEach(b => b.onclick = async () => {
-const d = await find(b.dataset.slDel); if (!d) return;
-if (!confirm(`Apagar "${d.title}" deste aparelho?`)) return;
-await slidesDel(d.id); slidesPos(d.id, 0); renderSlidesPage();
+openQuickModal(d.title, d.pages.length === 1 ? "1 slide" : `${d.pages.length} slides`, body, null, "Fechar");
+}
+// Organizar uma apresentação (8.86): todos os slides em miniatura, numerados. Tocar marca;
+// segurar e arrastar muda a ordem. Marcados: apresentar daqui, mover para o começo/fim,
+// duplicar, mandar para outra apresentação, apagar.
+let slOrg = null;   // { id, sel:Set<number>, urls:[] }
+async function openSlideOrganizer(id){
+let el = document.getElementById("slOrg");
+if (!el) {
+el = document.createElement("div"); el.id = "slOrg"; el.className = "sl-org"; el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true");
+document.body.appendChild(el);
+}
+slOrg = { id, sel: new Set(), urls: [] };
+el.hidden = false;
+document.body.classList.add("sl-org-on");
+try { history.pushState({ hiSlOrg: 1 }, ""); } catch(e) {}
+await renderSlideOrganizer();
+}
+function closeSlideOrganizer(fromPop){
+const el = document.getElementById("slOrg");
+if (!el || el.hidden) return;
+(slOrg ? slOrg.urls : []).forEach(u => URL.revokeObjectURL(u));
+slOrg = null; el.hidden = true; el.innerHTML = "";
+document.body.classList.remove("sl-org-on");
+if (!fromPop) { try { if (history.state && history.state.hiSlOrg) history.back(); } catch(e) {} }
+if (currentPage === "slides") renderSlidesPage();
+}
+window.addEventListener("popstate", () => { if (slOrg) closeSlideOrganizer(true); });
+async function renderSlideOrganizer(){
+const el = document.getElementById("slOrg");
+if (!slOrg || !el) return;
+const d = (await slidesAll()).find(x => x.id === slOrg.id);
+if (!d) { closeSlideOrganizer(); return; }
+slOrg.urls.forEach(u => URL.revokeObjectURL(u));
+slOrg.urls = d.pages.map(p => URL.createObjectURL(p));
+const sel = slOrg.sel, n = d.pages.length, at = slidesPos(d.id);
+[...sel].forEach(i => { if (i >= n) sel.delete(i); });
+el.innerHTML = `<div class="sl-org-head">
+<button type="button" class="sl-org-back" data-a="close" aria-label="Voltar">‹</button>
+<div class="sl-org-tt"><div class="sl-org-title">${escapeHtml(d.title)}</div><div class="sl-org-sub">${n === 1 ? "1 slide" : `${n} slides`} · toque para marcar, segure e arraste para mudar a ordem</div></div>
+<button type="button" class="btn-historico" data-a="add">+ Slides</button>
+<button type="button" class="planr-main-btn" data-a="play">▶ Apresentar</button>
+<button type="button" class="slide-more" data-a="more" aria-label="Mais opções">⋯</button>
+</div>
+<div class="sl-org-grid">${slOrg.urls.map((u, i) => `<div class="sl-thumb${sel.has(i) ? " picked" : ""}${i === at && at ? " here" : ""}" data-i="${i}"><img src="${u}" alt="" draggable="false"><span class="sl-num">${i + 1}</span>${i === at && at ? `<span class="sl-here">parou aqui</span>` : ""}</div>`).join("")}</div>
+<div class="sl-org-bar"${sel.size ? "" : " hidden"}><span>${sel.size === 1 ? "1 slide marcado" : `${sel.size} slides marcados`}</span>
+<button type="button" class="edit" data-a="from"${sel.size === 1 ? "" : " disabled"}>Apresentar daqui</button>
+<button type="button" class="edit" data-a="first">Para o começo</button>
+<button type="button" class="edit" data-a="last">Para o fim</button>
+<button type="button" class="edit" data-a="dup">Duplicar</button>
+<button type="button" class="edit" data-a="move">Mandar para…</button>
+<button type="button" class="edit planr-sel-del" data-a="del">Apagar</button>
+<button type="button" class="edit" data-a="none">Desmarcar</button></div>`;
+const save = async pages => { const ok = await slidesPut({ ...d, pages }); if (!ok) showCloudWarning("Não consegui guardar no aparelho. Pode ser falta de espaço."); return ok; };
+const picked = () => [...sel].sort((a, b) => a - b);
+el.querySelectorAll("[data-a]").forEach(b => b.onclick = async () => {
+const a = b.dataset.a;
+if (a === "close") return closeSlideOrganizer();
+if (a === "add") return slidesPick(d);
+if (a === "play") return slidesShow(d);
+if (a === "more") return slideOrgMenu(d);
+if (a === "none") { sel.clear(); return renderSlideOrganizer(); }
+const idx = picked(); if (!idx.length) return;
+if (a === "from") { slidesPos(d.id, idx[0]); return slidesShow(d); }
+if (a === "first" || a === "last") {
+const chosen = idx.map(i => d.pages[i]), rest = d.pages.filter((_, i) => !sel.has(i));
+const pages = a === "first" ? chosen.concat(rest) : rest.concat(chosen);
+sel.clear(); (a === "first" ? chosen.map((_, i) => i) : chosen.map((_, i) => rest.length + i)).forEach(i => sel.add(i));
+await save(pages); return renderSlideOrganizer();
+}
+if (a === "dup") {
+const pages = []; d.pages.forEach((p, i) => { pages.push(p); if (sel.has(i)) pages.push(p); });
+if (pages.length > 600) { alert("Uma apresentação pode ter até 600 slides."); return; }
+sel.clear(); await save(pages); return renderSlideOrganizer();
+}
+if (a === "del") {
+if (idx.length === n) { if (await slideDeckDelete(d)) closeSlideOrganizer(); return; }
+if (!confirm(`Apagar ${idx.length === 1 ? "1 slide" : `${idx.length} slides`} desta apresentação?`)) return;
+const pages = d.pages.filter((_, i) => !sel.has(i)); sel.clear();
+if (slidesPos(d.id) >= pages.length) slidesPos(d.id, 0);
+await save(pages); return renderSlideOrganizer();
+}
+if (a === "move") return slideOrgMoveTo(d, idx);
 });
+// Tocar marca / desmarca; segurar e arrastar troca de lugar.
+const grid = el.querySelector(".sl-org-grid");
+grid.querySelectorAll(".sl-thumb").forEach(t => slideThumbDrag(t, grid, d, save));
+}
+function slideThumbDrag(t, grid, d, save){
+const i = Number(t.dataset.i);
+let timer = null, sx = 0, sy = 0, dragging = false, ghost = null, target = null, moved = false;
+const clear = () => grid.querySelectorAll(".drop-before,.drop-after").forEach(x => x.classList.remove("drop-before", "drop-after"));
+t.addEventListener("pointerdown", e => {
+if (e.button) return;
+sx = e.clientX; sy = e.clientY; moved = false;
+timer = setTimeout(() => {
+timer = null; dragging = true;
+if (navigator.vibrate) { try { navigator.vibrate(12); } catch(x) {} }
+t.classList.add("dragging");
+try { t.setPointerCapture(e.pointerId); } catch(x) {}
+ghost = t.cloneNode(true); ghost.classList.add("sl-ghost"); ghost.style.width = t.offsetWidth + "px";
+document.body.appendChild(ghost);
+ghost.style.left = (sx - t.offsetWidth / 2) + "px"; ghost.style.top = (sy - t.offsetHeight / 2) + "px";
+}, 280);
+});
+t.addEventListener("pointermove", e => {
+if (!dragging) { if (timer && Math.hypot(e.clientX - sx, e.clientY - sy) > 8) { clearTimeout(timer); timer = null; moved = true; } return; }
+e.preventDefault();
+ghost.style.left = (e.clientX - t.offsetWidth / 2) + "px"; ghost.style.top = (e.clientY - t.offsetHeight / 2) + "px";
+ghost.hidden = true; const under = document.elementFromPoint(e.clientX, e.clientY); ghost.hidden = false;
+const over = under && under.closest(".sl-thumb");
+clear(); target = null;
+if (over && over !== t && grid.contains(over)) {
+const r = over.getBoundingClientRect(), after = e.clientX > r.left + r.width / 2;
+over.classList.add(after ? "drop-after" : "drop-before");
+target = { j: Number(over.dataset.i), after };
+}
+// Rola a tela perto das bordas.
+const sc = document.getElementById("slOrg"), edge = 70;
+if (e.clientY > innerHeight - edge) sc.scrollTop += 14; else if (e.clientY < edge + 60) sc.scrollTop -= 14;
+});
+const end = async ev => {
+if (timer) { clearTimeout(timer); timer = null; }
+if (!dragging) {
+if (ev.type === "pointerup" && !moved) { const sel = slOrg.sel; if (sel.has(i)) sel.delete(i); else sel.add(i); renderSlideOrganizer(); }
+return;
+}
+dragging = false; t.classList.remove("dragging"); clear();
+if (ghost) { ghost.remove(); ghost = null; }
+if (!target || ev.type !== "pointerup") return;
+let to = target.j + (target.after ? 1 : 0);
+const pages = d.pages.slice(), [p] = pages.splice(i, 1);
+if (i < to) to--;
+if (to === i) return;
+pages.splice(to, 0, p);
+slOrg.sel.clear();
+await save(pages); renderSlideOrganizer();
+};
+t.addEventListener("pointerup", end);
+t.addEventListener("pointercancel", end);
+t.addEventListener("contextmenu", e => e.preventDefault());
+}
+function slideOrgMenu(d){
+const body = document.createElement("div");
+const opts = [["ren", "Renomear"], ["dup", "Duplicar a apresentação"], ["rev", "Inverter a ordem"], ["del", "Apagar a apresentação"]];
+body.innerHTML = `<div class="sl-menu">${opts.map(([k, l]) => `<button type="button" class="sl-menu-item${k === "del" ? " danger" : ""}" data-k="${k}">${l}</button>`).join("")}</div>`;
+body.querySelectorAll("[data-k]").forEach(b => b.onclick = async () => {
+closeQuickModal();
+const k = b.dataset.k;
+if (k === "ren") { if (await slideDeckRename(d)) renderSlideOrganizer(); }
+else if (k === "dup") { if (await slideDeckDuplicate(d)) showCloudWarning("Cópia criada na página de Slides."); }
+else if (k === "rev") { if (!confirm("Inverter a ordem de todos os slides?")) return; await slidesPut({ ...d, pages: d.pages.slice().reverse() }); if (slOrg) slOrg.sel.clear(); renderSlideOrganizer(); }
+else if (k === "del") { if (await slideDeckDelete(d)) closeSlideOrganizer(); }
+});
+openQuickModal(d.title, "", body, null, "Fechar");
+}
+async function slideOrgMoveTo(d, idx){
+const others = (await slidesAll()).filter(x => x.id !== d.id);
+const body = document.createElement("div");
+body.innerHTML = `<div class="field"><label>Mandar para</label><select id="slMvTo"><option value="">Uma apresentação nova</option>${others.map(o => `<option value="${o.id}">${escapeHtml(o.title)}</option>`).join("")}</select></div>
+<label class="sab-item"><input type="checkbox" id="slMvKeep"> Deixar uma cópia aqui também</label>`;
+openQuickModal(idx.length === 1 ? "Mandar 1 slide" : `Mandar ${idx.length} slides`, "", body, async () => {
+const toId = body.querySelector("#slMvTo").value, keep = body.querySelector("#slMvKeep").checked;
+const chosen = idx.map(i => d.pages[i]);
+let destName;
+if (toId) {
+const dest = others.find(o => o.id === toId);
+if (dest.pages.length + chosen.length > 600) { alert("A outra apresentação passaria de 600 slides."); return; }
+await slidesPut({ ...dest, pages: dest.pages.concat(chosen) }); destName = dest.title;
+} else {
+destName = `${d.title} (parte)`.slice(0, 80);
+await slidesPut({ id: "s" + Date.now().toString(36), title: destName, pages: chosen, created: Date.now() });
+}
+closeQuickModal();
+if (!keep) {
+const left = d.pages.filter((_, i) => !idx.includes(i));
+if (!left.length) { await slidesDel(d.id); slidesPos(d.id, 0); showCloudWarning(`Pronto: tudo foi para "${destName}".`); closeSlideOrganizer(); return; }
+await slidesPut({ ...d, pages: left });
+if (slidesPos(d.id) >= left.length) slidesPos(d.id, 0);
+}
+slOrg.sel.clear();
+showCloudWarning(`Pronto: ${chosen.length === 1 ? "1 slide" : `${chosen.length} slides`} em "${destName}".`);
+renderSlideOrganizer();
+}, "Cancelar", "Mandar");
 }
 // Tocar e segurar numa capa marca várias para apagar (8.83).
 let slidesSel = null;
@@ -8747,7 +8999,7 @@ return;
 const ok = await slidesPut({ id: "s" + Date.now().toString(36), title: title.slice(0, 80) || "Apresentação", pages, created: Date.now() });
 if (!ok) err().textContent = "Não consegui guardar no aparelho. Pode ser falta de espaço: apague uma apresentação antiga e tente de novo.";
 };
-const refresh = () => { if (currentPage === "slides") renderSlidesPage(); };
+const refresh = () => { if (currentPage === "slides") renderSlidesPage(); if (slOrg) renderSlideOrganizer(); };
 document.getElementById("addSlidesBtn").onclick = () => slidesPick(null);
 document.getElementById("slPdf").onchange = async e => {
 const file = e.target.files && e.target.files[0]; e.target.value = ""; if (!file) return;

@@ -9,7 +9,7 @@
 //  - Notificações (8.14): mostra o que a função send-push mandou e, ao tocar, abre (ou traz pra
 //    frente) o app já na página certa (?p=inicio | aulas | avisos | financeiro).
 const VERSION = new URL(self.location.href).searchParams.get("v") || "dev";
-const SW_REV = "8.85";   // sobe junto com o APP_VERSION quando o próprio service worker muda
+const SW_REV = "8.86";   // sobe junto com o APP_VERSION quando o próprio service worker muda
 const CACHE = `hi-teacher-${SW_REV}-${VERSION}`;
 const CORE = ["./", "./index.html", "./privacidade.html", "./privacy.html", "./i18n/en.js", "./manifest.webmanifest", "./icons/icon-192.png", "./icons/logo-text-light.png", "./icons/icon-512.png", "./icons/icon-maskable-512.png", "./icons/apple-touch-icon.png", "./icons/favicon-32.png", "./icons/logo-text.png", "./fonts/poppins-500.woff2", "./fonts/poppins-600.woff2", "./fonts/poppins-700.woff2"];
 const LIB_HOSTS = /(^|\.)(cdn\.jsdelivr\.net|cdn\.sheetjs\.com|unpkg\.com|tessdata\.projectnaptha\.com)$/;
@@ -24,10 +24,18 @@ self.addEventListener("activate", e => {
 });
 // Novidades desta versão (8.84): o app mostra no aviso "Nova versão". Trocar a cada versão.
 const NEWS = [
-  "Pasta aberta em Pequenos Temas mostra todos os temas: a página cresce até o fim da pasta"
+  "Slides: toque numa apresentação para ver todos os slides em miniatura",
+  "Segure e arraste um slide para mudar a ordem; toque para marcar",
+  "Marcados: apresentar daqui, mandar para o começo ou fim, duplicar, mandar para outra apresentação, apagar",
+  "Cards de slides com visual novo e menu ⋯ (renomear, duplicar, acrescentar, apagar)",
+  "Busca e ordem na página de Slides"
 ];
 const NEWS_EN = [
-  "Open folders in Small Topics show every topic: the page grows to fit the folder"
+  "Slides: tap a presentation to see every slide as a thumbnail",
+  "Hold and drag a slide to reorder; tap to select",
+  "Selected: present from here, move to start or end, duplicate, send to another presentation, delete",
+  "New look for slide cards with a ⋯ menu (rename, duplicate, add, delete)",
+  "Search and sort on the Slides page"
 ];
 self.addEventListener("message", e => {
   const d = e.data || {};
